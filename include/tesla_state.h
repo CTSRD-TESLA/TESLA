@@ -64,7 +64,7 @@ struct tesla_state;
  */
 struct tesla_instance {
 	register_t	ti_keys[4];
-	int		ti_state[4];
+	u_int		ti_state[4];
 };
 
 /*
@@ -86,8 +86,13 @@ struct tesla_instance {
  * free all currently instantiated automata for an assertion, while leaving
  * the tesla_state reusable.  Note: for per-thread storage,
  * tesla_state_flush() affects only the current thread.
+ *
+ * The 'limit argument specifies the maximum number of automata to support,
+ * and memory use scales linearly with this value.  It is recommended that
+ * the limit be prime, and ideally at least 10x the actual number you might
+ * use in practice, in order to ensure an adequately sparse hash table.
  */
-int	tesla_state_new(struct tesla_state **tspp, u_int scope,
+int	tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 	    const char *name, const char *description);
 void	tesla_state_destroy(struct tesla_state *tsp);
 void	tesla_state_flush(struct tesla_state *tsp);
@@ -95,7 +100,7 @@ void	tesla_state_flush(struct tesla_state *tsp);
 /*
  * Interfaces to look up/allocate, release, free, and flush automata state
  * from a struct tesla_state.  New automata instances are returned with their
- * state field set to (-1); automata generators should use state between 0
+ * state field set to (0); automata generators should use state between 1
  * and the maximum positive integer to avoid collisions with the state
  * infrastructure.
  */
