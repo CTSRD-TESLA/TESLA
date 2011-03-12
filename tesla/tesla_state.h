@@ -98,6 +98,14 @@ void	tesla_state_destroy(struct tesla_state *tsp);
 void	tesla_state_flush(struct tesla_state *tsp);
 
 /*
+ * Set the action to take when a TESLA assertion fails; implemented via a
+ * callback from the TESLA runtime.
+ */
+typedef void	(*tesla_assert_fail_callback)(struct tesla_instance *tip);
+void	tesla_state_setaction(struct tesla_state *tsp,
+	    tesla_assert_fail_callback handler);
+
+/*
  * Interfaces to look up/allocate, release, free, and flush automata state
  * from a struct tesla_state.  New automata instances are returned with their
  * state field set to (0); automata generators should use state between 1
@@ -136,6 +144,7 @@ void	tesla_instance_destroy(struct tesla_state *tsp,
  * call.  Further cases of this particular instance firing should be
  * suppressed so that DTrace probes fire only once per failure.
  */
-void	tesla_assert_fail(struct tesla_state *tsp);
+void	tesla_assert_fail(struct tesla_state *tsp,
+	    struct tesla_instance *tip);
 
 #endif /* _TESLA_STATE */
