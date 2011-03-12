@@ -68,16 +68,6 @@ struct tesla_instance {
 };
 
 /*
- * libtesla functions mostly return error values, and therefore return
- * pointers, etc, via call-by-reference arguments.  These errors are
- * modeled on errno(2), but a separate namespace.
- */
-#define	TESLA_ERROR_SUCCESS	0	/* Success. */
-#define	TESLA_ERROR_ENOENT	1	/* Entry not found. */
-#define	TESLA_ERROR_EEXIST	2	/* Entry already present. */
-#define	TESLA_ERROR_ENOMEM	3	/* Insufficient memory. */
-
-/*
  * Instances of tesla_state each have a "scope", used to determine where data
  * should be stored, and how it should be synchronised.  Two scopes are
  * currently supported: thread-local and global.  Thread-local storage does
@@ -98,7 +88,7 @@ struct tesla_instance {
  * tesla_state_flush() affects only the current thread.
  */
 int	tesla_state_new(struct tesla_state **tspp, u_int scope,
-	    const char *name);
+	    const char *name, const char *description);
 void	tesla_state_destroy(struct tesla_state *tsp);
 void	tesla_state_flush(struct tesla_state *tsp);
 
@@ -134,5 +124,13 @@ void	tesla_instance_put(struct tesla_state *tsp,
  */
 void	tesla_instance_destroy(struct tesla_state *tsp,
 	    struct tesla_instance *tip);
+
+/*
+ * Function to invoke when a TESLA assertion fails.  May not actually fail
+ * stop at this point, so assertions must handle continuation after this
+ * call.  Further cases of this particular instance firing should be
+ * suppressed so that DTrace probes fire only once per failure.
+ */
+void	tesla_assert_fail(struct tesla_state *tsp);
 
 #endif /* _TESLA_STATE */
