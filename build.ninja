@@ -1,0 +1,26 @@
+cflags = -cc1 -g -Wall -load lib/TeslaInstrumenter.so -add-plugin tesla
+
+rule parse
+    command = clang $cflags -S -emit-llvm $in -o $out
+
+rule compile
+    command = clang $cflags $in -c -o $out
+
+rule assemble
+    command = llvm-as $in -o $out
+
+rule link
+    command = clang $linkflags $in -o $out
+
+
+build test: link caller.bc checkers.bc syscalls.bc
+
+build caller.bc: assemble caller.ll
+build caller.ll: parse caller.c | syscalls.h types.h
+
+build checkers.bc: assemble checkers.ll
+build checkers.ll: parse checkers.c | syscalls.h types.h
+
+build syscalls.bc: assemble syscalls.ll
+build syscalls.ll: parse syscalls.c | syscalls.h tesla.h types.h
+
