@@ -59,12 +59,9 @@ struct tesla_state {
 	 * State fields if per-thread.
 	 */
 #ifdef _KERNEL
-	/*
-	 * XXXRW: Kernel implementation, possibly an index into a per-thread
-	 * array managed by libtesla?
-	 */
+	u_int		 ts_perthread_index;	/* Per-thread array index. */
 #else
-	pthread_key_t	ts_pthread_key;
+	pthread_key_t	 ts_pthread_key;
 #endif
 
 	/*
@@ -84,6 +81,13 @@ struct tesla_state {
  */
 #define	TESLA_ACTION_FAILSTOP	1	/* Stop on failure. */
 #define	TESLA_ACTION_DTRACE	2	/* Fire DTrace probe on failure. */
+
+#ifdef _KERNEL
+/*
+ * Memory type for TESLA allocations in the kernel.
+ */
+MALLOC_DECLARE(M_TESLA);
+#endif
 
 /*
  * Interfaces to global state management.
