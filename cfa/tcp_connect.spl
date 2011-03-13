@@ -1,17 +1,39 @@
+function active_close() {
+  Assign_pcb_tstate_FIN_WAIT_1;
+  either {
+    Assign_pcb_tstate_CLOSING;
+    Assign_pcb_tstate_TIME_WAIT;
+  } or {
+    Assign_pcb_tstate_FIN_WAIT_2;
+    Assign_pcb_tstate_TIME_WAIT;
+  }
+  Assign_pcb_tstate_CLOSED;
+}
+ 
+function established() {
+  Assign_pcb_tstate_ESTAB;
+  either {
+    active_close();
+  } or {
+    // receive close from other side
+    Assign_pcb_tstate_CLOSE_WAIT;
+    Assign_pcb_tstate_LAST_ACK;    
+    Assign_pcb_tstate_CLOSED;
+  }
+}
+   
 automaton tcp_connect() {
   Assign_pcb_tstate_CLOSED;
   Assign_pcb_tstate_SYN_SENT;
   either {
-    Assign_pcb_tstate_CLOSE_WAIT;
-    Assign_pcb_tstate_LAST_ACK;
-  } or {
-    Assign_pcb_tstate_FIN_WAIT_1;
+    // Simultaneous open
+    Assign_pcb_tstate_SYN_RCVD;
     either {
-      Assign_pcb_tstate_CLOSING;
-      Assign_pcb_tstate_TIME_WAIT;
-    } or {
-      Assign_pcb_tstate_FIN_WAIT_2;
-      Assign_pcb_tstate_TIME_WAIT;
-    }
+      established ();
+   } or {
+      active_close();
+   }
+  } or {
+    established ();
   }
 }
