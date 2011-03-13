@@ -1,0 +1,17 @@
+automaton tcp_connect() {
+  Assign_pcb_tstate_CLOSED;
+  Assign_pcb_tstate_SYN_SENT;
+  either {
+    Assign_pcb_tstate_CLOSE_WAIT;
+    Assign_pcb_tstate_LAST_ACK;
+  } or {
+    Assign_pcb_tstate_FIN_WAIT_1;
+    either {
+      Assign_pcb_tstate_CLOSING;
+      Assign_pcb_tstate_TIME_WAIT;
+    } or {
+      Assign_pcb_tstate_FIN_WAIT_2;
+      Assign_pcb_tstate_TIME_WAIT;
+    }
+  }
+}
