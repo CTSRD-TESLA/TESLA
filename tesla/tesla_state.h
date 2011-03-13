@@ -123,6 +123,23 @@ int	tesla_instance_get4(struct tesla_state *tsp, register_t key1,
 	    struct tesla_instance **tip);
 
 /*
+ * Iterator to handle sets of matching automata.  Handler will be called once
+ * for each matching instance -- the iterator will call tesla_instance_put()
+ * as needed, so the handler won't call it.
+ *
+ * Note: calling tesla_instance_destroy() from the foreach handler is not
+ * permitted.
+ *
+ * XXXRW: It's not clear if this is sufficient to handle multi-clause
+ * expressions, as the results must be composed, so this might need to be
+ * revisited.
+ */
+typedef void	(*tesla_instance_foreach_callback)
+		    (struct tesla_instance *tip, void *arg);
+void	tesla_instance_foreach1(struct tesla_state *tsp, register_t key0,
+	    tesla_instance_foreach_callback handler, void *arg);
+
+/*
  * Once an instance has been queried, it must be "returned" to its
  * tesla_state, which will release synchronisation on the instance.
  */
