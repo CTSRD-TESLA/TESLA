@@ -32,6 +32,9 @@
 
 #include <stdio.h>
 
+#include <tesla/tesla_util.h>
+#include <tesla/tesla_state.h>
+
 #include "mwc_defs.h"
 
 /*
@@ -39,11 +42,14 @@
  * event sequences and see how it works out.
  */
 
-int
-main(int argc, char *argv[])
+static void
+test(int scope)
 {
 
-	mwc_init();
+	printf("\nScope: %s\n", scope == TESLA_SCOPE_GLOBAL ? "global" :
+	    "per-thread");
+
+	mwc_init(scope);
 	mwc_setaction_debug();	/* Use printf(), not assert(). */
 
 	printf("Simulating syscall without check or use; should pass\n");
@@ -123,6 +129,15 @@ main(int argc, char *argv[])
 	mwc_event_tesla_syscall_return();
 
 	mwc_destroy();
+}
+
+
+int
+main(int argc, char *argv[])
+{
+
+	test(TESLA_SCOPE_GLOBAL);
+	test(TESLA_SCOPE_PERTHREAD);
 
 	return (0);
 }

@@ -79,16 +79,12 @@ static struct tesla_state	*mwc_state;
  * per-thread instances, and synchronisation is avoided.
  */
 void
-mwc_init(void)
+mwc_init(int scope)
 {
 	int error;
 
-	/*
-	 * XXXRW: More realistically, would be TESLA_SCOPE_PERTHREAD, but
-	 * that doesn't work yet.
-	 */
-	error = tesla_state_new(&mwc_state, TESLA_SCOPE_GLOBAL, MWC_LIMIT,
-	    MWC_NAME, MWC_DESCRIPTION);
+	error = tesla_state_new(&mwc_state, scope, MWC_LIMIT, MWC_NAME,
+	    MWC_DESCRIPTION);
 #ifdef _KERNEL
 	if (error)
 		panic("mwc_init: tesla_state_new failed due to %s",

@@ -51,7 +51,7 @@ int	mwc_automata_prod(struct tesla_instance *tip, u_int event);
  * "Public" interfaces to the assertion, to be invoked by load, unload, and
  * instrumentation handlers.
  */
-void	mwc_init(void);
+void	mwc_init(int scope);
 void	mwc_destroy(void);
 void	mwc_event_tesla_syscall_enter(void);
 void	mwc_event_tesla_syscall_return(void);
