@@ -86,12 +86,6 @@ struct tesla_state {
 #define	TESLA_ACTION_DTRACE	2	/* Fire DTrace probe on failure. */
 
 /*
- * Interfaces from the central TESLA code to the state management libraries.
- */
-void	tesla_state_lock(struct tesla_state *tsp);
-void	tesla_state_unlock(struct tesla_state *tsp);
-
-/*
  * Interfaces to global state management.
  */
 int	tesla_state_global_new(struct tesla_state *tsp);
