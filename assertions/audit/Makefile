@@ -15,7 +15,8 @@ audit_automata.o: audit_automata.c
 test.o: test.c
 	gcc -c ${CFLAGS} -o test.o test.c
 test: test.o audit_assertion.o audit_automata.o ${TESLALIBS}
-	gcc -o test test.o audit_assertion.o audit_automata.o ${TESLALIBS}
+	gcc -o test test.o audit_assertion.o audit_automata.o ${TESLALIBS} \
+	    -lpthread
 clean:
 	rm -f test test.o audit_assertion.o audit_automata.o
 

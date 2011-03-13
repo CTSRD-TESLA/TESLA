@@ -15,7 +15,8 @@ mwc_automata.o: mwc_automata.c
 test.o: test.c
 	gcc -c ${CFLAGS} -o test.o test.c
 test: test.o mwc_assertion.o mwc_automata.o ${TESLALIBS}
-	gcc -o test test.o mwc_assertion.o mwc_automata.o ${TESLALIBS}
+	gcc -o test test.o mwc_assertion.o mwc_automata.o ${TESLALIBS} \
+	    -lpthread
 clean:
 	rm -f test test.o mwc_assertion.o mwc_automata.o
 
