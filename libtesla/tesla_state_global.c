@@ -31,7 +31,10 @@
  */
 
 #ifdef _KERNEL
-#error "No kernel support yet"
+#include <sys/param.h>
+#include <sys/libkern.h>
+#include <sys/lock.h>
+#include <sys/mutex.h>
 #else
 #include <assert.h>
 #include <err.h>
@@ -40,8 +43,8 @@
 #include <string.h>
 #endif
 
-#include <tesla/tesla_util.h>
 #include <tesla/tesla_state.h>
+#include <tesla/tesla_util.h>
 
 #include "tesla_internal.h"
 
@@ -52,7 +55,7 @@
  * atomicity problems when composing multi-clause expressions, however; more
  * investigation required.
  */
-void
+static void
 tesla_state_global_lock_init(struct tesla_state *tsp)
 {
 
@@ -64,7 +67,7 @@ tesla_state_global_lock_init(struct tesla_state *tsp)
 #endif
 }
 
-void
+static void
 tesla_state_global_lock_destroy(struct tesla_state *tsp)
 {
 

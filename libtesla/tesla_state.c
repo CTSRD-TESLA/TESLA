@@ -31,7 +31,12 @@
  */
 
 #ifdef _KERNEL
-#error "No kernel support yet"
+#include <sys/param.h>
+#include <sys/kernel.h>
+#include <sys/lock.h>
+#include <sys/mutex.h>
+#include <sys/malloc.h>
+#include <sys/systm.h>
 #else
 #include <assert.h>
 #include <err.h>
@@ -44,6 +49,10 @@
 #include <tesla/tesla_state.h>
 
 #include "tesla_internal.h"
+
+#ifdef _KERNEL
+MALLOC_DEFINE(M_TESLA, "tesla", "TESLA internal state");
+#endif
 
 int
 tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
@@ -69,7 +78,7 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 		len = sizeof(*tsp) + sizeof(struct tesla_instance) * limit;
 
 #ifdef _KERNEL
-	/* XXXRW: Kernel implementation? */
+	tsp = malloc(len, M_TESLA, M_WAITOK | M_ZERO);
 #else
 	tsp = malloc(len);
 	if (tsp == NULL)
@@ -86,7 +95,11 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 	if (scope == TESLA_SCOPE_PERTHREAD) {
 		error = tesla_state_perthread_new(tsp);
 		if (error != TESLA_ERROR_SUCCESS) {
+#ifdef _KERNEL
+			free(tsp, M_TESLA);
+#else
 			free(tsp);
+#endif
 			return (error);
 		}
 	} else
@@ -103,7 +116,11 @@ tesla_state_destroy(struct tesla_state *tsp)
 		tesla_state_global_destroy(tsp);
 	else
 		tesla_state_perthread_destroy(tsp);
+#ifdef _KERNEL
+	free(tsp, M_TESLA);
+#else
 	free(tsp);
+#endif
 }
 
 void
