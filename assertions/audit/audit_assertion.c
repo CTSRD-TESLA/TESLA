@@ -79,16 +79,12 @@ static struct tesla_state	*audit_state;
  * per-thread instances, and synchronisation is avoided.
  */
 void
-audit_init(void)
+audit_init(int scope)
 {
 	int error;
 
-	/*
-	 * XXXRW: More realistically, would be TESLA_SCOPE_PERTHREAD, but
-	 * that doesn't work yet.
-	 */
-	error = tesla_state_new(&audit_state, TESLA_SCOPE_GLOBAL, AUDIT_LIMIT,
-	    AUDIT_NAME, AUDIT_DESCRIPTION);
+	error = tesla_state_new(&audit_state, scope, AUDIT_LIMIT, AUDIT_NAME,
+	    AUDIT_DESCRIPTION);
 #ifdef _KERNEL
 	if (error)
 		panic("audit_init: tesla_state_new failed due to %s",

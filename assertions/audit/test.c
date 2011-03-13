@@ -32,6 +32,9 @@
 
 #include <stdio.h>
 
+#include <tesla/tesla_util.h>
+#include <tesla/tesla_state.h>
+
 #include "audit_defs.h"
 
 /*
@@ -39,11 +42,14 @@
  * event sequences and see how it works out.
  */
 
-int
-main(int argc, char *argv[])
+void
+test(int scope)
 {
 
-	audit_init();
+	printf("\nScope: %s\n", scope == TESLA_SCOPE_GLOBAL ? "global" :
+	    "per-thread");
+
+	audit_init(scope);
 	audit_setaction_debug();	/* Use printf(), not assert(). */
 
 	printf("Simulating syscall without assertion or use; should pass\n");
@@ -106,6 +112,14 @@ main(int argc, char *argv[])
 	audit_event_tesla_syscall_return();
 
 	audit_destroy();
+}
+
+int
+main(int argc, char *argv[])
+{
+
+	test(TESLA_SCOPE_GLOBAL);
+	test(TESLA_SCOPE_PERTHREAD);
 
 	return (0);
 }
