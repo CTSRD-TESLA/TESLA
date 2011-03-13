@@ -197,12 +197,20 @@ tesla_instance_foreach1(struct tesla_state *tsp, register_t key0,
     tesla_instance_foreach_callback handler, void *arg)
 {
 	struct tesla_instance *tip;
+	struct tesla_table *ttp;
+	int error;
 	u_int i;
 
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
+	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
 		tesla_state_global_lock(tsp);
-	for (i = 0; i < tsp->ts_table.tt_length; i++) {
-		tip = &tsp->ts_table.tt_instances[i];
+		ttp = &tsp->ts_table;
+	} else {
+		error = tesla_state_perthread_gettable(tsp, &ttp);
+		if (error != TESLA_ERROR_SUCCESS)
+			return;
+	}
+	for (i = 0; i < ttp->tt_length; i++) {
+		tip = &ttp->tt_instances[i];
 		if (tip->ti_keys[0] != key0)
 			continue;
 		handler(tip, arg);
