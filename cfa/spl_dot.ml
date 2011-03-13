@@ -39,6 +39,12 @@ let rec string_of_expr = function
     | Divide (a,b) -> sprintf "(%s / %s)" (string_of_expr a) (string_of_expr b)
     | Int_constant a -> sprintf "%d" a
 
+let style_of_edge = function
+    |T_handle -> ""
+    |T_normal -> ""
+    |T_func_prologue -> "style=\"dashed\","
+    |T_func_epilogue -> "style=\"dotted\","
+
 let string_of_transition from t =
     let (ty,str) = match t.t with
     |Terminate -> "color=\"red\"", "abort"
@@ -48,7 +54,7 @@ let string_of_transition from t =
     |Message id -> "", (sprintf "{%s}" id)
     in
     let ln = match t.loc with None -> "" |Some l -> sprintf " (%d)" l.Spl_location.line_num in
-    sprintf " \"%s\" -> \"%s\" [label=\"%s%s\",fontsize=10,%s];" from.label !(t.target).label str ln ty
+    sprintf " \"%s\" -> \"%s\" [%slabel=\"%s%s\",fontsize=10,%s];" from.label !(t.target).label (style_of_edge t.cl) str ln ty
 
 let string_of_state s =
     String.concat "\n" ((List.map (string_of_transition s) s.edges))

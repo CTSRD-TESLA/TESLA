@@ -29,13 +29,15 @@ type transition_method =
 type transition_class =
   | T_handle
   | T_normal
+  | T_func_prologue
+  | T_func_epilogue
 
 type state = {
   label: string;
   mutable edges: transition list;
 }
 and transition = {
-  t: transition_method;
+  mutable t: transition_method;
   target: state ref;
   cl: transition_class;
   loc: Spl_location.t option;
@@ -46,7 +48,7 @@ type env = {
   initial_state: state option ref;
   final_state: state option ref;
   blocks: (string, state) Hashtbl.t;
-  registers: (var_type, unit) Hashtbl.t;
+  registers: (var_type, int option) Hashtbl.t;  (* declaration -> max value, None means uncalculated *)
   functions_called: (string, unit) Hashtbl.t;
 }
 
@@ -72,6 +74,7 @@ type compiled_functions =
 type global_env = {
   filename: string;
   functions: compiled_functions;
+  mutable reg_ranges: (string, int) Hashtbl.t;
   counter: int ref; (* for unique state number *)
 }
 
@@ -83,6 +86,8 @@ exception Type_checking_invariant_failure
 let string_of_transition_class = function
   |T_handle -> "handle"
   |T_normal -> "normal"
+  |T_func_prologue -> "func_prologue"
+  |T_func_epilogue -> "func_epilogue"
 
 let gen_label genv prefix =
   incr genv.counter;
@@ -233,7 +238,7 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         let sblockexit = new_state env (gen_label genv "multblexit") in
         let smultexit = new_state env (gen_label genv "multexit") in
         let regn = sprintf "multiple_%d" (gen_return_number genv) in
-        Hashtbl.replace env.registers (Integer regn) ();
+        Hashtbl.replace env.registers (Integer regn) None;
         let reg = Identifier regn in
         create_edge state sinit (need_reg (Assignment (regn, (Int_constant 0))));
         create_edge sblockexit sblockincr (need_reg (Assignment (regn,(Plus (reg,Int_constant 1)))));
@@ -279,7 +284,7 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         let sexit = new_state env (gen_label genv "during") in
         let new_handles = List.map (fun xsl ->
           let reg = sprintf "h_ret_%d" (gen_return_number genv) in
-          Hashtbl.replace env.registers (Integer reg) ();
+          Hashtbl.replace env.registers (Integer reg) None;
           let sinit = new_state env (gen_label genv "h_init") in
           let sexit = new_state env (gen_label genv "h_exit") in
           generate_states_of_expr ~cl:T_handle genv env allows handles sinit sexit xsl;
@@ -295,22 +300,22 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         (* Add the function call to the call list of this environment, and also any
            functions that it calls *)
         Hashtbl.replace env.functions_called fname ();
-        Hashtbl.iter (fun f () -> Hashtbl.replace env.functions_called f ())
+        Hashtbl.iter (fun f _ -> Hashtbl.replace env.functions_called f ())
         f_env.functions_called;
         (* Map the function arguments into register names *)
         let target_args = List.map (reg_arg fname) f.args in
         let from_args = List.map (reg_arg env.func_name) args in
         (* Add function registers to the our register list for automaton *)
-        Hashtbl.iter (fun f () -> Hashtbl.replace env.registers f ()) f_env.registers;
+        Hashtbl.iter (fun f _ -> Hashtbl.replace env.registers f None) f_env.registers;
         (* Add function return register to the register list *)
         let return_reg_name = fname ^ "_return" in
         let return_reg = (Integer return_reg_name) in
-        Hashtbl.replace env.registers return_reg ();
+        Hashtbl.replace env.registers return_reg None;
         (* Get a unique number for the return register *)
         let return_num = Int_constant (gen_return_number genv) in
         (* Map function arguments into the register variable for this function *)
         let return_push_state = new_state env (gen_label genv "func_push_ret") in
-        create_edge state return_push_state (Assignment (return_reg_name, return_num));
+        create_edge state return_push_state ~cl:T_func_prologue (Assignment (return_reg_name, return_num));
         (* Push function arguments into the registers *)
         let func_entry_state = List.fold_left2
           (fun st var arg ->
@@ -324,7 +329,7 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         (* And add a link condition to the return location *)
         let func_exit_state = new_state env (gen_label genv "func_exit") in
         let func_condition = Condition (Equals ((Identifier return_reg_name), return_num)) in
-        create_edge (final_state_of_env f_env) func_exit_state func_condition;
+        create_edge (final_state_of_env f_env) ~cl:T_func_epilogue func_exit_state func_condition;
         let func_pop_state = List.fold_left2 (fun st var arg ->
             let assign_state = new_state env (gen_label genv "func_pop") in
             let var_name = var_name_of_arg var in
@@ -343,13 +348,13 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
     ()
     
 let generate_states fname funcs =
-    let genv = { filename=fname; functions = Hashtbl.create 1; counter = ref 0 } in
+    let genv = { filename=fname; functions = Hashtbl.create 1; counter = ref 0; reg_ranges=Hashtbl.create 1 } in
     List.iter (fun f ->
         Logger.log (sprintf "Compiling function %s (%s) ... " f.name
             (if f.export then "public" else "private"));
         let env = new_state_env genv f.name in
         (* Add the function arguments to the register list *)
-        List.iter (fun x -> Hashtbl.replace env.registers (reg_arg f.name x) ()) f.args;
+        List.iter (fun x -> Hashtbl.replace env.registers (reg_arg f.name x) None) f.args;
         let initial_state = initial_state_of_env env in
         let final_state = final_state_of_env env in
         generate_states_of_expr genv env [] [] initial_state final_state f.body;

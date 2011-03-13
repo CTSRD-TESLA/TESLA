@@ -142,7 +142,7 @@ let pp_env env e =
         e.p (sprintf "unsigned %s_state : %d = %s;" func_name (snd (frexp (float_of_int num_total_states)) ) initial_state.label);        
         e.p (sprintf "bool %s_done = false;" func_name);
 
-        Hashtbl.iter (fun reg () ->
+        Hashtbl.iter (fun reg _->
             match reg with
             |Unknown _ -> failwith "type checking badness";
             |Boolean x -> e.p (sprintf "bool %s = false;" x);

@@ -89,8 +89,8 @@ let rec ocaml_string_of_expr ?reduce ex =
     fn ex
     
 let ocaml_type_of_arg = function
-    | Integer x -> (x, "int",false)
-    | Boolean x -> (x, "uint8_t",false)
+    | Integer x -> (x, "u_int",false)
+    | Boolean x -> (x, "u_short",false)
     | Unknown x -> failwith "type checker invariant failure"
 
 let initial_value_of_arg = function
@@ -115,33 +115,37 @@ let export_fun_map fn env =
         if func.export then (fn fname env func) :: a else a
     ) env.funcs []
 
-(* Pretty-print a "module blah = struct end" *)
-let pp_module e m fn = 
-    e.p (sprintf "module %s = struct" (String.capitalize m));
-    indent_fn e fn;
-    e.p "end";
-    e.nl ()
-
-(* Pretty-print a "module blah:sig end" *)
-let pp_module_sig e m fn =
-    e.p (sprintf "module %s : sig" (String.capitalize m));
-    indent_fn e fn;
-    e.p "end";
-    e.nl ()
-
 (* Pretty-print a state struct *)
-let pp_record_type e tname t =
+let pp_record_type e genv env tname t =
+  (* calculate number of bits needed for an int *)
+  let num_bits v =
+    let v = ref v in
+    let bits = ref 0 in
+    while !v > 0 do
+      incr bits;
+      v := !v lsr 1
+    done;
+    !bits in
+  let total_width = ref 0 in
   e.p (sprintf "struct %s {" tname);
   indent_fn e (fun e ->
-    e.p "int state;";
+    let max_state = Hashtbl.fold (fun _ num a -> max num a) env.statenum (-1) in
+    e.p (sprintf "u_int state : %d;" (num_bits max_state));
+    total_width := num_bits max_state;
     List.iter (fun (nm,ty,m) ->
-      e.p (sprintf "%s %s;" ty nm)
+      let range = try num_bits (Hashtbl.find genv.reg_ranges nm)
+        with Not_found -> 32 in
+      total_width := !total_width + range;
+      e.p (sprintf "%s %s : %d;" ty nm range)
     ) t;
   );
   e.p "};";
+  (* For current Tesla, > 32 bits for a state is bad *)
+  if !total_width > 32 then
+    failwith (sprintf "Total width of %s > 32 bits (==%d)" tname !total_width);
   e.nl ()
 
-let pp_env env e =
+let pp_env genv env e =
   let comment xs = 
     e.p "/*";
     List.iter (fun x -> e.p (sprintf " * %s" x)) xs;
@@ -167,7 +171,7 @@ let pp_env env e =
   export_fun_iter (fun func_name func_env func_def ->
     let block_list = blocks_of_function func_env env.funcs in
     let registers = list_of_registers func_env in
-    pp_record_type e func_name (List.map ocaml_type_of_arg registers);
+    pp_record_type e genv env func_name (List.map ocaml_type_of_arg registers);
     e.p (sprintf "void %s_init(struct %s *s) {" func_name func_name);
     indent_fn e (fun e ->
       let ist = initial_state_of_env func_env in
@@ -272,7 +276,7 @@ let pp_env env e =
         func_name scall func_name func_name);
       indent_fn e (fun e ->
         (* s1[sz] is current state and we place result in s2 and return [curpos] *)
-        e.p "uint8_t i,curpos=0;";
+        e.p "u_short i,curpos=0;";
         e.p "for (i=0; i<sz; i++) {";
         indent_fn e (fun e ->
           e.p "switch (s1[i].state) {";
@@ -403,7 +407,7 @@ let generate sfile ofiles debug genvs  =
       let hprinter = init_printer ~header:false hout in
       generate_header env sfile hprinter;
       generate_interface env pifaceout;
-      pp_env env penvml;
+      pp_env genv env penvml;
       close_out mlout;
       close_out schan;
       close_out hout

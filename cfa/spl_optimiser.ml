@@ -145,7 +145,7 @@ let all_exits_true genv env =
                     (* Create new edges pointing to the relevant targets *)
                     let new_edges = List.map (fun t_from ->
                         List.map (fun t_to ->
-                            { t=t_from.t; target=t_to.target; cl=t_to.cl; loc=t_from.loc }
+                            { t=t_from.t; target=t_to.target; cl=t_from.cl; loc=t_from.loc }
                         ) state.edges
                     ) to_move in
                     sr.edges <- other @ (List.flatten new_edges);
@@ -185,6 +185,33 @@ let all_entries_true genv env =
         end
     ) env.blocks;
     !elim
+
+(* Range analysis on return variables, to help pack them more 
+   compactly. *)
+let reduce_range blocks =
+    let regs = Hashtbl.create 1 in
+    List.iter (fun (sname,state) ->
+      List.iter (fun edge ->
+         match edge.cl,edge.t with
+         |T_func_prologue, (Assignment (id,(Int_constant s))) -> begin
+            (* Find the corresponding edge *)
+            List.iter (fun (sname,state) ->
+              List.iter (fun edge' ->
+                match edge'.cl,edge'.t with
+                |T_func_epilogue, (Condition (Equals ((Identifier id', (Int_constant s'))))) when id=id' && s=s' ->
+                   (* Reduce this function call with the lowest register value *)
+                   let reg_val = try Hashtbl.find regs id with Not_found -> 0 in
+                   edge.t <- Assignment (id,(Int_constant reg_val));
+                   edge'.t <- Condition (Equals (Identifier id', (Int_constant reg_val)));
+                   Hashtbl.replace regs id (reg_val+1);
+                |_ -> ()
+              ) state.edges
+            ) blocks
+         end      
+         |_ -> ()
+      ) state.edges
+    ) blocks;
+    regs
 
 (* If a function is only called once, remove redundant return register checks *)    
 (* broken , needs to cross across environments 
@@ -230,4 +257,8 @@ let optimise genv =
         ) genv.functions;
         total := !elim + !total
     done;
+    let all_blocks = Hashtbl.fold (fun k (env,_) a ->
+        Hashtbl.fold (fun k v a -> (k,v) :: a) env.blocks [] @ a
+      ) genv.functions [] in
+    genv.reg_ranges <- reduce_range all_blocks;
     !total
