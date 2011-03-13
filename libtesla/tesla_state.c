@@ -43,100 +43,7 @@
 #include <tesla/tesla_util.h>
 #include <tesla/tesla_state.h>
 
-/*
- * Instance table definition, used for both global and per-thread scopes.  A
- * more refined data structure might eventually be used here.
- */
-struct tesla_table {
-	u_int			tt_length;
-	u_int			tt_free;
-	struct tesla_instance	tt_instances[];
-};
-
-/*
- * Assertion state definition is internal to libtesla so we can change it as
- * we need to.
- */
-struct tesla_state {
-	const char	*ts_name;	/* Name of the assertion. */
-	const char	*ts_description;/* Description of the assertion. */
-	u_int		 ts_scope;	/* Per-thread or global. */
-	u_int		 ts_limit;	/* Simultaneous automata limit. */
-	tesla_assert_fail_callback	ts_handler;	/* Run on failure. */
-	u_int		 ts_action;	/* What to do on failure. */
-
-	/*
-	 * State fields if global.  Table must be last field as it uses a
-	 * zero-length array.
-	 */
-#ifdef _KERNEL
-	struct mtx	ts_lock;	/* Synchronise ts_table. */
-#else
-	pthread_mutex_t	 ts_lock;	/* Synchronise ts_table. */
-#endif
-	struct tesla_table	ts_table;	/* Table of instances. */
-};
-
-/*
- * When the assertion fails, what to do?
- */
-#define	TESLA_ACTION_FAILSTOP	1	/* Stop on failure. */
-#define	TESLA_ACTION_DTRACE	2	/* Fire DTrace probe on failure. */
-
-/*
- * Currently, this serialised all automata associated with a globally-scoped
- * assertion.  This is undesirable, and we should think about something more
- * granular, such as using key values to hash to locks.  This might cause
- * atomicity problems when composing multi-clause expressions, however; more
- * investigation required.
- */
-static void
-tesla_state_lock_init(struct tesla_state *tsp)
-{
-
-#ifdef _KERNEL
-	mtx_init(&tsp->ts_lock, "tesla", NULL, MTX_DEF);
-#else
-	int error = pthread_mutex_init(&tsp->ts_lock, NULL);
-	assert(error == 0);
-#endif
-}
-
-static void
-tesla_state_lock_destroy(struct tesla_state *tsp)
-{
-
-#ifdef _KERNEL
-	mtx_destroy(&tsp->ts_lock);
-#else
-	int error = pthread_mutex_destroy(&tsp->ts_lock);
-	assert(error == 0);
-#endif
-}
-
-static void
-tesla_state_lock(struct tesla_state *tsp)
-{
-
-#ifdef _KERNEL
-	mtx_lock(&tsp->ts_lock);
-#else
-	int error = pthread_mutex_lock(&tsp->ts_lock);
-	assert(error == 0);
-#endif
-}
-
-static void
-tesla_state_unlock(struct tesla_state *tsp)
-{
-
-#ifdef _KERNEL
-	mtx_unlock(&tsp->ts_lock);
-#else
-	int error = pthread_mutex_unlock(&tsp->ts_lock);
-	assert(error == 0);
-#endif
-}
+#include "tesla_internal.h"
 
 int
 tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
@@ -144,6 +51,7 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 {
 	struct tesla_state *tsp;
 	size_t len;
+	int error;
 
 #ifdef _KERNEL
 	KASSERT((scope == TESLA_SCOPE_PERTHREAD) ||
@@ -154,10 +62,11 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 #endif
 
 	/* XXXRW: Should validate 'limit' argument. */
-	if (scope == TESLA_SCOPE_GLOBAL)
-		len = sizeof(*tsp) + sizeof(struct tesla_instance) * limit;
-	else
+
+	if (scope == TESLA_SCOPE_PERTHREAD)
 		len = sizeof(*tsp);
+	else
+		len = sizeof(*tsp) + sizeof(struct tesla_instance) * limit;
 
 #ifdef _KERNEL
 	/* XXXRW: Kernel implementation? */
@@ -173,13 +82,15 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 	tsp->ts_scope = scope;
 	tsp->ts_limit = limit;
 	tsp->ts_action = TESLA_ACTION_FAILSTOP;	/* XXXRW: Default for now? */
-	if (scope == TESLA_SCOPE_GLOBAL) {
-		tsp->ts_table.tt_length = limit;
-		tsp->ts_table.tt_free = limit;
-		tesla_state_lock_init(tsp);
-	} else {
-		/* XXXRW: Some per-thread storage actions? */
-	}
+
+	if (scope == TESLA_SCOPE_PERTHREAD) {
+		error = tesla_state_perthread_new(tsp);
+		if (error != TESLA_ERROR_SUCCESS) {
+			free(tsp);
+			return (error);
+		}
+	} else
+		tesla_state_global_new(tsp);
 	*tspp = tsp;
 	return (TESLA_ERROR_SUCCESS);
 }
@@ -188,11 +99,10 @@ void
 tesla_state_destroy(struct tesla_state *tsp)
 {
 
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_lock_destroy(tsp);
-	} else {
-		/* XXXRW: Some per-thread storage actions? */
-	}
+	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_state_global_destroy(tsp);
+	else
+		tesla_state_perthread_destroy(tsp);
 	free(tsp);
 }
 
@@ -200,15 +110,10 @@ void
 tesla_state_flush(struct tesla_state *tsp)
 {
 
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_lock(tsp);
-		bzero(&tsp->ts_table.tt_instances,
-		    sizeof(struct tesla_instance) * tsp->ts_table.tt_length);
-		tsp->ts_table.tt_free = tsp->ts_table.tt_length;
-		tesla_state_unlock(tsp);
-	} else {
-		/* XXXRW: Some per-thread storage actions? */
-	}
+	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_state_global_flush(tsp);
+	else
+		tesla_state_perthread_flush(tsp);
 }
 
 int
@@ -218,13 +123,15 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 	struct tesla_instance *tip, *free_tip;
 	struct tesla_table *ttp;
 	u_int i;
+	int error;
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_lock(tsp);
+		tesla_state_global_lock(tsp);
 		ttp = &tsp->ts_table;
 	} else {
-		/* XXX: Some per-thread storage actions? */
-		ttp = NULL;
+		error = tesla_state_perthread_gettable(tsp, &ttp);
+		if (error != TESLA_ERROR_SUCCESS)
+			return (error);
 	}
 
 	/* XXXRW: Absolutely the wrong algorithm. */
@@ -256,7 +163,7 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 		return (TESLA_ERROR_SUCCESS);
 	}
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_unlock(tsp);
+		tesla_state_global_unlock(tsp);
 	}
 	return (TESLA_ERROR_ENOMEM);
 }
@@ -292,14 +199,16 @@ tesla_instance_foreach1(struct tesla_state *tsp, register_t key0,
 	struct tesla_instance *tip;
 	u_int i;
 
-	tesla_state_lock(tsp);
+	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_state_global_lock(tsp);
 	for (i = 0; i < tsp->ts_table.tt_length; i++) {
 		tip = &tsp->ts_table.tt_instances[i];
 		if (tip->ti_keys[0] != key0)
 			continue;
 		handler(tip, arg);
 	}
-	tesla_state_unlock(tsp);
+	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_state_global_unlock(tsp);
 }
 
 void
@@ -307,13 +216,15 @@ tesla_instance_put(struct tesla_state *tsp, struct tesla_instance *tip)
 {
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_state_unlock(tsp);
+		tesla_state_global_unlock(tsp);
 	/* No action required for TESLA_SCOPE_PERTHREAD. */
 }
 
 void
 tesla_instance_destroy(struct tesla_state *tsp, struct tesla_instance *tip)
 {
+	struct tesla_table *ttp;
+	int error;
 
 	tip->ti_state[0] = 0;
 	tip->ti_state[1] = 0;
@@ -324,9 +235,18 @@ tesla_instance_destroy(struct tesla_state *tsp, struct tesla_instance *tip)
 	tip->ti_keys[2] = 0;
 	tip->ti_keys[3] = 0;
 
-	/* XXXRW: If we move to hashed locks, will need to revisit this. */
-	tsp->ts_table.tt_free++;
-	tesla_instance_put(tsp, NULL);
+	/*
+	 * XXXRW: this will need revisiting if we change locking strategies.
+	 */
+	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
+		tsp->ts_table.tt_free++;
+		tesla_state_global_unlock(tsp);
+	} else  {
+		error = tesla_state_perthread_gettable(tsp, &ttp);
+		if (error != TESLA_ERROR_SUCCESS)
+			return;
+		ttp->tt_free++;
+	}
 }
 
 void

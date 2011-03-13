@@ -5,7 +5,6 @@ TODO's for Robert's libtesla:
 - Add some sort of sanity check on the 'limit' argument.  Possibly TESLA
   should round up to the nearest prime.
 - Implement some sort of more granular locking scheme for global state.
-- Implement userspace per-thread state.
 - Implement kernel global state.
 - Implement kernel per-thread state.
 - Investigate using stack(9) somehow to capture stack traces.
