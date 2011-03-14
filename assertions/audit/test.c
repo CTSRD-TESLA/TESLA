@@ -30,86 +30,54 @@
  * $Id$
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 
 #include <tesla/tesla_util.h>
 #include <tesla/tesla_state.h>
 
 #include "audit_defs.h"
+#include "syscalls.h"
 
 /*
  * Test program for the 'audit' assertion.  Run a number of times with various
  * event sequences and see how it works out.
  */
-
 void
 test(int scope)
 {
-
 	printf("\nScope: %s\n", scope == TESLA_SCOPE_GLOBAL ? "global" :
 	    "per-thread");
 
 	audit_init(scope);
 	audit_setaction_debug();	/* Use printf(), not assert(). */
 
-	printf("Simulating syscall without assertion or use; should pass\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_tesla_syscall_return();
+	printf("test:\tno assertion or use\n");
+	syscall(0);
 
-	printf("Simulating syscall with audit_submit; should pass\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_audit_submit();
-	audit_event_tesla_syscall_return();
+	printf("test:\taudit_submit\n");
+	syscall(1, SUBMIT);
 
-	printf("Simulating syscall with assertion, no submit; should fail\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_assertion();
-	audit_event_tesla_syscall_return();
+	printf("test:\tassertion, no submit (should FAIL)\n");
+	syscall(1, ASSERT);
 
-	printf("Simulating syscall with assertion, submit; should pass\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_assertion();
-	audit_event_audit_submit();
-	audit_event_tesla_syscall_return();
+	printf("test:\tassertion, submit\n");
+	syscall(2, ASSERT, SUBMIT);
 
-	printf("Simulating syscall with submit, assertion in wrong order; "
-	    "should fail\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_audit_submit();
-	audit_event_assertion();
-	audit_event_tesla_syscall_return();
+	printf("test:\tsubmit, assertion in wrong order (should FAIL)\n");
+	syscall(2, SUBMIT, ASSERT);
 
-	printf("Simulating syscall with double submit, assertion; should "
-	    "pass\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_assertion();
-	audit_event_audit_submit();
-	audit_event_audit_submit();
-	audit_event_tesla_syscall_return();
+	printf("test:\tdouble submit, assertion\n");
+	syscall(3, ASSERT, SUBMIT, SUBMIT);
 
-	printf("Simulating syscall with double assertion, submit; should "
-	    "pass\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_assertion();
-	audit_event_assertion();
-	audit_event_audit_submit();
-	audit_event_tesla_syscall_return();
+	printf("test:\tdouble assertion, submit\n");
+	syscall(3, ASSERT, ASSERT, SUBMIT);
 
-	printf("Simulating syscall with assert/submit/assert/submit; should "
-	    "pass\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_assertion();
-	audit_event_audit_submit();
-	audit_event_assertion();
-	audit_event_audit_submit();
-	audit_event_tesla_syscall_return();
+	printf("test:\tassert/submit/assert/submit\n");
+	syscall(4, ASSERT, SUBMIT, ASSERT, SUBMIT);
 
-	printf("Simulating syscall with assert/submit/assert; should fail\n");
-	audit_event_tesla_syscall_enter();
-	audit_event_assertion();
-	audit_event_audit_submit();
-	audit_event_assertion();
-	audit_event_tesla_syscall_return();
+	printf("test:\tassert/submit/assert (should FAIL)\n");
+	syscall(3, ASSERT, SUBMIT, ASSERT);
 
 	audit_destroy();
 }
@@ -117,7 +85,6 @@ test(int scope)
 int
 main(int argc, char *argv[])
 {
-
 	test(TESLA_SCOPE_GLOBAL);
 	test(TESLA_SCOPE_PERTHREAD);
 

@@ -1,4 +1,10 @@
-CFLAGS=-Wall -g -I../..
+CC=clang -cc1
+LD=clang
+
+CFLAGS=-Wall -g -I../.. \
+	-load llvmlib/TeslaInstrumenter.so -add-plugin tesla \
+	-plugin-arg-tesla instrumentation.spec
+
 TESLALIBS=					\
 	../../libtesla/tesla_state.o		\
 	../../libtesla/tesla_state_global.o	\
@@ -7,16 +13,14 @@ TESLALIBS=					\
 
 all: test
 
-audit_assertion.o: audit_assertion.c
-	gcc -c ${CFLAGS} -o audit_assertion.o audit_assertion.c
-audit_automata.o: audit_automata.c
-	gcc -c ${CFLAGS} -o audit_automata.o audit_automata.c
-	gcc -c ${CFLAGS} -o test.o test.c
-test.o: test.c
-	gcc -c ${CFLAGS} -o test.o test.c
-test: test.o audit_assertion.o audit_automata.o ${TESLALIBS}
-	gcc -o test test.o audit_assertion.o audit_automata.o ${TESLALIBS} \
-	    -lpthread
+%.bc: %.ll
+	${CC} -emit-llvm $< -o $@
+
+%.ll: %.c
+	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
+
+test: test.bc audit_assertion.bc audit_automata.bc syscalls.bc ${TESLALIBS}
+	${LD} -o $@ $+ -lpthread
 clean:
-	rm -f test test.o audit_assertion.o audit_automata.o
+	rm -f test *.o *.bc *.ll
 

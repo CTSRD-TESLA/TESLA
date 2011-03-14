@@ -35,6 +35,8 @@
 
 #include <sys/types.h>		/* register_t */
 
+#include "tesla.h"
+
 /*
  * Names for events that will trigger AUDIT rules.
  */
@@ -56,9 +58,12 @@ int	audit_automata_prod(struct tesla_instance *tip, u_int event);
 void	audit_init(int scope);
 void	audit_destroy(void);
 #endif
-void	audit_event_tesla_syscall_enter(void);
-void	audit_event_tesla_syscall_return(void);
-void	audit_event_audit_submit(void);
+void __tesla_event_function_prologue_syscall(
+	struct __tesla_data *tesla_data, int opcode);
+void __tesla_event_function_return_syscall(
+	struct __tesla_data *tesla_data, int retval);
+void	__tesla_event_function_prologue_audit_submit(struct __tesla_data*);
+void	__tesla_event_function_return_audit_submit(struct __tesla_data*, int);
 void	audit_event_assertion(void);
 void	audit_setaction_debug(void);
 
