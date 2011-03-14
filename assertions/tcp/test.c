@@ -45,20 +45,36 @@
  * Test program for the 'tcpc' assignment assertions.
  */
 
+
+static int test1[7] = { TCPS_CLOSED, TCPS_SYN_SENT,
+	TCPS_SYN_RECEIVED, TCPS_ESTABLISHED, TCPS_CLOSE_WAIT,
+	TCPS_LAST_ACK, TCPS_CLOSED };
+
+static int test2[3] = { TCPS_CLOSED, TCPS_SYN_SENT, TCPS_LAST_ACK };
+
 static void
 test(int scope)
 {
-	struct tcpcb tcb1;
+	struct tcpcb tcb1, tcb2;
+	int i;
 
 	tcpc_init(scope);
 	printf("\nScope: %s\n", scope == TESLA_SCOPE_GLOBAL ? "global" :
 	    "per-thread");
 
-	tcpc_init(scope);
 	tcpc_setaction_debug();	/* Use printf(), not assert(). */
 
-        __tesla_event_field_assign_tcpcb(&tcb1, TCPS_CLOSED);
-}
+        printf("Sending valid sequence...");
+	for (i=0; i< 7; i++)
+	    __tesla_event_field_assign_tcpcb(&tcb1, test1[i]);
+	printf(" OK\n");
+
+	printf("Sending invalid sequence...error follows:\n");
+	for (i=0; i< 3; i++)
+	    __tesla_event_field_assign_tcpcb(&tcb2, test2[i]);
+	printf(" OK\n");
+	
+}     
 
 int
 main(int argc, char *argv[])

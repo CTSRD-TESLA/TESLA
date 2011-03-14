@@ -56,14 +56,47 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         curpos++;
         break;
       default:
-        return 1; /* TESLA_ERROR */
+        break;
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 1:  /* EVENT_FIN_WAIT_1 */
+  case 1:  /* EVENT_SYN_RECEIVED */
+    for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
+      switch (TCP_CONNECT_STATE(tip,i)->state) {
+      case 4:
+        /* event S_or_29 -> S_or_32 */
+        /* register established_return = 1 */
+        /* event S_or_29 -> S_initial_12 */
+        tmpstate.active_close_return = TCP_CONNECT_STATE(tip,i)->active_close_return;
+        tmpstate.established_return = 1;
+        tmpstate.state = 20;
+        memcpy(&(newstate[curpos]), &tmpstate, 1);
+        curpos++;
+        /* event S_or_29 -> S_or_36 */
+        /* register active_close_return = 1 */
+        /* event S_or_29 -> S_initial_1 */
+        tmpstate.active_close_return = 1;
+        tmpstate.established_return = TCP_CONNECT_STATE(tip,i)->established_return;
+        tmpstate.state = 9;
+        memcpy(&(newstate[curpos]), &tmpstate, 1);
+        curpos++;
+        break;
+      default:
+        break;
+      }
+    }
+    newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
+    memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
+    return 0;
+
+  case 2:  /* EVENT_FIN_WAIT_1 */
     for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
       switch (TCP_CONNECT_STATE(tip,i)->state) {
       case 9:
@@ -81,14 +114,16 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         curpos++;
         break;
       default:
-        return 1; /* TESLA_ERROR */
+        break;
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 2:  /* EVENT_FIN_WAIT_2 */
+  case 3:  /* EVENT_FIN_WAIT_2 */
     for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
       switch (TCP_CONNECT_STATE(tip,i)->state) {
       case 14:
@@ -100,14 +135,16 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         curpos++;
         break;
       default:
-        return 1; /* TESLA_ERROR */
+        break;
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 3:  /* EVENT_SYN_SENT */
+  case 4:  /* EVENT_SYN_SENT */
     for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
       switch (TCP_CONNECT_STATE(tip,i)->state) {
       case 7:
@@ -127,14 +164,16 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         curpos++;
         break;
       default:
-        return 1; /* TESLA_ERROR */
+        break;
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 4:  /* EVENT_CLOSED */
+  case 5:  /* EVENT_CLOSED */
     for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
       switch (TCP_CONNECT_STATE(tip,i)->state) {
       case 6:
@@ -207,14 +246,16 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         }
         break;
       default:
-        return 1; /* TESLA_ERROR */
+        break;
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 5:  /* EVENT_CLOSE_WAIT */
+  case 6:  /* EVENT_CLOSE_WAIT */
     for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
       switch (TCP_CONNECT_STATE(tip,i)->state) {
       case 16:
@@ -226,14 +267,16 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         curpos++;
         break;
       default:
-        return 1; /* TESLA_ERROR */
+        break;
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 6:  /* EVENT_ESTABLISHED */
+  case 7:  /* EVENT_ESTABLISHED */
     for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
       switch (TCP_CONNECT_STATE(tip,i)->state) {
       case 20:
@@ -253,14 +296,16 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         curpos++;
         break;
       default:
-        return 1; /* TESLA_ERROR */
+        break;
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 7:  /* EVENT_LAST_ACK */
+  case 8:  /* EVENT_LAST_ACK */
     for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
       switch (TCP_CONNECT_STATE(tip,i)->state) {
       case 15:
@@ -272,14 +317,16 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         curpos++;
         break;
       default:
-        return 1; /* TESLA_ERROR */
+        break;
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 8:  /* EVENT_TIME_WAIT */
+  case 9:  /* EVENT_TIME_WAIT */
     for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
       switch (TCP_CONNECT_STATE(tip,i)->state) {
       case 8:
@@ -299,39 +346,12 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
         curpos++;
         break;
       default:
-        return 1; /* TESLA_ERROR */
-      }
-    }
-    newstate[0] = curpos-1;
-    memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
-    return 0;
-
-  case 9:  /* EVENT_SYN_RCVD */
-    for (i=0; i < TCP_CONNECT_NUM_STATES(tip); i++) {
-      switch (TCP_CONNECT_STATE(tip,i)->state) {
-      case 4:
-        /* event S_or_29 -> S_or_32 */
-        /* register established_return = 1 */
-        /* event S_or_29 -> S_initial_12 */
-        tmpstate.active_close_return = TCP_CONNECT_STATE(tip,i)->active_close_return;
-        tmpstate.established_return = 1;
-        tmpstate.state = 20;
-        memcpy(&(newstate[curpos]), &tmpstate, 1);
-        curpos++;
-        /* event S_or_29 -> S_or_36 */
-        /* register active_close_return = 1 */
-        /* event S_or_29 -> S_initial_1 */
-        tmpstate.active_close_return = 1;
-        tmpstate.established_return = TCP_CONNECT_STATE(tip,i)->established_return;
-        tmpstate.state = 9;
-        memcpy(&(newstate[curpos]), &tmpstate, 1);
-        curpos++;
         break;
-      default:
-        return 1; /* TESLA_ERROR */
       }
     }
     newstate[0] = curpos-1;
+    if (newstate[0] == 0)
+      return 1; /* TESLA_ERROR */
     memcpy(TCP_CONNECT_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 

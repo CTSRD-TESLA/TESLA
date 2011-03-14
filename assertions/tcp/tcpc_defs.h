@@ -12,15 +12,15 @@
  * Names for events that will trigger TCPC rules
  */
 #define TCPC_EVENT_CLOSING 0
-#define TCPC_EVENT_FIN_WAIT_1 1
-#define TCPC_EVENT_FIN_WAIT_2 2
-#define TCPC_EVENT_SYN_SENT 3
-#define TCPC_EVENT_CLOSED 4
-#define TCPC_EVENT_CLOSE_WAIT 5
-#define TCPC_EVENT_ESTABLISHED 6
-#define TCPC_EVENT_LAST_ACK 7
-#define TCPC_EVENT_TIME_WAIT 8
-#define TCPC_EVENT_SYN_RCVD 9
+#define TCPC_EVENT_SYN_RECEIVED 1
+#define TCPC_EVENT_FIN_WAIT_1 2
+#define TCPC_EVENT_FIN_WAIT_2 3
+#define TCPC_EVENT_SYN_SENT 4
+#define TCPC_EVENT_CLOSED 5
+#define TCPC_EVENT_CLOSE_WAIT 6
+#define TCPC_EVENT_ESTABLISHED 7
+#define TCPC_EVENT_LAST_ACK 8
+#define TCPC_EVENT_TIME_WAIT 9
 
 /*
  * Prod the TCPC state machine, return (1) if the assertion failed
