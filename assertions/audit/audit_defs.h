@@ -33,7 +33,7 @@
 #ifndef AUDIT_DEFS_H
 #define	AUDIT_DEFS_H
 
-#include <sys/types.h>		/* register_t */
+#include <sys/types.h>
 
 #include "tesla.h"
 
