@@ -30,8 +30,8 @@
  * $Id$
  */
 
-#ifndef TESLA_H
-#define	TESLA_H
+#ifndef TESLA_UTIL_H
+#define	TESLA_UTIL_H
 
 #include <sys/types.h>		/* register_t */
 
@@ -50,4 +50,4 @@
  */
 const char	*tesla_strerror(int error);
 
-#endif /* TESLA_H */
+#endif /* TESLA_UTIL_H */
