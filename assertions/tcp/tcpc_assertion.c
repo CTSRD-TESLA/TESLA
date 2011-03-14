@@ -165,6 +165,9 @@ __tesla_event_field_assign_tcpcb(struct tcpcb *tcpcb, u_int t_state)
           case TCPS_SYN_SENT:
             event = TCPC_EVENT_SYN_SENT;
             break;
+          case TCPS_SYN_RECEIVED:
+            event = TCPC_EVENT_SYN_RECEIVED;
+            break;
           case TCPS_CLOSE_WAIT:
             event = TCPC_EVENT_CLOSE_WAIT;
             break;
@@ -182,6 +185,9 @@ __tesla_event_field_assign_tcpcb(struct tcpcb *tcpcb, u_int t_state)
             break;
           case TCPS_TIME_WAIT:
             event = TCPC_EVENT_TIME_WAIT;
+            break;
+          case TCPS_ESTABLISHED:
+            event = TCPC_EVENT_ESTABLISHED;
             break;
           default:
             /* Do not deliver an event the automaton cannot ever handle */

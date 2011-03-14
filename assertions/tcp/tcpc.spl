@@ -25,7 +25,7 @@ automaton tcp_connect() {
   CLOSED;
   SYN_SENT;
   either {
-    SYN_RCVD;
+    SYN_RECEIVED;
     either {
       established ();
    } or {
