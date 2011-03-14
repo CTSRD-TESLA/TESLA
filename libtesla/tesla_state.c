@@ -32,7 +32,9 @@
  */
 
 #ifdef _KERNEL
+#include "opt_kdb.h"
 #include <sys/param.h>
+#include <sys/kdb.h>
 #include <sys/kernel.h>
 #include <sys/lock.h>
 #include <sys/mutex.h>
@@ -307,7 +309,10 @@ tesla_assert_fail(struct tesla_state *tsp, struct tesla_instance *tip)
 		return;
 #endif
 	case TESLA_ACTION_PRINTF:
-		printf("tesla_assert_failed: %s: %s", tsp->ts_name,
+#if defined(_KERNEL) && defined(KDB)
+		kdb_backtrace();
+#endif
+		printf("tesla_assert_failed: %s: %s\n", tsp->ts_name,
 		    tsp->ts_description);
 		break;
 	}
