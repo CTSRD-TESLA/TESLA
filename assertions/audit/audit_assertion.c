@@ -154,9 +154,9 @@ SYSUNINIT(audit_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
 * System call enters: prod implicit system call lifespan state machine.
 */
 void
-__tesla_event_function_prologue_syscall(tesla, opcode)
+__tesla_event_function_prologue_syscall(tesla, len)
 	struct __tesla_data *tesla;
-	int opcode;
+	int len; /* TODO: someday we might handle varargs */
 {
 	struct tesla_instance *tip;
 	int error;

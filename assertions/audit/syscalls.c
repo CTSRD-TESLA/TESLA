@@ -2,7 +2,11 @@
 
 #include "syscalls.h"
 
-void audit_submit() {}
+int
+audit_submit()
+{
+	return 0;
+}
 
 void
 helper_which_asserts()
