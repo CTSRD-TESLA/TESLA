@@ -33,8 +33,6 @@
 #ifndef MWC_DEFS_H
 #define	MWC_DEFS_H
 
-#include <sys/types.h>		/* register_t */
-
 /*
  * Names for events that will trigger MWC rules.
  */
@@ -55,11 +53,13 @@ int	mwc_automata_prod(struct tesla_instance *tip, u_int event);
 void	mwc_init(int scope);
 void	mwc_destroy(void);
 #endif
+struct ucred;
+struct vnode;
 void	mwc_event_tesla_syscall_enter(void);
 void	mwc_event_tesla_syscall_return(void);
-void	mwc_event_mac_vnode_check_write(register_t cred, register_t vp,
-	    register_t retval);
-void	mwc_event_assertion(register_t vp, register_t cred);
+void	mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
+	    int retval);
+void	mwc_event_assertion(struct vnode *vp, struct ucred *cred);
 void	mwc_setaction_debug(void);
 
 #endif /* MWC_DEFS_H */

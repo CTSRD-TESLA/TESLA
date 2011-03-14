@@ -30,6 +30,8 @@
  * $Id$
  */
 
+#include <sys/types.h>
+
 #include <stdio.h>
 
 #include <tesla/tesla_util.h>
@@ -41,6 +43,12 @@
  * Test program for the 'mwc' assertion.  Run a number of times with various
  * event sequences and see how it works out.
  */
+
+#define	ZERO	(void *)0
+#define	ONE	(void *)1
+#define	TWO	(void *)2
+#define	THREE	(void *)3
+#define	FOUR	(void *)4
 
 static void
 test(int scope)
@@ -59,46 +67,46 @@ test(int scope)
 	printf("Simulating syscall with successful check, no use; should "
 	    "pass\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_mac_vnode_check_write(1, 1, 0);
+	mwc_event_mac_vnode_check_write(ONE, ONE, 0);
 	mwc_event_tesla_syscall_return();
 
 	printf("Simulating syscall, unsuccessful check, no use; should "
 	    "pass\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_mac_vnode_check_write(1, 1, 1);
+	mwc_event_mac_vnode_check_write(ONE, ONE, 1);
 	mwc_event_tesla_syscall_return();
 
 	printf("Simulating syscall, unsuccessful check, use; should fail\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_mac_vnode_check_write(1, 1, 1);
-	mwc_event_assertion(1, 1);
+	mwc_event_mac_vnode_check_write(ONE, ONE, 1);
+	mwc_event_assertion(ONE, ONE);
 	mwc_event_tesla_syscall_return();
 
 	printf("Simulating syscall, use without check; should fail\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_assertion(1, 1);
+	mwc_event_assertion(ONE, ONE);
 	mwc_event_tesla_syscall_return();
 
 	printf("Simulating syscall, check on wrong vnode, use; should "
 	    "fail\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_mac_vnode_check_write(2, 2, 0);
-	mwc_event_assertion(1, 1);
+	mwc_event_mac_vnode_check_write(TWO, TWO, 0);
+	mwc_event_assertion(ONE, ONE);
 	mwc_event_tesla_syscall_return();
 
 	printf("Simulating syscall, use with check from last run; should "
 	    "fail\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_assertion(2, 2);
+	mwc_event_assertion(TWO, TWO);
 	mwc_event_tesla_syscall_return();
 
 	printf("Simulating syscall, checking two vnodes and then using "
 	    "them; should pass\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_mac_vnode_check_write(3, 3, 0);
-	mwc_event_mac_vnode_check_write(4, 4, 0);
-	mwc_event_assertion(3, 3);
-	mwc_event_assertion(4, 4);
+	mwc_event_mac_vnode_check_write(THREE, THREE, 0);
+	mwc_event_mac_vnode_check_write(FOUR, FOUR, 0);
+	mwc_event_assertion(THREE, THREE);
+	mwc_event_assertion(FOUR, FOUR);
 	mwc_event_tesla_syscall_return();
 
 	printf("Erroneously enter syscall twice; should pass\n");
@@ -109,28 +117,27 @@ test(int scope)
 	printf("Generating false negative due to out of memory: check(1), "
 	    "check(2), use(3); should pass\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_mac_vnode_check_write(1, 1, 0);
-	mwc_event_mac_vnode_check_write(2, 2, 0);
-	mwc_event_assertion(3, 3);
+	mwc_event_mac_vnode_check_write(ONE, ONE, 0);
+	mwc_event_mac_vnode_check_write(TWO, TWO, 0);
+	mwc_event_assertion(THREE, THREE);
 	mwc_event_tesla_syscall_return();
 
 	printf("Using same cred twice to make sure both keys used; "
 	    "should fail.\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_mac_vnode_check_write(1, 1, 0);
-	mwc_event_assertion(1, 2);
+	mwc_event_mac_vnode_check_write(ONE, ONE, 0);
+	mwc_event_assertion(ONE, TWO);
 	mwc_event_tesla_syscall_return();
 
 	printf("Using same vnode twice to make sure both keys used; "
 	    "should fail.\n");
 	mwc_event_tesla_syscall_enter();
-	mwc_event_mac_vnode_check_write(1, 1, 0);
-	mwc_event_assertion(2, 1);
+	mwc_event_mac_vnode_check_write(ONE, ONE, 0);
+	mwc_event_assertion(TWO, ONE);
 	mwc_event_tesla_syscall_return();
 
 	mwc_destroy();
 }
-
 
 int
 main(int argc, char *argv[])

@@ -189,8 +189,8 @@ out:
 * Epilogue of mac_vnode_check_write is an event.
 */
 void
-mwc_event_mac_vnode_check_write(register_t cred, register_t vp,
-    register_t retval)
+mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
+    int retval)
 {
 	struct tesla_instance *tip;
 	u_int state;
@@ -225,8 +225,8 @@ mwc_event_mac_vnode_check_write(register_t cred, register_t vp,
 	/*
 	 * No wildcards here; if there were, we'd use tesla_instance_foreach.
 	 */
-	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION, cred,
-	    vp, &tip);
+	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION,
+	    (register_t)cred, (register_t)vp, &tip);
 	if (error)
 		return;
 	if (mwc_automata_prod(tip, MWC_EVENT_MAC_VNODE_CHECK_WRITE))
@@ -238,7 +238,7 @@ mwc_event_mac_vnode_check_write(register_t cred, register_t vp,
 * The event implied by the assertion; executes at that point in VOP_WRITE.
 */
 void
-mwc_event_assertion(register_t vp, register_t cred)
+mwc_event_assertion(struct vnode *vp, struct ucred *cred)
 {
 	struct tesla_instance *tip;
 	int error, state;
@@ -256,8 +256,8 @@ mwc_event_assertion(register_t vp, register_t cred)
 		return;
 
 	/* No argument checking for this event, they were free variables. */
-	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION, cred,
-	    vp, &tip);
+	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION,
+	    (register_t)cred, (register_t)vp, &tip);
 	if (error)
 		return;
 	if (mwc_automata_prod(tip, MWC_EVENT_ASSERTION))
