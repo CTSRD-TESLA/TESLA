@@ -113,14 +113,14 @@ void	tesla_state_setaction(struct tesla_state *tsp,
  * infrastructure.
  */
 int	tesla_instance_get1(struct tesla_state *tsp, register_t key1,
-	    struct tesla_instance **tip);
+	    struct tesla_instance **tip, int *allocated);
 int	tesla_instance_get2(struct tesla_state *tsp, register_t key1,
-	    register_t key2, struct tesla_instance **tip);
+	    register_t key2, struct tesla_instance **tip, int *allocated);
 int	tesla_instance_get3(struct tesla_state *tsp, register_t key1,
-	    register_t key2, register_t key3, struct tesla_instance **tip);
+	    register_t key2, register_t key3, struct tesla_instance **tip, int *allocated);
 int	tesla_instance_get4(struct tesla_state *tsp, register_t key1,
 	    register_t key2, register_t key3, register_t key4,
-	    struct tesla_instance **tip);
+	    struct tesla_instance **tip, int *allocated);
 
 /*
  * Iterator to handle sets of matching automata.  Handler will be called once

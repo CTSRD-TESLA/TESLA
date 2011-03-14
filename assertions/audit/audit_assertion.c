@@ -159,7 +159,7 @@ audit_event_tesla_syscall_enter(void)
 	int error;
 
 	error = tesla_instance_get1(audit_state, AUDIT_AUTOMATA_SYSCALL,
-	    &tip);
+	    &tip, NULL);
 	if (error)
 		return;
 	tip->ti_state[0] = 1;		/* In syscall. */
@@ -189,7 +189,8 @@ audit_event_tesla_syscall_return(void)
 	u_int event;
 	int error;
 
-	error = tesla_instance_get1(audit_state, AUDIT_AUTOMATA_SYSCALL, &tip);
+	error = tesla_instance_get1(audit_state, AUDIT_AUTOMATA_SYSCALL,
+	    &tip, NULL);
 	if (error)
 		goto out;
 	if (tip->ti_state[0] == 1)
@@ -215,7 +216,7 @@ audit_event_audit_submit(void)
 	int error;
 
 	error = tesla_instance_get1(audit_state, AUDIT_AUTOMATA_SYSCALL,
-	    &tip);
+	    &tip, NULL);
 	if (error)
 		return;
 	state = tip->ti_state[0];
@@ -224,7 +225,7 @@ audit_event_audit_submit(void)
 		return;
 
 	error = tesla_instance_get1(audit_state, AUDIT_AUTOMATA_ASSERTION,
-	    &tip);
+	    &tip, NULL);
 	if (error)
 		return;
 	if (audit_automata_prod(tip, AUDIT_EVENT_AUDIT_SUBMIT))
@@ -245,7 +246,8 @@ audit_event_assertion(void)
 	 * Check that we are in a system call; if not, we may have incomplete
 	 * data.
 	 */
-	error = tesla_instance_get1(audit_state, AUDIT_AUTOMATA_SYSCALL, &tip);
+	error = tesla_instance_get1(audit_state, AUDIT_AUTOMATA_SYSCALL,
+	    &tip, NULL);
 	if (error)
 		return;
 	state = tip->ti_state[0];
@@ -254,7 +256,7 @@ audit_event_assertion(void)
 		return;
 
 	error = tesla_instance_get1(audit_state, AUDIT_AUTOMATA_ASSERTION,
-	    &tip);
+	    &tip, NULL);
 	if (error)
 		return;
 	if (audit_automata_prod(tip, AUDIT_EVENT_ASSERTION))

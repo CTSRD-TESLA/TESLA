@@ -157,7 +157,7 @@ mwc_event_tesla_syscall_enter(void)
 	struct tesla_instance *tip;
 	int error;
 
-	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip);
+	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip, NULL);
 	if (error)
 		return;
 	tip->ti_state[0] = 1;		/* In syscall. */
@@ -175,7 +175,7 @@ mwc_event_tesla_syscall_return(void)
 	struct tesla_instance *tip;
 	int error;
 
-	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip);
+	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip, NULL);
 	if (error)
 		goto out;
 	if (tip->ti_state[0] == 1)
@@ -214,7 +214,7 @@ mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
 	 * Check that we are in a system call; if not, we may have incomplete
 	 * data.
 	 */
-	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip);
+	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip, NULL);
 	if (error)
 		return;
 	state = tip->ti_state[0];
@@ -226,7 +226,7 @@ mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
 	 * No wildcards here; if there were, we'd use tesla_instance_foreach.
 	 */
 	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION,
-	    (register_t)cred, (register_t)vp, &tip);
+	    (register_t)cred, (register_t)vp, &tip, NULL);
 	if (error)
 		return;
 	if (mwc_automata_prod(tip, MWC_EVENT_MAC_VNODE_CHECK_WRITE))
@@ -247,7 +247,7 @@ mwc_event_assertion(struct vnode *vp, struct ucred *cred)
 	 * Check that we are in a system call; if not, we may have incomplete
 	 * data.
 	 */
-	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip);
+	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip, NULL);
 	if (error)
 		return;
 	state = tip->ti_state[0];
@@ -257,7 +257,7 @@ mwc_event_assertion(struct vnode *vp, struct ucred *cred)
 
 	/* No argument checking for this event, they were free variables. */
 	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION,
-	    (register_t)cred, (register_t)vp, &tip);
+	    (register_t)cred, (register_t)vp, &tip, NULL);
 	if (error)
 		return;
 	if (mwc_automata_prod(tip, MWC_EVENT_ASSERTION))

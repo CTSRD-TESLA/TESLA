@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 2011 Robert N. M. Watson
+ * Copyright (c) 2011 Anil Madhavapeddy
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -140,7 +141,7 @@ tesla_state_flush(struct tesla_state *tsp)
 
 int
 tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
-    register_t key2, register_t key3, struct tesla_instance **tipp)
+    register_t key2, register_t key3, struct tesla_instance **tipp, int *alloc)
 {
 	struct tesla_instance *tip, *free_tip;
 	struct tesla_table *ttp;
@@ -182,6 +183,8 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 		tip->ti_keys[3] = key3;
 		/* Note: ti_state left zero'd. */
 		*tipp = tip;
+		if (alloc != NULL)
+		    *alloc = 1;
 		return (TESLA_ERROR_SUCCESS);
 	}
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
@@ -192,26 +195,26 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 
 int
 tesla_instance_get3(struct tesla_state *tsp, register_t key0, register_t key1,
-    register_t key2, struct tesla_instance **tipp)
+    register_t key2, struct tesla_instance **tipp, int *alloc)
 {
 
-	return (tesla_instance_get4(tsp, key0, key1, key2, 0, tipp));
+	return (tesla_instance_get4(tsp, key0, key1, key2, 0, tipp, alloc));
 }
 
 int
 tesla_instance_get2(struct tesla_state *tsp, register_t key0, register_t key1,
-    struct tesla_instance **tipp)
+    struct tesla_instance **tipp, int *alloc)
 {
 
-	return (tesla_instance_get4(tsp, key0, key1, 0, 0, tipp));
+	return (tesla_instance_get4(tsp, key0, key1, 0, 0, tipp, alloc));
 }
 
 int
 tesla_instance_get1(struct tesla_state *tsp, register_t key0,
-    struct tesla_instance **tipp)
+    struct tesla_instance **tipp, int *alloc)
 {
 
-	return (tesla_instance_get4(tsp, key0, 0, 0, 0, tipp));
+	return (tesla_instance_get4(tsp, key0, 0, 0, 0, tipp, alloc));
 }
 
 void
