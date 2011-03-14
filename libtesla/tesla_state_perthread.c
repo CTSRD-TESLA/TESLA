@@ -241,9 +241,9 @@ loop:
 				looped = 1;
 				goto loop;
 			}
-			td->td_tesla[index] = ttp;
 			ttp->tt_length = tsp->ts_limit;
 			ttp->tt_free = tsp->ts_limit;
+			td->td_tesla[index] = ttp;
 			ttp = NULL;
 		}
 		PROC_UNLOCK(p);
@@ -312,6 +312,8 @@ tesla_state_perthread_gettable(struct tesla_state *tsp,
 	struct tesla_table *ttp;
 
 	ttp = curthread->td_tesla[tsp->ts_perthread_index];
+	KASSERT(ttp != NULL,
+	    ("tesla_state_perthread_gettable: NULL tesla thread state"));
 	*ttpp = ttp;
 	return (TESLA_ERROR_SUCCESS);
 }
