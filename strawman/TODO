@@ -1,10 +1,10 @@
 TODOs for Jon's Clang instrumentation:
-- save function parameters for return statments
-  - dep: generate __tesla_data programmatically (no real declaration required)
-- instrument specific fields of structures (rather than *all* fields)
 - instrument malloc() and equivalents
   - dep: instrument assignments to variables of specified type
 - instrument assignments to named global variables
 - handle non-compound => compound conversion
   - e.g. 'if (err) return err;' => 'if (err) { __instrument(); return err; }'
+- generate __tesla_data programmatically (no real declaration required)
+  - I'm no longer convinced that we actually want to do this; need to declare
+    it for event handlers anyway...
 
