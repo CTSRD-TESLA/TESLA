@@ -52,50 +52,33 @@ void __tesla_event_function_return_syscall(struct __tesla_data *tesla_data, int 
 	printf("leave syscall(returned %d)\n", retval);
 }
 
- 
-void __tesla_event_struct_assign_struct_Name(name, index, new_value)
+
+void __tesla_event_field_assign_struct_Name_first(name, new_value)
 	struct Name *name;
-	int index;
-	void *new_value;
+	const char *new_value;
 {
-	printf("Name(0x%016lx)", (unsigned long) name);
-
-	switch (index)
-	{
-		case 0:
-			printf(".first       =>  '%s'\n", (char*) new_value);
-			break;
-
-		case 1:
-			printf(".initial     =>  '%c'\n", (char) new_value);
-			break;
-
-		case 2:
-			printf(".last        =>  '%s'\n", (char*) new_value);
-			break;
-	}
+	printf("Name(0x%016lx).first = '%s'\n", (unsigned long) name, new_value);
 }
+ 
+void __tesla_event_field_assign_struct_Name_initial(name, new_value)
+	struct Name *name;
+	char new_value;
+{
+	printf("Name(0x%016lx).initial = '%c'\n", (unsigned long) name, new_value);
+}
+ 
+void __tesla_event_field_assign_struct_Name_last(name, new_value)
+	struct Name *name;
+	const char *new_value;
+{
+	printf("Name(0x%016lx).last = '%s'\n", (unsigned long) name, new_value);
+}
+ 
 
-void __tesla_event_struct_assign_struct_User(user, index, new_value)
+void __tesla_event_field_assign_struct_User_id(user, new_value)
 	struct User *user;
-	int index;
-	void *new_value;
+	unsigned int new_value;
 {
-	printf("User(0x%016lx)", (unsigned long) user);
-
-	switch (index)
-	{
-		case 0:
-			printf(".name        =>  0x%016lx\n", (unsigned long) new_value);
-			break;
-
-		case 1:
-			printf(".id          =>  %d\n", (int) new_value);
-			break;
-
-		case 2:
-			printf(".generation  =>  %d\n", (int) new_value);
-			break;
-	}
+	printf("User(0x%016lx).id = %d\n", (unsigned long) user, new_value);
 }
-
+ 
