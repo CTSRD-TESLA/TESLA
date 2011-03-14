@@ -312,11 +312,13 @@ let pp_env genv env e =
             );
           ) valid_states;
           e.p "default:";
-          indent_fn e (fun e -> e.p "return 1; /* TESLA_ERROR */");
+          indent_fn e (fun e -> e.p "break;");
           e.p "}";
         );
         e.p "}";
         e.p ("newstate[0] = curpos-1;");
+        e.p ("if (newstate[0] == 0)");
+        indent_fn e (fun e -> e.p ("return 1; /* TESLA_ERROR */"));
         e.p (sprintf "memcpy(%s_PTR(tip), &newstate, sizeof(newstate));" uname);
         e.p "return 0;";
       );
