@@ -110,7 +110,7 @@ tesla_state_global_new(struct tesla_state *tsp)
 	tesla_state_global_lock_init(tsp);
 	tsp->ts_table.tt_length = tsp->ts_limit;
 	tsp->ts_table.tt_free = tsp->ts_limit;
-	return (TESLA_ERROR_SUCCESS);
+	return (TESLA_SUCCESS);
 }
 
 void

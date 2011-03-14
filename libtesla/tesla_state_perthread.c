@@ -253,7 +253,7 @@ loop:
 	if (ttp != NULL)
 		free(ttp, M_TESLA);
 	sx_xunlock(&tesla_state_perthread_sx);
-	return (TESLA_ERROR_SUCCESS);
+	return (TESLA_SUCCESS);
 }
 
 void
@@ -315,7 +315,7 @@ tesla_state_perthread_gettable(struct tesla_state *tsp,
 	KASSERT(ttp != NULL,
 	    ("tesla_state_perthread_gettable: NULL tesla thread state"));
 	*ttpp = ttp;
-	return (TESLA_ERROR_SUCCESS);
+	return (TESLA_SUCCESS);
 }
 
 #else /* _KERNEL */
@@ -352,7 +352,7 @@ tesla_state_perthread_constructor(struct tesla_state *tsp,
 	error = pthread_setspecific(tsp->ts_pthread_key, ttp);
 	assert(error == 0);
 	*ttpp = ttp;
-	return (TESLA_ERROR_SUCCESS);
+	return (TESLA_SUCCESS);
 }
 
 int
@@ -364,7 +364,7 @@ tesla_state_perthread_new(struct tesla_state *tsp)
 	    tesla_state_perthread_destructor);
 	if (error != 0)
 		return (TESLA_ERROR_ENOMEM);
-	return (TESLA_ERROR_SUCCESS);
+	return (TESLA_SUCCESS);
 }
 
 void
@@ -403,6 +403,6 @@ tesla_state_perthread_gettable(struct tesla_state *tsp,
 			return (error);
 	}
 	*ttpp = ttp;
-	return (TESLA_ERROR_SUCCESS);
+	return (TESLA_SUCCESS);
 }
 #endif

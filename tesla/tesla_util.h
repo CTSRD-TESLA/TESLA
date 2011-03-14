@@ -40,7 +40,7 @@
  * pointers, etc, via call-by-reference arguments.  These errors are modeled
  * on errno(2), but a separate namespace.
  */
-#define	TESLA_ERROR_SUCCESS	0	/* Success. */
+#define	TESLA_SUCCESS		0	/* Success. */
 #define	TESLA_ERROR_ENOENT	1	/* Entry not found. */
 #define	TESLA_ERROR_EEXIST	2	/* Entry already present. */
 #define	TESLA_ERROR_ENOMEM	3	/* Insufficient memory. */

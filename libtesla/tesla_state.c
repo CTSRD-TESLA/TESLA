@@ -102,7 +102,7 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 
 	if (scope == TESLA_SCOPE_PERTHREAD) {
 		error = tesla_state_perthread_new(tsp);
-		if (error != TESLA_ERROR_SUCCESS) {
+		if (error != TESLA_SUCCESS) {
 #ifdef _KERNEL
 			free(tsp, M_TESLA);
 #else
@@ -113,7 +113,7 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 	} else
 		tesla_state_global_new(tsp);
 	*tspp = tsp;
-	return (TESLA_ERROR_SUCCESS);
+	return (TESLA_SUCCESS);
 }
 
 void
@@ -155,7 +155,7 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 		ttp = &tsp->ts_table;
 	} else {
 		error = tesla_state_perthread_gettable(tsp, &ttp);
-		if (error != TESLA_ERROR_SUCCESS)
+		if (error != TESLA_SUCCESS)
 			return (error);
 	}
 
@@ -175,7 +175,7 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 		    tip->ti_keys[3] != key3)
 			continue;
 		*tipp = tip;
-		return (TESLA_ERROR_SUCCESS);
+		return (TESLA_SUCCESS);
 	}
 	if (free_tip != NULL) {
 		tip = free_tip;
@@ -187,7 +187,7 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 		*tipp = tip;
 		if (alloc != NULL)
 		    *alloc = 1;
-		return (TESLA_ERROR_SUCCESS);
+		return (TESLA_SUCCESS);
 	}
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
 		tesla_state_global_unlock(tsp);
@@ -233,7 +233,7 @@ tesla_instance_foreach1(struct tesla_state *tsp, register_t key0,
 		ttp = &tsp->ts_table;
 	} else {
 		error = tesla_state_perthread_gettable(tsp, &ttp);
-		if (error != TESLA_ERROR_SUCCESS)
+		if (error != TESLA_SUCCESS)
 			return;
 	}
 	for (i = 0; i < ttp->tt_length; i++) {
@@ -278,7 +278,7 @@ tesla_instance_destroy(struct tesla_state *tsp, struct tesla_instance *tip)
 		tesla_state_global_unlock(tsp);
 	} else  {
 		error = tesla_state_perthread_gettable(tsp, &ttp);
-		if (error != TESLA_ERROR_SUCCESS)
+		if (error != TESLA_SUCCESS)
 			return;
 		ttp->tt_free++;
 	}

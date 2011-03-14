@@ -37,7 +37,7 @@ tesla_strerror(int error)
 {
 
 	switch (error) {
-	case TESLA_ERROR_SUCCESS:
+	case TESLA_SUCCESS:
 		return ("Success");
 	case TESLA_ERROR_ENOENT:
 		return ("Entry not found");
