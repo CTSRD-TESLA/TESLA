@@ -33,6 +33,9 @@
 #include <sys/types.h>
 
 #ifdef _KERNEL
+#include <sys/param.h>
+#include <sys/kernel.h>
+#include <sys/systm.h>
 #else
 #include <assert.h>
 #include <stdio.h>
@@ -78,6 +81,9 @@ static struct tesla_state	*mwc_state;
  * relative to specific threads.  Later use of tesla_instance will return
  * per-thread instances, and synchronisation is avoided.
  */
+#ifdef _KERNEL
+static
+#endif
 void
 mwc_init(int scope)
 {
@@ -107,18 +113,40 @@ mwc_init(int scope)
 	    mwc_event_assertion);
 #endif
 }
-/* SYSINIT(..., mwc_init, ...); */
+
+#ifdef _KERNEL
+static void
+mwc_sysinit(__unused void *arg)
+{
+
+	mwc_init(TESLA_SCOPE_GLOBAL);
+}
+SYSINIT(mwc_init, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, mwc_sysinit, NULL);
+#endif /* _KERNEL */
 
 /*
  * When the checker is unloaded, GC its state.  Hopefully also un-instruments.
  */
+#ifdef _KERNEL
+static
+#endif
 void
 mwc_destroy(void)
 {
 
 	tesla_state_destroy(mwc_state);
 }
-/* SYSUNINIT(..., mwc_destroy, ...); */
+
+#ifdef _KERNEL
+static void
+mwc_sysuninit(__unused void *arg)
+{
+
+	mwc_destroy();
+}
+SYSUNINIT(mwc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, mwc_sysuninit,
+    NULL);
+#endif /* _KERNEL */
 
 /*
 * System call enters: prod implicit system call lifespan state machine.

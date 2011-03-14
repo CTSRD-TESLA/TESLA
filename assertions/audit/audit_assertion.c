@@ -33,6 +33,9 @@
 #include <sys/types.h>
 
 #ifdef _KERNEL
+#include <sys/param.h>
+#include <sys/kernel.h>
+#include <sys/systm.h>
 #else
 #include <assert.h>
 #include <stdio.h>
@@ -78,6 +81,9 @@ static struct tesla_state	*audit_state;
  * relative to specific threads.  Later use of tesla_instance will return
  * per-thread instances, and synchronisation is avoided.
  */
+#ifdef _KERNEL
+static
+#endif
 void
 audit_init(int scope)
 {
@@ -107,18 +113,41 @@ audit_init(int scope)
 	    audit_event_assertion);
 #endif
 }
-/* SYSINIT(..., audit_init, ...); */
+
+#ifdef _KERNEL
+static void
+audit_sysinit(__unused void *arg)
+{
+
+	audit_init(TESLA_SCOPE_GLOBAL);
+}
+SYSINIT(audit_init, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, audit_sysinit,
+    NULL);
+#endif /* _KERNEL */
 
 /*
  * When the checker is unloaded, GC its state.  Hopefully also un-instruments.
  */
+#ifdef _KERNEL
+static
+#endif
 void
 audit_destroy(void)
 {
 
 	tesla_state_destroy(audit_state);
 }
-/* SYSUNINIT(..., audit_destroy, ...); */
+
+#ifdef _KERNEL
+static void
+audit_sysuninit(__unused void *arg)
+{
+
+	audit_destroy();
+}
+SYSUNINIT(audit_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
+    audit_sysuninit, NULL);
+#endif /* _KERNEL */
 
 /*
 * System call enters: prod implicit system call lifespan state machine.

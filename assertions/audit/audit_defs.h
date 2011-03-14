@@ -52,8 +52,10 @@ int	audit_automata_prod(struct tesla_instance *tip, u_int event);
  * "Public" interfaces to the assertion, to be invoked by load, unload, and
  * instrumentation handlers.
  */
+#ifndef _KERNEL
 void	audit_init(int scope);
 void	audit_destroy(void);
+#endif
 void	audit_event_tesla_syscall_enter(void);
 void	audit_event_tesla_syscall_return(void);
 void	audit_event_audit_submit(void);
