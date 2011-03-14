@@ -119,7 +119,7 @@ static void
 mwc_sysinit(__unused void *arg)
 {
 
-	mwc_init(TESLA_SCOPE_GLOBAL);
+	mwc_init(TESLA_SCOPE_PERTHREAD);
 }
 SYSINIT(mwc_init, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, mwc_sysinit, NULL);
 #endif /* _KERNEL */

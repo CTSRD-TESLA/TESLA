@@ -119,7 +119,7 @@ static void
 audit_sysinit(__unused void *arg)
 {
 
-	audit_init(TESLA_SCOPE_GLOBAL);
+	audit_init(TESLA_SCOPE_PERTHREAD);
 }
 SYSINIT(audit_init, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, audit_sysinit,
     NULL);
