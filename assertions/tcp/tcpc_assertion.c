@@ -144,17 +144,19 @@ SYSUNINIT(tcpc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, tcpc_sysuninit,
 * An assignment event to a (struct tcpcb->t_state)
 */
 void
-tcpc_event_assign_tcpcb(struct tcpcb *tcpcb)
+__tesla_event_field_assign_tcpcb(struct tcpcb *tcpcb, u_int t_state)
 {
 	struct tesla_instance *tip;
-	u_int state, event;
+	u_int event;
 	int error;
 
 	error = tesla_instance_get1(tcpc_state, tcpcb, &tip);
 	if (error)
 		return;
 
-        switch (tcpcb->t_state) {
+	/* TODO This conversion from t_state -> event will be done via an
+	   'event mapping script */
+        switch (state) {
           case TCPS_CLOSED:
             event = TCPC_EVENT_TCPS_CLOSED;
             break;
