@@ -1,0 +1,37 @@
+function active_close() {
+  FIN_WAIT_1;
+  either {
+    CLOSING;
+    TIME_WAIT;
+  } or {
+    FIN_WAIT_2;
+    TIME_WAIT;
+  }
+  CLOSED;
+}
+ 
+function established() {
+  ESTABLISHED;
+  either {
+    active_close();
+  } or {
+    CLOSE_WAIT;
+    LAST_ACK;    
+    CLOSED;
+  }
+}
+   
+automaton tcp_connect() {
+  CLOSED;
+  SYN_SENT;
+  either {
+    SYN_RCVD;
+    either {
+      established ();
+   } or {
+      active_close();
+   }
+  } or {
+    established ();
+  }
+}
