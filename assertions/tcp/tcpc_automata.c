@@ -23,14 +23,17 @@ struct tcp_connect {
   u_int active_close_return : 1;
   u_int established_return : 1;
 } __attribute__((__packed__));
+
 #define TCP_CONNECT_PTR(tip) ((unsigned char *)((tip)->ti_state))
 #define TCP_CONNECT_STATE(tip,off) ((struct tcp_connect *)(TCP_CONNECT_PTR(tip)+(off)+1))
 #define TCP_CONNECT_NUM_STATES(tip) (TCP_CONNECT_PTR(tip)[0])
 
-void tcp_connect_init(struct tcp_connect *s) {
-  s->state = 6; /* S_initial_24 */
-  s->active_close_return = 0;
-  s->established_return = 0;
+void
+tcpc_automata_init(struct tesla_instance *tip) {
+  TCP_CONNECT_NUM_STATES(tip) = 1;
+  TCP_CONNECT_STATE(tip,0)->state = 6; /* S_initial_24 */
+  TCP_CONNECT_STATE(tip,0)->active_close_return = 0;
+  TCP_CONNECT_STATE(tip,0)->established_return = 0;
 }
 
 int

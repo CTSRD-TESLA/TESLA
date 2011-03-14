@@ -26,6 +26,7 @@
  * Prod the TCPC state machine, return (1) if the assertion failed
  */
 struct tesla_instance;
+void tcpc_automata_init(struct tesla_instance *);
 int tcpc_automata_prod(struct tesla_instance *tip, u_int event);
 
 /*
@@ -34,4 +35,5 @@ int tcpc_automata_prod(struct tesla_instance *tip, u_int event);
  */
 void	tcpc_init(int scope);
 void	tcpc_destroy(void);
+void    tcpc_setaction_debug(void);
 #endif /* TCPC_DEFS_H */

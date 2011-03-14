@@ -42,6 +42,7 @@
 #else
 #include <assert.h>
 #include <stdio.h>
+#include "tcpc_userspace.h"
 #endif
 
 #include <tesla/tesla_state.h>
@@ -148,26 +149,21 @@ __tesla_event_field_assign_tcpcb(struct tcpcb *tcpcb, u_int t_state)
 {
 	struct tesla_instance *tip;
 	u_int event;
-	int error;
+	int error, alloc=0;
 
-	error = tesla_instance_get1(tcpc_state, tcpcb, &tip);
+	error = tesla_instance_get1(tcpc_state, (register_t)tcpcb, &tip, &alloc);
 	if (error)
 		return;
-
+	if (alloc == 1)
+		tcpc_automata_init(tip);
 	/* TODO This conversion from t_state -> event will be done via an
 	   'event mapping script */
-        switch (state) {
+        switch (t_state) {
           case TCPS_CLOSED:
-            event = TCPC_EVENT_TCPS_CLOSED;
+            event = TCPC_EVENT_CLOSED;
             break;
           case TCPS_SYN_SENT:
             event = TCPC_EVENT_SYN_SENT;
-            break;
-          case TCPS_SYN_RECEIVED:
-            event = TCPC_EVENT_SYN_RECEIVED;
-            break;
-          case TCPS_ESTABLISHED:
-            event = TCPC_EVENT_SYN_ESTABLISHED;
             break;
           case TCPS_CLOSE_WAIT:
             event = TCPC_EVENT_CLOSE_WAIT;

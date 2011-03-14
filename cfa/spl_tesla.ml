@@ -140,6 +140,7 @@ let pp_record_type e genv env tname t =
     ) t;
   );
   e.p "} __attribute__((__packed__));";
+  e.nl ();
   let uname = String.uppercase tname in
   e.p (sprintf "#define %s_PTR(tip) ((unsigned char *)((tip)->ti_state))" uname);
   e.p (sprintf "#define %s_STATE(tip,off) ((struct %s *)(%s_PTR(tip)+(off)+1))"
@@ -179,12 +180,15 @@ let pp_env genv env e =
     let block_list = blocks_of_function func_env env.funcs in
     let registers = list_of_registers func_env in
     pp_record_type e genv env func_name (List.map ocaml_type_of_arg registers);
-    e.p (sprintf "void %s_init(struct %s *s) {" func_name func_name);
+    e.p "void";
+    e.p (sprintf "%s_automata_init(struct tesla_instance *tip) {" env.sname);
     indent_fn e (fun e ->
       let ist = initial_state_of_env func_env in
-      e.p (sprintf "s->state = %d; /* %s */" (num_of_state ist.label) ist.label);
+      e.p (sprintf "%s_NUM_STATES(tip) = 1;" uname);
+      e.p (sprintf "%s_STATE(tip,0)->state = %d; /* %s */"
+        uname (num_of_state ist.label) ist.label);
       List.iter (fun (k,_,_) ->
-        e.p (sprintf "s->%s = 0;" k);
+        e.p (sprintf "%s_STATE(tip,0)->%s = 0;" uname k);
       ) (List.map ocaml_type_of_arg registers);
     );
     e.p "}";
@@ -402,12 +406,14 @@ let generate_header env sfile e =
   e.nl ();
   comment [sprintf "Prod the %s state machine, return (1) if the assertion failed" modname];
   e.p "struct tesla_instance;";
+  e.p (sprintf "void %s_automata_init(struct tesla_instance *);" lname);
   e.p (sprintf "int %s_automata_prod(struct tesla_instance *tip, u_int event);" lname);
   e.nl ();
   comment ["\"Public\" interfaces to the assertion, to be invoked by load, unload";
     "and instrumentation handlers."];
   e.p (sprintf "void	%s_init(int scope);" lname);
   e.p (sprintf "void	%s_destroy(void);" lname);
+  e.p (sprintf "void    %s_setaction_debug(void);" lname);
   e.p (sprintf "#endif /* %s_DEFS_H */" modname)
   
 let generate sfile ofiles debug genvs  =
