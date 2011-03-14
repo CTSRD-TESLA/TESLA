@@ -119,7 +119,7 @@ let export_fun_map fn env =
 let pp_record_type e genv env tname t =
   (* calculate number of bits needed for an int *)
   let num_bits v =
-    let v = ref v in
+    let v = ref (v-1) in
     let bits = ref 0 in
     while !v > 0 do
       incr bits;
@@ -139,10 +139,15 @@ let pp_record_type e genv env tname t =
       e.p (sprintf "%s %s : %d;" ty nm range)
     ) t;
   );
-  e.p "};";
-  (* For current Tesla, > 32 bits for a state is bad *)
+  e.p "} __attribute__((__packed__));";
+  let uname = String.uppercase tname in
+  e.p (sprintf "#define %s_PTR(tip) ((unsigned char *)((tip)->ti_state))" uname);
+  e.p (sprintf "#define %s_STATE(tip,off) ((struct %s *)(%s_PTR(tip)+(off)+1))"
+    uname tname uname);
+  e.p (sprintf "#define %s_NUM_STATES(tip) (%s_PTR(tip)[0])" uname uname);
+  (* For current Tesla, just assume >8 bits for a state is bad *)
   if !total_width > 32 then
-    failwith (sprintf "Total width of %s > 32 bits (==%d)" tname !total_width);
+    failwith (sprintf "Total width of %s > 8 bits (==%d)" tname !total_width);
   e.nl ()
 
 let pp_env genv env e =
@@ -159,6 +164,8 @@ let pp_env genv env e =
   e.p "#else";
   e.p "#include <assert.h>";
   e.p "#include <stdlib.h>";
+  e.p "#include <stdint.h>";
+  e.p "#include <strings.h>";
   e.p "#endif";
   e.nl ();
   e.p "#include <tesla/tesla_state.h>";
@@ -167,8 +174,8 @@ let pp_env genv env e =
   e.p (sprintf "#include <%s_defs.h>" env.sname);
   e.nl ();
   let num_of_state s = Hashtbl.find env.statenum s in
-  e.nl ();
   export_fun_iter (fun func_name func_env func_def ->
+    let uname = String.uppercase func_name in
     let block_list = blocks_of_function func_env env.funcs in
     let registers = list_of_registers func_env in
     pp_record_type e genv env func_name (List.map ocaml_type_of_arg registers);
@@ -197,18 +204,19 @@ let pp_env genv env e =
           let expr = List.assoc reg_name sym in
           ocaml_string_of_expr expr
         with Not_found ->
-          sprintf "s1[i].%s" reg_name
+          sprintf "%s_STATE(tip,i)->%s" uname reg_name
       in
       if List.length aborttrans > 0 then begin
-        e.p "tesla_abort();"
+        e.p "return 1; /* TESLA_ABORT */";
       end else begin
          if List.length msgtrans > 0 || (is_sink_state targ) then begin
            (* For each register, set it in the state descriptor *)
            List.iter (fun reg ->
              let reg_name = var_name_of_arg reg in
-             e.p (sprintf "s2[curpos].%s = %s;" reg_name (reg_value reg_name))
+             e.p (sprintf "tmpstate.%s = %s;" reg_name (reg_value reg_name))
            ) registers;
-           e.p (sprintf "s2[curpos].state = %d;" (num_of_state targ.label));
+           e.p (sprintf "tmpstate.state = %d;" (num_of_state targ.label));
+           e.p ("memcpy(&(newstate[curpos]), &tmpstate, 1);");
            e.p "curpos++;";
          end;
       (* Group common conditionals together *)
@@ -239,8 +247,7 @@ let pp_env genv env e =
         ) vxs;
         e.p " default:";
         indent_fn e (fun e ->
-          e.p "tesla_internal_error ();";
-          e.p "break;";
+          e.p "return 1; /* TESLA_INTERNAL_ERROR */";
         );
         e.p "}";
       ) condvals;
@@ -270,19 +277,29 @@ let pp_env genv env e =
        ) asstrans;
       end
     in
-    (* Output a function for each input event *)
-    Hashtbl.iter (fun scall funcs ->
-      e.p (sprintf "int %s_event_%s(struct %s *s1, int sz, struct %s *s2) {"
-        func_name scall func_name func_name);
-      indent_fn e (fun e ->
-        (* s1[sz] is current state and we place result in s2 and return [curpos] *)
-        e.p "u_short i,curpos=0;";
-        e.p "for (i=0; i<sz; i++) {";
+    (* Output the main automata prod function that accepts events *)
+    e.p "int";
+    e.p (sprintf "%s_automata_prod(struct tesla_instance *tip, u_int event)"
+      env.sname);
+    e.p "{";
+    indent_fn e (fun e ->
+      e.p "unsigned char newstate[16];";
+      e.p "u_int i, curpos=1;";
+      e.p (sprintf "struct %s tmpstate;" func_name);
+      e.p "bzero(newstate, sizeof(newstate));";
+      e.p "switch (event) {";
+      Hashtbl.iter (fun scall funcs ->
+        (* Find statecall event integer from the array *)
+        let scnum = ref (-1) in
+        Array.iteri (fun i s -> if s = scall then scnum := i) env.scnum;
+        e.p (sprintf "case %d:  /* EVENT_%s */" !scnum (String.uppercase scall));
         indent_fn e (fun e ->
-          e.p "switch (s1[i].state) {";
-          let valid_states = Spl_cfg.valid_states_for_statecall block_list scall in
-          List.iter (fun (state,targets) ->
-            let state_name = state.Spl_cfg.label in
+          e.p (sprintf "for (i=0; i < %s_NUM_STATES(tip); i++) {" uname);
+          indent_fn e (fun e ->
+            e.p (sprintf "switch (%s_STATE(tip,i)->state) {" uname);
+            let valid_states = valid_states_for_statecall block_list scall in
+            List.iter (fun (state,targets) ->
+            let state_name = state.label in
             e.p (sprintf "case %d:" (num_of_state state_name));
             indent_fn e (fun e ->
               (* default symbol table is existing register values *)
@@ -291,15 +308,21 @@ let pp_env genv env e =
             );
           ) valid_states;
           e.p "default:";
-          indent_fn e (fun e -> e.p "tesla_error();");
+          indent_fn e (fun e -> e.p "return 1; /* TESLA_ERROR */");
           e.p "}";
         );
         e.p "}";
+        e.p ("newstate[0] = curpos-1;");
+        e.p (sprintf "memcpy(%s_PTR(tip), &newstate, sizeof(newstate));" uname);
+        e.p "return 0;";
       );
-      e.p "return curpos;";
-      e.p "}";
       e.nl ()
     ) env.statecalls;
+    e.p "default:";
+    indent_fn e (fun e -> e.p "return 1; /* TESLA_UNKNOWN_EVENT */");
+    e.p "}";
+    );
+    e.p "}";
   ) env;
   e.nl ()
 
@@ -392,7 +415,7 @@ let generate sfile ofiles debug genvs  =
     if List.length genvs > 1 then
        failwith "TESLA only supports 1 SPL input at a time for now";
     List.iter2 (fun genv ofile ->
-      let mlout = open_out (ofile ^ ".c") in
+      let mlout = open_out (ofile ^ "_automata.c") in
       let penvml = init_printer ~header:false mlout in
       let env = { statenum=Hashtbl.create 1; statecalls=Hashtbl.create 1; scnum=[||]; 
         funcs=genv.functions; debug=debug; sname=sfile} in
