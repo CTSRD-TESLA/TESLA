@@ -42,6 +42,7 @@
 #include <err.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #endif
 
@@ -90,7 +91,11 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 	tsp->ts_description = description;
 	tsp->ts_scope = scope;
 	tsp->ts_limit = limit;
+#ifdef _KERNEL
+	tsp->ts_action = TESLA_ACTION_PRINTF;
+#else
 	tsp->ts_action = TESLA_ACTION_FAILSTOP;	/* XXXRW: Default for now? */
+#endif
 
 	if (scope == TESLA_SCOPE_PERTHREAD) {
 		error = tesla_state_perthread_new(tsp);
@@ -292,10 +297,16 @@ tesla_assert_fail(struct tesla_state *tsp, struct tesla_instance *tip)
 		errx(-1, "tesla_assert failed: %s: %s", tsp->ts_name,
 		    tsp->ts_description);
 #endif
+		break;		/* A bit gratuitous. */
 #ifdef NOTYET
 	case TESLA_ACTION_DTRACE:
+		dtrace_probe(...);
 		return;
 #endif
+	case TESLA_ACTION_PRINTF:
+		printf("tesla_assert_failed: %s: %s", tsp->ts_name,
+		    tsp->ts_description);
+		break;
 	}
 }
 

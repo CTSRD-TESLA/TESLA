@@ -81,8 +81,9 @@ struct tesla_state {
  */
 #define	TESLA_ACTION_FAILSTOP	1	/* Stop on failure. */
 #define	TESLA_ACTION_DTRACE	2	/* Fire DTrace probe on failure. */
+#define	TESLA_ACTION_PRINTF	3	/* Console/stdio printf. */
 
-#ifdef _KERNEL
+#if defined(_KERNEL) && defined(MALLOC_DECLARE)
 /*
  * Memory type for TESLA allocations in the kernel.
  */
