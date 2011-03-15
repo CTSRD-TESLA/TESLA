@@ -31,7 +31,7 @@ type env = {
 
 let rec reduce_expr sym ex =
     let rec fn = function
-    | Statecall _ -> assert false
+    | Statecall _ | Struct _ -> assert false
     | And (a,b) -> And ((fn a), (fn b))
     | Or (a,b) -> Or ((fn a), (fn b))
     | Not a -> Not (fn a)
@@ -73,13 +73,13 @@ let rec promela_of_expr = function
     | Multiply (a,b) -> sprintf "(%s * %s)" (promela_of_expr a) (promela_of_expr b)
     | Divide (a,b) -> sprintf "(%s / %s)" (promela_of_expr a) (promela_of_expr b)
     | Int_constant a -> sprintf "%d" a
-    | Statecall _ -> assert false
+    | Statecall _ | Struct _ -> assert false
 
 let initial_promela_of_arg = function
     | Integer x -> sprintf "int %s = 0" x
     | Boolean x -> sprintf "bool %s = 0" x
-    | Extern x -> assert false
-    | Unknown x -> failwith "type checker invariant failure"
+    | Extern _ -> assert false
+    | Unknown _ -> failwith "type checker invariant failure"
 
 (* Run an iterator over only automata functions *)
 let export_fun_iter fn genv =

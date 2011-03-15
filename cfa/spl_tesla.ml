@@ -32,7 +32,7 @@ type env = {
 
 let rec reduce_expr sym ex =
     let rec fn = function
-    | Statecall _ -> assert false
+    | Statecall _ | Struct _ -> assert false
     | And (a,b) -> And ((fn a), (fn b))
     | Or (a,b) -> Or ((fn a), (fn b))
     | Not a -> Not (fn a)
@@ -58,7 +58,7 @@ let rec reduce_expr sym ex =
 (* Convert expression to a string *)
 let rec ocaml_string_of_expr ?reduce ex =
     let rec fn = function
-    | Statecall _ -> assert false
+    | Statecall _ | Struct _ -> assert false
     | And (a,b) -> sprintf "(%s && %s)" 
         (fn a) (fn b)
     | Or (a,b) -> sprintf "(%s || %s)" 
@@ -93,17 +93,17 @@ let rec ocaml_string_of_expr ?reduce ex =
 let ocaml_type_of_arg = function
     | Integer x -> (x, "u_int",false)
     | Boolean x -> (x, "u_short",false)
-    | Unknown x | Extern x -> failwith "type checker invariant failure"
+    | Unknown _ | Extern _ -> failwith "type checker invariant failure"
 
 let initial_value_of_arg = function
     | Integer x -> sprintf "%s = 0" x
     | Boolean x -> sprintf "%s = false" x
-    | Unknown x | Extern x -> failwith "type checker invariant failure"
+    | Unknown _ | Extern _ -> failwith "type checker invariant failure"
 
 let ocaml_format_of_arg = function
     | Integer x -> (x, "%d")
     | Boolean x -> (x, "%B")
-    | Unknown x | Extern x -> failwith "type checker invariant failure"
+    | Unknown _ | Extern _ -> failwith "type checker invariant failure"
 
 (* Run an iterator over only automata functions *)
 let export_fun_iter fn genv =
@@ -374,13 +374,9 @@ let generate_statecall_numbers env =
   env.scnum <- a
   
 let generate_interface genv env e =
-  (* Go through the global environment looking for extern mappings
-     will form assignments *)
-  List.iter (fun inc ->
-    try Scanf.sscanf inc "#pragma map_var(%s@,%s@->%s@)"
-      (fun _ s f -> e.p (sprintf "field_assign,%s,%s" s f))
-    with _ -> ()
-  ) genv.includes
+  Hashtbl.iter (fun _ (cfgenv, _) ->
+    List.iter e.p cfgenv.externs
+  ) env.funcs
   
 let generate_header env sfile e =
   let modname = String.uppercase sfile in

@@ -46,6 +46,10 @@ type token =
   | EQUALS of (Spl_location.t)
   | EXIT of (Spl_location.t)
   | ABORT of (Spl_location.t)
+  | VOID of (Spl_location.t)
+  | STRUCT of (Spl_location.t)
+  | STAR of (Spl_location.t)
+  | FIELD of (Spl_location.t)
 
 val main :
   (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Spl_syntaxtree.global

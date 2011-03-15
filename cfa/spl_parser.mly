@@ -48,6 +48,7 @@
 %token <Spl_location.t> PLUS MINUS MULTIPLY DIVIDE
 %token <Spl_location.t> GREATER GREATER_EQUAL LESS LESS_EQUAL EQUALS
 %token <Spl_location.t> EXIT ABORT
+%token <Spl_location.t> VOID STRUCT STAR FIELD
 
 /* XXX - review these associativities - avsm */
 %left OR
@@ -62,24 +63,23 @@
 %type <Spl_syntaxtree.global> main
 %%
 main:
-  include_list function_list EOF{ {Spl_syntaxtree.includes=$1; funcs=$2} }
+  include_list automaton EOF{ {Spl_syntaxtree.includes=$1; funcs=$2} }
 ;
 include_list:
 | INCLUDE include_list  { id $1 :: $2 }
 | INCLUDE { [id $1] }
 | { [] }
 ;
+automaton:
+| AUTOMATON IDENTIFIER LBRACKET RBRACKET LBRACE function_list RBRACE { $6 }
+;
 function_list:
 | function_decl function_list {$1::$2}
 | function_decl {[$1]}
 ;
 function_decl:
-| AUTOMATON IDENTIFIER LBRACKET function_args RBRACKET function_body 
-    {{Spl_syntaxtree.name=id $2; args=$4; body=$6; html=""; export=true;
-      loc=$1}}
-| FUNCTION IDENTIFIER LBRACKET function_args RBRACKET function_body 
-    {{Spl_syntaxtree.name=id $2; args=$4; body=$6; html=""; export=false;
-      loc=$1}}
+| VOID IDENTIFIER LBRACKET function_args RBRACKET function_body {
+    { Spl_syntaxtree.name=id $2; args=$4; body=$6; html=""; export=(id $2 = "main"); loc=$1 } }
 ;
 function_args:
 | function_arg COMMA function_args { $1::$3 }
@@ -89,7 +89,7 @@ function_args:
 function_arg:
 | INT_DECL IDENTIFIER { Spl_syntaxtree.Integer (id $2) }
 | BOOL_DECL IDENTIFIER { Spl_syntaxtree.Boolean (id $2) }
-| EXTERN_DECL IDENTIFIER { Spl_syntaxtree.Extern (id $2) }
+| STRUCT IDENTIFIER STAR IDENTIFIER { Spl_syntaxtree.Extern (id $4, None) }
 ;
 function_call_args:
 | function_arg_nodecl COMMA function_call_args { $1::$3 }
@@ -97,7 +97,8 @@ function_call_args:
 | {[]}
 ;
 function_arg_nodecl:
-| IDENTIFIER { Spl_syntaxtree.Unknown (id $1) }
+| IDENTIFIER { Spl_syntaxtree.Unknown (id $1, None) }
+| IDENTIFIER FIELD IDENTIFIER { Spl_syntaxtree.Unknown(id $1, Some (id $3))}
 ;
 statecall_args:
 | STATECALL COMMA statecall_args { (id $1)::$3 }
@@ -141,7 +142,9 @@ single_statement:
 | WHILE guard_expr function_body
     { ($1, Spl_syntaxtree.While ($2, $3)) }
 | IDENTIFIER ASSIGN expr SEMICOLON
-    { (loc $1, Spl_syntaxtree.Assign ((id $1), $3)) }
+    { ($2 , (Spl_syntaxtree.Assign ((id $1, None), $3))) }
+| IDENTIFIER FIELD IDENTIFIER ASSIGN expr SEMICOLON
+    { ($2 , (Spl_syntaxtree.Assign ((id $1, (Some (id $3))), $5))) }
 | DURING function_body handle_list
     { ($1, Spl_syntaxtree.During_handle ($2, $3)) }
 | EXIT SEMICOLON { ($1, Spl_syntaxtree.Exit) }
@@ -162,6 +165,7 @@ guard_expr:
 expr:
 | INT { Spl_syntaxtree.Int_constant (id $1) }
 | IDENTIFIER {Spl_syntaxtree.Identifier (id $1)}
+| IDENTIFIER FIELD IDENTIFIER { Spl_syntaxtree.Struct (id $1, id $3) }
 | LBRACKET expr RBRACKET { $2 }
 | STATECALL { Spl_syntaxtree.Statecall (id $1) }
 | expr PLUS expr { Spl_syntaxtree.Plus ($1, $3) }

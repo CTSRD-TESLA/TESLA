@@ -74,12 +74,12 @@ let check_variable_type loc e p =
     |Integer _ -> begin match p with
         |Integer _ -> ()
         |Boolean x -> terr x "bool" "int"
-        |Extern x -> terr x "extern" "int"
+        |Extern _ -> terr "" "extern" "int"
         |Unknown _ -> raise (Type_internal_error "Unknown variable seen")
     end
     |Boolean _ -> begin match p with
         |Integer x -> terr x "int" "bool"
-        |Extern x -> terr x "extern" "bool"
+        |Extern _ -> terr "" "extern" "bool"
         |Boolean _ -> ()
         |Unknown _ -> raise (Type_internal_error "Unknown variable seen")
     end
@@ -101,6 +101,7 @@ let rec check_expr f loc e_type expr =
                 "Expression should have type bool but uses int operator '%s'" x) loc in
             match e with
             |Statecall _ -> terr ("Statecall in expr") loc
+            |Struct _ -> terr ("struct in expr") loc
             |And (a,b) -> bool_ops a; bool_ops b
             |Or (a,b) -> bool_ops a; bool_ops b
             |Not x -> bool_ops x
@@ -111,11 +112,11 @@ let rec check_expr f loc e_type expr =
             |Less_or_equal (a,b) -> check_int a; check_int b
             |Equals (a,b) -> check_int a; check_int b
             |Identifier id -> begin
-                (* Figure out type of id from function argument list *)
-                match find_argument f id with
-                |None -> terr (sprintf "Unknown variable '%s'" id) loc
-                |Some a -> check_variable_type loc (Boolean "") a
-                end
+              (* Figure out type of id from function argument list *)
+              match find_argument f id with
+              |None -> terr (sprintf "Unknown variable '%s'" id) loc
+              |Some a -> check_variable_type loc (Boolean "") a
+            end
             |Plus _ -> berr "+"
             |Minus _ -> berr "-"
             |Multiply _ -> berr "*"
@@ -129,6 +130,7 @@ let rec check_expr f loc e_type expr =
                 "Expression should have type int but uses int operator '%s'" x) loc in
             match e with
             |Statecall _ -> terr (sprintf "extern")
+	    |Struct _ -> terr "struct"
             |Plus (a,b) -> int_ops a; int_ops b
             |Minus (a,b) -> int_ops a; int_ops b
             |Multiply (a,b) -> int_ops a; int_ops b
@@ -163,25 +165,30 @@ let resolve_unknown_variables f =
         |Exit -> Exit
         |Sequence _ as p -> p
         |Either_or gcl -> Either_or
-            (List.map (fun (expr, xsl) -> (expr, resolve xsl)) gcl)
+          (List.map (fun (expr, xsl) -> (expr, resolve xsl)) gcl)
         |Multiple (l,h,xsl) -> Multiple (l, h, resolve xsl)
         |Always_allow (ids, xsl) -> Always_allow (ids, resolve xsl)
         |While (expr, xsl) -> While (expr, resolve xsl)
         |Do_until (expr, xsl) -> Do_until (expr, resolve xsl)
         |Assign (id, expr) as p -> p
         |During_handle (xsl, xsll) ->
-            During_handle(resolve xsl, List.map resolve xsll)
+          During_handle(resolve xsl, List.map resolve xsll)
         |Function_call (fname, args) ->
-            (* Every Unknown here needs to be resolved or error thrown *)
-            let nargs = List.map (function
-            |Unknown arg -> begin
-                match find_argument f arg with
-                |None -> terr (sprintf "Unknown variable '%s' in function call '%s'" arg fname) loc
-                |Some a -> a
-                end
-            |_ -> raise (Type_internal_error "resolve_unknown_vars")
-            ) args in
-            Function_call (fname, nargs)
+          (* Every Unknown here needs to be resolved or error thrown *)
+          let nargs = List.map (function
+          |Unknown (arg,None) -> begin
+            match find_argument f arg with
+            |None -> terr (sprintf "Unknown variable '%s' in function call '%s'" arg fname) loc
+            |Some a -> a
+          end
+          |Unknown (arg,Some fn) -> begin
+            match find_argument f arg with
+            |None -> terr (sprintf "Unknown variable '%s' in function call '%s'" arg fname) loc
+            |Some _ -> Extern (arg, Some fn)
+          end
+          |_ -> raise (Type_internal_error "resolve_unknown_vars")
+          ) args in
+          Function_call (fname, nargs)
         ))
     ) xsl in
     f.body <- resolve f.body
@@ -214,27 +221,18 @@ let check_syntax_tree fs =
             |During_handle (xsl, xsll) ->
                 follow_fun_call xsl;
                 List.iter follow_fun_call xsll
-            |Assign (id, expr) -> begin
+            |Assign ((id,None), expr) -> begin
                 match find_argument f id with
                 |None -> terr (sprintf "Unknown variable '%s'" id)
                 |Some a -> check_expr f loc a expr
                 end
-            |Function_call (fname, args) ->
-                let func_def = match find_function fs fname with
-                |None -> terr (sprintf "Unknown function call '%s'" fname)
-                |Some x -> x in
-                (* Cannot function call to an automaton *)
-                if func_def.export then
-                    terr (sprintf "Cannot call automaton '%s' as a function" fname);
-                (* Make sure argument size is correct *)
-                let la1 = List.length args in
-                let la2 = List.length func_def.args in
-                if la1 != la2 then
-                    terr (sprintf "Function '%s' requires %d argument%s, not %d"
-                        fname la2 (if la2 > 1 then "s" else "") la1);
-                (* Check types of each argument are consistent *)
-                List.iter2 (check_variable_type loc) func_def.args args;
-                
+            |Assign ((id, Some fl), Statecall _) -> begin
+                match find_argument f id with
+                |None -> terr (sprintf "Unknown struct '%s'" id)
+                |Some a -> ()
+            end
+            |Assign _ -> terr "Assignments can only be to statecalls"
+            |Function_call (fname, args) -> ()
             ) xsl in
         follow_fun_call f.body
     ) fs

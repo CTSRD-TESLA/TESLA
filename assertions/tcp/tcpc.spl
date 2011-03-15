@@ -1,40 +1,43 @@
 #include <netinet/tcp_fsm.h>
-#pragma map_var(pcb,tcpcb->t_state)
 
-function active_close(extern pcb) {
-  pcb = TCPS_FIN_WAIT_1;
-  either {
-    pcb = TCPS_CLOSING;
-    pcb = TCPS_TIME_WAIT;
-  } or {
-    pcb = TCPS_FIN_WAIT_2;
-    pcb = TCPS_TIME_WAIT;
-  }
-  pcb = TCPS_CLOSED;
-}
- 
-function established(extern pcb) {
-  pcb = TCPS_ESTABLISHED;
-  either {
-    active_close(pcb);
-  } or {
-    pcb = TCPS_CLOSE_WAIT;
-    pcb = TCPS_LAST_ACK;    
-    pcb = TCPS_CLOSED;
-  }
-}
-   
-automaton tcp_connect(extern pcb) {
-  pcb = TCPS_CLOSED;
-  pcb = TCPS_SYN_SENT;
-  either {
-    pcb = TCPS_SYN_RECEIVED;
+automaton tcp_connect()
+{
+  void active_close(struct tcpcb *tp) {
+    tp->t_state = TCPS_FIN_WAIT_1;
     either {
-      established (pcb);
-   } or {
-      active_close(pcb);
-   }
-  } or {
-    established (pcb);
-  }
+      tp->t_state = TCPS_CLOSING;
+      tp->t_state = TCPS_TIME_WAIT;
+    } or {
+      tp->t_state = TCPS_FIN_WAIT_2;
+      tp->t_state = TCPS_TIME_WAIT;
+    }
+    tp->t_state = TCPS_CLOSED;
+  };
+
+  void established(struct tcpcb *tp) {
+    tp->t_state = TCPS_ESTABLISHED;
+    either {
+      active_close(tp->t_state);
+    } or {
+      tp->t_state = TCPS_CLOSE_WAIT;
+      tp->t_state = TCPS_LAST_ACK;    
+      tp->t_state = TCPS_CLOSED;
+    }
+    tcp_free(tp);
+  };
+   
+  void main(struct tcpcb *tp) {
+    tp->t_state = TCPS_CLOSED;
+    tp->t_state = TCPS_SYN_SENT;
+    either {
+      tp->t_state = TCPS_SYN_RECEIVED;
+      either {
+        established (tp->t_state);
+      } or {
+        active_close(tp->t_state);
+      }
+    } or {
+      established (tp->t_state);
+    }
+  };
 }

@@ -42,6 +42,7 @@ rule token = parse
 | "always_allow" { ALWAYS_ALLOW(next_token lexbuf) }
 | "optional" { OPTIONAL(next_token lexbuf) }
 | "either" { EITHER(next_token lexbuf) }
+| "void" { VOID(next_token lexbuf) }
 | "or" { OR(next_token lexbuf) }
 | "if" { IF(next_token lexbuf) }
 | "during" { DURING(next_token lexbuf) }
@@ -53,6 +54,9 @@ rule token = parse
 | "false" { FALSE(next_token lexbuf) }
 | "exit" { EXIT(next_token lexbuf) }
 | "abort" { ABORT(next_token lexbuf) }
+| "struct" { STRUCT(next_token lexbuf) }
+| "->" { FIELD(next_token lexbuf) }
+| "*" { STAR(next_token lexbuf) }
 | "&&" { AND(next_token lexbuf) }
 | "||" { OR(next_token lexbuf) }
 | "!" { NOT(next_token lexbuf) }

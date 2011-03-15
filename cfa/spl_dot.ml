@@ -22,7 +22,7 @@ open Spl_cfg
 
 (* Convert expression to a string *)
 let rec string_of_expr = function
-    | Statecall _ -> assert false
+    | Statecall _ | Struct _ -> assert false
     | And (a,b) -> sprintf "(%s && %s)" (string_of_expr a) (string_of_expr b)
     | Or (a,b) -> sprintf "(%s || %s)" (string_of_expr a) (string_of_expr b)
     | Identifier i -> i

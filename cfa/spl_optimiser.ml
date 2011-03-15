@@ -23,6 +23,7 @@ open Spl_utils
 
 let rec fold = function
         |Statecall _ -> assert false
+	|Struct _ -> assert false
 	|And (a,b) as o -> begin
 		match (fold a, fold b) with
 		|False,_

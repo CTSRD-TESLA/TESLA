@@ -49,6 +49,7 @@ type env = {
   final_state: state option ref;
   blocks: (string, state) Hashtbl.t;
   registers: (var_type, int option) Hashtbl.t;  (* declaration -> max value, None means uncalculated *)
+  mutable externs: string list;
   functions_called: (string, unit) Hashtbl.t;
 }
 
@@ -133,6 +134,7 @@ let new_state_env genv name =
     final_state = ref None;
     registers = Hashtbl.create 1;
     functions_called = Hashtbl.create 1;
+    externs = [];
   } in
   let initial = new_state env (gen_label genv "initial") in
   let final = new_state env (gen_label genv "final") in
@@ -156,8 +158,8 @@ let reg_name f x = sprintf "%s_%s" f x
 let reg_arg f = function
   | Integer x -> Integer (reg_name f x)
   | Boolean x -> Boolean (reg_name f x)
-  | Extern x -> Extern x
-  | Unknown x -> failwith "type checker invariant failure"
+  | Extern (a,b) -> Extern (a,b)
+  | Unknown (a,b) -> failwith "type checker invariant failure"
 
 (* Get a flat list of blocks for a function *)
 let blocks_of_function env fhash =
@@ -174,6 +176,8 @@ let blocks_of_function env fhash =
 
 (* Convert any identifiers in an expression into their register equivalents *)
 let rec register_expr f = function
+  |Statecall _ -> assert false
+  |Struct _ -> assert false
   |And (a,b) -> And (register_expr f a, register_expr f b)
   |Or (a,b) -> Or (register_expr f a, register_expr f b)
   |Not x -> Not (register_expr f x)
@@ -268,22 +272,19 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         let sexit = new_state env (gen_label genv "always") in
         generate_states_of_expr genv env (ids @ allows) handles state sexit xsl;
         true, sexit
-      |Assign (id, expr) -> begin
-        (* If this is an assignment to an extern variable then convert
-           into a statecall *)
-        if Hashtbl.mem env.registers (Extern id) then begin
-          let exprid = match expr with
-            |Statecall id -> id
-            |_ -> failwith "Unsupported expression in extern assignment" in
-          let sc = sprintf "%s_assign_%s" id exprid in
-          insert_sequence (String.capitalize sc)
-        end else begin
-          let sblockexit = new_state env (gen_label genv "assign") in
-          create_edge state sblockexit (Assignment
-            (reg_name env.func_name id, register_expr env expr));
-          true, sblockexit
-        end
-      end
+      |Assign ((id,None), expr) ->
+        let sblockexit = new_state env (gen_label genv "assign") in
+        create_edge state sblockexit (Assignment
+          (reg_name env.func_name id, register_expr env expr));
+        true, sblockexit
+      |Assign ((id, Some fl), expr) ->
+        let exprid = match expr with
+          |Statecall id -> id
+          |_ -> failwith "Unsupported expression in extern assignment" in
+        let sc = sprintf "%s_%s_assign_%s" id fl exprid in
+        let extern = sprintf "field_assign,%s,%s,%s" id fl exprid in
+        env.externs <- extern :: env.externs;
+        insert_sequence (String.capitalize sc)
       |While (expr, xsl) ->
         let alpha = new_state env (gen_label genv "while_a") in
         let beta = new_state env (gen_label genv "while_b") in
@@ -313,58 +314,65 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         generate_states_of_expr genv env allows (handles @ new_handles) state sexit xsl;
         true, sexit
       |Function_call (fname, args) ->
-        (* Function that maps function name, local variable to a register name *)
-        (* Lookup the function in our global environment *)
-        let f_env, f = try Hashtbl.find genv.functions fname
-          with Not_found -> raise (Unknown_function fname) in
-        (* Add the function call to the call list of this environment, and also any
-           functions that it calls *)
-        Hashtbl.replace env.functions_called fname ();
-        Hashtbl.iter (fun f _ -> Hashtbl.replace env.functions_called f ())
-        f_env.functions_called;
-        (* Map the function arguments into register names, filtering out externs *)
-        let target_args = List.map (reg_arg fname) (args_without_extern f.args) in
-        let from_args = List.map (reg_arg env.func_name) (args_without_extern args) in
-        (* Add function registers to the our register list for automaton *)
-        Hashtbl.iter (fun f _ -> match f with
-           |Extern _ -> () |_ -> Hashtbl.replace env.registers f None)
-          f_env.registers;
-        (* Add function return register to the register list *)
-        let return_reg_name = fname ^ "_return" in
-        let return_reg = (Integer return_reg_name) in
-        Hashtbl.replace env.registers return_reg None;
-        (* Get a unique number for the return register *)
-        let return_num = Int_constant (gen_return_number genv) in
-        (* Map function arguments into the register variable for this function *)
-        let return_push_state = new_state env (gen_label genv "func_push_ret") in
-        create_edge state return_push_state ~cl:T_func_prologue (Assignment (return_reg_name, return_num));
-        (* Push function arguments into the registers *)
-        let func_entry_state = List.fold_left2
-          (fun st var arg ->
-            let assign_state = new_state env (gen_label genv "func_push") in
-            let var_name = var_name_of_arg var in
-            let arg_name = var_name_of_arg arg in
-            create_edge st assign_state (Assignment (var_name, (Identifier arg_name)));
-          assign_state) return_push_state target_args from_args in
-        (* Jump to the function being called *)
-        create_edge func_entry_state (initial_state_of_env f_env) (Condition True);
-        (* And add a link condition to the return location *)
-        let func_exit_state = new_state env (gen_label genv "func_exit") in
-        let func_condition = Condition (Equals ((Identifier return_reg_name), return_num)) in
-        create_edge (final_state_of_env f_env) ~cl:T_func_epilogue func_exit_state func_condition;
-        let func_pop_state = List.fold_left2 (fun st var arg ->
+        (* If function call is unknown locally, then assume it's a function invocation event *)
+        if Hashtbl.mem genv.functions fname then begin
+          (* Function that maps function name, local variable to a register name *)
+          (* Lookup the function in our global environment *)
+          let f_env, f = Hashtbl.find genv.functions fname in
+          (* Add the function call to the call list of this environment, and also any
+             functions that it calls *)
+          Hashtbl.replace env.functions_called fname ();
+          Hashtbl.iter (fun f _ -> Hashtbl.replace env.functions_called f ())
+          f_env.functions_called;
+          (* Map the function arguments into register names, filtering out externs *)
+          let target_args = List.map (reg_arg fname) (args_without_extern f.args) in
+          let from_args = List.map (reg_arg env.func_name) (args_without_extern args) in
+          (* Add function registers to the our register list for automaton *)
+          Hashtbl.iter (fun f _ -> match f with
+             |Extern _ -> () |_ -> Hashtbl.replace env.registers f None)
+            f_env.registers;
+          (* Add function return register to the register list *)
+          let return_reg_name = fname ^ "_return" in
+          let return_reg = (Integer return_reg_name) in
+          Hashtbl.replace env.registers return_reg None;
+          (* Get a unique number for the return register *)
+          let return_num = Int_constant (gen_return_number genv) in
+          (* Map function arguments into the register variable for this function *)
+          let return_push_state = new_state env (gen_label genv "func_push_ret") in
+          create_edge state return_push_state ~cl:T_func_prologue (Assignment (return_reg_name, return_num));
+          (* Push function arguments into the registers *)
+          let func_entry_state = List.fold_left2
+            (fun st var arg ->
+              let assign_state = new_state env (gen_label genv "func_push") in
+              let var_name = var_name_of_arg var in
+              let arg_name = var_name_of_arg arg in
+              create_edge st assign_state (Assignment (var_name, (Identifier arg_name)));
+            assign_state) return_push_state target_args from_args in
+          (* Jump to the function being called *)
+          create_edge func_entry_state (initial_state_of_env f_env) (Condition True);
+          (* And add a link condition to the return location *)
+          let func_exit_state = new_state env (gen_label genv "func_exit") in
+          let func_condition = Condition (Equals ((Identifier return_reg_name), return_num)) in
+          create_edge (final_state_of_env f_env) ~cl:T_func_epilogue func_exit_state func_condition;
+          let func_pop_state = List.fold_left2 (fun st var arg ->
             let assign_state = new_state env (gen_label genv "func_pop") in
             let var_name = var_name_of_arg var in
             let arg_name = var_name_of_arg arg in
             create_edge st assign_state (Assignment (arg_name, (Identifier var_name)));
           assign_state) func_exit_state target_args from_args in
-        (* Finally, propagate during/handle and always_allows to the function body
-           with a conditional check on the return register *)
-        Hashtbl.iter (fun sname block ->
+          (* Finally, propagate during/handle and always_allows to the function body
+             with a conditional check on the return register *)
+          Hashtbl.iter (fun sname block ->
             insert_always_allows block func_condition allows;
             insert_during_handles block func_condition handles;
           ) f_env.blocks;
-        true, func_pop_state
+          true, func_pop_state
+        end else begin
+          (* Unknown function so treat it as external pattern match *)
+          let sc = sprintf "Func_prologue_%s" fname in
+          env.externs <- sprintf "function,%s" fname :: env.externs;
+          insert_sequence sc;
+        end
     ) (true, si) xsl in
     if connect then create_edge ~cl:cl last_state se (Condition True);
     ()

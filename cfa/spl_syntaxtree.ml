@@ -26,6 +26,7 @@ type expr =
     | And of (expr * expr)
     | Or of (expr * expr)
     | Identifier of id
+    | Struct of id * id
     | Statecall of id
     | Not of expr
     | True
@@ -43,10 +44,10 @@ type expr =
 
 (* Types that can be assigned to state variables *)
 type var_type =
-    | Unknown of id (* should never be present post-typechecking *)
+    | Unknown of id * id option (* should never be present post-typechecking *)
     | Boolean of id
     | Integer of id
-    | Extern  of id (* External variable from C or whatever *)
+    | Extern  of id * id option (* Field type * var name *)
 type var_types = var_type list
 
 type statement =
@@ -56,7 +57,7 @@ type statement =
     | Either_or of (guarded_choice list)
     | Do_until of guarded_choice
     | While of guarded_choice
-    | Assign of (id * expr)
+    | Assign of (id * id option)  * expr
     | Function_call of (funcname * var_types)
     | During_handle of (statements * statements list)
     | Exit  (* Exit without an error *)
@@ -81,9 +82,11 @@ type global = {
 }
 
 let var_name_of_arg = function
-    |Unknown x -> x
+    |Unknown (a,None) -> a
+    |Unknown (a,Some b) -> sprintf "%s->%s" a b
     |Boolean x -> x
     |Integer x -> x
-    |Extern  x -> x
+    |Extern (a,None) -> a
+    |Extern (a,Some b) -> sprintf "%s->%s" a b
    
 exception Syntax_error of Spl_location.t
