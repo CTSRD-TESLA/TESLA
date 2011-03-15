@@ -1,6 +1,7 @@
 #include <netinet/tcp_fsm.h>
+#pragma map_var(pcb,tcpcb->t_state)
 
-function active_close() {
+function active_close(extern pcb) {
   pcb = TCPS_FIN_WAIT_1;
   either {
     pcb = TCPS_CLOSING;
@@ -12,10 +13,10 @@ function active_close() {
   pcb = TCPS_CLOSED;
 }
  
-function established() {
+function established(extern pcb) {
   pcb = TCPS_ESTABLISHED;
   either {
-    active_close();
+    active_close(pcb);
   } or {
     pcb = TCPS_CLOSE_WAIT;
     pcb = TCPS_LAST_ACK;    
@@ -23,17 +24,17 @@ function established() {
   }
 }
    
-automaton tcp_connect() {
+automaton tcp_connect(extern pcb) {
   pcb = TCPS_CLOSED;
   pcb = TCPS_SYN_SENT;
   either {
     pcb = TCPS_SYN_RECEIVED;
     either {
-      established ();
+      established (pcb);
    } or {
-      active_close();
+      active_close(pcb);
    }
   } or {
-    established ();
+    established (pcb);
   }
 }

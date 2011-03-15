@@ -145,13 +145,18 @@ let create_edge ?(cl=T_normal) ?(loc=None) sfrom sto trans =
   sfrom.edges <- (edge :: sfrom.edges)
 
 let list_of_registers e =
-  Hashtbl.fold (fun k v a -> k :: a) e.registers []
+  Hashtbl.fold (fun k v a ->
+    match k with |Extern _ -> a |_ -> k :: a) e.registers []
 
+let args_without_extern xs =
+  List.fold_left (fun a -> function |Extern _ -> a |x -> x :: a) [] xs
+ 
 let reg_name f x = sprintf "%s_%s" f x
 
 let reg_arg f = function
   | Integer x -> Integer (reg_name f x)
   | Boolean x -> Boolean (reg_name f x)
+  | Extern x -> Extern x
   | Unknown x -> failwith "type checker invariant failure"
 
 (* Get a flat list of blocks for a function *)
@@ -206,6 +211,13 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
   let connect, last_state =
     List.fold_left (fun (_,state) (loc,xs) ->
       let create_edge = create_edge ~loc:(Some loc) in
+      let insert_sequence id = 
+        let ns = new_state env (gen_label genv "seq") in
+        create_edge state ns (Message id);
+        insert_always_allows state (Condition True) allows;
+        insert_during_handles state (Condition True) handles;
+         true, ns
+      in
       match xs with
       |Abort ->
         let final_state = final_state_of_env env in
@@ -216,11 +228,7 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         create_edge state final_state (Condition True);
         false, final_state
       |Sequence id ->
-        let ns = new_state env (gen_label genv "seq") in
-        create_edge state ns (Message id);
-        insert_always_allows state (Condition True) allows;
-        insert_during_handles state (Condition True) handles;
-        true, ns
+        insert_sequence id
       |Either_or gcl ->
         let sblockexit = new_state env (gen_label genv "either_or") in
         List.iter (fun (expr, xsl) ->
@@ -260,11 +268,22 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         let sexit = new_state env (gen_label genv "always") in
         generate_states_of_expr genv env (ids @ allows) handles state sexit xsl;
         true, sexit
-      |Assign (id, expr) ->
-        let sblockexit = new_state env (gen_label genv "assign") in
-        create_edge state sblockexit (Assignment
-        (reg_name env.func_name id, register_expr env expr));
-        true, sblockexit
+      |Assign (id, expr) -> begin
+        (* If this is an assignment to an extern variable then convert
+           into a statecall *)
+        if Hashtbl.mem env.registers (Extern id) then begin
+          let exprid = match expr with
+            |Statecall id -> id
+            |_ -> failwith "Unsupported expression in extern assignment" in
+          let sc = sprintf "%s_assign_%s" id exprid in
+          insert_sequence (String.capitalize sc)
+        end else begin
+          let sblockexit = new_state env (gen_label genv "assign") in
+          create_edge state sblockexit (Assignment
+            (reg_name env.func_name id, register_expr env expr));
+          true, sblockexit
+        end
+      end
       |While (expr, xsl) ->
         let alpha = new_state env (gen_label genv "while_a") in
         let beta = new_state env (gen_label genv "while_b") in
@@ -303,11 +322,13 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         Hashtbl.replace env.functions_called fname ();
         Hashtbl.iter (fun f _ -> Hashtbl.replace env.functions_called f ())
         f_env.functions_called;
-        (* Map the function arguments into register names *)
-        let target_args = List.map (reg_arg fname) f.args in
-        let from_args = List.map (reg_arg env.func_name) args in
+        (* Map the function arguments into register names, filtering out externs *)
+        let target_args = List.map (reg_arg fname) (args_without_extern f.args) in
+        let from_args = List.map (reg_arg env.func_name) (args_without_extern args) in
         (* Add function registers to the our register list for automaton *)
-        Hashtbl.iter (fun f _ -> Hashtbl.replace env.registers f None) f_env.registers;
+        Hashtbl.iter (fun f _ -> match f with
+           |Extern _ -> () |_ -> Hashtbl.replace env.registers f None)
+          f_env.registers;
         (* Add function return register to the register list *)
         let return_reg_name = fname ^ "_return" in
         let return_reg = (Integer return_reg_name) in
@@ -356,7 +377,8 @@ let generate_states fname funcs includes =
             (if f.export then "public" else "private"));
         let env = new_state_env genv f.name in
         (* Add the function arguments to the register list *)
-        List.iter (fun x -> Hashtbl.replace env.registers (reg_arg f.name x) None) f.args;
+        List.iter (fun x -> Hashtbl.replace env.registers
+          (reg_arg f.name x) None) f.args;
         let initial_state = initial_state_of_env env in
         let final_state = final_state_of_env env in
         generate_states_of_expr genv env [] [] initial_state final_state f.body;

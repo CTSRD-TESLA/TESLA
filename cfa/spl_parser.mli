@@ -9,6 +9,7 @@ type token =
   | AUTOMATON of (Spl_location.t)
   | BOOL_DECL of (Spl_location.t)
   | INT_DECL of (Spl_location.t)
+  | EXTERN_DECL of (Spl_location.t)
   | BOOLEAN of (Spl_location.t)
   | EXPORT of (Spl_location.t)
   | LBRACE of (Spl_location.t)

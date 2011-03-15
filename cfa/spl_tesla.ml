@@ -32,6 +32,7 @@ type env = {
 
 let rec reduce_expr sym ex =
     let rec fn = function
+    | Statecall _ -> assert false
     | And (a,b) -> And ((fn a), (fn b))
     | Or (a,b) -> Or ((fn a), (fn b))
     | Not a -> Not (fn a)
@@ -57,6 +58,7 @@ let rec reduce_expr sym ex =
 (* Convert expression to a string *)
 let rec ocaml_string_of_expr ?reduce ex =
     let rec fn = function
+    | Statecall _ -> assert false
     | And (a,b) -> sprintf "(%s && %s)" 
         (fn a) (fn b)
     | Or (a,b) -> sprintf "(%s || %s)" 
@@ -91,17 +93,17 @@ let rec ocaml_string_of_expr ?reduce ex =
 let ocaml_type_of_arg = function
     | Integer x -> (x, "u_int",false)
     | Boolean x -> (x, "u_short",false)
-    | Unknown x -> failwith "type checker invariant failure"
+    | Unknown x | Extern x -> failwith "type checker invariant failure"
 
 let initial_value_of_arg = function
     | Integer x -> sprintf "%s = 0" x
     | Boolean x -> sprintf "%s = false" x
-    | Unknown x -> failwith "type checker invariant failure"
+    | Unknown x | Extern x -> failwith "type checker invariant failure"
 
 let ocaml_format_of_arg = function
     | Integer x -> (x, "%d")
     | Boolean x -> (x, "%B")
-    | Unknown x -> failwith "type checker invariant failure"
+    | Unknown x | Extern x -> failwith "type checker invariant failure"
 
 (* Run an iterator over only automata functions *)
 let export_fun_iter fn genv =
@@ -305,14 +307,14 @@ let pp_env genv env e =
             e.p (sprintf "switch (%s_STATE(tip,i)->state) {" uname);
             let valid_states = valid_states_for_statecall block_list scall in
             List.iter (fun (state,targets) ->
-            let state_name = state.label in
-            e.p (sprintf "case %d:" (num_of_state state_name));
-            indent_fn e (fun e ->
-              (* default symbol table is existing register values *)
-              List.iter (tickfn e [] state) targets;
-              e.p "break;";
-            );
-          ) valid_states;
+              let state_name = state.label in
+              e.p (sprintf "case %d:" (num_of_state state_name));
+              indent_fn e (fun e ->
+                (* default symbol table is existing register values *)
+                List.iter (tickfn e [] state) targets;
+                e.p "break;";
+              );
+            ) valid_states;
           e.p "default:";
           indent_fn e (fun e -> e.p "break;");
           e.p "}";
@@ -371,21 +373,14 @@ let generate_statecall_numbers env =
   Hashtbl.iter (fun k v -> a.(!pos) <- k; incr pos) env.statecalls;
   env.scnum <- a
   
-let generate_interface env e =
-    let names = Hashtbl.fold (fun k v a -> k :: a) env.statecalls [] in
-    List.iter (fun name ->
-      let bits = Str.split (Str.regexp_string "_") (String.lowercase name) in
-      match bits with
-      | "assign" :: struct_name :: field_name :: value ->
-          e.p (String.concat "," bits)
-      | "net" :: mode :: [flag] ->
-          e.p (sprintf "net,%s,,%s" mode flag)
-      | "invoke" :: tl ->
-          e.p (sprintf "invoke,%s" (String.concat "_" tl))
-      | x ->
-          e.p (sprintf "UNKNOWN,%s" (String.concat "_" x))
-    ) names;
-    e.nl ()
+let generate_interface genv env e =
+  (* Go through the global environment looking for extern mappings
+     will form assignments *)
+  List.iter (fun inc ->
+    try Scanf.sscanf inc "#pragma map_var(%s@,%s@->%s@)"
+      (fun _ s f -> e.p (sprintf "field_assign,%s,%s" s f))
+    with _ -> ()
+  ) genv.includes
   
 let generate_header env sfile e =
   let modname = String.uppercase sfile in
@@ -439,7 +434,7 @@ let generate sfile ofiles debug genvs =
       let hout = open_out (sfile ^ "_defs.h") in
       let hprinter = init_printer ~header:false hout in
       generate_header env sfile hprinter;
-      generate_interface env pifaceout;
+      generate_interface genv env pifaceout;
       pp_env genv env penvml;
       close_out mlout;
       close_out schan;

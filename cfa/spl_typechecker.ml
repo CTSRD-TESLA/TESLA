@@ -74,11 +74,19 @@ let check_variable_type loc e p =
     |Integer _ -> begin match p with
         |Integer _ -> ()
         |Boolean x -> terr x "bool" "int"
+        |Extern x -> terr x "extern" "int"
         |Unknown _ -> raise (Type_internal_error "Unknown variable seen")
     end
     |Boolean _ -> begin match p with
         |Integer x -> terr x "int" "bool"
+        |Extern x -> terr x "extern" "bool"
         |Boolean _ -> ()
+        |Unknown _ -> raise (Type_internal_error "Unknown variable seen")
+    end
+    |Extern _ -> begin match p with
+        |Extern _ -> ()
+        |Integer x -> terr x "int" "extern"
+        |Boolean x -> terr x "bool" "extern"
         |Unknown _ -> raise (Type_internal_error "Unknown variable seen")
     end
     |Unknown _ -> raise (Type_internal_error "Unknown variable seen")
@@ -92,6 +100,7 @@ let rec check_expr f loc e_type expr =
             let berr x = terr (sprintf 
                 "Expression should have type bool but uses int operator '%s'" x) loc in
             match e with
+            |Statecall _ -> terr ("Statecall in expr") loc
             |And (a,b) -> bool_ops a; bool_ops b
             |Or (a,b) -> bool_ops a; bool_ops b
             |Not x -> bool_ops x
@@ -119,6 +128,7 @@ let rec check_expr f loc e_type expr =
             let terr x = terr (sprintf
                 "Expression should have type int but uses int operator '%s'" x) loc in
             match e with
+            |Statecall _ -> terr (sprintf "extern")
             |Plus (a,b) -> int_ops a; int_ops b
             |Minus (a,b) -> int_ops a; int_ops b
             |Multiply (a,b) -> int_ops a; int_ops b
@@ -141,6 +151,7 @@ let rec check_expr f loc e_type expr =
             |Less_or_equal _ -> terr "<="
             |Equals _ -> terr "=="
         in int_ops expr
+    |Extern _ -> ()
     |Unknown _ -> raise (Type_internal_error "check_expr")
 
 (* Just go through a syntax tree and make sure that Unknowns disappear *)

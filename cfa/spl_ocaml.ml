@@ -31,6 +31,7 @@ type env = {
 
 let rec reduce_expr sym ex =
     let rec fn = function
+    | Statecall _ -> assert false
     | And (a,b) -> And ((fn a), (fn b))
     | Or (a,b) -> Or ((fn a), (fn b))
     | Not a -> Not (fn a)
@@ -56,6 +57,7 @@ let rec reduce_expr sym ex =
 (* Convert expression to a string *)
 let rec ocaml_string_of_expr ex =
     let rec fn = function
+    | Statecall _ -> assert false
     | And (a,b) -> sprintf "(%s && %s)" 
         (fn a) (fn b)
     | Or (a,b) -> sprintf "(%s || %s)" 
@@ -89,17 +91,17 @@ let rec ocaml_string_of_expr ex =
 let ocaml_type_of_arg = function
     | Integer x -> (x, "int",false)
     | Boolean x -> (x, "bool",false)
-    | Unknown x -> failwith "type checker invariant failure"
+    | Unknown x | Extern x -> failwith "type checker invariant failure"
 
 let initial_value_of_arg = function
     | Integer x -> sprintf "%s = 0" x
     | Boolean x -> sprintf "%s = false" x
-    | Unknown x -> failwith "type checker invariant failure"
+    | Unknown x | Extern x -> failwith "type checker invariant failure"
 
 let ocaml_format_of_arg = function
     | Integer x -> (x, "%d")
     | Boolean x -> (x, "%B")
-    | Unknown x -> failwith "type checker invariant failure"
+    | Unknown x | Extern x -> failwith "type checker invariant failure"
 
 (* Run an iterator over only automata functions *)
 let export_fun_iter fn genv =

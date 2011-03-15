@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 Anil Madhavapeddy <anil@recoil.org>
+ * Copyright (c) 2005-2011 Anil Madhavapeddy <anil@recoil.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -33,7 +33,7 @@
 %token <string * Spl_location.t> STATECALL
 %token <int * Spl_location.t> INT
 %token <Spl_location.t> FUNCTION AUTOMATON
-%token <Spl_location.t> BOOL_DECL INT_DECL
+%token <Spl_location.t> BOOL_DECL INT_DECL EXTERN_DECL
 %token <Spl_location.t> BOOLEAN
 %token <Spl_location.t> EXPORT
 %token <Spl_location.t> LBRACE RBRACE LBRACKET RBRACKET
@@ -67,6 +67,7 @@ main:
 include_list:
 | INCLUDE include_list  { id $1 :: $2 }
 | INCLUDE { [id $1] }
+| { [] }
 ;
 function_list:
 | function_decl function_list {$1::$2}
@@ -88,6 +89,7 @@ function_args:
 function_arg:
 | INT_DECL IDENTIFIER { Spl_syntaxtree.Integer (id $2) }
 | BOOL_DECL IDENTIFIER { Spl_syntaxtree.Boolean (id $2) }
+| EXTERN_DECL IDENTIFIER { Spl_syntaxtree.Extern (id $2) }
 ;
 function_call_args:
 | function_arg_nodecl COMMA function_call_args { $1::$3 }
@@ -161,6 +163,7 @@ expr:
 | INT { Spl_syntaxtree.Int_constant (id $1) }
 | IDENTIFIER {Spl_syntaxtree.Identifier (id $1)}
 | LBRACKET expr RBRACKET { $2 }
+| STATECALL { Spl_syntaxtree.Statecall (id $1) }
 | expr PLUS expr { Spl_syntaxtree.Plus ($1, $3) }
 | expr MINUS expr { Spl_syntaxtree.Minus ($1, $3) }
 | expr MULTIPLY expr { Spl_syntaxtree.Multiply ($1, $3) }

@@ -26,6 +26,7 @@ type expr =
     | And of (expr * expr)
     | Or of (expr * expr)
     | Identifier of id
+    | Statecall of id
     | Not of expr
     | True
     | False
@@ -45,6 +46,7 @@ type var_type =
     | Unknown of id (* should never be present post-typechecking *)
     | Boolean of id
     | Integer of id
+    | Extern  of id (* External variable from C or whatever *)
 type var_types = var_type list
 
 type statement =
@@ -82,5 +84,6 @@ let var_name_of_arg = function
     |Unknown x -> x
     |Boolean x -> x
     |Integer x -> x
+    |Extern  x -> x
    
 exception Syntax_error of Spl_location.t

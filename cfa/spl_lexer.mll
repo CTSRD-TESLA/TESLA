@@ -68,6 +68,7 @@ rule token = parse
 | ".." { DOTDOT(next_token lexbuf) }
 | "int" { INT_DECL(next_token lexbuf) }
 | "bool" { BOOL_DECL(next_token lexbuf) }
+| "extern" { EXTERN_DECL(next_token lexbuf) }
 | identifier { IDENTIFIER(Lexing.lexeme lexbuf, next_token lexbuf) }
 | statecall { STATECALL(Lexing.lexeme lexbuf, next_token lexbuf) }
 | number { INT(int_of_string (Lexing.lexeme lexbuf), next_token lexbuf) }
@@ -79,6 +80,7 @@ rule token = parse
 | "#elsif" { include_line (buffer_with "#elsif") lexbuf }
 | "#endif" { include_line (buffer_with "#endif") lexbuf }
 | "#ifdef" { include_line (buffer_with "#ifdef") lexbuf }
+| "#pragma" { include_line (buffer_with "#pragma") lexbuf }
 | eof { EOF(next_token lexbuf) }
 
 and comment = parse

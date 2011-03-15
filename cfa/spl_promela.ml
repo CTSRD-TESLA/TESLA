@@ -31,6 +31,7 @@ type env = {
 
 let rec reduce_expr sym ex =
     let rec fn = function
+    | Statecall _ -> assert false
     | And (a,b) -> And ((fn a), (fn b))
     | Or (a,b) -> Or ((fn a), (fn b))
     | Not a -> Not (fn a)
@@ -72,10 +73,12 @@ let rec promela_of_expr = function
     | Multiply (a,b) -> sprintf "(%s * %s)" (promela_of_expr a) (promela_of_expr b)
     | Divide (a,b) -> sprintf "(%s / %s)" (promela_of_expr a) (promela_of_expr b)
     | Int_constant a -> sprintf "%d" a
+    | Statecall _ -> assert false
 
 let initial_promela_of_arg = function
     | Integer x -> sprintf "int %s = 0" x
     | Boolean x -> sprintf "bool %s = 0" x
+    | Extern x -> assert false
     | Unknown x -> failwith "type checker invariant failure"
 
 (* Run an iterator over only automata functions *)
@@ -144,7 +147,7 @@ let pp_env env e =
 
         Hashtbl.iter (fun reg _->
             match reg with
-            |Unknown _ -> failwith "type checking badness";
+            |Unknown _ | Extern _ -> failwith "type checking badness";
             |Boolean x -> e.p (sprintf "bool %s = false;" x);
             |Integer x -> e.p (sprintf "byte %s = 0;" x);
         ) func_env.registers;
