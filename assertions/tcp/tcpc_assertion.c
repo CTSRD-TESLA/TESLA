@@ -160,34 +160,34 @@ __tesla_event_field_assign_tcpcb(struct tcpcb *tcpcb, u_int t_state)
 	   'event mapping script */
         switch (t_state) {
           case TCPS_CLOSED:
-            event = TCPC_EVENT_CLOSED;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_CLOSED;
             break;
           case TCPS_SYN_SENT:
-            event = TCPC_EVENT_SYN_SENT;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_SYN_SENT;
             break;
           case TCPS_SYN_RECEIVED:
-            event = TCPC_EVENT_SYN_RECEIVED;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_SYN_RECEIVED;
             break;
           case TCPS_CLOSE_WAIT:
-            event = TCPC_EVENT_CLOSE_WAIT;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_CLOSE_WAIT;
             break;
           case TCPS_FIN_WAIT_1:
-            event = TCPC_EVENT_FIN_WAIT_1;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_FIN_WAIT_1;
             break;
           case TCPS_CLOSING:
-            event = TCPC_EVENT_CLOSING;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_CLOSING;
             break;
           case TCPS_LAST_ACK:
-            event = TCPC_EVENT_LAST_ACK;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_LAST_ACK;
             break;
           case TCPS_FIN_WAIT_2:
-            event = TCPC_EVENT_FIN_WAIT_2;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_FIN_WAIT_2;
             break;
           case TCPS_TIME_WAIT:
-            event = TCPC_EVENT_TIME_WAIT;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_TIME_WAIT;
             break;
           case TCPS_ESTABLISHED:
-            event = TCPC_EVENT_ESTABLISHED;
+            event = TCPC_EVENT_PCB_ASSIGN_TCPS_ESTABLISHED;
             break;
           default:
             /* Do not deliver an event the automaton cannot ever handle */
