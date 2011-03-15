@@ -3,6 +3,17 @@
 #include "tesla.h"
 #include "types.h"
 
+
+
+void __tesla_event_assertion_helper_0(user, filename, super_error)
+	struct User *user;
+	const char *filename;
+	int super_error;
+{
+	printf("assertion 0 in helper(): 0x%016lx, '%s', %d\n",
+			 (unsigned long) user, filename, super_error);
+}
+
 // int check_auth(struct User *u, const char *filename);
 void __tesla_event_function_prologue_check_auth(
 		struct __tesla_data *tesla_data, struct User *u, const char *filename);

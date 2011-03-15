@@ -9,7 +9,7 @@ static int super_error = 0;
 
 int helper(struct User *user, const char *filename)
 {
-	__tesla_assert {
+	TESLA {
 		previously(returned(check_auth(user, filename), 0))
 		|| eventually(assigned(super_error, -1));
 	};
@@ -85,7 +85,7 @@ syscall(int id, const void *args)
 			// TODO: create compound statement
 			{
 			return foo(&user, (const char*) args);
-								}
+			}
 	}
 
 	return ENOSYS;
