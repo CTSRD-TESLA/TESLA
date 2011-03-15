@@ -11,7 +11,8 @@ struct __tesla_data {
 };
 
 
-#define __tesla_assert
+void __tesla_start_of_assertion();
+#define TESLA __tesla_start_of_assertion();
 
 int __tesla_previously(int cond);
 #define previously(x) __tesla_previously(x)

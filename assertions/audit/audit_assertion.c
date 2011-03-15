@@ -253,7 +253,7 @@ __tesla_event_function_return_audit_submit(tesla, retval)
 * The event implied by the assertion; executes at that point in VOP_WRITE.
 */
 void
-audit_event_assertion(void)
+__tesla_event_assertion_helper_which_asserts_0(void)
 {
 	struct tesla_instance *tip;
 	int error, state;

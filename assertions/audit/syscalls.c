@@ -11,8 +11,9 @@ audit_submit()
 void
 helper_which_asserts()
 {
-	// TODO: this is cheating... fixme.
-	audit_event_assertion();
+	TESLA {
+		eventually(audit_submit());
+	}
 }
 
 int
