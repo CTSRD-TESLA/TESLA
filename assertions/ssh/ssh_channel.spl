@@ -1,0 +1,26 @@
+automaton ssh_kex()
+{
+  void main(struct tcpcb *tp, int encrypted) {
+    either {
+      Transmit_Transport_KexInit;
+      Receive_Transport_KexInit;
+    } or (encrypted) {
+      // we receive a re-key request from client
+      Receive_Transport_KexInit;
+      Transmit_Transport_KexInit;
+    }
+    either {
+      Expect_DHInit;
+      Receive_Dhgroupsha1_Init;
+      Transmit_Dhgroupsha1_Reply;
+    } or {
+      Expect_GexInit;
+      Receive_Dhgexsha1_Request;
+      Transmit_Dhgexsha1_Group;
+      Receive_Dhgexsha1_Init;
+      Transmit_Dhgexsha1_Reply;
+    }
+    Receive_Transport_NewKeys;
+    Transmit_Transport_NewKeys;
+  }
+}
