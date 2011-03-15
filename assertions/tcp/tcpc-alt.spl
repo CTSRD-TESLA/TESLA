@@ -1,0 +1,44 @@
+#include <netinet/tcp_fsm.h>
+
+automaton tcp_connect(struct tcbcb *tp) 
+{
+
+  void active_close(struct tcpcb *tp) {
+    tp->t_state = TCPS_FIN_WAIT_1;
+    either {
+      tp->t_state = TCPS_CLOSING;
+      tp->t_state = TCPS_TIME_WAIT;
+    } or {
+      tp->t_state = TCPS_FIN_WAIT_2;
+      tp->t_state = TCPS_TIME_WAIT;
+    }
+    tp->t_state = TCPS_CLOSED;
+  };
+
+  void established(struct tcpcb *tp) {
+    tp->t_state = TCPS_ESTABLISHED;
+    either {
+      active_close(tp->t_state);
+    } or {
+      tp->t_state = TCPS_CLOSE_WAIT;
+      tp->t_state = TCPS_LAST_ACK;    
+      tp->t_state = TCPS_CLOSED;
+    }
+    tcp_free(tp);
+  };
+   
+  void main(struct tcpcb *tp) {
+    tp->t_state = TCPS_CLOSED;
+    tp->t_state = TCPS_SYN_SENT;
+    either {
+      tp->t_state = TCPS_SYN_RECEIVED;
+      either {
+        established (tp->t_state);
+      } or {
+        active_close(tp->t_state);
+      }
+    } or {
+      established (tp->t_state);
+    }
+  };
+}
