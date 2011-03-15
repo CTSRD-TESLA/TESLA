@@ -1,4 +1,6 @@
 TODOs for Jon's Clang instrumentation:
+- deal with calls within expressions to pass to instrumentation
+  - we don't want to do '__instrument_return(foo()); return foo();'
 - instrument malloc() and equivalents
   - dep: instrument assignments to variables of specified type
 - instrument assignments to named global variables
