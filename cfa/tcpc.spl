@@ -1,0 +1,39 @@
+#include <netinet/tcp_fsm.h>
+
+function active_close() {
+  pcb = TCPS_FIN_WAIT_1;
+  either {
+    pcb = TCPS_CLOSING;
+    pcb = TCPS_TIME_WAIT;
+  } or {
+    pcb = TCPS_FIN_WAIT_2;
+    pcb = TCPS_TIME_WAIT;
+  }
+  pcb = TCPS_CLOSED;
+}
+ 
+function established() {
+  pcb = TCPS_ESTABLISHED;
+  either {
+    active_close();
+  } or {
+    pcb = TCPS_CLOSE_WAIT;
+    pcb = TCPS_LAST_ACK;    
+    pcb = TCPS_CLOSED;
+  }
+}
+   
+automaton tcp_connect() {
+  pcb = TCPS_CLOSED;
+  pcb = TCPS_SYN_SENT;
+  either {
+    pcb = TCPS_SYN_RECEIVED;
+    either {
+      established ();
+   } or {
+      active_close();
+   }
+  } or {
+    established ();
+  }
+}
