@@ -14,7 +14,7 @@ int helper(struct User *user, const char *filename)
 		|| eventually(assigned(super_error, -1));
 	};
 
-	return 0;
+	return EIO;
 }
 
 int
@@ -29,8 +29,7 @@ foo(struct User *user, const char *filename)
 	}
 
 	err = helper(user, filename);
-	// TODO: without compound statements
-	if (err) { return err; }
+	if (err) return err;
 	
 	/* Only submit audit record every second attempt. */
 	if ((++seq % 2) == 0)
@@ -82,10 +81,7 @@ syscall(int id, const void *args)
 	switch (id)
 	{
 		case SYSCALL_FOO:
-			// TODO: create compound statement
-			{
 			return foo(&user, (const char*) args);
-			}
 	}
 
 	return ENOSYS;
