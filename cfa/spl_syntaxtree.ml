@@ -73,7 +73,10 @@ type func = {
     loc: Spl_location.t;
 }
 
-type funcs = func list
+type global = {
+    includes: string list;
+    funcs: func list;
+}
 
 let var_name_of_arg = function
     |Unknown x -> x

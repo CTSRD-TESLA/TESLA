@@ -2,6 +2,7 @@ type token =
   | EOL of (Spl_location.t)
   | EOF of (Spl_location.t)
   | IDENTIFIER of (string * Spl_location.t)
+  | INCLUDE of (string * Spl_location.t)
   | STATECALL of (string * Spl_location.t)
   | INT of (int * Spl_location.t)
   | FUNCTION of (Spl_location.t)
@@ -46,4 +47,4 @@ type token =
   | ABORT of (Spl_location.t)
 
 val main :
-  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Spl_syntaxtree.funcs
+  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Spl_syntaxtree.global

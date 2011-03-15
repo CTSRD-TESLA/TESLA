@@ -81,14 +81,16 @@ let main =
                 (Spl_location.string_of_location l) (Lexing.lexeme lexbuf));
             exit 1;
         end in
-        let _ = try Spl_typechecker.type_check result
+        let funcs = result.Spl_syntaxtree.funcs in
+        let includes = result.Spl_syntaxtree.includes in
+        let _ = try Spl_typechecker.type_check funcs 
         with Spl_typechecker.Type_error (e,l) -> begin
             Logger.log_quiet (sprintf "Type error%s %s"
                 (Spl_location.string_of_location l) e);
             exit 1;
         end in
         (* generate cfg *)
-        let genv = Spl_cfg.generate_states file result in
+        let genv = Spl_cfg.generate_states file funcs includes in
         if !optimise then begin
             Logger.log "Optimising CFA... ";
             let removed = Spl_optimiser.optimise genv in

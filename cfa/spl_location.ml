@@ -52,3 +52,8 @@ let string_of_location l =
     let c = if l.column_num > 0 then sprintf " char %d" l.column_num else
         "" in
     sprintf " at line %d%s:" l.line_num c
+
+let buffer_with x =
+    let buffer = Buffer.create 128 in
+    Buffer.add_string buffer x;
+    buffer

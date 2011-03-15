@@ -29,7 +29,7 @@
 %}
 
 %token <Spl_location.t> EOL EOF
-%token <string * Spl_location.t> IDENTIFIER
+%token <string * Spl_location.t> IDENTIFIER INCLUDE
 %token <string * Spl_location.t> STATECALL
 %token <int * Spl_location.t> INT
 %token <Spl_location.t> FUNCTION AUTOMATON
@@ -59,10 +59,14 @@
 %nonassoc UMINUS
 
 %start main
-%type <Spl_syntaxtree.funcs> main
+%type <Spl_syntaxtree.global> main
 %%
 main:
-  function_list EOF {$1}
+  include_list function_list EOF{ {Spl_syntaxtree.includes=$1; funcs=$2} }
+;
+include_list:
+| INCLUDE include_list  { id $1 :: $2 }
+| INCLUDE { [id $1] }
 ;
 function_list:
 | function_decl function_list {$1::$2}

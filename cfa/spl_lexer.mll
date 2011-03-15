@@ -73,6 +73,12 @@ rule token = parse
 | number { INT(int_of_string (Lexing.lexeme lexbuf), next_token lexbuf) }
 | "/*" { ignore(comment lexbuf); token lexbuf }
 | "//" { ignore(single_comment lexbuf); token lexbuf }
+| "#include" { include_line (buffer_with "#include") lexbuf }
+| "#define" { include_line (buffer_with "#define") lexbuf }
+| "#else" { include_line (buffer_with "#else") lexbuf }
+| "#elsif" { include_line (buffer_with "#elsif") lexbuf }
+| "#endif" { include_line (buffer_with "#endif") lexbuf }
+| "#ifdef" { include_line (buffer_with "#ifdef") lexbuf }
 | eof { EOF(next_token lexbuf) }
 
 and comment = parse
@@ -84,3 +90,8 @@ and comment = parse
 and single_comment = parse
 | '\n' { new_line lexbuf; true }
 | _ { single_comment lexbuf }
+
+and include_line s = parse
+| '\n' { new_line lexbuf; INCLUDE(Buffer.contents s, next_token lexbuf) }
+| _ as x { Buffer.add_char s x; include_line s lexbuf }
+

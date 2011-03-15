@@ -52,6 +52,22 @@ type env = {
   functions_called: (string, unit) Hashtbl.t;
 }
 
+type compiled_functions =
+  (string, env * Spl_syntaxtree.func) Hashtbl.t
+
+type global_env = {
+  filename: string;
+  functions: compiled_functions;
+  mutable reg_ranges: (string, int) Hashtbl.t;
+  counter: int ref; (* for unique state number *)
+  includes: string list; (* #include tokens *)
+}
+
+exception Block_not_unique of string
+exception Unknown_variable of string
+exception Unknown_function of string
+exception Type_checking_invariant_failure
+
 (* Get all states for which a given statecall is a valid outgoing transition,
    from a list of blocks, and their target states *)
 let valid_states_for_statecall states sc =
@@ -67,21 +83,6 @@ let valid_states_for_statecall states sc =
     |[] -> acc
     |_ -> (state,edges) :: acc
   ) [] states
-
-type compiled_functions =
-  (string, env * Spl_syntaxtree.func) Hashtbl.t
-
-type global_env = {
-  filename: string;
-  functions: compiled_functions;
-  mutable reg_ranges: (string, int) Hashtbl.t;
-  counter: int ref; (* for unique state number *)
-}
-
-exception Block_not_unique of string
-exception Unknown_variable of string
-exception Unknown_function of string
-exception Type_checking_invariant_failure
 
 let string_of_transition_class = function
   |T_handle -> "handle"
@@ -347,8 +348,9 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
     if connect then create_edge ~cl:cl last_state se (Condition True);
     ()
     
-let generate_states fname funcs =
-    let genv = { filename=fname; functions = Hashtbl.create 1; counter = ref 0; reg_ranges=Hashtbl.create 1 } in
+let generate_states fname funcs includes =
+    let genv = { filename=fname; functions=Hashtbl.create 1;
+      counter = ref 0; reg_ranges=Hashtbl.create 1; includes } in
     List.iter (fun f ->
         Logger.log (sprintf "Compiling function %s (%s) ... " f.name
             (if f.export then "public" else "private"));
