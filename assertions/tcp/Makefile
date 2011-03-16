@@ -16,6 +16,9 @@ all: test
 %_defs.h %_automata.c %.spec: %.spl $(SPLC) Makefile
 	$(SPLC) -t tesla -s $* $<
 
+tcpc-all.dot: tcpc.spl $(SPLC) Makefile
+	$(SPLC) -t dot $* $<
+
 %_automata.o: %_automata.c %_defs.h
 	$(CC) -c $(CFLAGS) -o $@ $<
 
