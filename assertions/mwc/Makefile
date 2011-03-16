@@ -1,4 +1,12 @@
-CFLAGS=-Wall -g -I../..
+CC=/home/robert/ctsrd/ctsrd/tesla/trunk/build/Debug+Asserts/bin/clang
+LD=/home/robert/ctsrd/ctsrd/tesla/trunk/build/Debug+Asserts/bin/clang
+CLANGLIB=/home/robert/ctsrd/ctsrd/tesla/trunk/build/Debug+Asserts/lib/libTeslaInstrumenter.so
+
+CFLAGS=-Wall -g -I../..				\
+	-Xclang -load -Xclang ${CLANGLIB}	\
+	-Xclang -add-plugin -Xclang tesla	\
+	-Xclang -plugin-arg-tesla -Xclang instrumentation.spec
+
 TESLALIBS=					\
 	../../libtesla/tesla_state.o		\
 	../../libtesla/tesla_state_global.o	\
@@ -7,16 +15,8 @@ TESLALIBS=					\
 
 all: test
 
-mwc_assertion.o: mwc_assertion.c
-	gcc -c ${CFLAGS} -o mwc_assertion.o mwc_assertion.c
-mwc_automata.o: mwc_automata.c
-	gcc -c ${CFLAGS} -o mwc_automata.o mwc_automata.c
-	gcc -c ${CFLAGS} -o test.o test.c
-test.o: test.c
-	gcc -c ${CFLAGS} -o test.o test.c
-test: test.o mwc_assertion.o mwc_automata.o ${TESLALIBS}
-	gcc -o test test.o mwc_assertion.o mwc_automata.o ${TESLALIBS} \
-	    -lpthread
-clean:
-	rm -f test test.o mwc_assertion.o mwc_automata.o
+test: test.o mwc_assertion.o mwc_automata.o syscalls.o ${TESLALIBS}
+	${LD} -o $@ $+ -lpthread
 
+clean:
+	rm -f test *.o *.bc *.ll

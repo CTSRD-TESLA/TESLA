@@ -158,7 +158,7 @@ SYSUNINIT(mwc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, mwc_sysuninit,
 * System call enters: prod implicit system call lifespan state machine.
 */
 void
-mwc_event_tesla_syscall_enter(void)
+__tesla_event_function_prologue_syscall(void)
 {
 	struct tesla_instance *tip;
 	int error;
@@ -176,7 +176,7 @@ mwc_event_tesla_syscall_enter(void)
  * tesla_instance_foreach() here to iterate over them, proding each.
  */
 void
-mwc_event_tesla_syscall_return(void)
+__tesla_event_function_return_syscall(void)
 {
 	struct tesla_instance *tip;
 	int error;
@@ -195,8 +195,8 @@ out:
  * Prologue of mac_vnode_check_write() is an event.
  */
 void
-mwc_event_call_mac_vnode_check_write(void *fp, struct ucred *cred,
-    struct vnode *vp)
+__tesla_event_function_prologue_mac_vnode_check_write(void *fp,
+    struct ucred *cred, struct vnode *vp)
 {
 	struct tesla_instance *tip;
 	u_int state;
@@ -245,7 +245,7 @@ mwc_event_call_mac_vnode_check_write(void *fp, struct ucred *cred,
  * Epilogue of mac_vnode_check_write is an event.
  */
 void
-mwc_event_return_mac_vnode_check_write(void *fp, int retval)
+__tesla_event_function_return_mac_vnode_check_write(void *fp, int retval)
 {
 	struct tesla_instance *tip;
 	register_t cred, vp;
@@ -321,7 +321,7 @@ mwc_event_return_mac_vnode_check_write(void *fp, int retval)
 * The event implied by the assertion; executes at that point in VOP_WRITE.
 */
 void
-mwc_event_assertion(struct vnode *vp, struct ucred *cred)
+__tesla_event_assertion_mws_assert_0(struct vnode *vp, struct ucred *cred)
 {
 	struct tesla_instance *tip;
 	int error, state;
