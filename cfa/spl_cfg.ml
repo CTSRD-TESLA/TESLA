@@ -242,16 +242,18 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         ) gcl;
         true, sblockexit
       |Multiple (l, h, xsl) ->
-        let need_reg x =
-          if (l = None) && (h = None) then Condition True else x
-        in
         let sinit = new_state env (gen_label genv "multinit") in
         let sentry = new_state env (gen_label genv "multentry") in
         let sblockincr = new_state env (gen_label genv "multincr") in
         let sblockexit = new_state env (gen_label genv "multblexit") in
         let smultexit = new_state env (gen_label genv "multexit") in
         let regn = sprintf "multiple_%d" (gen_return_number genv) in
-        Hashtbl.replace env.registers (Integer regn) None;
+        let need_reg x =
+          if (l = None) && (h = None) then
+            Condition True 
+          else
+            (Hashtbl.replace env.registers (Integer regn) None; x)
+        in
         let reg = Identifier regn in
         create_edge state sinit (need_reg (Assignment (regn, (Int_constant 0))));
         create_edge sblockexit sblockincr (need_reg (Assignment (regn,(Plus (reg,Int_constant 1)))));
