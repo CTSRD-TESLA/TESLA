@@ -1,10 +1,13 @@
-cflags = -cc1 -g -Wall -load lib/TeslaInstrumenter.so -add-plugin tesla -plugin-arg-tesla strawman.spec
+tesla_args = -Xclang -load -Xclang lib/TeslaInstrumenter.so -Xclang -add-plugin -Xclang tesla -Xclang -plugin-arg-tesla -Xclang strawman.spec
+
+cflags = -g -Wall $tesla_args
+linkflags =
 
 rule parse
     command = clang $cflags -S -emit-llvm $in -o $out
 
 rule compile
-    command = clang $cflags $in -c -o $out
+    command = clang $cflags -c $in -o $out
 
 rule assemble
     command = llvm-as $in -o $out
@@ -13,7 +16,12 @@ rule link
     command = clang $linkflags $in -o $out
 
 
-build test: link caller.bc checkers.bc syscalls.bc
+#build test: link caller.bc checkers.bc syscalls.bc
+build test: link caller.o checkers.o syscalls.o | build.ninja Makefile
+
+build caller.o: compile caller.c | build.ninja Makefile
+build checkers.o: compile checkers.c | build.ninja Makefile
+build syscalls.o: compile syscalls.c | build.ninja Makefile
 
 build caller.bc: assemble caller.ll
 build caller.ll: parse caller.c | syscalls.h types.h
