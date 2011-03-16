@@ -55,41 +55,41 @@ test(int scope)
 	mwc_init(scope);
 	mwc_setaction_debug();	/* Use printf(), not assert(). */
 
-	printf("Simulating syscall without check or use; should pass\n");
+	printf("test:\tsimulating syscall without check or use\n");
 	syscall(NOOP);
 
-	printf("Simulating syscall with successful check, no use; should "
-	    "pass\n");
+	printf("test:\tsimulating syscall with successful check, no use\n");
 	syscall(CHECK_ONLY);
 
-	printf("Simulating syscall, unsuccessful check, no use; should "
-	    "pass\n");
+	printf("test:\tsimulating syscall, successful check, use\n");
 	syscall(CHECK_ASSERT);
 
-	printf("Simulating syscall, unsuccessful check, use; should fail\n");
+	printf("test:\tsimulating syscall, unsuccessful check, use "
+	    "(should FAIL)\n");
 	syscall(BADCHECK_ASSERT);
 
-	printf("Simulating syscall, use without check; should fail\n");
+	printf("test:\tsimulating syscall, use without check "
+	    "(should FAIL)\n");
 	syscall(ASSERT_ONLY);
 
-	printf("Simulating syscall, check on wrong vnode, use; should "
-	    "fail\n");
+	printf("test:\tsimulating syscall, check on wrong vnode, use "
+	    "(should FAIL)\n");
 	syscall(WRONG_VNODE);
 
-	printf("Simulating syscall, use with check from last run; should "
-	    "fail\n");
+	printf("test:\tsimulating syscall, use with check from last run "
+	    "(should FAIL)\n");
 	syscall(LASTRULE);
 
-	printf("Simulating syscall, checking two vnodes and then using "
-	    "them; should pass\n");
+	printf("test:\tsimulating syscall, checking two vnodes and then "
+	    "using them\n");
 	syscall(TWOPASS);
 
-	printf("Using same cred twice to make sure both keys used; "
-	    "should fail.\n");
+	printf("Using same cred twice to make sure both keys used "
+	    "(should FAIL)\n");
 	syscall(DOUBLECRED);
 
 	printf("Using same vnode twice to make sure both keys used; "
-	    "should fail.\n");
+	    "(should FAIL)\n");
 	syscall(DOUBLEVNODE);
 
 	mwc_destroy();
