@@ -69,7 +69,9 @@ syscall(int id, const void *args)
 
 	struct User user;
 
-	user.id = 42;
+	int magic = 42;
+	user.id = ++magic;
+	user.id = ++magic;
 	user.generation = 0;
 
 	// Do something slightly tricky.
@@ -78,12 +80,14 @@ syscall(int id, const void *args)
 		uname_ptr = (user.name = &username);
 	}
 
+	int err = ENOSYS;
 	switch (id)
 	{
 		case SYSCALL_FOO:
-			return foo(&user, (const char*) args);
+			err = foo(&user, (const char*) args);
 	}
 
-	return ENOSYS;
+	errno = err;
+	return err;
 }
 
