@@ -6,9 +6,9 @@
 # mostly the right thing.                                                      #
 ################################################################################
 
-TESLA_ARGS="-Xclang -load -Xclang ~/llvmlib/TeslaInstrumenter.so -Xclang -add-plugin -Xclang tesla -Xclang -plugin-arg-tesla -Xclang instrumentation.spec"
+TESLA_ARGS="-Xclang -load -Xclang ${HOME}/llvmlib/TeslaInstrumenter.so -Xclang -add-plugin -Xclang tesla -Xclang -plugin-arg-tesla -Xclang instrumentation.spec -no-integrated-as"
 
 ARGS=`echo $* | sed 's/-Werror//g'`
 ARGS="$TESLA_ARGS $ARGS"
 
-~/LLVM/build/bin/clang $ARGS || exit 1
+clang $ARGS || exit 1
