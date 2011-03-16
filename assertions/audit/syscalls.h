@@ -3,8 +3,6 @@
 
 #include <sys/types.h>
 
-#include "tesla.h"
-
 /* actions which can be performed in a syscall */
 #define	NOOP	0
 #define	SUBMIT	1

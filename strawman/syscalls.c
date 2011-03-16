@@ -1,9 +1,29 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "syscalls.h"
-#include "tesla.h"
+#include <tesla/tesla.h>
 
+#include "syscalls.h"
+
+#define VFS_LOCK_GIANT(MP) __extension__                                \
+({                                                                      \
+        int _locked;                                                    \
+        struct mount *_mp;                                              \
+        _mp = (MP);                                                     \
+        if (VFS_NEEDSGIANT_(_mp)) {                                     \
+                mtx_lock(&Giant);                                       \
+                _locked = 1;                                            \
+        } else                                                          \
+                _locked = 0;                                            \
+        _locked;                                                        \
+})
+
+#define WEIRD_C_THING(x) __extension__ \
+({	\
+	int foo = 42; \
+	foo += 2 * x; \
+	foo;	\
+})
 
 static int super_error = 0;
 
@@ -13,6 +33,8 @@ int helper(struct User *user, const char *filename)
 		previously(returned(check_auth(user, filename), 0))
 		|| eventually(assigned(super_error, -1));
 	};
+
+	int y = WEIRD_C_THING(12);
 
 	return EIO;
 }

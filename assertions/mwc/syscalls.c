@@ -1,8 +1,9 @@
 #include <errno.h>
 #include <stdarg.h>
 
+#include <tesla/tesla.h>
+
 #include "syscalls.h"
-#include "tesla.h"
 
 /* arguments to internal functions */
 #define	ZERO	(void *)0

@@ -4,7 +4,7 @@
 CC = ../kernel/tesla-clang
 LD = ../kernel/tesla-clang
 
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -I ..
 
 UNITS = caller syscalls _instrumentation
 OBJ = $(UNITS:=.o)
@@ -22,7 +22,7 @@ test: $(OBJ)
 # LLVM IR for inspection
 all: syscalls.ll
 syscalls.ll: syscalls.c
-	$(CC) -emit-llvm -o $@ -S $^
+	$(CC) $(CFLAGS) -emit-llvm -o $@ -S $^
 
 
 # Clang-generated declarations of instrumentation

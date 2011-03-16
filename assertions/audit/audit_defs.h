@@ -35,8 +35,6 @@
 
 #include <sys/types.h>
 
-#include "tesla.h"
-
 /*
  * Names for events that will trigger AUDIT rules.
  */

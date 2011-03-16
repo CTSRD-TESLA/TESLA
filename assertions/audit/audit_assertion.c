@@ -41,11 +41,11 @@
 #include <stdio.h>
 #endif
 
+#include <tesla/tesla.h>
 #include <tesla/tesla_state.h>
 #include <tesla/tesla_util.h>
 
 #include "audit_defs.h"
-#include "tesla.h"
 
 #include "syscalls.c-tesla.h"
 
@@ -156,9 +156,7 @@ SYSUNINIT(audit_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
 * System call enters: prod implicit system call lifespan state machine.
 */
 void
-__tesla_event_function_prologue_syscall(tesla, len)
-	struct __tesla_data *tesla;
-	size_t len; /* TODO: someday we might handle varargs */
+__tesla_event_function_prologue_syscall(void **tesla_data, size_t len)
 {
 	struct tesla_instance *tip;
 	int error;
@@ -188,9 +186,7 @@ audit_iterator_callback(struct tesla_instance *tip, void *arg)
  * prod eventually clauses, and flush all assertions.
  */
 void
-__tesla_event_function_return_syscall(tesla, retval)
-	struct __tesla_data *tesla;
-	int retval;
+__tesla_event_function_return_syscall(void **tesla_data, int retval)
 {
 	struct tesla_instance *tip;
 	u_int event;
@@ -216,7 +212,7 @@ out:
  * Invocation of audit_submit(): prod the state machine.
  */
 void
-__tesla_event_function_prologue_audit_submit(struct __tesla_data *tesla)
+__tesla_event_function_prologue_audit_submit(void **tesla_data)
 {
 	struct tesla_instance *tip;
 	u_int state;
@@ -244,9 +240,7 @@ __tesla_event_function_prologue_audit_submit(struct __tesla_data *tesla)
  * Return from audit_submit(): did we return the correct value?
  */
 void
-__tesla_event_function_return_audit_submit(tesla, retval)
-	struct __tesla_data *tesla;
-	int retval;
+__tesla_event_function_return_audit_submit(void **tesla_data, int retval)
 {
 	/* TODO */
 }

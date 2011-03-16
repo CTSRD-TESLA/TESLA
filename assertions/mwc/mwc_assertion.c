@@ -45,7 +45,6 @@
 #include <tesla/tesla_util.h>
 
 #include "mwc_defs.h"
-#include "tesla.h"
 
 #include "syscalls.c-tesla.h"
 
@@ -161,8 +160,7 @@ SYSUNINIT(mwc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, mwc_sysuninit,
 * System call enters: prod implicit system call lifespan state machine.
 */
 void
-__tesla_event_function_prologue_syscall(struct __tesla_data *tesla_data,
-		int action)
+__tesla_event_function_prologue_syscall(void **tesla_data, int action)
 {
 	struct tesla_instance *tip;
 	int error;
@@ -180,8 +178,7 @@ __tesla_event_function_prologue_syscall(struct __tesla_data *tesla_data,
  * tesla_instance_foreach() here to iterate over them, proding each.
  */
 void
-__tesla_event_function_return_syscall(
-		struct __tesla_data *tesla_data, int retval)
+__tesla_event_function_return_syscall(void **tesla_data, int retval)
 {
 	struct tesla_instance *tip;
 	int error;
@@ -201,7 +198,7 @@ out:
  */
 void
 __tesla_event_function_prologue_mac_vnode_check_write(
-    struct __tesla_data *tesla_data, struct ucred *cred, struct vnode *vp)
+    void **tesla_data, struct ucred *cred, struct vnode *vp)
 {
 	struct tesla_instance *tip;
 	u_int state;
@@ -250,8 +247,7 @@ __tesla_event_function_prologue_mac_vnode_check_write(
  * Epilogue of mac_vnode_check_write is an event.
  */
 void
-__tesla_event_function_return_mac_vnode_check_write(
-		struct __tesla_data *tesla, int retval)
+__tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
 {
 	struct tesla_instance *tip;
 	register_t cred, vp;

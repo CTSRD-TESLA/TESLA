@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <tesla/tesla.h>
 
 #include "syscalls.h"
 
