@@ -1,15 +1,10 @@
 .DEFAULT: all
 .PHONY: all clean
 
+CC = ../kernel/tesla-clang
+LD = ../kernel/tesla-clang
 
-TESLA = -load lib/TeslaInstrumenter.so -add-plugin tesla -plugin-arg-tesla strawman.spec
-TESLA_PASSTHROUGH = $(TESLA:%=-Xclang %)
-
-CC = clang
-CXX = clang++
-CFLAGS = -g -Wall $(TESLA_PASSTHROUGH)
-
-LD = clang
+CFLAGS = -g -Wall
 
 UNITS = caller syscalls _instrumentation
 OBJ = $(UNITS:=.o)
