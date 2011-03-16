@@ -51,6 +51,16 @@
 #define	FOUR	(void *)4
 
 static void
+mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
+    int retval)
+{
+	int dummy;	/* Actually, there is some magic C for the FP? */
+
+	mwc_event_call_mac_vnode_check_write(&dummy, cred, vp);
+	mwc_event_return_mac_vnode_check_write(&dummy, retval);
+}
+
+static void
 test(int scope)
 {
 
@@ -114,6 +124,7 @@ test(int scope)
 	mwc_event_tesla_syscall_enter();
 	mwc_event_tesla_syscall_return();
 
+#if 0
 	printf("Generating false negative due to out of memory: check(1), "
 	    "check(2), use(3); should pass\n");
 	mwc_event_tesla_syscall_enter();
@@ -121,6 +132,7 @@ test(int scope)
 	mwc_event_mac_vnode_check_write(TWO, TWO, 0);
 	mwc_event_assertion(THREE, THREE);
 	mwc_event_tesla_syscall_return();
+#endif
 
 	printf("Using same cred twice to make sure both keys used; "
 	    "should fail.\n");

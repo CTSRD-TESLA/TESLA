@@ -52,22 +52,26 @@
 static struct tesla_state	*mwc_state;
 
 /*
- * This assertion has two automata: an implied system call automata, and the
- * explicit autaomata described by mwc_automata_states and
+ * This assertion has three automata: an implied system call automata, an
+ * implicit automata linking call and return for mac_vnode_check_write(), and
+ * the explicit autaomata described by mwc_automata_states and
  * mwc_automata_rules.  For more complex (multi-clause) assertions, there
  * would be an additional automata for each clause.
  *
  * Note: non-zero constants.
  */
 #define	MWC_AUTOMATA_SYSCALL	1	/* In a system call. */
-#define	MWC_AUTOMATA_ASSERTION	2	/* Assertion clause. */
+#define	MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE	2 /* Call to return automata. */
+#define	MWC_AUTOMATA_ASSERTION	3	/* Assertion clause. */
 
 /*
  * Define the maximum number of instances of the assertion to implement
  * per-thread.  Should be prime, and must be at least 2 so that the system
- * call automata works.
+ * call automata works.  Recursion is not used in the kernel, but if
+ * non-trivial recursion was likely, setting this to a significantly higher
+ * value might make sense.
  */
-#define	MWC_LIMIT	3
+#define	MWC_LIMIT	11
 
 /*
  * Strings used when printing assertion failures.
@@ -107,8 +111,10 @@ mwc_init(int scope)
 	    mwc_event_syscall_enter);
 	TESLA_INSTRUMENTATION(mwc_state, tesla_syscall_return,
 	    mwc_event_syscall_return);
-	TESLA_INSTRUMENTATION(mwc_state, tesla_mac_vnode_check_write,
-	    mwc_event_mac_vnode_check_write);
+	TESLA_INSTRUMENTATION(mwc_state, tesla_call_mac_vnode_check_write,
+	    mwc_call_event_mac_vnode_check_write);
+	TESLA_INSTRUMENTATION(mwc_state, tesla_return_mac_vnode_check_write,
+	    mwc_return_event_mac_vnode_check_write);
 	TESLA_INSTRUMENTATION(mwc_state, tesla_214872348923_assertion,
 	    mwc_event_assertion);
 #endif
@@ -186,13 +192,63 @@ out:
 }
 
 /*
-* Epilogue of mac_vnode_check_write is an event.
-*/
+ * Prologue of mac_vnode_check_write() is an event.
+ */
 void
-mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
-    int retval)
+mwc_event_call_mac_vnode_check_write(void *fp, struct ucred *cred,
+    struct vnode *vp)
 {
 	struct tesla_instance *tip;
+	u_int state;
+	int error;
+
+	/*
+	 * There's no pattern matching on the arguments, so don't check them.
+	 * If there were, here is the place to do it, so that the matching
+	 * on, for example, call-by-reference values occurs against
+	 * call-time, rather than return-time, state.
+	 */
+	/* No-op. */
+
+	/*
+	 * Check that we are in a system call; if not, we may have incomplete
+	 * data.
+	 */
+	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip,
+	    NULL);
+	if (error)
+		return;
+	state = tip->ti_state[0];
+	tesla_instance_put(mwc_state, tip);
+	if (state != 1)
+		return;
+
+	/*
+	 * Create an automata for this frame, capturing the cred and vp
+	 * parameters to our actual automata.  This allows us to look up
+	 * whether the call matched when we process the return later.
+	 *
+	 * XXXRW: Possibly, we shouldn't create an automata if there isn't a
+	 * match on arguments, but for now this is simpler.
+	 */
+	error = tesla_instance_get2(mwc_state,
+	    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)fp, &tip, NULL);
+	if (error)
+		return;
+	tip->ti_state[0] = 1;
+	tip->ti_state[1] = (register_t)cred;
+	tip->ti_state[2] = (register_t)vp;
+	tesla_instance_put(mwc_state, tip);
+}
+
+/*
+ * Epilogue of mac_vnode_check_write is an event.
+ */
+void
+mwc_event_return_mac_vnode_check_write(void *fp, int retval)
+{
+	struct tesla_instance *tip;
+	register_t cred, vp;
 	u_int state;
 	int error;
 
@@ -207,8 +263,18 @@ mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
 	 * XXX: If more than one clause in the assertion, then we might prod
 	 * more than one automata here.
 	 */
-	if (retval != 0)
+	if (retval != 0) {
+		/*
+		 * Even if this isn't a match, we need to GC frame pointer
+		 * state.
+		 */
+		error = tesla_instance_get2(mwc_state,
+		    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)fp, &tip,
+		    NULL);
+		if (error == 0)
+			tesla_instance_destroy(mwc_state, tip);
 		return;
+	}
 
 	/*
 	 * Check that we are in a system call; if not, we may have incomplete
@@ -223,10 +289,27 @@ mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
 		return;
 
 	/*
+	 * Look up the automata for this frame pointer, which will allow us
+	 * to retrieve the parameters.  Destroy when done to avoid confusing
+	 * the next guy when fp is reused.
+	 */
+	error = tesla_instance_get2(mwc_state,
+	    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)fp, &tip, NULL);
+	if (error)
+		return;
+	if (tip->ti_state[0] == 0) {
+		tesla_instance_destroy(mwc_state, tip);
+		return;
+	}
+	cred = tip->ti_state[1];
+	vp = tip->ti_state[2];
+	tesla_instance_destroy(mwc_state, tip);
+
+	/*
 	 * No wildcards here; if there were, we'd use tesla_instance_foreach.
 	 */
 	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION,
-	    (register_t)cred, (register_t)vp, &tip, NULL);
+	    cred, vp, &tip, NULL);
 	if (error)
 		return;
 	if (mwc_automata_prod(tip, MWC_EVENT_MAC_VNODE_CHECK_WRITE))

@@ -57,8 +57,9 @@ struct ucred;
 struct vnode;
 void	mwc_event_tesla_syscall_enter(void);
 void	mwc_event_tesla_syscall_return(void);
-void	mwc_event_mac_vnode_check_write(struct ucred *cred, struct vnode *vp,
-	    int retval);
+void	mwc_event_call_mac_vnode_check_write(void *fp, struct ucred *cred,
+	    struct vnode *vp);
+void	mwc_event_return_mac_vnode_check_write(void *fp, int retval);
 void	mwc_event_assertion(struct vnode *vp, struct ucred *cred);
 void	mwc_setaction_debug(void);
 
