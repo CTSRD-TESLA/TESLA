@@ -1,9 +1,10 @@
-CC=clang -cc1
+CC=clang
 LD=clang
 
 CFLAGS=-Wall -g -I../.. \
-	-load llvmlib/TeslaInstrumenter.so -add-plugin tesla \
-	-plugin-arg-tesla instrumentation.spec
+	-Xclang -load -Xclang llvmlib/TeslaInstrumenter.so \
+	-Xclang -add-plugin -Xclang tesla \
+	-Xclang -plugin-arg-tesla -Xclang instrumentation.spec
 
 TESLALIBS=					\
 	../../libtesla/tesla_state.o		\
@@ -19,7 +20,7 @@ all: test
 %.ll: %.c
 	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
 
-test: test.bc audit_assertion.bc audit_automata.bc syscalls.bc ${TESLALIBS}
+test: test.o audit_assertion.o audit_automata.o syscalls.o ${TESLALIBS}
 	${LD} -o $@ $+ -lpthread
 clean:
 	rm -f test *.o *.bc *.ll
