@@ -47,7 +47,7 @@
 #include "mwc_defs.h"
 #include "tesla.h"
 
-#include "__tesla_instrumentation_syscalls.c.h"
+#include "syscalls.c-tesla.h"
 
 /*
  * State associated with this assertion in flight.

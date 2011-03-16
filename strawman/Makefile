@@ -18,7 +18,7 @@ OBJ = $(UNITS:=.o)
 all: test
 
 clean:
-	rm -f test *.bc *.ll *.o __tesla_instrumentation_*.h
+	rm -f test *.bc *.ll *.o *.c-tesla.h
 
 test: $(OBJ)
 	$(LD) -o $@ $^
@@ -31,6 +31,6 @@ syscalls.ll: syscalls.c
 
 
 # Clang-generated declarations of instrumentation
-_instrumentation.o: __tesla_instrumentation_syscalls.c.h
-__tesla_instrumentation_syscalls.c.h: syscalls.o
+_instrumentation.o: syscalls.c-tesla.h
+syscalls.c-tesla.h: syscalls.o
 

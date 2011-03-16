@@ -19,4 +19,7 @@ test: test.o mwc_assertion.o mwc_automata.o syscalls.o ${TESLALIBS}
 	${LD} -o $@ $+ -lpthread
 
 clean:
-	rm -f test *.o *.bc *.ll
+	rm -f test *.o *.bc *.ll *.c-tesla.h
+
+mwc_assertion.o: syscalls.c-tesla.h
+syscalls.c-tesla.h: syscalls.o
