@@ -45,6 +45,9 @@
 #include <tesla/tesla_util.h>
 
 #include "mwc_defs.h"
+#include "tesla.h"
+
+#include "__tesla_instrumentation_syscalls.c.h"
 
 /*
  * State associated with this assertion in flight.
@@ -158,7 +161,8 @@ SYSUNINIT(mwc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, mwc_sysuninit,
 * System call enters: prod implicit system call lifespan state machine.
 */
 void
-__tesla_event_function_prologue_syscall(void)
+__tesla_event_function_prologue_syscall(struct __tesla_data *tesla_data,
+		int action)
 {
 	struct tesla_instance *tip;
 	int error;
@@ -176,7 +180,8 @@ __tesla_event_function_prologue_syscall(void)
  * tesla_instance_foreach() here to iterate over them, proding each.
  */
 void
-__tesla_event_function_return_syscall(void)
+__tesla_event_function_return_syscall(
+		struct __tesla_data *tesla_data, int retval)
 {
 	struct tesla_instance *tip;
 	int error;
@@ -195,8 +200,8 @@ out:
  * Prologue of mac_vnode_check_write() is an event.
  */
 void
-__tesla_event_function_prologue_mac_vnode_check_write(void *fp,
-    struct ucred *cred, struct vnode *vp)
+__tesla_event_function_prologue_mac_vnode_check_write(
+    struct __tesla_data *tesla_data, struct ucred *cred, struct vnode *vp)
 {
 	struct tesla_instance *tip;
 	u_int state;
@@ -232,7 +237,7 @@ __tesla_event_function_prologue_mac_vnode_check_write(void *fp,
 	 * match on arguments, but for now this is simpler.
 	 */
 	error = tesla_instance_get2(mwc_state,
-	    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)fp, &tip, NULL);
+	    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)tesla_data, &tip, NULL);
 	if (error)
 		return;
 	tip->ti_state[0] = 1;
@@ -245,7 +250,8 @@ __tesla_event_function_prologue_mac_vnode_check_write(void *fp,
  * Epilogue of mac_vnode_check_write is an event.
  */
 void
-__tesla_event_function_return_mac_vnode_check_write(void *fp, int retval)
+__tesla_event_function_return_mac_vnode_check_write(
+		struct __tesla_data *tesla, int retval)
 {
 	struct tesla_instance *tip;
 	register_t cred, vp;
@@ -269,7 +275,7 @@ __tesla_event_function_return_mac_vnode_check_write(void *fp, int retval)
 		 * state.
 		 */
 		error = tesla_instance_get2(mwc_state,
-		    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)fp, &tip,
+		    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)tesla, &tip,
 		    NULL);
 		if (error == 0)
 			tesla_instance_destroy(mwc_state, tip);
@@ -294,7 +300,7 @@ __tesla_event_function_return_mac_vnode_check_write(void *fp, int retval)
 	 * the next guy when fp is reused.
 	 */
 	error = tesla_instance_get2(mwc_state,
-	    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)fp, &tip, NULL);
+	    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)tesla, &tip, NULL);
 	if (error)
 		return;
 	if (tip->ti_state[0] == 0) {
@@ -321,7 +327,7 @@ __tesla_event_function_return_mac_vnode_check_write(void *fp, int retval)
 * The event implied by the assertion; executes at that point in VOP_WRITE.
 */
 void
-__tesla_event_assertion_mws_assert_0(struct vnode *vp, struct ucred *cred)
+__tesla_event_assertion_mws_assert_0(struct ucred *cred, struct vnode *vp)
 {
 	struct tesla_instance *tip;
 	int error, state;

@@ -1,10 +1,11 @@
 CC=clang
 LD=clang
 
-CFLAGS=-Wall -g -I../.. \
-	-Xclang -load -Xclang llvmlib/TeslaInstrumenter.so \
-	-Xclang -add-plugin -Xclang tesla \
-	-Xclang -plugin-arg-tesla -Xclang instrumentation.spec
+TESLA = -load llvmlib/TeslaInstrumenter.so -add-plugin tesla \
+	-plugin-arg-tesla instrumentation.spec
+TESLA_PASSTHROUGH = $(TESLA:%=-Xclang %)
+
+CFLAGS=-Wall -g -I../.. $(TESLA_PASSTHROUGH)
 
 TESLALIBS=					\
 	../../libtesla/tesla_state.o		\
@@ -13,12 +14,6 @@ TESLALIBS=					\
 	../../libtesla/tesla_util.o
 
 all: test
-
-%.bc: %.ll
-	${CC} -emit-llvm $< -o $@
-
-%.ll: %.c
-	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
 
 test: test.o audit_assertion.o audit_automata.o syscalls.o ${TESLALIBS}
 	${LD} -o $@ $+ -lpthread

@@ -47,6 +47,8 @@
 #include "audit_defs.h"
 #include "tesla.h"
 
+#include "__tesla_instrumentation_syscalls.c.h"
+
 /*
  * State associated with this assertion in flight.
  */
@@ -156,7 +158,7 @@ SYSUNINIT(audit_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
 void
 __tesla_event_function_prologue_syscall(tesla, len)
 	struct __tesla_data *tesla;
-	int len; /* TODO: someday we might handle varargs */
+	size_t len; /* TODO: someday we might handle varargs */
 {
 	struct tesla_instance *tip;
 	int error;

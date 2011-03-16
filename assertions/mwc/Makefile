@@ -1,11 +1,11 @@
-CC=/home/robert/ctsrd/ctsrd/tesla/trunk/build/Debug+Asserts/bin/clang
-LD=/home/robert/ctsrd/ctsrd/tesla/trunk/build/Debug+Asserts/bin/clang
-CLANGLIB=/home/robert/ctsrd/ctsrd/tesla/trunk/build/Debug+Asserts/lib/libTeslaInstrumenter.so
+CC=clang
+LD=clang
 
-CFLAGS=-Wall -g -I../..				\
-	-Xclang -load -Xclang ${CLANGLIB}	\
-	-Xclang -add-plugin -Xclang tesla	\
-	-Xclang -plugin-arg-tesla -Xclang instrumentation.spec
+TESLA = -load llvmlib/TeslaInstrumenter.so -add-plugin tesla \
+	-plugin-arg-tesla instrumentation.spec
+TESLA_PASSTHROUGH = $(TESLA:%=-Xclang %)
+
+CFLAGS=-Wall -g -I../.. $(TESLA_PASSTHROUGH)
 
 TESLALIBS=					\
 	../../libtesla/tesla_state.o		\
