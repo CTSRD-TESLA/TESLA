@@ -3,6 +3,8 @@
 #include "tesla.h"
 #include "types.h"
 
+#include "__tesla_instrumentation_syscalls.c.h"
+
 
 
 void __tesla_event_assertion_helper_0(user, filename, super_error)
