@@ -68,21 +68,20 @@ void __tesla_event_function_return_syscall(struct __tesla_data *tesla_data, int 
 
 void __tesla_event_field_assign_struct_Name_first(name, new_value)
 	struct Name *name;
-	const char *new_value;
+	char *new_value;
 {
 	printf("Name(0x%016lx).first = '%s'\n", (unsigned long) name, new_value);
 }
  
-void __tesla_event_field_assign_struct_Name_initial(name, new_value)
-	struct Name *name;
-	char new_value;
+void __tesla_event_field_assign_struct_Name_initial(
+		struct Name *name, char new_value)
 {
 	printf("Name(0x%016lx).initial = '%c'\n", (unsigned long) name, new_value);
 }
  
 void __tesla_event_field_assign_struct_Name_last(name, new_value)
 	struct Name *name;
-	const char *new_value;
+	char *new_value;
 {
 	printf("Name(0x%016lx).last = '%s'\n", (unsigned long) name, new_value);
 }
