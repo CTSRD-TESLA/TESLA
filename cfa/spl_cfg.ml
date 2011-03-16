@@ -93,7 +93,7 @@ let string_of_transition_class = function
 
 let gen_label genv prefix =
   incr genv.counter;
-  sprintf "S_%s_%d" prefix !(genv.counter)
+  sprintf "%d" !(genv.counter)
 
 let gen_return_number genv =
   incr genv.counter;

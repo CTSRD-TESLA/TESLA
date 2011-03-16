@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2005 Anil Madhavapeddy <anil@recoil.org>
+ * Copyright (c) 2005-2011 Anil Madhavapeddy <anil@recoil.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -49,13 +49,21 @@ let style_of_edge = function
 let string_of_transition from t =
     let (ty,str) = match t.t with
     |Terminate -> "color=\"red\"", "abort"
-    |Condition expr -> "arrowhead=\"odiamond\",color=\"blue\"", (string_of_expr  expr)
-    |Assignment (id,expr) -> "arrowhead=\"tee\",color=\"green\"",
-        sprintf "%s=%s" id (string_of_expr expr)
-    |Message id -> "", (sprintf "{%s}" id)
+    |Condition expr ->
+       let expr = string_of_expr expr in
+       let expr = Str.global_replace (Str.regexp_string "_return") "" expr in
+       "arrowhead=\"odiamond\",color=\"blue\"", expr
+    |Assignment (id,expr) ->
+       let expr = string_of_expr expr in
+       let id = Str.global_replace (Str.regexp_string "_return") "" id in
+       "arrowhead=\"tee\",color=\"green\"",(sprintf "%s=%s" id expr)
+    |Message id ->
+       let id = Str.global_replace (Str.regexp_string "Tp_t_state_assign_TCPS_") "" id in
+       let id = Str.global_replace (Str.regexp_string "ESTABLISHED") "ESTAB" id in
+       "", (sprintf "{%s}" id)
     in
     let ln = match t.loc with None -> "" |Some l -> sprintf " (%d)" l.Spl_location.line_num in
-    sprintf " \"%s\" -> \"%s\" [%slabel=\"%s%s\",fontsize=10,%s];" from.label !(t.target).label (style_of_edge t.cl) str ln ty
+    sprintf " \"%s\" -> \"%s\" [%slabel=\"%s\",fontsize=10,%s];" from.label !(t.target).label (style_of_edge t.cl) str ty
 
 let string_of_state s =
     String.concat "\n" ((List.map (string_of_transition s) s.edges))
@@ -78,10 +86,6 @@ let generate ochanfn genv =
             let funcs = Hashtbl.fold (fun f () a ->
                 let e,_ = Hashtbl.find genv.functions f in
                 e.blocks :: a) env.functions_called [env.blocks] in
-(*            List.iter (Hashtbl.iter (fun k v ->
-                let ln v = match v.loc with |None -> "" |Some x -> string_of_int (x.Spl_location.line_num) in
-                o (sprintf "%s [label=\"%s\"];" v.label v.label (ln v))
-            )) funcs; *)
             List.iter (Hashtbl.iter (fun k v ->
                 o (string_of_state v)
             )) funcs;
