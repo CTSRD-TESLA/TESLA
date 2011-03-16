@@ -1,0 +1,22 @@
+automaton dhcp() {
+  void main(struct dhcp_cb *d) {
+    d->state = DHCP_DISCOVER;
+    multiple {
+      dhcp_broadcast(d);
+      either {
+        d->state = DHCP_BOUND;
+        either {
+          d->state = DHCP_RENEW;
+        } or {
+          d->state = DHCP_RELEASE;
+          free(d);
+          exit;
+        }
+      } or {
+        d->state = DHCP_FAILED;
+        free(d);
+        exit;
+      }
+    }
+  }
+}
