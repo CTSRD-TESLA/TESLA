@@ -7,6 +7,12 @@ if [ ! -d llvm ]; then
   cd llvm/tools
   git clone http://github.com/trombonehero/clang
   cd ../../
+else 
+  cd llvm
+  git pull
+  cd tools/clang
+  git pull
+  cd ../../..
 fi
 
 mkdir -p build
