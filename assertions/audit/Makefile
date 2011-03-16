@@ -1,11 +1,8 @@
-CC=clang
-LD=clang
+CC=../../kernel/tesla-clang
+LD=../../kernel/tesla-clang
+CLANGLIB=${HOME}/llvmlib/libTeslaInstrumenter.so
 
-TESLA = -load llvmlib/TeslaInstrumenter.so -add-plugin tesla \
-	-plugin-arg-tesla instrumentation.spec
-TESLA_PASSTHROUGH = $(TESLA:%=-Xclang %)
-
-CFLAGS=-Wall -g -I../.. $(TESLA_PASSTHROUGH)
+CFLAGS=-Wall -g -I../..
 
 TESLALIBS=					\
 	../../libtesla/tesla_state.o		\
