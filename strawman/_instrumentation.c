@@ -1,3 +1,5 @@
+/* manual mock-up of what event handlers (machine-generated) could look like */
+
 #include <stdio.h>
 
 #include "tesla.h"

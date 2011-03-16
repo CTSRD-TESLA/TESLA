@@ -11,7 +11,7 @@ CFLAGS = -g -Wall $(TESLA_PASSTHROUGH)
 
 LD = clang
 
-UNITS = caller checkers syscalls
+UNITS = caller syscalls _instrumentation
 OBJ = $(UNITS:=.o)
 
 
@@ -31,6 +31,6 @@ syscalls.ll: syscalls.c
 
 
 # Clang-generated declarations of instrumentation
-checkers.o: __tesla_instrumentation_syscalls.c.h
+_instrumentation.o: __tesla_instrumentation_syscalls.c.h
 __tesla_instrumentation_syscalls.c.h: syscalls.o
 
