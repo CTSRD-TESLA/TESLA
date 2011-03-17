@@ -34,6 +34,7 @@
 
 #ifdef _KERNEL
 #include <sys/param.h>
+#include <sys/eventhandler.h>
 #include <sys/kernel.h>
 #include <sys/systm.h>
 #else
@@ -41,10 +42,9 @@
 #include <stdio.h>
 #endif
 
+#include <tesla/tesla_registration.h>
 #include <tesla/tesla_state.h>
 #include <tesla/tesla_util.h>
-
-#include "syscalls.c-tesla.h"
 
 /*
  * This checker is modeled on an abstract "check-before-use" (CBU) checker
@@ -56,7 +56,7 @@
 /*
  * State associated with this assertion in flight.
  */
-static struct tesla_state	*cbu_%MACCHECK%_state;
+static struct tesla_state	*cbu_state;
 
 /*
  * This assertion has three automata: an implied system call automata, an
@@ -86,6 +86,16 @@ static struct tesla_state	*cbu_%MACCHECK%_state;
  */
 #define	CBU_NAME		"cbu-%MACCHECK%"
 #define	CBU_DESCRIPTION		"%CALLERFN% without previous %MACCHECK%"
+
+#ifdef _KERNEL
+static eventhandler_tag	cbu_event_function_prologue_syscallenter_tag;
+static eventhandler_tag	cbu_event_function_prologue_syscallret_tag;
+#endif
+
+static void	cbu_event_function_prologue_syscallenter(void **tesla_data,
+		    struct thread *td, struct syscall_args *sa);
+static void	cbu_event_function_prologue_syscallret(void **tesla_data,
+		    struct thread *td, int error, struct syscall_args *sa);
 
 /*
  * Names for events that will trigger MAC check rules.
@@ -199,11 +209,29 @@ cbu_%MACCHECK%_sysinit(_unused void *arg)
 {
 	int error;
 
-	error = tesla_state_new(&cbu_%MACCHECK%_state, TESLA_SCOPE_PERTHREAD,
+	error = tesla_state_new(&cbu_state, TESLA_SCOPE_PERTHREAD,
 	    CBU_LIMIT, CBU_NAME, CBU_DESCRIPTION);
 	if (error)
 		panic("cbu_%MACCHECK%_init: tesla_state_new failed due to "
 		    "%s", tesla_strerror(error));
+
+	/*
+	 * The synchronisation properties of registration are a bit dubious.
+	 * We probably want a global flag to enable the assertion on start,
+	 * with appropriate memory barriers with respect to event handler
+	 * registration.
+	 */
+#ifdef _KERNEL
+	cbu_event_function_prologue_syscallenter_tag =
+	    EVENTHANDLER_REGISTER(tesla_event_function_prologue_syscallenter,
+	    cbu_event_function_prologue_syscallenter, NULL,
+	    EVENTHANDLER_PRI_ANY);
+	cbu_event_function_prologue_syscallret_tag =
+	    EVENTHANDLER_REGISTER(tesla_event_function_prologue_syscallret,
+	    cbu_event_function_prologue_syscallret, NULL,
+	    EVENTHANDLER_PRI_ANY);
+#endif
+
 }
 SYSINIT(cbu_%MACCHECK%_init, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
     cbu_%MACCHECK%_sysinit, NULL);
@@ -215,7 +243,14 @@ static void
 cbu_%MACCHECK%_sysuninit(_unused void *arg)
 {
 
-	tesla_state_destroy(cbu_%MACCHECK%_state);
+	tesla_state_destroy(cbu_state);
+
+#ifdef _KERNEL
+	EVENTHANDLER_DEREGISTER(tesla_event_function_prologue_syscallenter,
+	    cbu_event_function_prologue_syscallenter_tag);
+	EVENTHANDLER_DEREGISTER(tesla_event_function_prologue_syscallret,
+	    cbu_event_function_prologue_syscallret_tag);
+#endif
 }
 SYSUNINIT(cbu_%MACCHECK%_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
     cbu_%MACCHECK%_sysuninit, NULL);
@@ -224,17 +259,18 @@ SYSUNINIT(cbu_%MACCHECK%_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
  * System call enters: prod implicit system call lifespan state machine.
  */
 static void
-_tesla_event_function_prologue_syscall(void **tesla_data, int action)
+cbu_tesla_event_function_prologue_syscallenter(void **tesla_data,
+    struct thread *td, struct syscall_args *sa)
 {
 	struct tesla_instance *tip;
 	int error;
 
-	error = tesla_instance_get1(cbu_%MACCHECK%_state,
+	error = tesla_instance_get1(cbu_state,
 	    CBU_AUTOMATA_SYSCALL, &tip, NULL);
 	if (error)
 		return;
 	tip->ti_state[0] = 1;		/* In syscall. */
-	tesla_instance_put(cbu_%MACCHECK%_state, tip);
+	tesla_instance_put(cbu_state, tip);
 }
 
 /*
@@ -243,27 +279,28 @@ _tesla_event_function_prologue_syscall(void **tesla_data, int action)
  * tesla_instance_foreach() here to iterate over them, proding each.
  */
 static void
-_tesla_event_function_return_syscall(void **tesla_data, int retval)
+cbu_tesla_event_function_prologue_syscallret(void **tesla_data,
+    struct thread *td, int err, struct syscall_args *sa)
 {
 	struct tesla_instance *tip;
 	int error;
 
-	error = tesla_instance_get1(cbu_%MACCHECK%_state,
+	error = tesla_instance_get1(cbu_state,
 	    CBU_AUTOMATA_SYSCALL, &tip, NULL);
 	if (error)
 		goto out;
 	if (tip->ti_state[0] == 1)
 		tip->ti_state[0] = 0;
-	tesla_instance_put(cbu_%MACCHECK%_state, tip);
+	tesla_instance_put(cbu_state, tip);
 out:
-	tesla_state_flush(cbu_%MACCHECK%_state);
+	tesla_state_flush(cbu_state);
 }
 
 /*
  * Prologue of mac_vnode_check_write() is an event.
  */
 static void
-_tesla_event_function_prologue_mac_vnode_check_write(
+cbu_tesla_event_function_prologue_mac_vnode_check_write(
     void **tesla_data, struct ucred *active_cred, struct ucred *file_cred,
     struct vnode *vp)
 {
@@ -284,12 +321,12 @@ _tesla_event_function_prologue_mac_vnode_check_write(
 	 * Check that we are in a system call; if not, we may have incomplete
 	 * data.
 	 */
-	error = tesla_instance_get1(cbu_%MACCHECK%_state,
-	    CBU_AUTOMATA_SYSCALL, &tip, NULL);
+	error = tesla_instance_get1(cbu_state, CBU_AUTOMATA_SYSCALL, &tip,
+	    NULL);
 	if (error)
 		return;
 	state = tip->ti_state[0];
-	tesla_instance_put(cbu_%MACCHECK%_state, tip);
+	tesla_instance_put(cbu_state, tip);
 	if (state != 1)
 		return;
 
@@ -302,9 +339,8 @@ _tesla_event_function_prologue_mac_vnode_check_write(
 	 * XXXRW: Possibly, we shouldn't create an automata if there isn't a
 	 * match on arguments, but for now this is simpler.
 	 */
-	error = tesla_instance_get2(cbu_%MACCHECK%_state,
-	    CBU_AUTOMATA_MACCHECK, (register_t)tesla_data, &tip,
-	    NULL);
+	error = tesla_instance_get2(cbu_state, CBU_AUTOMATA_MACCHECK,
+	    (register_t)tesla_data, &tip, NULL);
 	if (error)
 		return;
 
@@ -315,7 +351,7 @@ _tesla_event_function_prologue_mac_vnode_check_write(
 	tip->ti_state[2] = (register_t)file_cred;
 	tip->ti_state[3] = (register_t)vp;
 #endif
-	tesla_instance_put(cbu_%MACCHECK%_state, tip);
+	tesla_instance_put(cbu_state, tip);
 }
 
 /*
@@ -348,10 +384,10 @@ _tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
 		 * Even if this isn't a match, we need to GC frame pointer
 		 * state.
 		 */
-		error = tesla_instance_get2(cbu_%MACCHECK%_state,
-		    CBU_AUTOMATA_MACCHECK, (register_t)tesla, &tip, NULL);
+		error = tesla_instance_get2(cbu_state, CBU_AUTOMATA_MACCHECK,
+		    (register_t)tesla, &tip, NULL);
 		if (error == 0)
-			tesla_instance_destroy(cbu_%MACCHECK%_state, tip);
+			tesla_instance_destroy(cbu_state, tip);
 		return;
 	}
 
@@ -359,12 +395,12 @@ _tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
 	 * Check that we are in a system call; if not, we may have incomplete
 	 * data.
 	 */
-	error = tesla_instance_get1(cbu_%MACCHECK%_state,
-	    CBU_AUTOMATA_SYSCALL, &tip, NULL);
+	error = tesla_instance_get1(cbu_state, CBU_AUTOMATA_SYSCALL, &tip,
+	    NULL);
 	if (error)
 		return;
 	state = tip->ti_state[0];
-	tesla_instance_put(cbu_%MACCHECK%_state, tip);
+	tesla_instance_put(cbu_state, tip);
 	if (state != 1)
 		return;
 
@@ -373,12 +409,12 @@ _tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
 	 * to retrieve the parameters.  Destroy when done to avoid confusing
 	 * the next guy when fp is reused.
 	 */
-	error = tesla_instance_get2(cbu_%MACCHECK%_state,
-	    CBU_AUTOMATA_MACCHECK, (register_t)tesla, &tip, NULL);
+	error = tesla_instance_get2(cbu_state, CBU_AUTOMATA_MACCHECK,
+	    (register_t)tesla, &tip, NULL);
 	if (error)
 		return;
 	if (tip->ti_state[0] == 0) {
-		tesla_instance_destroy(cbu_%MACCHECK%_state, tip);
+		tesla_instance_destroy(cbu_state, tip);
 		return;
 	}
 	%EXTRACT_STATE%
@@ -387,18 +423,18 @@ _tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
 	file_cred = tip->ti_state[2];
 	vp = tip->ti_state[3];
 #endif
-	tesla_instance_destroy(cbu_%MACCHECK%_state, tip);
+	tesla_instance_destroy(cbu_state, tip);
 
 	/*
 	 * No wildcards here; if there were, we'd use tesla_instance_foreach.
 	 */
-	error = tesla_instance_get%NUMARGS%(cbu_%MACCHECK%_state,
-	    CBU_AUTOMATA_ASSERTION, %REGISTERARGS%, &tip, NULL);
+	error = tesla_instance_get%NUMARGS%(cbu_state, CBU_AUTOMATA_ASSERTION,
+	    %REGISTERARGS%, &tip, NULL);
 	if (error)
 		return;
 	if (automata_prod(tip, CBU_EVENT_MACCHECK))
-		tesla_assert_fail(cbu_%MACCHECK%_state, tip);
-	tesla_instance_put(cbu_%MACCHECK%_state, tip);
+		tesla_assert_fail(cbu_state, tip);
+	tesla_instance_put(cbu_state, tip);
 }
 
 /*
@@ -416,23 +452,22 @@ _tesla_event_assertion_%CALLERFN%_0(%ASSERTIONARGS%)
 	 * Check that we are in a system call; if not, we may have incomplete
 	 * data.
 	 */
-	error = tesla_instance_get1(cbu_%MACCHECK%_state,
+	error = tesla_instance_get1(cbu_state,
 	    CBU_AUTOMATA_SYSCALL, &tip, NULL);
 	if (error)
 		return;
 	state = tip->ti_state[0];
-	tesla_instance_put(cbu_%MACCHECK%_state, tip);
+	tesla_instance_put(cbu_state, tip);
 	if (state != 1)
 		return;
 
 	/* No argument checking for this event, they were free variables. */
-	error = tesla_instance_get%NUMARGS%(cbu_%MACCHECK%_state,
-	    CBU_AUTOMATA_ASSERTION,
+	error = tesla_instance_get%NUMARGS%(cbu_state, CBU_AUTOMATA_ASSERTION,
 	    %KEYARGS%,
 	    &tip, NULL);
 	if (error)
 		return;
 	if (automata_prod(tip, CBU_EVENT_ASSERTION))
-		tesla_assert_fail(cbu_%MACCHECK%_state, tip);
-	tesla_instance_put(cbu_%MACCHECK%_state, tip);
+		tesla_assert_fail(cbu_state, tip);
+	tesla_instance_put(cbu_state, tip);
 }
