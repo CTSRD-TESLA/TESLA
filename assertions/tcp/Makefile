@@ -29,4 +29,4 @@ test: test.o tcpc_assertion.o tcpc_automata.o ${TESLALIBS}
 	$(CC) -o $@ $^ -lpthread
 
 clean:
-	rm -f test *.o tcpc_defs.h
+	rm -f test *.o

@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <strings.h>
+#include <string.h>
 #endif
 
 #include <tesla/tesla_state.h>
