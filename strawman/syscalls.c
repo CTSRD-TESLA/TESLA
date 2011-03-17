@@ -29,7 +29,7 @@ static int super_error = 0;
 
 int helper(struct User *user, const char *filename)
 {
-	TESLA {
+	TESLA_ASSERT {
 		previously(returned(check_auth(user, filename), 0))
 		|| eventually(assigned(super_error, -1));
 	};
