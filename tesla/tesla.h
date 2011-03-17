@@ -16,4 +16,10 @@ int __tesla_assigned(void* where, void* what);
 int __tesla_returned(int retval, int expected);
 #define returned(x, y) __tesla_returned(x, y)
 
+/*
+ * We actually need some special syntax here, such as '...', to differentiate
+ * a legitimate NULL/0 value from a don't care.
+ */
+#define	TESLA_DONTCARE	NULL
+
 #endif  /* TESLA_H */
