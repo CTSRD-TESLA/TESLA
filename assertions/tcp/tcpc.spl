@@ -12,6 +12,7 @@ automaton tcp_connect()
       tp->t_state = TCPS_TIME_WAIT;
     }
     tp->t_state = TCPS_CLOSED;
+    tcp_free(tp); exit;
   };
 
   void established(struct tcpcb *tp) {
@@ -44,6 +45,8 @@ automaton tcp_connect()
       } or {
         established (tp->t_state);
       }
-    };
+    } or {
+      tcp_free(tp); exit;
+    }
   }
 }
