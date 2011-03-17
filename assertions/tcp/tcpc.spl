@@ -23,21 +23,27 @@ automaton tcp_connect()
       tp->t_state = TCPS_LAST_ACK;    
       optional { tp->t_state = TCPS_CLOSED; }
     }
-    tcp_free(tp);
+    tcp_free(tp); exit;
   };
-   
+  
   void main(struct tcpcb *tp) {
     tp->t_state = TCPS_CLOSED;
-    optional { tp->t_state = TCPS_SYN_SENT; }
     either {
-      tp->t_state = TCPS_SYN_RECEIVED;
-      either {
-        established (tp->t_state);
-      } or {
-        active_close(tp->t_state);
-      }
+      tp->t_state = TCPS_LISTEN;
+      optional { tp->t_state = TCPS_CLOSED; }
+      tcp_free(tp);
     } or {
-      established (tp->t_state);
-    }
-  };
+      optional { tp->t_state = TCPS_SYN_SENT; }
+      either {
+        tp->t_state = TCPS_SYN_RECEIVED;
+        either {
+          established (tp->t_state);
+        } or {
+          active_close(tp->t_state);
+        }
+      } or {
+        established (tp->t_state);
+      }
+    };
+  }
 }

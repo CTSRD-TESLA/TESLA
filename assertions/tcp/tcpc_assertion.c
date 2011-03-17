@@ -204,6 +204,9 @@ __tesla_event_field_assign_struct_tcpcb_t_state(struct tcpcb *tcpcb,
           case TCPS_CLOSED:
             event = TCPC_EVENT_TP_T_STATE_ASSIGN_TCPS_CLOSED;
             break;
+          case TCPS_LISTEN:
+            event = TCPC_EVENT_TP_T_STATE_ASSIGN_TCPS_LISTEN;
+            break;
           case TCPS_SYN_SENT:
             event = TCPC_EVENT_TP_T_STATE_ASSIGN_TCPS_SYN_SENT;
             break;
