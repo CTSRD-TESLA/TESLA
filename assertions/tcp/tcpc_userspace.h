@@ -35,13 +35,13 @@ struct tcpcb {
 };
 
 #define TCPS_CLOSED 0
-#define TCPS_SYN_SENT 1
-#define TCPS_SYN_RECEIVED 2
-#define TCPS_ESTABLISHED 3
-#define TCPS_CLOSE_WAIT 4
-#define TCPS_FIN_WAIT_1 5
-#define TCPS_CLOSING 6
-#define TCPS_LAST_ACK 7
-#define TCPS_FIN_WAIT_2 8
-#define TCPS_TIME_WAIT 9
-
+#define	TCPS_LISTEN 1
+#define TCPS_SYN_SENT 2
+#define TCPS_SYN_RECEIVED 3
+#define TCPS_ESTABLISHED 4
+#define TCPS_CLOSE_WAIT 5
+#define TCPS_FIN_WAIT_1 6
+#define TCPS_CLOSING 7
+#define TCPS_LAST_ACK 8
+#define TCPS_FIN_WAIT_2 9
+#define TCPS_TIME_WAIT 10
