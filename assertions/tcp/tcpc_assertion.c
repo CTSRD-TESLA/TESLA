@@ -144,6 +144,25 @@ SYSUNINIT(tcpc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, tcpc_sysuninit,
     NULL);
 #endif /* _KERNEL */
 
+void
+__tesla_event_function_prologue_tcp_free(struct tcpcb *tcpcb)
+{
+	struct tesla_instance *tip;
+	int error, alloc=0;
+
+	error = tesla_instance_get1(tcpc_state, (register_t)tcpcb, &tip, &alloc);
+	if (error)
+		return;
+	/* If we need to initialise before doing a free, something is very wrong
+	   but do this anyway as we want to catch the error */
+	if (alloc == 1)
+		tcpc_automata_init(tip);
+	
+	if (tcpc_automata_prod(tip, TCPC_EVENT_FUNC_PROLOGUE_TCP_FREE))
+		tesla_assert_fail(tcpc_state, tip);
+	tesla_instance_put(tcpc_state, tip);
+}
+
 /*
 * An assignment event to a (struct tcpcb->t_state)
 */
