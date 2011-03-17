@@ -233,6 +233,7 @@ __tesla_event_field_assign_struct_tcpcb_t_state(struct tcpcb *tcpcb,
             break;
           default:
             /* Do not deliver an event the automaton cannot ever handle */
+		tesla_instance_put(tcpc_state, tip);
             return;
         }
 	if (tcpc_automata_prod(tip, event))
