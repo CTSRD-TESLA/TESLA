@@ -18,7 +18,7 @@
 #include <tesla/tesla_state.h>
 #include <tesla/tesla_util.h>
 
-#include <tcpc_defs.h>
+#include "tcpc_defs.h"
 
 struct main {
   u_int state : 5;
