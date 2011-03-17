@@ -166,17 +166,18 @@ let pp_env genv env e =
   e.p "#include <sys/types.h>";
   e.nl ();
   e.p "#ifdef _KERNEL";
+  e.p "#include <sys/systm.h>";
   e.p "#else";
   e.p "#include <assert.h>";
   e.p "#include <stdlib.h>";
   e.p "#include <stdint.h>";
-  e.p "#include <strings.h>";
+  e.p "#include <string.h>";
   e.p "#endif";
   e.nl ();
   e.p "#include <tesla/tesla_state.h>";
   e.p "#include <tesla/tesla_util.h>";
   e.nl ();
-  e.p (sprintf "#include <%s_defs.h>" env.sname);
+  e.p (sprintf "#include \"%s_defs.h\"" env.sname);
   e.nl ();
   let num_of_state s = Hashtbl.find env.statenum s in
   export_fun_iter (fun func_name func_env func_def ->
@@ -406,9 +407,11 @@ let generate_header env sfile e =
   e.nl ();
   comment ["\"Public\" interfaces to the assertion, to be invoked by load, unload";
     "and instrumentation handlers."];
+  e.p (sprintf "#ifndef _KERNEL");
   e.p (sprintf "void	%s_init(int scope);" lname);
   e.p (sprintf "void	%s_destroy(void);" lname);
   e.p (sprintf "void    %s_setaction_debug(void);" lname);
+  e.p (sprintf "#endif");
   e.p (sprintf "#endif /* %s_DEFS_H */" modname)
   
 let generate sfile ofiles debug genvs =
