@@ -62,9 +62,11 @@ struct tesla_state;
  * is important that this structure be no bigger than necessary, as one will
  * be allocated for every potential intance of an automata.
  */
+#define	TESLA_KEY_SIZE		4
+#define	TESLA_STATE_SIZE	4
 struct tesla_instance {
-	register_t	ti_keys[4];
-	u_int		ti_state[4];
+	register_t	ti_keys[TESLA_KEY_SIZE];
+	u_int		ti_state[TESLA_STATE_SIZE];
 };
 
 /*
