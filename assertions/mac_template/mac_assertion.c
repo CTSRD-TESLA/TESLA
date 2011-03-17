@@ -47,6 +47,11 @@
 #include <tesla/tesla_util.h>
 
 /*
+ * Provide compile-time checks on e.g. the size of tesla_instance.
+ */
+%COMPILE_TIME_CHECKS%
+
+/*
  * This checker is modeled on an abstract "check-before-use" (CBU) checker
  * template.  The goal is to establish at the time of use whether, previously,
  * an appropriate access control check occurred using the same credential and
@@ -297,10 +302,10 @@ out:
 }
 
 /*
- * Prologue of mac_vnode_check_write() is an event.
+ * Prologue of %MACCHECK%() is an event.
  */
 static void
-cbu_tesla_event_function_prologue_mac_vnode_check_write(
+__tesla_event_function_prologue_%MACCHECK%(
     void **tesla_data, struct ucred *active_cred, struct ucred *file_cred,
     struct vnode *vp)
 {
@@ -358,7 +363,7 @@ cbu_tesla_event_function_prologue_mac_vnode_check_write(
  * Epilogue of mac_vnode_check_write is an event.
  */
 static void
-_tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
+__tesla_event_function_return_%MACCHECK%(void **tesla, int retval)
 {
 	struct tesla_instance *tip;
 	%REGISTERARGS_DECL%
