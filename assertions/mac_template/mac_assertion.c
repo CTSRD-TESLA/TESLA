@@ -209,7 +209,7 @@ cbu_%MACCHECK%_sysinit(_unused void *arg)
 {
 	int error;
 
-	error = tesla_state_new(&cbu_state, TESLA_SCOPE_PERTHREAD,
+	error = tesla_state_new(&cbu_state, %STORAGE%,
 	    CBU_LIMIT, CBU_NAME, CBU_DESCRIPTION);
 	if (error)
 		panic("cbu_%MACCHECK%_init: tesla_state_new failed due to "
