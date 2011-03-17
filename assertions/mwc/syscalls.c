@@ -30,7 +30,7 @@ mac_vnode_check_write(struct ucred *cred, struct vnode *vp)
 void
 mws_assert(struct ucred *cred, struct vnode *vp)
 {
-	TESLA {
+	TESLA_ASSERT {
 		previously(returned(mac_vnode_check_write(cred, vp), 0));
 	}
 }

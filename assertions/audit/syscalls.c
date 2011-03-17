@@ -12,7 +12,7 @@ audit_submit()
 void
 helper_which_asserts()
 {
-	TESLA {
+	TESLA_ASSERT {
 		eventually(audit_submit());
 	}
 }
