@@ -168,7 +168,8 @@ __tesla_event_function_prologue_tcp_free(void **tesla_data,
 	
 	if (tcpc_automata_prod(tip, TCPC_EVENT_FUNC_PROLOGUE_TCP_FREE))
 		tesla_assert_fail(tcpc_state, tip);
-	tesla_instance_put(tcpc_state, tip);
+
+	tesla_instance_destroy(tcpc_state, tip);
 }
 
 void
