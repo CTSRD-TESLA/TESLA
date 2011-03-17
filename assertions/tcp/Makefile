@@ -7,8 +7,10 @@ TESLALIBS=                                      \
 	../../libtesla/tesla_state_perthread.o  \
 	../../libtesla/tesla_util.o
 
-.PHONY: all clean
+.PHONY: all clean pdf
 all: test
+
+pdf: tcpc.pdf 
 
 %_assertion.o: %_assertion.c %_defs.h
 	$(CC) -c $(CFLAGS) -o $@ $<
@@ -18,6 +20,12 @@ all: test
 
 tcpc-all.dot: tcpc.spl $(SPLC) Makefile
 	$(SPLC) -t dot $* $<
+
+tcpc-all.dot.pdf: tcpc-all.dot
+	dot -Tpdf -O $<
+
+tcpc.pdf: tcpc-all.dot.pdf
+	cp $< $@
 
 %_automata.o: %_automata.c %_defs.h
 	$(CC) -c $(CFLAGS) -o $@ $<
