@@ -145,7 +145,8 @@ SYSUNINIT(tcpc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, tcpc_sysuninit,
 #endif /* _KERNEL */
 
 void
-__tesla_event_function_prologue_tcp_free(struct tcpcb *tcpcb)
+__tesla_event_function_prologue_tcp_free(void **tesla_data,
+    struct tcpcb *tcpcb)
 {
 	struct tesla_instance *tip;
 	int error, alloc=0;
@@ -161,6 +162,16 @@ __tesla_event_function_prologue_tcp_free(struct tcpcb *tcpcb)
 	if (tcpc_automata_prod(tip, TCPC_EVENT_FUNC_PROLOGUE_TCP_FREE))
 		tesla_assert_fail(tcpc_state, tip);
 	tesla_instance_put(tcpc_state, tip);
+}
+
+void
+__tesla_event_function_return_tcp_free(void **tesla_data)
+{
+
+	/*
+	 * No-op.  Required because we can't request just prologue or
+	 * epilogue instrumentation yet.
+	 */
 }
 
 /*
