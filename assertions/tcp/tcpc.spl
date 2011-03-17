@@ -21,14 +21,14 @@ automaton tcp_connect()
     } or {
       tp->t_state = TCPS_CLOSE_WAIT;
       tp->t_state = TCPS_LAST_ACK;    
-      tp->t_state = TCPS_CLOSED;
+      optional { tp->t_state = TCPS_CLOSED; }
     }
     tcp_free(tp);
   };
    
   void main(struct tcpcb *tp) {
     tp->t_state = TCPS_CLOSED;
-    tp->t_state = TCPS_SYN_SENT;
+    optional { tp->t_state = TCPS_SYN_SENT; }
     either {
       tp->t_state = TCPS_SYN_RECEIVED;
       either {
