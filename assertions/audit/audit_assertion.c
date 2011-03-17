@@ -34,20 +34,22 @@
 
 #ifdef _KERNEL
 #include <sys/param.h>
+#include <sys/eventhandler.h>
 #include <sys/kernel.h>
 #include <sys/systm.h>
 #else
 #include <assert.h>
 #include <stdio.h>
+
+#include "syscalls.h"
 #endif
 
 #include <tesla/tesla.h>
+#include <tesla/tesla_registration.h>
 #include <tesla/tesla_state.h>
 #include <tesla/tesla_util.h>
 
 #include "audit_defs.h"
-
-#include "syscalls.c-tesla.h"
 
 /*
  * State associated with this assertion in flight.
@@ -78,6 +80,16 @@ static struct tesla_state	*audit_state;
 #define	AUDIT_NAME		"audit_submit_check"
 #define	AUDIT_DESCRIPTION	"VOP_WRITE without eventual audit_submit"
 
+#ifdef _KERNEL
+static eventhandler_tag	audit_event_function_prologue_syscallenter_tag;
+static eventhandler_tag	audit_event_function_prologue_syscallret_tag;
+#endif
+
+void	audit_event_function_prologue_syscallenter(void **tesla_data,
+	    struct thread *td, struct syscall_args *sa);
+void	audit_event_function_prologue_syscallret(void **tesla_data,
+	    struct thread *td, int error, struct syscall_args *sa);
+
 /*
  * When an assertion is initialised, register state management with the TESLA
  * state framework. This assertion uses per-thread state, since assertions are
@@ -101,19 +113,19 @@ audit_init(int scope)
 #else
 	assert(error == 0);
 #endif
-#if 0
+
 	/*
-	 * In the future, this will somehow register instrumentation?  How to
-	 * ensure this is (relatively) atomic?
+	 * Comment from MWC regarding atomicity also applies here.
 	 */
-	TESLA_INSTRUMENTATION(audit_state, tesla_syscall_enter,
-	    audit_event_syscall_enter);
-	TESLA_INSTRUMENTATION(audit_state, tesla_syscall_return,
-	    audit_event_syscall_return);
-	TESLA_INSTRUMENTATION(audit_state, tesla_audit_submit,
-	    audit_event_audit_submit);
-	TESLA_INSTRUMENTATION(audit_state, tesla_214872348923_assertion,
-	    audit_event_assertion);
+#ifdef _KERNEL
+	audit_event_function_prologue_syscallenter_tag =
+	    EVENTHANDLER_REGISTER(tesla_event_function_prologue_syscallenter,
+	    audit_event_function_prologue_syscallenter, NULL,
+	    EVENTHANDLER_PRI_ANY);
+	audit_event_function_prologue_syscallret_tag =
+	    EVENTHANDLER_REGISTER(tesla_event_function_prologue_syscallret,
+	    audit_event_function_prologue_syscallret, NULL,
+	    EVENTHANDLER_PRI_ANY);
 #endif
 }
 
@@ -139,6 +151,12 @@ audit_destroy(void)
 {
 
 	tesla_state_destroy(audit_state);
+#ifdef _KERNEL
+	EVENTHANDLER_DEREGISTER(tesla_event_function_prologue_syscallenter,
+	   audit_event_function_prologue_syscallenter_tag);
+	EVENTHANDLER_DEREGISTER(tesla_event_function_prologue_syscallret,
+	   audit_event_function_prologue_syscallret_tag);
+#endif
 }
 
 #ifdef _KERNEL
@@ -153,10 +171,27 @@ SYSUNINIT(audit_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
 #endif /* _KERNEL */
 
 /*
-* System call enters: prod implicit system call lifespan state machine.
-*/
+ * System call enters: prod implicit system call lifespan state machine.
+ */
+#ifndef _KERNEL
 void
-__tesla_event_function_prologue_syscall(void **tesla_data, size_t len)
+__tesla_event_function_prologue_syscallenter(void **tesla_data,
+    struct thread *td, struct syscall_args *sa)
+{
+
+	audit_event_function_prologue_syscallenter(tesla_data, td, sa);
+}
+
+void
+__tesla_event_function_return_syscallenter(void **tesla_data, int retval)
+{
+
+}
+#endif
+
+void
+audit_event_function_prologue_syscallenter(void **tesla_data,
+    struct thread *td, struct syscall_args *sa)
 {
 	struct tesla_instance *tip;
 	int error;
@@ -185,8 +220,25 @@ audit_iterator_callback(struct tesla_instance *tip, void *arg)
  * System call returns: prod implicit system call lifespan state machine,
  * prod eventually clauses, and flush all assertions.
  */
+#ifndef _KERNEL
 void
-__tesla_event_function_return_syscall(void **tesla_data, int retval)
+__tesla_event_function_prologue_syscallret(void **tesla_data,
+    struct thread *td, int error, struct syscall_args *sa)
+{
+
+	audit_event_function_prologue_syscallret(tesla_data, td, error, sa);
+}
+
+void
+__tesla_event_function_return_syscallret(void **tesla_data)
+{
+
+}
+#endif
+
+void
+audit_event_function_prologue_syscallret(void **tesla_data, struct thread *td,
+    int err, struct syscall_args *sa)
 {
 	struct tesla_instance *tip;
 	u_int event;

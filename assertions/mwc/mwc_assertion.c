@@ -34,19 +34,21 @@
 
 #ifdef _KERNEL
 #include <sys/param.h>
+#include <sys/eventhandler.h>
 #include <sys/kernel.h>
 #include <sys/systm.h>
 #else
 #include <assert.h>
 #include <stdio.h>
+
+#include "syscalls.h"
 #endif
 
+#include <tesla/tesla_registration.h>
 #include <tesla/tesla_state.h>
 #include <tesla/tesla_util.h>
 
 #include "mwc_defs.h"
-
-#include "syscalls.c-tesla.h"
 
 /*
  * State associated with this assertion in flight.
@@ -81,6 +83,16 @@ static struct tesla_state	*mwc_state;
 #define	MWC_NAME	"mac_write_check"
 #define	MWC_DESCRIPTION	"VOP_WRITE without previous mac_check_vnode_write"
 
+#ifdef _KERNEL
+static eventhandler_tag	mwc_event_function_prologue_syscallenter_tag;
+static eventhandler_tag	mwc_event_function_prologue_syscallret_tag;
+#endif
+
+void	mwc_event_function_prologue_syscallenter(void **tesla_data,
+	    struct thread *td, struct syscall_args *sa);
+void	mwc_event_function_prologue_syscallret(void **tesla_data,
+	    struct thread *td, int error, struct syscall_args *sa);
+
 /*
  * When an assertion is initialised, register state management with the TESLA
  * state framework. This assertion uses per-thread state, since assertions are
@@ -104,21 +116,22 @@ mwc_init(int scope)
 #else
 	assert(error == 0);
 #endif
-#if 0
+
 	/*
-	 * In the future, this will somehow register instrumentation?  How to
-	 * ensure this is (relatively) atomic?
+	 * The synchronisation properties of registration are a bit dubious.
+	 * We probably want a global flag to enable the assertion on start,
+	 * with appropriate memory barriers with respect to event handler
+	 * registration.
 	 */
-	TESLA_INSTRUMENTATION(mwc_state, tesla_syscall_enter,
-	    mwc_event_syscall_enter);
-	TESLA_INSTRUMENTATION(mwc_state, tesla_syscall_return,
-	    mwc_event_syscall_return);
-	TESLA_INSTRUMENTATION(mwc_state, tesla_call_mac_vnode_check_write,
-	    mwc_call_event_mac_vnode_check_write);
-	TESLA_INSTRUMENTATION(mwc_state, tesla_return_mac_vnode_check_write,
-	    mwc_return_event_mac_vnode_check_write);
-	TESLA_INSTRUMENTATION(mwc_state, tesla_214872348923_assertion,
-	    mwc_event_assertion);
+#ifdef _KERNEL
+	mwc_event_function_prologue_syscallenter_tag =
+	    EVENTHANDLER_REGISTER(tesla_event_function_prologue_syscallenter,
+	    mwc_event_function_prologue_syscallenter, NULL,
+	    EVENTHANDLER_PRI_ANY);
+	mwc_event_function_prologue_syscallret_tag =
+	    EVENTHANDLER_REGISTER(tesla_event_function_prologue_syscallret,
+	    mwc_event_function_prologue_syscallret, NULL,
+	    EVENTHANDLER_PRI_ANY);
 #endif
 }
 
@@ -143,6 +156,13 @@ mwc_destroy(void)
 {
 
 	tesla_state_destroy(mwc_state);
+
+#ifdef _KERNEL
+	EVENTHANDLER_DEREGISTER(tesla_event_function_prologue_syscallenter,
+	   mwc_event_function_prologue_syscallenter_tag);
+	EVENTHANDLER_DEREGISTER(tesla_event_function_prologue_syscallret,
+	   mwc_event_function_prologue_syscallret_tag);
+#endif
 }
 
 #ifdef _KERNEL
@@ -159,13 +179,31 @@ SYSUNINIT(mwc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, mwc_sysuninit,
 /*
 * System call enters: prod implicit system call lifespan state machine.
 */
+#ifndef _KERNEL
 void
-__tesla_event_function_prologue_syscall(void **tesla_data, int action)
+__tesla_event_function_prologue_syscallenter(void **tesla_data,
+    struct thread *td, struct syscall_args *sa)
+{
+
+	mwc_event_function_prologue_syscallenter(tesla_data, td, sa);
+}
+
+void
+__tesla_event_function_return_syscallenter(void **tesla_data, int retval)
+{
+
+}
+#endif
+
+void
+mwc_event_function_prologue_syscallenter(void **tesla_data,
+    struct thread *td, struct syscall_args *sa)
 {
 	struct tesla_instance *tip;
 	int error;
 
-	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip, NULL);
+	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip,
+	    NULL);
 	if (error)
 		return;
 	tip->ti_state[0] = 1;		/* In syscall. */
@@ -177,13 +215,31 @@ __tesla_event_function_prologue_syscall(void **tesla_data, int action)
  * flush all assertions.  If we had eventually clauses, we would do a
  * tesla_instance_foreach() here to iterate over them, proding each.
  */
+#ifndef _KERNEL
 void
-__tesla_event_function_return_syscall(void **tesla_data, int retval)
+__tesla_event_function_prologue_syscallret(void **tesla_data,
+    struct thread *td, int error, struct syscall_args *sa)
+{
+
+	mwc_event_function_prologue_syscallret(tesla_data, td, error, sa);
+}
+
+void
+__tesla_event_function_return_syscallret(void **tesla_data)
+{
+
+}
+#endif
+
+void
+mwc_event_function_prologue_syscallret(void **tesla_data, struct thread *td,
+    int err, struct syscall_args *sa)
 {
 	struct tesla_instance *tip;
 	int error;
 
-	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip, NULL);
+	error = tesla_instance_get1(mwc_state, MWC_AUTOMATA_SYSCALL, &tip,
+	    NULL);
 	if (error)
 		goto out;
 	if (tip->ti_state[0] == 1)

@@ -11,4 +11,9 @@
 /* simulate a syscall */
 int	syscall(size_t len, ...);
 
+struct thread;
+struct syscall_args;
+int	syscallenter(struct thread *td, struct syscall_args *sa);
+void	syscallret(struct thread *td, int error, struct syscall_args *sa);
+
 #endif	/* SYSCALLS_H */

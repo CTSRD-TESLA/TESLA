@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include <tesla/tesla.h>
 
@@ -28,6 +29,19 @@ mac_vnode_check_write(struct ucred *active_cred, struct ucred *file_cred,
 	return (desired_return_value);
 }
 
+int
+syscallenter(struct thread *td, struct syscall_args *sa)
+{
+
+	return (0);
+}
+
+void
+syscallret(struct thread *td, int error, struct syscall_args *sa)
+{
+
+}
+
 void
 mws_assert(struct ucred *active_cred, struct ucred *file_cred,
     struct vnode *vp)
@@ -42,6 +56,7 @@ int
 syscall(int action)
 {
 
+	syscallenter(NULL, NULL);
 	switch(action) {
 	case NOOP:
 		break;
@@ -95,6 +110,6 @@ syscall(int action)
 		mws_assert(TWO, TWO, ONE);
 		break;
 	}
-
+	syscallret(NULL, 0, NULL);
 	return (0);
 }
