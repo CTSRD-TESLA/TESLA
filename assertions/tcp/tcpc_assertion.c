@@ -145,6 +145,13 @@ SYSUNINIT(tcpc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, tcpc_sysuninit,
 #endif /* _KERNEL */
 
 void
+__tesla_event_assertion_tcp_newtcpcb_0(struct tcpcb *tcpcb)
+{
+
+	/* XXXRW: TODO: explicit initial state. */
+}
+
+void
 __tesla_event_function_prologue_tcp_free(void **tesla_data,
     struct tcpcb *tcpcb)
 {
