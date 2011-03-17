@@ -1,0 +1,2 @@
+function,syscall
+function,%MACCHECK%
