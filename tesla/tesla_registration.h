@@ -41,8 +41,8 @@
  */
 #ifdef _KERNEL
 
-struct thread *td;
-struct syscall_args *sa;
+struct thread;
+struct syscall_args;
 typedef void	(*tesla_event_function_prologue_syscallenter_fn)(void *arg,
 		    void **tesla_data, struct thread *td,
 		    struct syscall_args *sa);
