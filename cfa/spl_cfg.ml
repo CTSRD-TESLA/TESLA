@@ -381,7 +381,7 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
     
 let generate_states fname funcs includes =
     let genv = { filename=fname; functions=Hashtbl.create 1;
-      counter = ref 0; reg_ranges=Hashtbl.create 1; includes } in
+      counter = ref 0; reg_ranges=Hashtbl.create 1; includes = includes } in
     List.iter (fun f ->
         Logger.log (sprintf "Compiling function %s (%s) ... " f.name
             (if f.export then "public" else "private"));
