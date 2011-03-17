@@ -21,17 +21,20 @@ static int desired_return_value;
 struct ucred;
 struct vnode;
 int
-mac_vnode_check_write(struct ucred *cred, struct vnode *vp)
+mac_vnode_check_write(struct ucred *active_cred, struct ucred *file_cred,
+    struct vnode *vp)
 {
 
 	return (desired_return_value);
 }
 
 void
-mws_assert(struct ucred *cred, struct vnode *vp)
+mws_assert(struct ucred *active_cred, struct ucred *file_cred,
+    struct vnode *vp)
 {
 	TESLA_ASSERT {
-		previously(returned(mac_vnode_check_write(cred, vp), 0));
+		previously(returned(mac_vnode_check_write(active_cred,
+		    file_cred, vp), 0));
 	}
 }
 
@@ -45,51 +48,51 @@ syscall(int action)
 
 	case CHECK_ONLY:
 		desired_return_value = 0;
-		(void)mac_vnode_check_write(ONE, ONE);
+		(void)mac_vnode_check_write(ONE, ONE, ONE);
 		break;
 
 	case CHECK_ASSERT:
 		desired_return_value = 0;
-		(void)mac_vnode_check_write(ONE, ONE);
-		mws_assert(ONE, ONE);
+		(void)mac_vnode_check_write(ONE, ONE, ONE);
+		mws_assert(ONE, ONE, ONE);
 		break;
 
 	case BADCHECK_ASSERT:
 		desired_return_value = EPERM;
-		(void)mac_vnode_check_write(ONE, ONE);
-		mws_assert(ONE, ONE);
+		(void)mac_vnode_check_write(ONE, ONE, ONE);
+		mws_assert(ONE, ONE, ONE);
 		break;
 
 	case ASSERT_ONLY:
-		mws_assert(ONE, ONE);
+		mws_assert(ONE, ONE, ONE);
 		break;
 
 	case WRONG_VNODE:
 		desired_return_value = 0;
-		(void)mac_vnode_check_write(TWO, TWO);
-		mws_assert(ONE, ONE);
+		(void)mac_vnode_check_write(TWO, TWO, TWO);
+		mws_assert(ONE, ONE, ONE);
 		break;
 
 	case LASTRULE:
-		mws_assert(TWO, TWO);
+		mws_assert(TWO, TWO, TWO);
 		break;
 
 	case TWOPASS:
 		desired_return_value = 0;
-		(void)mac_vnode_check_write(ONE, ONE);
-		(void)mac_vnode_check_write(TWO, TWO);
-		mws_assert(ONE, ONE);
-		mws_assert(TWO, TWO);
+		(void)mac_vnode_check_write(ONE, ONE, ONE);
+		(void)mac_vnode_check_write(TWO, TWO, TWO);
+		mws_assert(ONE, ONE, ONE);
+		mws_assert(TWO, TWO, TWO);
 		break;
 
 	case DOUBLECRED:
-		(void)mac_vnode_check_write(ONE, ONE);
-		mws_assert(ONE, TWO);
+		(void)mac_vnode_check_write(ONE, ONE, ONE);
+		mws_assert(ONE, ONE, TWO);
 		break;
 
 	case DOUBLEVNODE:
-		(void)mac_vnode_check_write(ONE, ONE);
-		mws_assert(TWO, ONE);
+		(void)mac_vnode_check_write(ONE, ONE, ONE);
+		mws_assert(TWO, TWO, ONE);
 		break;
 	}
 

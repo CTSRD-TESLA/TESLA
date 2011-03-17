@@ -198,7 +198,8 @@ out:
  */
 void
 __tesla_event_function_prologue_mac_vnode_check_write(
-    void **tesla_data, struct ucred *cred, struct vnode *vp)
+    void **tesla_data, struct ucred *active_cred, struct ucred *file_cred,
+    struct vnode *vp)
 {
 	struct tesla_instance *tip;
 	u_int state;
@@ -226,20 +227,23 @@ __tesla_event_function_prologue_mac_vnode_check_write(
 		return;
 
 	/*
-	 * Create an automata for this frame, capturing the cred and vp
-	 * parameters to our actual automata.  This allows us to look up
-	 * whether the call matched when we process the return later.
+	 * Create an automata for this frame, capturing the active_cred,
+	 * file_cred, and vp parameters to our actual automata.  This allows
+	 * us to look up whether the call matched when we process the return
+	 * later.
 	 *
 	 * XXXRW: Possibly, we shouldn't create an automata if there isn't a
 	 * match on arguments, but for now this is simpler.
 	 */
 	error = tesla_instance_get2(mwc_state,
-	    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)tesla_data, &tip, NULL);
+	    MWC_AUTOMATA_MAC_VNODE_CHECK_WRITE, (register_t)tesla_data, &tip,
+	    NULL);
 	if (error)
 		return;
 	tip->ti_state[0] = 1;
-	tip->ti_state[1] = (register_t)cred;
-	tip->ti_state[2] = (register_t)vp;
+	tip->ti_state[1] = (register_t)active_cred;
+	tip->ti_state[2] = (register_t)file_cred;
+	tip->ti_state[3] = (register_t)vp;
 	tesla_instance_put(mwc_state, tip);
 }
 
@@ -250,7 +254,7 @@ void
 __tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
 {
 	struct tesla_instance *tip;
-	register_t cred, vp;
+	register_t active_cred, file_cred, vp;
 	u_int state;
 	int error;
 
@@ -303,15 +307,16 @@ __tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
 		tesla_instance_destroy(mwc_state, tip);
 		return;
 	}
-	cred = tip->ti_state[1];
-	vp = tip->ti_state[2];
+	active_cred = tip->ti_state[1];
+	file_cred = tip->ti_state[2];
+	vp = tip->ti_state[3];
 	tesla_instance_destroy(mwc_state, tip);
 
 	/*
 	 * No wildcards here; if there were, we'd use tesla_instance_foreach.
 	 */
-	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION,
-	    cred, vp, &tip, NULL);
+	error = tesla_instance_get4(mwc_state, MWC_AUTOMATA_ASSERTION,
+	    active_cred, file_cred, vp, &tip, NULL);
 	if (error)
 		return;
 	if (mwc_automata_prod(tip, MWC_EVENT_MAC_VNODE_CHECK_WRITE))
@@ -323,7 +328,13 @@ __tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
 * The event implied by the assertion; executes at that point in VOP_WRITE.
 */
 void
-__tesla_event_assertion_mws_assert_0(struct ucred *cred, struct vnode *vp)
+#ifdef _KERNEL
+__tesla_event_assertion_vn_rdwr_0(struct ucred *active_cred,
+    struct ucred *file_cred, struct vnode *vp)
+#else
+__tesla_event_assertion_mws_assert_0(struct ucred *active_cred,
+    struct ucred *file_cred, struct vnode *vp)
+#endif
 {
 	struct tesla_instance *tip;
 	int error, state;
@@ -341,8 +352,9 @@ __tesla_event_assertion_mws_assert_0(struct ucred *cred, struct vnode *vp)
 		return;
 
 	/* No argument checking for this event, they were free variables. */
-	error = tesla_instance_get3(mwc_state, MWC_AUTOMATA_ASSERTION,
-	    (register_t)cred, (register_t)vp, &tip, NULL);
+	error = tesla_instance_get4(mwc_state, MWC_AUTOMATA_ASSERTION,
+	    (register_t)active_cred, (register_t)file_cred, (register_t)vp,
+	    &tip, NULL);
 	if (error)
 		return;
 	if (mwc_automata_prod(tip, MWC_EVENT_ASSERTION))
@@ -354,9 +366,9 @@ static void
 mwc_debug_callback(struct tesla_instance *tip)
 {
 
-	printf("%s: assertion %s failed, cred %p vp %p\n", MWC_NAME,
-	    MWC_DESCRIPTION, (void *)tip->ti_keys[1],
-	    (void *)tip->ti_keys[2]);
+	printf("%s: assertion %s failed, active_cred %p file_cred %p vp %p\n",
+	    MWC_NAME, MWC_DESCRIPTION, (void *)tip->ti_keys[1],
+	    (void *)tip->ti_keys[2], (void *)tip->ti_keys[3]);
 }
 
 void
