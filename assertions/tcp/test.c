@@ -52,10 +52,15 @@ static int test1[7] = { TCPS_CLOSED, TCPS_SYN_SENT,
 
 static int test2[3] = { TCPS_CLOSED, TCPS_SYN_SENT, TCPS_LAST_ACK };
 
+static int test3[2] = { TCPS_CLOSED, TCPS_CLOSED };
+
+static int test4[5] = { TCPS_CLOSED, TCPS_SYN_SENT, TCPS_ESTABLISHED,
+	TCPS_CLOSE_WAIT, TCPS_LAST_ACK };
+
 static void
 test(int scope)
 {
-	struct tcpcb tcb1, tcb2;
+	struct tcpcb tcb1, tcb2, tcb3, tcb4;
 	int i;
 
 	tcpc_init(scope);
@@ -75,7 +80,18 @@ test(int scope)
 	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb2, test2[i]);
 	__tesla_event_function_prologue_tcp_free(&tcb2);
 	printf(" OK\n");
-	
+
+	printf("Initial closed to closed:\n");
+	for (i=0; i< 2; i++)
+	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb3, test3[i]);
+	__tesla_event_function_prologue_tcp_free(&tcb3);
+	printf(" OK\n");
+
+	printf("Free directly from TCPS_LAST_ACK\n");
+	for (i=0; i< 5; i++)
+	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb4, test4[i]);
+	__tesla_event_function_prologue_tcp_free(&tcb4);
+	printf(" OK\n");
 }     
 
 int
