@@ -46,7 +46,7 @@ void
 mws_assert(struct ucred *active_cred, struct ucred *file_cred,
     struct vnode *vp)
 {
-	TESLA_ASSERT {
+	TESLA_ASSERT(syscall) {
 		previously(returned(mac_vnode_check_write(active_cred,
 		    file_cred, vp), 0));
 	}

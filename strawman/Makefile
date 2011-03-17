@@ -18,6 +18,8 @@ clean:
 test: $(OBJ)
 	$(LD) -o $@ $^
 
+syscalls.o: ../tesla/tesla.h
+
 
 # LLVM IR for inspection
 all: syscalls.ll

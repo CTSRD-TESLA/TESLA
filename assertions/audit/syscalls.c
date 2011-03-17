@@ -14,7 +14,7 @@ audit_submit()
 void
 helper_which_asserts()
 {
-	TESLA_ASSERT {
+	TESLA_ASSERT(syscall) {
 		eventually(audit_submit());
 	}
 }
