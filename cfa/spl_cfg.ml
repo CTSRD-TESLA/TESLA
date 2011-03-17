@@ -241,6 +241,13 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
           generate_states_of_expr genv env allows handles ns sblockexit xsl
         ) gcl;
         true, sblockexit
+      |Multiple (None, Some 1, xsl) -> (* Optional, no registers needed *)
+        let sinit = new_state env (gen_label genv "optinit") in
+        let sexit = new_state env (gen_label genv "optexit") in
+        create_edge state sinit (Condition True);
+        create_edge state sexit (Condition True);
+        generate_states_of_expr genv env allows handles sinit sexit xsl;
+        (true, sexit)
       |Multiple (l, h, xsl) ->
         let sinit = new_state env (gen_label genv "multinit") in
         let sentry = new_state env (gen_label genv "multentry") in
