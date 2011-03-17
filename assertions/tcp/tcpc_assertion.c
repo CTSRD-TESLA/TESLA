@@ -148,7 +148,8 @@ SYSUNINIT(tcpc_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY, tcpc_sysuninit,
 * An assignment event to a (struct tcpcb->t_state)
 */
 void
-__tesla_event_field_assign_tcpcb(struct tcpcb *tcpcb, u_int t_state)
+__tesla_event_field_assign_struct_tcpcb_t_state(struct tcpcb *tcpcb,
+    u_int t_state)
 {
 	struct tesla_instance *tip;
 	u_int event;
