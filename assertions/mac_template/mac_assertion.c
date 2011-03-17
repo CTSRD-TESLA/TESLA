@@ -85,7 +85,7 @@ static struct tesla_state	*cbu_state;
  * Strings used when printing assertion failures.
  */
 #define	CBU_NAME		"cbu-%MACCHECK%"
-#define	CBU_DESCRIPTION		"%CALLERFN% without previous %MACCHECK%"
+#define	CBU_DESCRIPTION		"%ASSERT_FN% without previous %MACCHECK%"
 
 #ifdef _KERNEL
 static eventhandler_tag	cbu_event_function_prologue_syscallenter_tag;
@@ -106,7 +106,7 @@ static void	cbu_event_function_prologue_syscallret(void **tesla_data,
 /*
  * This is a hand-crafted automata implementing the TESLA assertion:
  *
- * (assertion in %CALLERFN%)(vp, ..., cred) ->
+ * (assertion in %ASSERT_FN%)(vp, ..., cred) ->
  *     previously(returned(%MACCHECK%(cred, vp), 0))
  *
  * Many instances of the automata may be in flight at once during a system
@@ -441,9 +441,7 @@ _tesla_event_function_return_mac_vnode_check_write(void **tesla, int retval)
  * The event implied by the assertion; executes at that point in VOP_WRITE.
  */
 static void
-#ifdef _KERNEL
-_tesla_event_assertion_%CALLERFN%_0(%ASSERTIONARGS%)
-#endif
+%ASSERTION_EVENT%
 {
 	struct tesla_instance *tip;
 	int error, state;
