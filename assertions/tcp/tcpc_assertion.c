@@ -36,9 +36,12 @@
 #ifdef _KERNEL
 #include <sys/param.h>
 #include <sys/kernel.h>
+#include <sys/socket.h>
+#include <sys/socketvar.h>
 #include <sys/systm.h>
 #include <netinet/tcp_fsm.h>
 #include <netinet/tcp.h>
+#include <netinet/tcp_var.h>
 #else
 #include <assert.h>
 #include <stdio.h>
@@ -198,6 +201,7 @@ __tesla_event_field_assign_tcpcb(struct tcpcb *tcpcb, u_int t_state)
 	tesla_instance_put(tcpc_state, tip);
 }
 
+#ifndef _KERNEL
 static void
 tcpc_debug_callback(struct tesla_instance *tip)
 {
@@ -212,3 +216,4 @@ tcpc_setaction_debug(void)
 
 	tesla_state_setaction(tcpc_state, tcpc_debug_callback);
 }
+#endif

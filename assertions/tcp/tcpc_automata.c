@@ -8,6 +8,7 @@
 #include <sys/types.h>
 
 #ifdef _KERNEL
+#include <sys/systm.h>
 #else
 #include <assert.h>
 #include <stdlib.h>

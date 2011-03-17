@@ -34,7 +34,9 @@ int tcpc_automata_prod(struct tesla_instance *tip, u_int event);
  * "Public" interfaces to the assertion, to be invoked by load, unload
  * and instrumentation handlers.
  */
+#ifndef _KERNEL
 void	tcpc_init(int scope);
 void	tcpc_destroy(void);
 void    tcpc_setaction_debug(void);
+#endif
 #endif /* TCPC_DEFS_H */
