@@ -19,3 +19,4 @@ clean:
 
 audit_assertion.o: syscalls.c-tesla.h
 syscalls.c-tesla.h: syscalls.o
+syscalls.o: instrumentation.spec

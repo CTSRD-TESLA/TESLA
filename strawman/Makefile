@@ -26,6 +26,7 @@ syscalls.ll: syscalls.c
 
 
 # Clang-generated declarations of instrumentation
+syscalls.o: instrumentation.spec
 _instrumentation.o: syscalls.c-tesla.h
 syscalls.c-tesla.h: syscalls.o
 
