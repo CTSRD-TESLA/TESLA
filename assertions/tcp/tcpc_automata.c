@@ -34,7 +34,7 @@ struct main {
 void
 tcpc_automata_init(struct tesla_instance *tip) {
   MAIN_NUM_STATES(tip) = 1;
-  MAIN_STATE(tip,0)->state = 8; /* 25 */
+  MAIN_STATE(tip,0)->state = 1; /* 27 */
   MAIN_STATE(tip,0)->active_close_return = 0;
   MAIN_STATE(tip,0)->established_return = 0;
 }
@@ -50,11 +50,17 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
   case 0:  /* EVENT_TP_T_STATE_ASSIGN_TCPS_LAST_ACK */
     for (i=0; i < MAIN_NUM_STATES(tip); i++) {
       switch (MAIN_STATE(tip,i)->state) {
-      case 20:
-        /* event 21 -> 22 */
+      case 21:
+        /* event 21 -> 15 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-        tmpstate.state = 22;
+        tmpstate.state = 20;
+        memcpy(&(newstate[curpos]), &tmpstate, 1);
+        curpos++;
+        /* event 21 -> 23 */
+        tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
+        tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
+        tmpstate.state = 17;
         memcpy(&(newstate[curpos]), &tmpstate, 1);
         curpos++;
         break;
@@ -89,42 +95,35 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
     memcpy(MAIN_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 2:  /* EVENT_TP_T_STATE_ASSIGN_TCPS_CLOSED */
+  case 2:  /* EVENT_TP_T_STATE_ASSIGN_TCPS_ESTABLISHED */
     for (i=0; i < MAIN_NUM_STATES(tip); i++) {
       switch (MAIN_STATE(tip,i)->state) {
-      case 8:
-        /* event 25 -> 27 */
+      case 7:
+        /* event 39 -> 16 */
+        /* register active_close_return = 1 */
+        /* event 39 -> 1 */
+        tmpstate.active_close_return = 1;
+        tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
+        tmpstate.state = 11;
+        memcpy(&(newstate[curpos]), &tmpstate, 1);
+        curpos++;
+        /* event 39 -> 20 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-        tmpstate.state = 2;
+        tmpstate.state = 19;
         memcpy(&(newstate[curpos]), &tmpstate, 1);
         curpos++;
         break;
-      case 14:
-        /* event 4 -> 2 */
-        switch (MAIN_STATE(tip,i)->active_close_return) {
-         case 1:
-          /* event 4 -> 15 */
-          tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
-          tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-          tmpstate.state = 19;
-          memcpy(&(newstate[curpos]), &tmpstate, 1);
-          curpos++;
-          break;
-         case 0:
-          /* event 4 -> 26 */
-          tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
-          tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-          tmpstate.state = 9;
-          memcpy(&(newstate[curpos]), &tmpstate, 1);
-          curpos++;
-          break;
-         default:
-          return 1; /* TESLA_INTERNAL_ERROR */
-        }
-        break;
-      case 22:
-        /* event 22 -> 15 */
+      case 8:
+        /* event 47 -> 16 */
+        /* register active_close_return = 1 */
+        /* event 47 -> 1 */
+        tmpstate.active_close_return = 1;
+        tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
+        tmpstate.state = 11;
+        memcpy(&(newstate[curpos]), &tmpstate, 1);
+        curpos++;
+        /* event 47 -> 20 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
         tmpstate.state = 19;
@@ -141,38 +140,59 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
     memcpy(MAIN_PTR(tip), &newstate, sizeof(newstate));
     return 0;
 
-  case 3:  /* EVENT_TP_T_STATE_ASSIGN_TCPS_ESTABLISHED */
+  case 3:  /* EVENT_TP_T_STATE_ASSIGN_TCPS_CLOSED */
     for (i=0; i < MAIN_NUM_STATES(tip); i++) {
       switch (MAIN_STATE(tip,i)->state) {
-      case 4:
-        /* event 35 -> 16 */
-        /* register active_close_return = 1 */
-        /* event 35 -> 1 */
-        tmpstate.active_close_return = 1;
-        tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-        tmpstate.state = 11;
-        memcpy(&(newstate[curpos]), &tmpstate, 1);
-        curpos++;
-        /* event 35 -> 20 */
+      case 1:
+        /* event 27 -> 34 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-        tmpstate.state = 18;
+        tmpstate.state = 2;
+        memcpy(&(newstate[curpos]), &tmpstate, 1);
+        curpos++;
+        /* event 27 -> 45 */
+        /* register established_return = 0 */
+        /* event 27 -> 47 */
+        tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
+        tmpstate.established_return = 0;
+        tmpstate.state = 8;
+        memcpy(&(newstate[curpos]), &tmpstate, 1);
+        curpos++;
+        /* event 27 -> 30 */
+        tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
+        tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
+        tmpstate.state = 9;
         memcpy(&(newstate[curpos]), &tmpstate, 1);
         curpos++;
         break;
-      case 5:
-        /* event 43 -> 16 */
-        /* register active_close_return = 1 */
-        /* event 43 -> 1 */
-        tmpstate.active_close_return = 1;
-        tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-        tmpstate.state = 11;
-        memcpy(&(newstate[curpos]), &tmpstate, 1);
-        curpos++;
-        /* event 43 -> 20 */
+      case 14:
+        /* event 4 -> 2 */
+        switch (MAIN_STATE(tip,i)->active_close_return) {
+         case 1:
+          /* event 4 -> 15 */
+          tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
+          tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
+          tmpstate.state = 20;
+          memcpy(&(newstate[curpos]), &tmpstate, 1);
+          curpos++;
+          break;
+         case 0:
+          /* event 4 -> 28 */
+          tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
+          tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
+          tmpstate.state = 3;
+          memcpy(&(newstate[curpos]), &tmpstate, 1);
+          curpos++;
+          break;
+         default:
+          return 1; /* TESLA_INTERNAL_ERROR */
+        }
+        break;
+      case 17:
+        /* event 23 -> 15 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-        tmpstate.state = 18;
+        tmpstate.state = 20;
         memcpy(&(newstate[curpos]), &tmpstate, 1);
         curpos++;
         break;
@@ -237,22 +257,22 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
   case 6:  /* EVENT_FUNC_PROLOGUE_TCP_FREE */
     for (i=0; i < MAIN_NUM_STATES(tip); i++) {
       switch (MAIN_STATE(tip,i)->state) {
-      case 19:
+      case 20:
         /* event 15 -> 13 */
         switch (MAIN_STATE(tip,i)->established_return) {
-         case 0:
-          /* event 15 -> 26 */
+         case 1:
+          /* event 15 -> 28 */
           tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
           tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-          tmpstate.state = 9;
+          tmpstate.state = 3;
           memcpy(&(newstate[curpos]), &tmpstate, 1);
           curpos++;
           break;
-         case 1:
-          /* event 15 -> 26 */
+         case 0:
+          /* event 15 -> 28 */
           tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
           tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-          tmpstate.state = 9;
+          tmpstate.state = 3;
           memcpy(&(newstate[curpos]), &tmpstate, 1);
           curpos++;
           break;
@@ -273,19 +293,19 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
   case 7:  /* EVENT_TP_T_STATE_ASSIGN_TCPS_SYN_SENT */
     for (i=0; i < MAIN_NUM_STATES(tip); i++) {
       switch (MAIN_STATE(tip,i)->state) {
-      case 2:
-        /* event 27 -> 30 */
+      case 9:
+        /* event 30 -> 34 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-        tmpstate.state = 7;
+        tmpstate.state = 2;
         memcpy(&(newstate[curpos]), &tmpstate, 1);
         curpos++;
-        /* event 27 -> 41 */
+        /* event 30 -> 45 */
         /* register established_return = 0 */
-        /* event 27 -> 43 */
+        /* event 30 -> 47 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = 0;
-        tmpstate.state = 5;
+        tmpstate.state = 8;
         memcpy(&(newstate[curpos]), &tmpstate, 1);
         curpos++;
         break;
@@ -302,11 +322,11 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
   case 8:  /* EVENT_TP_T_STATE_ASSIGN_TCPS_CLOSE_WAIT */
     for (i=0; i < MAIN_NUM_STATES(tip); i++) {
       switch (MAIN_STATE(tip,i)->state) {
-      case 18:
+      case 19:
         /* event 20 -> 21 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
-        tmpstate.state = 20;
+        tmpstate.state = 21;
         memcpy(&(newstate[curpos]), &tmpstate, 1);
         curpos++;
         break;
@@ -323,18 +343,18 @@ tcpc_automata_prod(struct tesla_instance *tip, u_int event)
   case 9:  /* EVENT_TP_T_STATE_ASSIGN_TCPS_SYN_RECEIVED */
     for (i=0; i < MAIN_NUM_STATES(tip); i++) {
       switch (MAIN_STATE(tip,i)->state) {
-      case 7:
-        /* event 30 -> 33 */
+      case 2:
+        /* event 34 -> 37 */
         /* register established_return = 1 */
-        /* event 30 -> 35 */
+        /* event 34 -> 39 */
         tmpstate.active_close_return = MAIN_STATE(tip,i)->active_close_return;
         tmpstate.established_return = 1;
-        tmpstate.state = 4;
+        tmpstate.state = 7;
         memcpy(&(newstate[curpos]), &tmpstate, 1);
         curpos++;
-        /* event 30 -> 37 */
+        /* event 34 -> 41 */
         /* register active_close_return = 0 */
-        /* event 30 -> 1 */
+        /* event 34 -> 1 */
         tmpstate.active_close_return = 0;
         tmpstate.established_return = MAIN_STATE(tip,i)->established_return;
         tmpstate.state = 11;
