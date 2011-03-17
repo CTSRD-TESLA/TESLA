@@ -187,6 +187,7 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 		tip->ti_keys[3] = key3;
 		/* Note: ti_state left zero'd. */
 		*tipp = tip;
+		ttp->tt_free--;
 		if (alloc != NULL)
 			*alloc = 1;
 		return (TESLA_SUCCESS);
