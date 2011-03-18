@@ -209,7 +209,7 @@ automata_prod(struct tesla_instance *tip, u_int event)
  * per-thread instances, and synchronisation is avoided.
  */
 static void
-cbu_%MACCHECK%_sysinit(_unused void *arg)
+cbu_%MACCHECK%_sysinit(__unused void *arg)
 {
 	int error;
 
@@ -244,7 +244,7 @@ SYSINIT(cbu_%MACCHECK%_init, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
  * When the checker is unloaded, GC its state.  Hopefully also un-instruments.
  */
 static void
-cbu_%MACCHECK%_sysuninit(_unused void *arg)
+cbu_%MACCHECK%_sysuninit(__unused void *arg)
 {
 
 	tesla_state_destroy(cbu_state);
@@ -263,7 +263,7 @@ SYSUNINIT(cbu_%MACCHECK%_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
  * System call enters: prod implicit system call lifespan state machine.
  */
 static void
-cbu_tesla_event_function_prologue_syscallenter(void **tesla_data,
+cbu_event_function_prologue_syscallenter(void **tesla_data,
     struct thread *td, struct syscall_args *sa)
 {
 	struct tesla_instance *tip;
@@ -283,7 +283,7 @@ cbu_tesla_event_function_prologue_syscallenter(void **tesla_data,
  * tesla_instance_foreach() here to iterate over them, proding each.
  */
 static void
-cbu_tesla_event_function_prologue_syscallret(void **tesla_data,
+cbu_event_function_prologue_syscallret(void **tesla_data,
     struct thread *td, int err, struct syscall_args *sa)
 {
 	struct tesla_instance *tip;
@@ -303,7 +303,7 @@ out:
 /*
  * Prologue of %MACCHECK%() is an event.
  */
-static void
+void
 __tesla_event_function_prologue_%MACCHECK%(
     void **tesla_data, struct ucred *active_cred, struct ucred *file_cred,
     struct vnode *vp)
@@ -361,7 +361,7 @@ __tesla_event_function_prologue_%MACCHECK%(
 /*
  * Epilogue of mac_vnode_check_write is an event.
  */
-static void
+void
 __tesla_event_function_return_%MACCHECK%(void **tesla, int retval)
 {
 	struct tesla_instance *tip;
@@ -444,7 +444,7 @@ __tesla_event_function_return_%MACCHECK%(void **tesla, int retval)
 /*
  * The event implied by the assertion; executes at that point in VOP_WRITE.
  */
-static void
+void
 %ASSERTION_EVENT%
 {
 	struct tesla_instance *tip;
