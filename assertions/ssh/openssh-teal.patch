@@ -1,0 +1,19 @@
+--- ssh.c.orig	2011-03-18 12:49:09.000000000 +0000
++++ ssh.c	2011-03-18 12:49:47.000000000 +0000
+@@ -110,6 +110,7 @@
+ #endif
+ 
+ extern char *__progname;
++void tesla_ssh_init(int);
+ 
+ /* Flag indicating whether debug mode is on.  May be set on the command line. */
+ int debug_flag = 0;
+@@ -258,6 +259,8 @@
+ 	 */
+ 	PRIV_END;
+ 
++	tesla_ssh_init(0);
++
+ #ifdef HAVE_SETRLIMIT
+ 	/* If we are installed setuid root be careful to not drop core. */
+ 	if (original_real_uid != original_effective_uid) {
