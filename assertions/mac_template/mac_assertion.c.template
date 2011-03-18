@@ -350,11 +350,6 @@ __tesla_event_function_prologue_%INSTRUMENTED_FN%(void **tesla_data, %PARAMS%)
 
 	tip->ti_state[0] = 1;
 %STORE_STATE%
-#if 0
-	tip->ti_state[1] = (register_t)active_cred;
-	tip->ti_state[2] = (register_t)file_cred;
-	tip->ti_state[3] = (register_t)vp;
-#endif
 	tesla_instance_put(cbu_state, tip);
 }
 
@@ -366,9 +361,6 @@ __tesla_event_function_return_%INSTRUMENTED_FN%(void **tesla, int retval)
 {
 	struct tesla_instance *tip;
 %KEYARGS_DECL%
-#if 0
-	register_t active_cred, file_cred, vp;
-#endif
 	u_int state;
 	int error;
 
@@ -422,11 +414,6 @@ __tesla_event_function_return_%INSTRUMENTED_FN%(void **tesla, int retval)
 		return;
 	}
 %EXTRACT_STATE%
-#if 0
-	active_cred = tip->ti_state[1];
-	file_cred = tip->ti_state[2];
-	vp = tip->ti_state[3];
-#endif
 	tesla_instance_destroy(cbu_state, tip);
 
 	/*
