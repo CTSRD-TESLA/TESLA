@@ -23,6 +23,7 @@ cp $TEMPLATE $OUTPUT
 cat $VARS | while read line
 do
 	case $line in
+		"") continue ;;
 		\#*)	continue ;;
 	esac
 
