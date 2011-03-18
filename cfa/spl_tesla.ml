@@ -132,7 +132,7 @@ let pp_record_type e genv env tname t =
   e.p (sprintf "struct %s {" tname);
   indent_fn e (fun e ->
     let max_state = Hashtbl.fold (fun _ num a -> max num a) env.statenum (-1) in
-    e.p (sprintf "u_int state : %d;" (num_bits max_state));
+    e.p (sprintf "u_int state : %d;" (num_bits (max_state+1)));
     total_width := num_bits max_state;
     List.iter (fun (nm,ty,m) ->
       let range = try num_bits (Hashtbl.find genv.reg_ranges nm)
