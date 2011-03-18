@@ -12,13 +12,15 @@ int do_something(struct User *u1, struct User *u2) { return -1; }
 
 int helper(struct User *user, const char *filename)
 {
+#ifdef TESLA_INCLUDE_ASSERTIONS
 	TESLA_ASSERT(syscall) {
 		previously(returned(check_auth(user, filename), 0))
 		|| previously(returned(do_something(user, NULL), 0))
 		|| eventually(assigned(user, generation, -1));
 	};
+#endif
 
-	int y = WEIRD_C_THING(12);
+//	int y = WEIRD_C_THING(12);
 
 	return EIO;
 }
