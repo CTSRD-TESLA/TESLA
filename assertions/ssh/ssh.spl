@@ -1,0 +1,9 @@
+automaton packet() {
+  void main() {
+    packet_set_connection();
+    multiple {
+      packet_start ();
+      packet_send ();
+    }
+  }
+}  
