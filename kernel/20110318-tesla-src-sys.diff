@@ -1,0 +1,444 @@
+Patch to hook up libtesla and assertions to the FreeBSD 9.x kernel.  This
+assumes that something like the following has been done first:
+
+  mkdir -p src/sys/tesla/assertions
+  mkdir src/sys/tesla/assertions/audit
+  mkdir src/sys/tesla/assertions/mac_assertion
+  mkdir src/sys/tesla/assertions/mwc
+  ln -s ~/ctsrd/tesla/trunk/tesla/* src/sys/tesla/
+  ln -s ~/ctsrd/tesla/trunk/libtesla/*.[ch] src/sys/tesla/
+  ln -s ~/ctsrd/tesla/trunk/assertions/audit \
+    src/sys/tesla/assertions/audit
+  ln -s ~/ctsrd/tesla/trunk/assertions/mac_assertion src/sys/tesla/mac_assertion
+  ln -s ~/ctsrd/tesla/trunk/assertions/mwc src/sys/tesla/assertions/mwc
+
+Note that the audit automata is current disabled as it has conflicting
+instrumentation with MWC; this will be fixed.
+
+A file named 'instrumentation.spec' needs to be placed in your kernel build
+directory; mine contains (omit leading spaces when copying and pasting):
+
+  function,audit_submit
+  function,syscall
+  function,mac_vnode_check_write
+
+My kernel configuration file reads:
+
+  include GENERIC
+  ident TESLA
+
+  options TESLA
+  # Optional: TESLA_TCP
+  # Optional: TESLA_MAC
+
+This causes libtesla to be compiled in.  TESLA generates stack traces for
+TESLA_ACTION_PRINTF if you also include options KDB, which is present in
+GENERIC, from which the above is derived.
+
+You will need a very recent version of the TESLA-extended clang compiler,
+checked out and built using the CTSRD clang_build.sh script.  I then built
+my kernel using:
+
+  config TESLA
+  cd ../compile/TESLA
+  WERROR= NO_WERROR= CC=~/ctsrd/ctsrd/tesla/trunk/kernel/tesla-clang \
+    make depend
+  WERROR= NO_WERROR= CC=~/ctsrd/ctsrd/tesla/trunk/kernel/tesla-clang \
+    make -j4
+
+Adjust paths as appropriate.  Make sure to read, and as needed, edit the
+tesla-clang script.
+
+Index: conf/files
+===================================================================
+--- conf/files	(revision 219626)
++++ conf/files	(working copy)
+@@ -2879,6 +2879,30 @@
+ security/mac_stub/mac_stub.c	optional mac_stub
+ security/mac_test/mac_test.c	optional mac_test
+ teken/teken.c			optional sc
++#tesla/assertions/audit/audit_assertion.c	optional tesla
++#tesla/assertions/audit/audit_automata.c	optional tesla
++#tesla/assertions/mwc/mwc_assertion.c	optional tesla
++#tesla/assertions/mwc/mwc_automata.c	optional tesla
++tesla/assertions/tcp/tcpc_assertion.c	optional tesla_tcp
++tesla/assertions/tcp/tcpc_automata.c	optional tesla_tcp
++#tesla/assertions/mac_template/mac_assertion.c	optional tesla
++tesla/assertions/mac_template/__tesla_event_assertion_pksignal_tesla_assert_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_soconnect_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_solisten_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_sopoll_generic_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_soreceive_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_sosend_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_vn_extattr_get_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_vn_extattr_rm_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_vn_extattr_set_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_vn_rdwr_0.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_vn_rdwr_1.c	optional tesla_mac
++tesla/assertions/mac_template/__tesla_event_assertion_vn_statfile_0.c	optional tesla_mac
++tesla/tesla_registration.c	optional tesla
++tesla/tesla_state.c		optional tesla
++tesla/tesla_state_global.c	optional tesla
++tesla/tesla_state_perthread.c	optional tesla
++tesla/tesla_util.c		optional tesla
+ ufs/ffs/ffs_alloc.c		optional ffs
+ ufs/ffs/ffs_balloc.c		optional ffs
+ ufs/ffs/ffs_inode.c		optional ffs
+Index: conf/options
+===================================================================
+--- conf/options	(revision 219626)
++++ conf/options	(working copy)
+@@ -578,6 +578,9 @@
+ RESTARTABLE_PANICS	opt_global.h
+ RWLOCK_NOINLINE		opt_global.h
+ SX_NOINLINE		opt_global.h
++TESLA			opt_global.h
++TESLA_MAC		opt_global.h
++TESLA_TCP		opt_global.h
+ VFS_BIO_DEBUG		opt_global.h
+ 
+ # These are VM related options
+Index: kern/vfs_vnops.c
+===================================================================
+--- kern/vfs_vnops.c	(revision 219626)
++++ kern/vfs_vnops.c	(working copy)
+@@ -63,6 +63,8 @@
+ 
+ #include <security/mac/mac_framework.h>
+ 
++#include <tesla/tesla.h>
++
+ static fo_rdwr_t	vn_read;
+ static fo_rdwr_t	vn_write;
+ static fo_truncate_t	vn_truncate;
+@@ -378,6 +380,22 @@
+ 
+ 	VFS_ASSERT_GIANT(vp->v_mount);
+ 
++	if (rw == UIO_READ) {
++#if defined(TESLA) && defined(MAC)
++		TESLA_ASSERT(mp) {
++			previously(returned(mac_vnode_check_read(active_cred,
++			    file_cred, vp), 0));
++		}
++#endif
++	} else if (rw == UIO_WRITE) {
++#if defined(TESLA) && defined(MAC)
++		TESLA_ASSERT(mp) {
++			previously(returned(mac_vnode_check_write(active_cred,
++			    file_cred, vp), 0));
++		}
++#endif
++	}
++
+ 	if ((ioflg & IO_NODELOCKED) == 0) {
+ 		mp = NULL;
+ 		if (rw == UIO_WRITE) { 
+@@ -689,6 +707,13 @@
+ 	int vfslocked;
+ 	int error;
+ 
++#if defined(TESLA) && defined(MAC)
++	TESLA_ASSERT(vp) {
++		previously(returned(mac_vnode_check_stat(active_cred,
++		    fp->f_cred, vp), 0));
++	}
++#endif
++
+ 	vfslocked = VFS_LOCK_GIANT(vp->v_mount);
+ 	vn_lock(vp, LK_SHARED | LK_RETRY);
+ 	error = vn_stat(vp, sb, active_cred, fp->f_cred, td);
+@@ -1214,6 +1239,13 @@
+ 	auio.uio_offset = 0;
+ 	auio.uio_resid = *buflen;
+ 
++#if defined(TESLA) && defined(MAC)
++	TESLA_ASSERT(vp) {
++		previously(returned(mac_vnode_check_getextattr(td->td_ucred,
++		    vp, attrnamespace, attrname), 0));
++	}
++#endif
++
+ 	if ((ioflg & IO_NODELOCKED) == 0)
+ 		vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
+ 
+@@ -1245,6 +1277,13 @@
+ 	struct mount	*mp;
+ 	int	error;
+ 
++#if defined(TESLA) && defined(MAC)
++	TESLA_ASSERT(vp) {
++		previously(returned(mac_vnode_check_setextattr(td->td_ucred,
++		    vp, attrnamespace, attrname), 0));
++	}
++#endif
++
+ 	iov.iov_len = buflen;
+ 	iov.iov_base = buf;
+ 
+@@ -1282,6 +1321,13 @@
+ 	struct mount	*mp;
+ 	int	error;
+ 
++#if defined(TESLA) && defined(MAC)
++	TESLA_ASSERT(vp) {
++		previously(returned(mac_vnode_check_setextattr(td->td_ucred,
++		    vp, attrnamespace, attrname), 0));
++	}
++#endif
++
+ 	if ((ioflg & IO_NODELOCKED) == 0) {
+ 		if ((error = vn_start_write(vp, &mp, V_WAIT)) != 0)
+ 			return (error);
+Index: kern/kern_sig.c
+===================================================================
+--- kern/kern_sig.c	(revision 219626)
++++ kern/kern_sig.c	(working copy)
+@@ -85,7 +85,10 @@
+ #include <machine/cpu.h>
+ 
+ #include <security/audit/audit.h>
++#include <security/mac/mac_framework.h>
+ 
++#include <tesla/tesla.h>
++
+ #define	ONSIG	32		/* NSIG for osig* syscalls.  XXX. */
+ 
+ SDT_PROVIDER_DECLARE(proc);
+@@ -1582,6 +1585,17 @@
+ 	return (0);
+ }
+ 
++static void
++pksignal_tesla_assert(struct thread *td, struct proc *p, int sig)
++{
++#if defined(MAC) && defined(TESLA)
++	TESLA_ASSERT(p) {
++		previously(returned(mac_proc_check_signal(td->td_ucred, p,
++		    sig), 0));
++	}
++#endif
++}
++
+ /*
+  * Common code for kill process group/broadcast kill.
+  * cp is calling process.
+@@ -1607,8 +1621,10 @@
+ 			}
+ 			if (p_cansignal(td, p, sig) == 0) {
+ 				nfound++;
+-				if (sig)
++				if (sig) {
++					pksignal_tesla_assert(td, p, sig);
+ 					pksignal(p, sig, ksi);
++				}
+ 			}
+ 			PROC_UNLOCK(p);
+ 		}
+@@ -1638,8 +1654,10 @@
+ 			}
+ 			if (p_cansignal(td, p, sig) == 0) {
+ 				nfound++;
+-				if (sig)
++				if (sig) {
++					pksignal_tesla_assert(td, p, sig);
+ 					pksignal(p, sig, ksi);
++				}
+ 			}
+ 			PROC_UNLOCK(p);
+ 		}
+@@ -1681,8 +1699,10 @@
+ 		}
+ 		AUDIT_ARG_PROCESS(p);
+ 		error = p_cansignal(td, p, uap->signum);
+-		if (error == 0 && uap->signum)
++		if (error == 0 && uap->signum) {
++			pksignal_tesla_assert(td, p, uap->signum);
+ 			pksignal(p, uap->signum, &ksi);
++		}
+ 		PROC_UNLOCK(p);
+ 		return (error);
+ 	}
+Index: kern/uipc_socket.c
+===================================================================
+--- kern/uipc_socket.c	(revision 219626)
++++ kern/uipc_socket.c	(working copy)
+@@ -140,6 +140,8 @@
+ 
+ #include <security/mac/mac_framework.h>
+ 
++#include <tesla/tesla.h>
++
+ #include <vm/uma.h>
+ 
+ #ifdef COMPAT_FREEBSD32
+@@ -548,6 +550,13 @@
+ {
+ 	int error;
+ 
++#if defined(TESLA) && defined(MAC)
++	TESLA_ASSERT(so) {
++		previously(returned(mac_socket_check_listen(td->td_ucred, so),
++		    0));
++	}
++#endif
++
+ 	CURVNET_SET(so->so_vnet);
+ 	error = (*so->so_proto->pr_usrreqs->pru_listen)(so, backlog, td);
+ 	CURVNET_RESTORE();
+@@ -799,6 +808,13 @@
+ {
+ 	int error;
+ 
++#if defined(TESLA) && defined(MAC)
++	TESLA_ASSERT(so) {
++		previously(returned(mac_socket_check_connect(td->td_ucred,
++		    so, nam), 0));
++	}
++#endif
++
+ 	if (so->so_options & SO_ACCEPTCONN)
+ 		return (EOPNOTSUPP);
+ 
+@@ -1341,6 +1357,13 @@
+ {
+ 	int error;
+ 
++#if defined(TESLA) && defined(MAC)
++	TESLA_ASSERT(so) {
++		previously(returned(mac_socket_check_send(td->td_ucred, so),
++		    0));
++	}
++#endif
++
+ 	CURVNET_SET(so->so_vnet);
+ 	error = so->so_proto->pr_usrreqs->pru_sosend(so, addr, uio, top,
+ 	    control, flags, td);
+@@ -2296,6 +2319,13 @@
+ {
+ 	int error;
+ 
++#if defined(TESLA) && defined(MAC)
++	struct ucred *cred = curthread->td_ucred;
++	TESLA_ASSERT(so) {
++		previously(returned(mac_socket_check_receive(cred, so), 0));
++	}
++#endif
++
+ 	CURVNET_SET(so->so_vnet);
+ 	error = (so->so_proto->pr_usrreqs->pru_soreceive(so, psa, uio, mp0,
+ 	    controlp, flagsp));
+@@ -2971,6 +3001,13 @@
+ {
+ 	int revents = 0;
+ 
++#if defined(TESLA) && defined(MAC)
++	TESLA_ASSERT(so) {
++		previously(returned(mac_socket_check_poll(active_cred, so),
++		    0));
++	}
++#endif
++
+ 	SOCKBUF_LOCK(&so->so_snd);
+ 	SOCKBUF_LOCK(&so->so_rcv);
+ 	if (events & (POLLIN | POLLRDNORM))
+Index: netinet/tcp_subr.c
+===================================================================
+--- netinet/tcp_subr.c	(revision 219626)
++++ netinet/tcp_subr.c	(working copy)
+@@ -113,6 +113,8 @@
+ 
+ #include <security/mac/mac_framework.h>
+ 
++#include <tesla/tesla.h>
++
+ VNET_DEFINE(int, tcp_mssdflt) = TCP_MSS;
+ #ifdef INET6
+ VNET_DEFINE(int, tcp_v6mssdflt) = TCP6_MSS;
+@@ -218,6 +220,7 @@
+ 
+ VNET_DEFINE(struct hhook_head *, tcp_hhh[HHOOK_TCP_LAST+1]);
+ 
++static void	tcp_free(struct tcpcb *tp);
+ static struct inpcb *tcp_notify(struct inpcb *, int);
+ static void	tcp_isn_tick(void *);
+ static char *	tcp_log_addr(struct in_conninfo *inc, struct tcphdr *th,
+@@ -654,6 +657,11 @@
+ 		return (NULL);
+ 	tp = &tm->tcb;
+ 
++	TESLA_ASSERT(tcp_newtcpcb) {
++		/* Work on the syntax. */
++		automata(/* tcpc_automata, */ tp);
++	}
++
+ 	/* Initialise cc_var struct for this tcpcb. */
+ 	tp->ccv = &tm->ccv;
+ 	tp->ccv->type = IPPROTO_TCP;
+@@ -813,6 +821,13 @@
+ 	return (tcp_close(tp));
+ }
+ 
++static void
++tcp_free(struct tcpcb *tp)
++{
++
++	uma_zfree(V_tcpcb_zone, tp);
++}
++
+ void
+ tcp_discardcb(struct tcpcb *tp)
+ {
+@@ -917,7 +932,7 @@
+ 	CC_ALGO(tp) = NULL;
+ 	inp->inp_ppcb = NULL;
+ 	tp->t_inpcb = NULL;
+-	uma_zfree(V_tcpcb_zone, tp);
++	tcp_free(tp);
+ }
+ 
+ /*
+Index: sys/kernel.h
+===================================================================
+--- sys/kernel.h	(revision 219626)
++++ sys/kernel.h	(working copy)
+@@ -111,6 +111,7 @@
+ 	SI_SUB_CPU		= 0x2100000,	/* CPU resource(s)*/
+ 	SI_SUB_RANDOM		= 0x2120000,	/* random number generator */
+ 	SI_SUB_KDTRACE		= 0x2140000,	/* Kernel dtrace hooks */
++	SI_SUB_TESLA		= 0x2140000,	/* Kernel TESLA hooks */
+ 	SI_SUB_MAC		= 0x2180000,	/* TrustedBSD MAC subsystem */
+ 	SI_SUB_MAC_POLICY	= 0x21C0000,	/* TrustedBSD MAC policies */
+ 	SI_SUB_MAC_LATE		= 0x21D0000,	/* TrustedBSD MAC subsystem */
+@@ -120,6 +121,7 @@
+ 	SI_SUB_DDB_SERVICES	= 0x2380000,	/* capture, scripting, etc. */
+ 	SI_SUB_RUN_QUEUE	= 0x2400000,	/* set up run queue*/
+ 	SI_SUB_KTRACE		= 0x2480000,	/* ktrace */
++	SI_SUB_TESLA_ASSERTION	= 0x2485000,	/* TESLA assertions */
+ 	SI_SUB_OPENSOLARIS	= 0x2490000,	/* OpenSolaris compatibility */
+ 	SI_SUB_CYCLIC		= 0x24A0000,	/* Cyclic timers */
+ 	SI_SUB_AUDIT		= 0x24C0000,	/* audit */
+Index: sys/proc.h
+===================================================================
+--- sys/proc.h	(revision 219626)
++++ sys/proc.h	(working copy)
+@@ -215,6 +215,7 @@
+ 	sigqueue_t	td_sigqueue;	/* (c) Sigs arrived, not delivered. */
+ #define	td_siglist	td_sigqueue.sq_signals
+ 	u_char		td_lend_user_pri; /* (t) Lend user pri. */
++	void		*td_tesla[TESLA_PERTHREAD_MAX];	/* (k) TESLA state. */
+ 
+ /* Cleared during fork1() */
+ #define	td_startzero td_flags
+Index: sys/param.h
+===================================================================
+--- sys/param.h	(revision 219626)
++++ sys/param.h	(working copy)
+@@ -87,6 +87,7 @@
+ #define	NOGROUP		65535		/* marker for empty group set member */
+ #define MAXHOSTNAMELEN	256		/* max hostname size */
+ #define SPECNAMELEN	63		/* max length of devicename */
++#define	TESLA_PERTHREAD_MAX	50	/* max TESLA assertions/thread */
+ 
+ /* More types and definitions used throughout the kernel. */
+ #ifdef _KERNEL
