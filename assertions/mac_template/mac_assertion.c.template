@@ -26,8 +26,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * $Id$
  */
 
 #include <sys/types.h>
@@ -42,6 +40,7 @@
 #include <stdio.h>
 #endif
 
+#include <tesla/tesla.h>
 #include <tesla/tesla_registration.h>
 #include <tesla/tesla_state.h>
 #include <tesla/tesla_util.h>
