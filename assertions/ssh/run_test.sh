@@ -2,6 +2,7 @@
 set -e
 
 TRIES=10
+SIZE="50k 100k 200k 400k 1m"
 SSH_FLAGS=
 TIME=/usr/bin/time
 
@@ -11,8 +12,11 @@ function run_test {
   rm -f ${OUT}
   echo start: ${SSH} to ${OUT} 
   for i in `jot ${TRIES}`; do
-    echo -n .
-    dd count=1024 bs=1k if=/dev/zero 2>> ${OUT} | ${SSH} ${SSH_FLAGS} localhost "cat > /dev/zero"
+    for sz in ${SIZE}; do
+      echo -n "${i}:${sz} "
+      OFILE="${OUT}.${sz}"
+      dd count=1024 bs=${sz} if=/dev/zero 2>> ${OFILE} | ${SSH} ${SSH_FLAGS} localhost "cat > /dev/zero"
+    done
   done
   echo done
 }
