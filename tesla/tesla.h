@@ -45,6 +45,9 @@ struct __tesla_event* __tesla_invoked(void *fn);
 struct __tesla_event* __tesla_returned(__tesla_result ret, void *fn);
 struct __tesla_event* __tesla_field_assigned(void *base, void *ptr, void *val);
 
+void __tesla_automata(void *);
+#define	automata(x) __tesla_automata(x)
+
 /* Tesla storage: global or per-thread */
 struct __tesla_storage_specifier;
 struct __tesla_storage_specifier* __tesla_storage_global();
