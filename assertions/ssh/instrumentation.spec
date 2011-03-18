@@ -1,3 +1,8 @@
 function,packet_start
 function,packet_send
 function,packet_set_connection
+function,kex_finish
+function,kex_send_kexinit
+function,kex_input_kexinit
+function,kex_choose_conf
+function,kex_setup

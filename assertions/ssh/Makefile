@@ -12,7 +12,7 @@ all: libteslassh.a libfaketeslassh.a
 
 pdf: ssh.pdf 
 
-%_assertion.o: %_assertion.c %_defs.h
+ssh_assertion.o: ssh_assertion.c ssh_defs.h ssh_kex_defs.h
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 %_fakeassertion.o: %_fakeassertion.c
@@ -21,19 +21,19 @@ pdf: ssh.pdf
 %_defs.h %_automata.c %.spec: %.spl $(SPLC) Makefile
 	$(SPLC) -t tesla -s $* $<
 
-ssh-all.dot: ssh.spl $(SPLC) Makefile
-	$(SPLC) -t dot $* $<
+%-all.dot: %.spl $(SPLC) Makefile
+	$(SPLC) -t dot $<
 
-ssh-all.dot.pdf: ssh-all.dot
+%-all.dot.pdf: %-all.dot
 	dot -Tpdf -O $<
 
-ssh.pdf: ssh-all.dot.pdf
+%.pdf: %-all.dot.pdf
 	cp $< $@
 
 %_automata.o: %_automata.c %_defs.h
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-libteslassh.a: $(TESLALIBS) ssh_automata.o ssh_assertion.o
+libteslassh.a: $(TESLALIBS) ssh_automata.o ssh_assertion.o ssh_kex_automata.o
 	ar rvc $@ $^
 
 libfaketeslassh.a: $(TESLALIBS) ssh_fakeassertion.o

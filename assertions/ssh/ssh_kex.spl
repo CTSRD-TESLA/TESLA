@@ -1,0 +1,17 @@
+automaton packet() {
+  void main() {
+    kex_setup();
+    multiple {
+      either {
+        kex_input_kexinit();
+        kex_send_kexinit();
+      } or {
+        kex_send_kexinit();
+        kex_input_kexinit();
+      }
+      kex_choose_conf();
+      kex_finish ();
+    }
+    kex_close ();
+  }
+} 
