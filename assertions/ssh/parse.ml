@@ -13,8 +13,8 @@ let std_dev l =
     let sumsqdev = List.fold_left (fun a b -> a +. (sqdev b)) 0. l in
     sqrt (sumsqdev /. (fl -. 1.))
 
-let parse file =
-  let fin = open_in ("res_"^file) in
+let parse file sz =
+  let fin = open_in ("res_"^file^"."^sz) in
   let res = ref [] in
   (try while true do
      (try
@@ -24,13 +24,19 @@ let parse file =
       with Scanf.Scan_failure _ -> ()
      )
   done with End_of_file -> close_in fin);
-  (file,(List.rev !res))
+  (List.rev !res)
 
 let _ =
-  let all = List.fold_left (fun a b -> parse b :: a)
-    [] [ "clang_notesla";"clang_tesla";"gcc_notesla" ] in
-  List.iter (fun (ty,tms) ->
-    let avg_tm = average tms in
-    let stddev_tm = std_dev tms in
-    printf "%s,%f,%f\n%!" ty avg_tm stddev_tm
-  ) all
+  let sizes = ["50k";"100k";"200k";"400k";"1m"] in
+  let datfile = open_out "ssh_data.dat" in
+  List.iter (fun sz ->
+    List.iter (fun fl ->
+     let tms = parse fl sz in
+     fprintf datfile "%s" sz;
+     let av = average tms in
+     let std = std_dev tms in
+     fprintf datfile " %f %f" av std
+    ) [ "clang_notesla";"clang_tesla";"gcc_notesla" ] ;
+    fprintf datfile "\n%!";
+  ) sizes;
+  close_out datfile
