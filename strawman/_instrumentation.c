@@ -9,13 +9,10 @@
 #include "syscalls.c-tesla.h"
 
 
-void __tesla_event_assertion_helper_0(user, filename, super_error)
-	struct User *user;
-	const char *filename;
-	int super_error;
+void __tesla_event_assertion_helper_0(struct User *user, const char *filename)
 {
-	printf("assertion 0 in helper(): 0x%016lx, '%s', %d\n",
-			 (unsigned long) user, filename, super_error);
+	printf("assertion 0 in helper(): 0x%016lx, '%s'\n",
+			 (unsigned long) user, filename);
 }
 
 
