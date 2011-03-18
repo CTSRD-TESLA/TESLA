@@ -2,9 +2,8 @@
 set -e
 
 TRIES=10
-SIZE="50k 100k 200k 400k 1m"
+SIZE="50k 100k 150k 200k 250k 300k 350k 400k 450k 500k 550k 600k 650k 700k 750k 800k 850k 900k 950k 1000k"
 SSH_FLAGS=
-TIME=/usr/bin/time
 
 function run_test {
   SSH=$1

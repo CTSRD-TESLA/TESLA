@@ -27,12 +27,15 @@ let parse file sz =
   (List.rev !res)
 
 let _ =
-  let sizes = ["50k";"100k";"200k";"400k";"1m"] in
+  let sizes = List.map (sprintf "%dk")
+   [50; 100; 150; 200; 250; 300; 350; 400; 450; 500; 550; 600; 650; 700; 750; 800; 850; 900; 950; 1000 ] in
   let datfile = open_out "ssh_data.dat" in
   List.iter (fun sz ->
     List.iter (fun fl ->
      let tms = parse fl sz in
-     fprintf datfile "%s" sz;
+     let sz' = String.copy sz in
+     sz'.[String.length sz' - 1] <- 'M';
+     fprintf datfile "%sB" sz';
      let av = average tms in
      let std = std_dev tms in
      fprintf datfile " %f %f" av std
