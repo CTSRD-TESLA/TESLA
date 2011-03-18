@@ -72,25 +72,25 @@ test(int scope)
         printf("Sending valid sequence...");
 	for (i=0; i< 7; i++)
 	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb1, test1[i]);
-	__tesla_event_function_prologue_tcp_free(&tcb1);
+	__tesla_event_function_prologue_tcp_free(NULL, &tcb1);
 	printf(" OK\n");
 
 	printf("Sending invalid sequence...error follows:\n");
 	for (i=0; i< 3; i++)
 	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb2, test2[i]);
-	__tesla_event_function_prologue_tcp_free(&tcb2);
+	__tesla_event_function_prologue_tcp_free(NULL, &tcb2);
 	printf(" OK\n");
 
 	printf("Initial closed to closed:\n");
 	for (i=0; i< 2; i++)
 	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb3, test3[i]);
-	__tesla_event_function_prologue_tcp_free(&tcb3);
+	__tesla_event_function_prologue_tcp_free(NULL, &tcb3);
 	printf(" OK\n");
 
 	printf("Free directly from TCPS_LAST_ACK\n");
 	for (i=0; i< 5; i++)
 	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb4, test4[i]);
-	__tesla_event_function_prologue_tcp_free(&tcb4);
+	__tesla_event_function_prologue_tcp_free(NULL, &tcb4);
 	printf(" OK\n");
 }     
 
