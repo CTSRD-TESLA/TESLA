@@ -8,13 +8,16 @@ TESLALIBS=                                      \
 	../../libtesla/tesla_util.o
 
 .PHONY: all clean pdf
-all: libteslassh.a
+all: libteslassh.a libfaketeslassh.a
 
 pdf: ssh.pdf 
 
 %_assertion.o: %_assertion.c %_defs.h
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+%_fakeassertion.o: %_fakeassertion.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+	
 %_defs.h %_automata.c %.spec: %.spl $(SPLC) Makefile
 	$(SPLC) -t tesla -s $* $<
 
@@ -31,6 +34,9 @@ ssh.pdf: ssh-all.dot.pdf
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 libteslassh.a: $(TESLALIBS) ssh_automata.o ssh_assertion.o
+	ar rvc $@ $^
+
+libfaketeslassh.a: $(TESLALIBS) ssh_fakeassertion.o
 	ar rvc $@ $^
 	
 test.o: test.c ssh_defs.h
