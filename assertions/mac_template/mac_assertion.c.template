@@ -64,11 +64,13 @@ static struct tesla_state	*cbu_state;
 
 /*
  * This assertion has three automata: an implied system call automata, an
- * implicit automata linking call and return for %MACCHECK%() so that we can
- * confirm that the right arguments correspond to the right return value, and
- * the explicit autaomata described by automata_states and
- * cbu_%MACCHECK%_automata_rules.  For more complex (multi-clause)
- * assertions, there would be an additional automata for each clause.
+ * implicit automata linking call and return for %INSTRUMENTED_FN%()
+ * so that we can confirm that the right arguments correspond to the right
+ * return value, and the explicit autaomata described by automata_states and
+ * cbu_%INSTRUMENTED_FN%_automata_rules.
+ *
+ * For more complex (multi-clause) assertions, there would be an additional
+ * automata for each clause.
  *
  * Note: non-zero constants.
  */
@@ -88,8 +90,8 @@ static struct tesla_state	*cbu_state;
 /*
  * Strings used when printing assertion failures.
  */
-#define	CBU_NAME		"cbu-%MACCHECK%"
-#define	CBU_DESCRIPTION		"%ASSERT_FN% without previous %MACCHECK%"
+#define	CBU_NAME		"cbu-%INSTRUMENTED_FN%"
+#define	CBU_DESCRIPTION		"%ASSERT_FN% without previous %INSTRUMENTED_FN%"
 
 #ifdef _KERNEL
 static eventhandler_tag	cbu_event_function_prologue_syscallenter_tag;
@@ -111,7 +113,7 @@ static void	cbu_event_function_prologue_syscallret(void **tesla_data,
  * This is a hand-crafted automata implementing the TESLA assertion:
  *
  * (assertion in %ASSERT_FN%)(vp, ..., cred) ->
- *     previously(returned(%MACCHECK%(cred, vp), 0))
+ *     previously(returned(%INSTRUMENTED_FN%(cred, vp), 0))
  *
  * Many instances of the automata may be in flight at once during a system
  * call, instantiated by invocations of tesla_assert().
@@ -121,7 +123,7 @@ static void	cbu_event_function_prologue_syscallret(void **tesla_data,
  * state.  This is a simple, one-clause previously assertion, so there is
  * just one automata, no composition required.
  *
- * (0)  --%MACCHECK%()--> (1) --tesla_assert--> (2) (loop)
+ * (0)  --%INSTRUMENTED_FN%()--> (1) --tesla_assert--> (2) (loop)
  *      \
  *        tesla_assert--> (reject 3) --*--> ((4)) (loop)
  *
@@ -209,14 +211,14 @@ automata_prod(struct tesla_instance *tip, u_int event)
  * per-thread instances, and synchronisation is avoided.
  */
 static void
-cbu_%MACCHECK%_sysinit(__unused void *arg)
+cbu_%INSTRUMENTED_FN%_sysinit(__unused void *arg)
 {
 	int error;
 
 	error = tesla_state_new(&cbu_state, %STORAGE%,
 	    CBU_LIMIT, CBU_NAME, CBU_DESCRIPTION);
 	if (error)
-		panic("cbu_%MACCHECK%_init: tesla_state_new failed due to "
+		panic("cbu_%INSTRUMENTED_FN%_init: tesla_state_new failed due to "
 		    "%s", tesla_strerror(error));
 
 	/*
@@ -237,14 +239,14 @@ cbu_%MACCHECK%_sysinit(__unused void *arg)
 #endif
 
 }
-SYSINIT(cbu_%MACCHECK%_init, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
-    cbu_%MACCHECK%_sysinit, NULL);
+SYSINIT(cbu_%INSTRUMENTED_FN%_init, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
+    cbu_%INSTRUMENTED_FN%_sysinit, NULL);
 
 /*
  * When the checker is unloaded, GC its state.  Hopefully also un-instruments.
  */
 static void
-cbu_%MACCHECK%_sysuninit(__unused void *arg)
+cbu_%INSTRUMENTED_FN%_sysuninit(__unused void *arg)
 {
 
 	tesla_state_destroy(cbu_state);
@@ -256,8 +258,8 @@ cbu_%MACCHECK%_sysuninit(__unused void *arg)
 	    cbu_event_function_prologue_syscallret_tag);
 #endif
 }
-SYSUNINIT(cbu_%MACCHECK%_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
-    cbu_%MACCHECK%_sysuninit, NULL);
+SYSUNINIT(cbu_%INSTRUMENTED_FN%_destroy, SI_SUB_TESLA_ASSERTION, SI_ORDER_ANY,
+    cbu_%INSTRUMENTED_FN%_sysuninit, NULL);
 
 /*
  * System call enters: prod implicit system call lifespan state machine.
@@ -301,12 +303,10 @@ out:
 }
 
 /*
- * Prologue of %MACCHECK%() is an event.
+ * Prologue of %INSTRUMENTED_FN%() is an event.
  */
 void
-__tesla_event_function_prologue_%MACCHECK%(
-    void **tesla_data, struct ucred *active_cred, struct ucred *file_cred,
-    struct vnode *vp)
+__tesla_event_function_prologue_%INSTRUMENTED_FN%(void **tesla_data, %PARAMS%)
 {
 	struct tesla_instance *tip;
 	u_int state;
@@ -362,10 +362,10 @@ __tesla_event_function_prologue_%MACCHECK%(
  * Epilogue of mac_vnode_check_write is an event.
  */
 void
-__tesla_event_function_return_%MACCHECK%(void **tesla, int retval)
+__tesla_event_function_return_%INSTRUMENTED_FN%(void **tesla, int retval)
 {
 	struct tesla_instance *tip;
-	%REGISTERARGS_DECL%
+	%KEYARGS_DECL%
 #if 0
 	register_t active_cred, file_cred, vp;
 #endif
@@ -433,7 +433,7 @@ __tesla_event_function_return_%MACCHECK%(void **tesla, int retval)
 	 * No wildcards here; if there were, we'd use tesla_instance_foreach.
 	 */
 	error = tesla_instance_get%NUMARGS%(cbu_state, CBU_AUTOMATA_ASSERTION,
-	    %REGISTERARGS%, &tip, NULL);
+	    %KEYARGS%, &tip, NULL);
 	if (error)
 		return;
 	if (automata_prod(tip, CBU_EVENT_MACCHECK))
