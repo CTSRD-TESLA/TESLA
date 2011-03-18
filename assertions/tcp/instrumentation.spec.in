@@ -1,0 +1,2 @@
+field_assign,struct tcpcb,t_state
+function,tcp_free

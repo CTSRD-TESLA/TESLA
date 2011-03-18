@@ -63,7 +63,7 @@ static struct tesla_state	*tcpc_state;
  * per-thread.  Should be prime, and must be at least 2 so that the system
  * call automata works.
  */
-#define	TCPC_LIMIT	2
+#define	TCPC_LIMIT	11
 
 /*
  * Strings used when printing assertion failures.

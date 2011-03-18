@@ -1,13 +1,16 @@
 SPLC ?= ../../cfa/splc
 
-CFLAGS=-Wall -g -I../.. -I.
+OPTLEVEL ?= -O0
+
+CFLAGS=-Wall -g -I../.. -I. $(OPTLEVEL)
+
 TESLALIBS=                                      \
 	../../libtesla/tesla_state.o            \
 	../../libtesla/tesla_state_global.o     \
 	../../libtesla/tesla_state_perthread.o  \
 	../../libtesla/tesla_util.o
 
-.PHONY: all clean pdf
+.PHONY: all clean pdf micro
 all: test
 
 pdf: tcpc.pdf 
@@ -35,6 +38,41 @@ test.o: test.c tcpc_defs.h
 
 test: test.o tcpc_assertion.o tcpc_automata.o ${TESLALIBS}
 	$(CC) -o $@ $^ -lpthread
+
+instr_gcc.o: instr.c tcpc_defs.h
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+gcc_stub.o: gcc_stub.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+clang_stub.o: clang_stub.c
+	./tesla-clang -c $(CFLAGS) -o $@ $<
+
+instr_clang_instr.o: instr.c tcpc_defs.h instrumentation.spec.in
+	cp instrumentation.spec.in instrumentation.spec
+	./tesla-clang -c $(CFLAGS) -o $@ $<
+
+instr_clang_noinstr.o: instr.c tcpc_defs.h instrumentation.spec.in
+	rm -f instrumentation.spec
+	./tesla-clang -c $(CFLAGS) -o $@ $<
+
+instr_gcc: instr_gcc.o gcc_stub.o
+	$(CC) $(CFLAGS) -o $@ $^	
+
+instr_clang_instr_tesla: instr.c tcpc_assertion.o tcpc_automata.o $(TESLALIBS)
+	cp instrumentation.spec.in instrumentation.spec
+	./tesla-clang $(CFLAGS) -o $@ $^
+
+instr_clang_instr_faketesla: instr.c tcpc_dummy_assertion.o $(TESLALIBS)
+	cp instrumentation.spec.in instrumentation.spec
+	./tesla-clang $(CFLAGS) -o $@ $^
+
+instr_clang_noinstr: instr_clang_noinstr.o clang_stub.o
+	rm -f instrumentation.spec
+	./tesla-clang $(CFLAGS) -o $@ $^
+
+micro: instr_gcc instr_clang_instr_tesla instr_clang_instr_faketesla instr_clang_noinstr
+	@ :
 
 clean:
 	rm -f test *.o
