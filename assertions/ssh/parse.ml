@@ -33,11 +33,11 @@ let _ =
    [100; 200; 300; 400; 500; 600; 700; 800; 900; 1000 ] in
   let datfile = open_out "ssh_data.dat" in
   List.iter (fun sz ->
+    let sz' = String.copy sz in
+    sz'.[String.length sz' - 1] <- 'M';
+    fprintf datfile "%sB" sz';
     List.iter (fun fl ->
      let tms = parse fl sz in
-     let sz' = String.copy sz in
-     sz'.[String.length sz' - 1] <- 'M';
-     fprintf datfile "%sB" sz';
      let av = average tms in
      let std = std_dev tms in
      fprintf datfile " %f %f" av std
