@@ -38,12 +38,6 @@ libteslassh.a: $(TESLALIBS) ssh_automata.o ssh_assertion.o ssh_kex_automata.o
 
 libfaketeslassh.a: $(TESLALIBS) ssh_fakeassertion.o
 	ar rvc $@ $^
-	
-test.o: test.c ssh_defs.h
-	$(CC) -c $(CFLAGS) -o test.o test.c
-
-test: test.o ssh_assertion.o ssh_automata.o ${TESLALIBS}
-	$(CC) -o $@ $^ -lpthread
 
 # Before running this, run ./run_test to generate the results files
 ssh_data.dat: parse.ml
