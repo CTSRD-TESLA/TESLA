@@ -43,14 +43,17 @@ libfaketeslassh.a: $(TESLALIBS) ssh_fakeassertion.o
 ssh_data.dat: parse.ml
 	ocaml $<
 
-sshperf.ps: sshplot.gp ssh_data.dat
-	gnuplot $<
+#sshperf.ps: sshplot.gp ssh_data.dat
+#	gnuplot $<
+#
+#sshperf.pdf: sshperf.ps
+#	ps2pdf -dEPSCrop $<
 
-sshperf.pdf: sshperf.ps
-	ps2pdf -dEPSCrop $<
+sshperf.pdf: sshplot.R ssh_data.dat
+	R CMD BATCH --vanilla $<
 
 clean:
-	rm -f *.o *.a *.dot *_defs.h *_automata.c ssh.spec ssh_kex.spec ssh_channel.spec ssh.pdf \
+	rm -f *.o *.a *.dot *.Rout *_defs.h *_automata.c ssh.spec ssh_kex.spec ssh_channel.spec ssh.pdf \
 		ssh_data.dat sshperf.ps sshperf.pdf
 
 distclean:

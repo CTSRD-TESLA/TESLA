@@ -5,6 +5,7 @@ openssh-5.8p1.tar.gz
 *.a
 *.o
 *.dot
+*.Rout
 ssh.pdf
 ssh_data.dat
 sshperf.ps

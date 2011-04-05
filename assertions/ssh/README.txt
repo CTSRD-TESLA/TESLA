@@ -6,7 +6,7 @@ Pre-requisites
 Build ../../libtesla, and ../../cfa (see documentation in those
 directories).
 A SSH server running on localhost: for running performance experiment
-ocaml, gnuplot, ps2pdf: for processing results and generating graphs
+ocaml, R, ps2pdf: for processing results and generating graphs
 
 Building
 --------
