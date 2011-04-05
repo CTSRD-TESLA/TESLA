@@ -1,0 +1,6 @@
+openssh-5.8p1-with-clang-faketesla/
+openssh-5.8p1-with-clang-tesla/
+openssh-5.8p1-with-gcc/
+openssh-5.8p1.tar.gz
+*.a
+*.o

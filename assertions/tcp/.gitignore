@@ -1,0 +1,9 @@
+*.o
+test
+instr.c-tesla.h
+instr_clang_instr_faketesla
+instr_clang_instr_faketesla.dSYM/
+instr_clang_instr_tesla
+instr_clang_instr_tesla.dSYM/
+instr_clang_noinstr
+instr_gcc

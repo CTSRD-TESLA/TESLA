@@ -1,0 +1,9 @@
+._bcdi/
+._ncdi/
+._d/
+*.cmi
+*.cmo
+*.annot
+spl_lexer.ml
+spl_parser.ml
+splc
