@@ -1,4 +1,5 @@
 SPLC ?= ../../cfa/splc
+TESLA_CLANG ?= ../../kernel/tesla-clang
 
 OPTLEVEL ?= -O0
 
@@ -46,30 +47,30 @@ gcc_stub.o: gcc_stub.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 clang_stub.o: clang_stub.c
-	./tesla-clang -c $(CFLAGS) -o $@ $<
+	$(TESLA_CLANG) -c $(CFLAGS) -o $@ $<
 
 instr_clang_instr.o: instr.c tcpc_defs.h instrumentation.spec.in
 	cp instrumentation.spec.in instrumentation.spec
-	./tesla-clang -c $(CFLAGS) -o $@ $<
+	$(TESLA_CLANG) -c $(CFLAGS) -o $@ $<
 
 instr_clang_noinstr.o: instr.c tcpc_defs.h instrumentation.spec.in
 	rm -f instrumentation.spec
-	./tesla-clang -c $(CFLAGS) -o $@ $<
+	$(TESLA_CLANG) -c $(CFLAGS) -o $@ $<
 
 instr_gcc: instr_gcc.o gcc_stub.o
 	$(CC) $(CFLAGS) -o $@ $^	
 
 instr_clang_instr_tesla: instr.c tcpc_assertion.o tcpc_automata.o $(TESLALIBS)
 	cp instrumentation.spec.in instrumentation.spec
-	./tesla-clang $(CFLAGS) -o $@ $^
+	$(TESLA_CLANG) $(CFLAGS) -o $@ $^
 
 instr_clang_instr_faketesla: instr.c tcpc_dummy_assertion.o $(TESLALIBS)
 	cp instrumentation.spec.in instrumentation.spec
-	./tesla-clang $(CFLAGS) -o $@ $^
+	$(TESLA_CLANG) $(CFLAGS) -o $@ $^
 
 instr_clang_noinstr: instr_clang_noinstr.o clang_stub.o
 	rm -f instrumentation.spec
-	./tesla-clang $(CFLAGS) -o $@ $^
+	$(TESLA_CLANG) $(CFLAGS) -o $@ $^
 
 micro: instr_gcc instr_clang_instr_tesla instr_clang_instr_faketesla instr_clang_noinstr
 	@ :

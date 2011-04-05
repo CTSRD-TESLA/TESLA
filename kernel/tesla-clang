@@ -1,13 +1,14 @@
 #/bin/sh
 
 ################################################################################
-# If you set the CC environment variable to this script, symlink ~/llvmlib to  #
-# the LLVM lib dir and put Clang in your path, then 'make kernel' will do      #
-# mostly the right thing.                                                      #
+# If you set the CC environment variable to this script, then 'make kernel'    #
+# will do mostly the right thing.                                              #
 ################################################################################
 
-TESLA_ARGS="-Xclang -load -Xclang ${HOME}/llvmlib/TeslaInstrumenter.so -Xclang -add-plugin -Xclang tesla -Xclang -plugin-arg-tesla -Xclang instrumentation.spec -no-integrated-as"
-
+TESLA_ARGS="-Xclang -load -Xclang TeslaInstrumenter.so -Xclang -add-plugin -Xclang tesla -Xclang -plugin-arg-tesla -Xclang instrumentation.spec -no-integrated-as"
+ 
 ARGS="$TESLA_ARGS $*"
 
-clang $ARGS || exit 1
+LD_LIBRARY_PATH=$(dirname $0)/../build/lib
+export LD_LIBRARY_PATH
+$(dirname $0)/../build/bin/clang $ARGS || exit 1

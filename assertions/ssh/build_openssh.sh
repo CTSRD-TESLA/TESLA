@@ -21,7 +21,7 @@ if [ ! -d openssh-${V}-with-clang-tesla ]; then
   cd openssh-${V}-with-clang-tesla
   cp ../instrumentation.spec .
   patch -p0 < ../openssh-teal.patch
-  CC=`python -c 'import os,sys;print os.path.realpath(sys.argv[1])' ../tesla-clang`
+  CC=`python -c 'import os,sys;print os.path.realpath(sys.argv[1])' ../../../kernel/tesla-clang`
   export CC
   LIBS=-lteslassh LDFLAGS=-L.. ./configure && make
   cd ..
@@ -33,7 +33,7 @@ if [ ! -d openssh-${V}-with-clang-faketesla ]; then
   cd openssh-${V}-with-clang-faketesla
   cp ../instrumentation.spec .
   patch -p0 < ../openssh-teal.patch
-  CC=`python -c 'import os,sys;print os.path.realpath(sys.argv[1])' ../tesla-clang`
+  CC=`python -c 'import os,sys;print os.path.realpath(sys.argv[1])' ../.../../kernel/tesla-clang`
   LIBS=-lfaketeslassh LDFLAGS=-L.. ./configure && make
   cd ..
 fi
