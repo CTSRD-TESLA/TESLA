@@ -45,8 +45,19 @@ test.o: test.c ssh_defs.h
 test: test.o ssh_assertion.o ssh_automata.o ${TESLALIBS}
 	$(CC) -o $@ $^ -lpthread
 
+# Before running this, run ./run_test to generate the results files
+ssh_data.dat: parse.ml
+	ocaml $<
+
+sshperf.ps: sshplot.gp ssh_data.dat
+	gnuplot $<
+
+sshperf.pdf: sshperf.ps
+	ps2pdf -dEPSCrop $<
+
 clean:
-	rm -f test *.o
+	rm -f *.o *.a *.dot *_defs.h *_automata.c ssh.spec ssh_kex.spec ssh_channel.spec ssh.pdf \
+		ssh_data.dat sshperf.ps sshperf.pdf
 
 distclean:
 	rm -rf openssh-5.8p1-with-clang-faketesla \
