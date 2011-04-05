@@ -47,3 +47,8 @@ test: test.o ssh_assertion.o ssh_automata.o ${TESLALIBS}
 
 clean:
 	rm -f test *.o
+
+distclean:
+	rm -rf openssh-5.8p1-with-clang-faketesla \
+		openssh-5.8p1-with-clang-tesla \
+		openssh-5.8p1-with-gcc
