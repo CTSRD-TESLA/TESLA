@@ -3,6 +3,7 @@ set -e
 
 TRIES=10
 SIZE="50k 100k 150k 200k 250k 300k 350k 400k 450k 500k 550k 600k 650k 700k 750k 800k 850k 900k 950k 1000k"
+RESULTS="results"
 SSH_FLAGS=
 
 function run_test {
@@ -20,6 +21,6 @@ function run_test {
   echo done
 }
 
-run_test ./openssh-5.8p1-with-clang-tesla/ssh res_clang_tesla
-run_test ./openssh-5.8p1-with-clang-faketesla/ssh res_clang_notesla
-run_test ./openssh-5.8p1-with-gcc/ssh res_gcc_notesla
+run_test ./openssh-5.8p1-with-clang-tesla/ssh ${RESULTS}/res_clang_tesla
+run_test ./openssh-5.8p1-with-clang-faketesla/ssh ${RESULTS}/res_clang_notesla
+run_test ./openssh-5.8p1-with-gcc/ssh ${RESULTS}/res_gcc_notesla

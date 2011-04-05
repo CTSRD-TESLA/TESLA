@@ -14,7 +14,7 @@ let std_dev l =
     sqrt (sumsqdev /. (fl -. 1.))
 
 let parse file sz =
-  let fin = open_in ("res_"^file^"."^sz) in
+  let fin = open_in ("results/res_"^file^"."^sz) in
   let res = ref [] in
   (try while true do
      (try
