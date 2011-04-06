@@ -1,9 +1,15 @@
 ## Read data
 tab <- read.table("ssh_data.dat", header=FALSE)
+dat <- tab[,2:7] # Remove first column (the transfer size)
+
+## Scale values so that Clang/Telsa is 1
+#scale <- rep(tab[,4], 6)
+#dim(scale) <- dim(dat)
+#dat <- dat / scale
 
 ## Split into error values, mean values
-errors <- as.vector(t(tab[,c(3,5,7)]))
-values <- as.vector(t(tab[,c(2,4,6)]))
+errors <- as.vector(t(dat[,c(2,4,6)]))
+values <- as.vector(t(dat[,c(1,3,5)]))
 
 ## Calculate limits of y axis
 ylim = c(0, max(values + errors))
@@ -15,7 +21,7 @@ par(cex=0.4)
 
 ## Plot the graph
 cols <- c("#8DD3C7", "#FFFFB3", "#BEBADA") # From http://colorbrewer2.org/
-mp <- barplot(t(as.matrix(tab[,c(2,4,6)])), names.arg=tab[,1], beside=TRUE, col=cols, ylim=ylim)
+mp <- barplot(t(as.matrix(dat[,c(1,3,5)])), names.arg=tab[,1], beside=TRUE, col=cols, ylim=ylim)
 
 ## Plot the error bars
 midpoints <- as.vector(mp)
