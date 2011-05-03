@@ -31,13 +31,14 @@
 #define	TESLA_PROVIDE_SHORTHAND
 #endif
 
+struct __tesla_event;
+
 /* Temporal qualifiers */
-int __tesla_now(void*);
-int __tesla_previously(void*);
-int __tesla_eventually(void*);
+int __tesla_now(struct __tesla_event *event);
+int __tesla_previously(struct __tesla_event *event);
+int __tesla_eventually(struct __tesla_event *event);
 
 /* Point expressions */
-struct __tesla_event;
 typedef int __tesla_result; /* TODO: more flexibility (want C++ templates) */
 __tesla_result __tesla_dont_care;
 
@@ -68,8 +69,8 @@ void __tesla_start_of_assertion(
 #define	previously(x)		T(previously(x))
 #define	eventually(x)		T(eventually(x))
 
-#define	invoked(fn)		T(invoked(fn))
-#define	returned(ret, fn)	T(returned(ret, fn))
+#define	invoked(fn)		T(invoked((void *)fn))
+#define	returned(ret, fn)	T(returned(ret, (void *)fn))
 #define	assigned(base, member, value) \
 	T(field_assigned((void*) base, (void*) &(base->member), (void*) value))
 
