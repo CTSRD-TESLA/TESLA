@@ -1,7 +1,7 @@
 .DEFAULT: all
 .PHONY: all clean
 
-CC = ../kernel/tesla-clang
+CC = ../kernel/tesla-clang -DTESLA_INCLUDE_ASSERTIONS
 LD = ../kernel/tesla-clang
 
 CFLAGS = -g -Wall -I ..

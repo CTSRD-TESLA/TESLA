@@ -4,7 +4,11 @@ struct Name
 	char initial;
 	char *last;
 }
+#ifdef TESLA_ATTRIBUTE_ANNOTATIONS
 __attribute__((tesla));  /* instrument assignments to ALL fields */
+#else
+;
+#endif
 
 struct User
 {
