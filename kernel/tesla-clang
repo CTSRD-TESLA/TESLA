@@ -6,6 +6,8 @@
 ################################################################################
 
 TESLA_ARGS="-Xclang -load -Xclang TeslaInstrumenter.so -Xclang -add-plugin -Xclang tesla -Xclang -plugin-arg-tesla -Xclang instrumentation.spec -no-integrated-as"
+#TESLA_ARGS="-cc1 -ast-print"
+#TESLA_ARGS="-cc1 -load TeslaInstrumenter.so -add-plugin tesla -plugin-arg-tesla instrumentation.spec -ast-print"
  
 ARGS="$TESLA_ARGS $*"
 
