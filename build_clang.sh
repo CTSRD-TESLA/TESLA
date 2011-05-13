@@ -3,9 +3,9 @@
 # Run from ctsrd.svn/tesla/trunk
 
 if [ ! -d llvm ]; then
-  git clone http://github.com/trombonehero/llvm
+  git clone http://github.com/CTSRD-TESLA/llvm.git
   cd llvm/tools
-  git clone http://github.com/trombonehero/clang
+  git clone http://github.com/CTSRD-TESLA/clang
   cd ../../
 elif [ "$1" != "--no-update" ]; then
   cd llvm
