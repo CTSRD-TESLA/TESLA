@@ -49,13 +49,23 @@
 static int test1[7] = { TCPS_CLOSED, TCPS_SYN_SENT,
 	TCPS_SYN_RECEIVED, TCPS_ESTABLISHED, TCPS_CLOSE_WAIT,
 	TCPS_LAST_ACK, TCPS_CLOSED };
+static int test1_len = sizeof(test1) / sizeof(test1[0]);
 
 static int test2[3] = { TCPS_CLOSED, TCPS_SYN_SENT, TCPS_LAST_ACK };
+static int test2_len = sizeof(test2) / sizeof(test2[0]);
 
 static int test3[2] = { TCPS_CLOSED, TCPS_CLOSED };
+static int test3_len = sizeof(test3) / sizeof(test3[0]);
 
 static int test4[5] = { TCPS_CLOSED, TCPS_SYN_SENT, TCPS_ESTABLISHED,
 	TCPS_CLOSE_WAIT, TCPS_LAST_ACK };
+static int test4_len = sizeof(test4) / sizeof(test4[0]);
+
+static void
+tcp_free(struct tcpcb *tp)
+{
+
+}
 
 static void
 test(int scope)
@@ -70,27 +80,31 @@ test(int scope)
 	tcpc_setaction_debug();	/* Use printf(), not assert(). */
 
         printf("Sending valid sequence...");
-	for (i=0; i< 7; i++)
-	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb1, test1[i]);
-	__tesla_event_function_prologue_tcp_free(NULL, &tcb1);
+	for (i = 0; i < test1_len; i++) {
+		tcb1.t_state = test1[i];
+	}
+	tcp_free(&tcb1);
 	printf(" OK\n");
 
 	printf("Sending invalid sequence...error follows:\n");
-	for (i=0; i< 3; i++)
-	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb2, test2[i]);
-	__tesla_event_function_prologue_tcp_free(NULL, &tcb2);
+	for (i = 0; i < test2_len; i++) {
+		tcb2.t_state = test2[i];
+	}
+	tcp_free(&tcb2);
 	printf(" OK\n");
 
 	printf("Initial closed to closed:\n");
-	for (i=0; i< 2; i++)
-	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb3, test3[i]);
-	__tesla_event_function_prologue_tcp_free(NULL, &tcb3);
+	for (i = 0; i < test3_len; i++) {
+		tcb3.t_state = test3[i];
+	}
+	tcp_free(&tcb3);
 	printf(" OK\n");
 
 	printf("Free directly from TCPS_LAST_ACK\n");
-	for (i=0; i< 5; i++)
-	    __tesla_event_field_assign_struct_tcpcb_t_state(&tcb4, test4[i]);
-	__tesla_event_function_prologue_tcp_free(NULL, &tcb4);
+	for (i = 0; i < test4_len; i++) {
+		tcb4.t_state = test4[i];
+	}
+	tcp_free(&tcb4);
 	printf(" OK\n");
 }     
 
