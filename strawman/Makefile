@@ -18,7 +18,7 @@ all: instrumentation
 	## then actually build the application. We need to do this
 	## in a new make instance, as otherwise make won't realize
 	## that instrumentation.c was created after it started
-	make -C . test
+	$(MAKE) -C . test
 
 clean:
 	rm -f test *.bc *.ll *.o *.c-tesla.h \
