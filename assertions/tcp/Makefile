@@ -35,7 +35,8 @@ tcpc.pdf: tcpc-all.dot.pdf
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 test.o: test.c tcpc_defs.h
-	$(CC) -c $(CFLAGS) -o test.o test.c
+	cp instrumentation.spec.in instrumentation.spec
+	$(TESLA_CLANG) -c $(CFLAGS) -o test.o test.c
 
 test: test.o tcpc_assertion.o tcpc_automata.o ${TESLALIBS}
 	$(CC) -o $@ $^ -lpthread
