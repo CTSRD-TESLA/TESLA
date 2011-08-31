@@ -63,7 +63,7 @@
 %type <Spl_syntaxtree.global> main
 %%
 main:
-  include_list automaton EOF{ {Spl_syntaxtree.includes=$1; funcs=$2} }
+  include_list automaton EOF{ {Spl_syntaxtree.includes=$1; funcs=(snd $2); aname=(fst $2)} }
 ;
 include_list:
 | INCLUDE include_list  { id $1 :: $2 }
@@ -71,7 +71,7 @@ include_list:
 | { [] }
 ;
 automaton:
-| AUTOMATON IDENTIFIER LBRACKET RBRACKET LBRACE function_list RBRACE { $6 }
+| AUTOMATON IDENTIFIER LBRACKET RBRACKET LBRACE function_list RBRACE { (id $2, $6) }
 ;
 function_list:
 | function_decl function_list {$1::$2}
@@ -141,6 +141,8 @@ single_statement:
     { ($1, Spl_syntaxtree.Do_until ($4, $2)) }
 | WHILE guard_expr function_body
     { ($1, Spl_syntaxtree.While ($2, $3)) }
+| IDENTIFIER ASSIGN expr LBRACKET RBRACKET SEMICOLON 
+    { ($2, (Spl_syntaxtree.Function_ret (id $1, $3))) }
 | IDENTIFIER ASSIGN expr SEMICOLON
     { ($2 , (Spl_syntaxtree.Assign ((id $1, None), $3))) }
 | IDENTIFIER FIELD IDENTIFIER ASSIGN expr SEMICOLON

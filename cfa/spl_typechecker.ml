@@ -173,6 +173,7 @@ let resolve_unknown_variables f =
         |Assign (id, expr) as p -> p
         |During_handle (xsl, xsll) ->
           During_handle(resolve xsl, List.map resolve xsll)
+        |Function_ret expr as f -> f
         |Function_call (fname, args) ->
           (* Every Unknown here needs to be resolved or error thrown *)
           let nargs = List.map (function
@@ -233,6 +234,7 @@ let check_syntax_tree fs =
             end
             |Assign _ -> terr "Assignments can only be to statecalls"
             |Function_call (fname, args) -> ()
+            |Function_ret expr -> ()
             ) xsl in
         follow_fun_call f.body
     ) fs

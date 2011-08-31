@@ -57,6 +57,7 @@ type compiled_functions =
   (string, env * Spl_syntaxtree.func) Hashtbl.t
 
 type global_env = {
+  aname: string;
   filename: string;
   functions: compiled_functions;
   mutable reg_ranges: (string, int) Hashtbl.t;
@@ -291,7 +292,15 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
           |Statecall id -> id
           |_ -> failwith "Unsupported expression in extern assignment" in
         let sc = sprintf "%s_%s_assign_%s" id fl exprid in
-        let extern = sprintf "field_assign,%s,%s,%s" id fl exprid in
+        let extern = sprintf "field_assign,%s,%s,%s,%s" id fl exprid genv.aname in
+        env.externs <- extern :: env.externs;
+        insert_sequence (String.capitalize sc)
+      |Function_ret (id, expr) ->
+        let exprid = match expr with
+          |Identifier id -> id
+          |_ -> failwith "Unsupported expression in function ret" in
+        let sc = sprintf "%s_funcret_%s" id exprid in
+        let extern = sprintf "function_ret,%s,%s,%s" exprid id genv.aname in
         env.externs <- extern :: env.externs;
         insert_sequence (String.capitalize sc)
       |While (expr, xsl) ->
@@ -379,15 +388,15 @@ let rec generate_states_of_expr ?(cl = T_normal) genv env allows handles si se x
         end else begin
           (* Unknown function so treat it as external pattern match *)
           let sc = sprintf "Func_prologue_%s" fname in
-          env.externs <- sprintf "function,%s" fname :: env.externs;
+          env.externs <- sprintf "function,%s,%s" fname genv.aname :: env.externs;
           insert_sequence sc;
         end
     ) (true, si) xsl in
     if connect then create_edge ~cl:cl last_state se (Condition True);
     ()
     
-let generate_states fname funcs includes =
-    let genv = { filename=fname; functions=Hashtbl.create 1;
+let generate_states aname fname funcs includes =
+    let genv = { aname; filename=fname; functions=Hashtbl.create 1;
       counter = ref 0; reg_ranges=Hashtbl.create 1; includes = includes } in
     List.iter (fun f ->
         Logger.log (sprintf "Compiling function %s (%s) ... " f.name

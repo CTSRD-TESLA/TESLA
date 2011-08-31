@@ -83,6 +83,7 @@ let main =
         end in
         let funcs = result.Spl_syntaxtree.funcs in
         let includes = result.Spl_syntaxtree.includes in
+        let aname = result.Spl_syntaxtree.aname in
         let _ = try Spl_typechecker.type_check funcs 
         with Spl_typechecker.Type_error (e,l) -> begin
             Logger.log_quiet (sprintf "Type error%s %s"
@@ -90,7 +91,7 @@ let main =
             exit 1;
         end in
         (* generate cfg *)
-        let genv = Spl_cfg.generate_states file funcs includes in
+        let genv = Spl_cfg.generate_states aname file funcs includes in
         if !optimise then begin
             Logger.log "Optimising CFA... ";
             let removed = Spl_optimiser.optimise genv in

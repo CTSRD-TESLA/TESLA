@@ -59,6 +59,7 @@ type statement =
     | While of guarded_choice
     | Assign of (id * id option)  * expr
     | Function_call of (funcname * var_types)
+    | Function_ret of (id * expr)
     | During_handle of (statements * statements list)
     | Exit  (* Exit without an error *)
     | Abort (* Immediately raise a Bad_statecall exception *)
@@ -79,6 +80,7 @@ type func = {
 type global = {
     includes: string list;
     funcs: func list;
+    aname: string;
 }
 
 let var_name_of_arg = function
