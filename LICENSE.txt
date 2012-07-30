@@ -1,7 +1,7 @@
 Unless specified otherwise, the contents of this directory are distributed
 according to the following terms.
 
-Copyright (c) 2011 Jonathan Anderson
+Copyright (c) 2011-2012 Jonathan Anderson
 Copyright (c) 2011 Anil Madhavapeddy
 Copyright (c) 2011 Steven Murdoch
 Copyright (c) 2011 Robert N. M. Watson
