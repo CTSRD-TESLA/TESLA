@@ -1,4 +1,0 @@
-TODOs for Jon's Clang instrumentation:
-- instrument malloc() and equivalents
-  - dep: instrument assignments to variables of specified type
-- instrument assignments to named global variables
