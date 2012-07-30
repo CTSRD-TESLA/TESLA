@@ -17,5 +17,5 @@ fi
 
 mkdir -p build
 cd build
-cmake -j5 -DCLANG_BUILD_EXAMPLES=true ../llvm
-make
+cmake -GNinja -DCLANG_BUILD_EXAMPLES=true ../llvm
+ninja
