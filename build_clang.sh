@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Use the 'ninja' build tool by default, but allow 'make' for the non-ninja.
+if [ "$MAKE" == "make" ]; then
+	GENERATOR="-G 'Unix Makefiles'"
+else
+	GENERATOR="-G Ninja"
+fi
+
 # If we don't have an LLVM directory, go get one. If we do, update it.
 if [ ! -d llvm ]; then
   git clone http://github.com/CTSRD-TESLA/llvm.git
@@ -24,8 +31,9 @@ cd build
 # about, we can just enable C++11 ("-std=c++11 -stdlib=libc++"). In the
 # meantime, we can just disable warnings and use the most obvious bits of
 # C++11, like auto type inference.
-cmake -GNinja \
+cmake $GENERATOR \
 	-DCLANG_BUILD_EXAMPLES=true \
 	-DCLANG_CXX_FLAGS="-Wno-c++11-extensions" \
 	../llvm
-ninja
+
+$MAKE
