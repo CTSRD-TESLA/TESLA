@@ -70,6 +70,7 @@ void __tesla_inline_assertion(const char *filename, int line, int count,
 
 /** A sequence of TESLA events. Can be combined with && or ||. */
 bool __tesla_sequence(__tesla_event, ...);
+#define	TSEQUENCE(x, ...)	__tesla_sequence(x, __VA_ARGS__)
 
 
 /* TESLA events: */
