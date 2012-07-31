@@ -35,10 +35,20 @@ int example_syscall(struct credential *cred, int index, int op);
 
 int do_operation(int op, struct object *o)
 {
+	/* An example of using high-level TESLA macros. */
 	TESLA_PERTHREAD(
 		since(entered(example_syscall), security_check(ANY, o, op) == 0)
 		||
 		before(leaving(example_syscall), log_audit_record(o, op) == 0)
+	);
+
+	/* An example of using the lower-level TESLA interface. */
+	TESLA_GLOBAL(
+		TSEQUENCE(
+			entered(example_syscall),
+			UPTO(4, entered(do_operation)),
+			leaving(example_syscall)
+		)
 	);
 
   return 0;
