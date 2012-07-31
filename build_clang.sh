@@ -17,5 +17,15 @@ fi
 
 mkdir -p build
 cd build
-cmake -GNinja -DCLANG_BUILD_EXAMPLES=true ../llvm
+
+# For now, we need to disable C++11 warnings with CLANG_CXX_FLAGS.
+#
+# Once compilers catch up in all of the bootstrap environments that we care
+# about, we can just enable C++11 ("-std=c++11 -stdlib=libc++"). In the
+# meantime, we can just disable warnings and use the most obvious bits of
+# C++11, like auto type inference.
+cmake -GNinja \
+	-DCLANG_BUILD_EXAMPLES=true \
+	-DCLANG_CXX_FLAGS="-Wno-c++11-extensions" \
+	../llvm
 ninja
