@@ -1,7 +1,6 @@
 #!/bin/sh
-# Build our patched LLVM/CLANG
-# Run from ctsrd.svn/tesla/trunk
 
+# If we don't have an LLVM directory, go get one. If we do, update it.
 if [ ! -d llvm ]; then
   git clone http://github.com/CTSRD-TESLA/llvm.git
   cd llvm/tools
@@ -15,6 +14,7 @@ elif [ "$1" != "--no-update" ]; then
   cd ../../..
 fi
 
+# We build LLVM+Clang out-of-tree.
 mkdir -p build
 cd build
 
