@@ -89,6 +89,16 @@ __tesla_event __tesla_now;
 /** A boolean predicate becoming true (e.g., foo(x) == y). */
 __tesla_event __tesla_predicate(bool);
 
+/** A number of times to match an event: positive or "any number". */
+typedef	int	__tesla_count;
+#define	ANY_REP	-1
+
+/** A repetition of events — this allows globby "?", "*", "+", etc. */
+__tesla_event __tesla_repeat(__tesla_count, __tesla_count, __tesla_event);
+#define	REPEAT(m, n, event)	__tesla_repeat(m, n, event)
+#define	UPTO(n, event)		__tesla_repeat(0, n, event)
+#define	ATLEAST(n, event)	__tesla_repeat(n, ANY_REP, event)
+
 /** A value that could match a lot of function parameters. Maybe anything? */
 void* __tesla_any();
 #define ANY __tesla_any()
