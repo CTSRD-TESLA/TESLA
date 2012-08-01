@@ -1,12 +1,20 @@
-.PHONY: build clean test
+.PHONY: check-syntax run-tesla tesla
 
 BUILD_DIR=../build
 TESLA=${BUILD_DIR}/bin/tesla
 EXAMPLE=example.c
 
-build:
+CC=clang -D TESLA
+PARSE=${CC} -fsyntax-only
+
+all: ${TESLA} check-syntax
+
+tesla:
 	cd ${BUILD_DIR} && ninja
 
-tesla: build
-	${TESLA} ${EXAMPLE} -- clang -D TESLA -fsyntax-only
+check-syntax: ${EXAMPLE}
+	${PARSE} ${EXAMPLE}
+
+run-tesla: tesla check-syntax
+	${TESLA} ${EXAMPLE} -- ${PARSE}
 
