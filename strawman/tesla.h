@@ -86,8 +86,8 @@ __tesla_event __tesla_leaving(void*);
 __tesla_event __tesla_now;
 #define	TESLA_NOW &__tesla_now
 
-/** A boolean predicate becoming true (e.g., foo(x) == y). */
-__tesla_event __tesla_predicate(bool);
+/** The result of a function call (e.g., foo(x) == y). */
+__tesla_event __tesla_call(bool);
 
 /** A number of times to match an event: positive or "any number". */
 typedef	int	__tesla_count;
@@ -105,18 +105,18 @@ void* __tesla_any();
 
 
 /** A more programmer-friendly way to write assertions about the past. */
-#define since(bound, predicate)						\
+#define since(bound, call)						\
 	__tesla_sequence(						\
 		bound,							\
-		__tesla_predicate(predicate),				\
+		__tesla_call(call),					\
 		__tesla_now						\
 	)
 
 /** A more programmer-friendly way to write assertions about the future. */
-#define before(bound, predicate)					\
+#define before(bound, call)						\
 	__tesla_sequence(						\
 		__tesla_now,						\
-		__tesla_predicate(predicate),				\
+		__tesla_call(call),					\
 		bound							\
 	)
 
