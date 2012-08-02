@@ -1,7 +1,7 @@
 .PHONY: check-syntax run-tesla tesla
 
-BUILD_DIR=../build
-TESLA=${BUILD_DIR}/bin/tesla
+TESLA_DIR=../tesla
+TESLA=${TESLA_DIR}/tesla
 EXAMPLE=example.c
 
 CC=clang -D TESLA
@@ -10,7 +10,7 @@ PARSE=${CC} -fsyntax-only
 all: ${TESLA} check-syntax
 
 tesla:
-	cd ${BUILD_DIR} && ninja
+	cd ${TESLA_DIR} && make
 
 check-syntax: ${EXAMPLE}
 	${PARSE} ${EXAMPLE}

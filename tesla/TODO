@@ -1,0 +1,14 @@
+Things left to do:
+
+ * more function-related events:
+   * caller/callee versions of everything
+   * entry with params (which could be "ANY")
+   * return with retval (which could be "ANY")
+
+ * actually extract the information that we need for:
+   * instrumentation
+   * pattern matching
+   * automata
+
+ * investigate using Clang's new ASTMatcher framework
+

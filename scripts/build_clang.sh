@@ -1,9 +1,18 @@
 #!/bin/sh
 
+# Default to Clang.
+if [ "$CC" == "gcc" ]; then
+	CXX=g++
+else
+	CC=clang
+	CXX=clang++
+fi
+
 # Use the 'ninja' build tool by default, but allow 'make' for the non-ninja.
 if [ "$MAKE" == "make" ]; then
 	GENERATOR="-G 'Unix Makefiles'"
 else
+	MAKE="ninja"
 	GENERATOR="-G Ninja"
 fi
 
@@ -21,19 +30,19 @@ elif [ "$1" != "--no-update" ]; then
   cd ../../..
 fi
 
-# We build LLVM+Clang out-of-tree.
+# Build out of tree.
 mkdir -p build
 cd build
 
-# For now, we need to disable C++11 warnings with CLANG_CXX_FLAGS.
-#
-# Once compilers catch up in all of the bootstrap environments that we care
-# about, we can just enable C++11 ("-std=c++11 -stdlib=libc++"). In the
-# meantime, we can just disable warnings and use the most obvious bits of
-# C++11, like auto type inference.
-cmake $GENERATOR \
-	-DCLANG_BUILD_EXAMPLES=true \
-	-DCLANG_CXX_FLAGS="-Wno-c++11-extensions" \
-	../llvm
+if [ -f CMakeCache.txt ]; then
+	# CMake has already been run. No need to explicitly run it again: its
+	# previously-generated makefiles will take care of that if needed.
+	:
+else
+	cmake $GENERATOR \
+		-D CMAKE_C_COMPILER=${CC} -D CMAKE_CXX_COMPILER=${CXX} \
+		../llvm
+fi
 
+echo "Build with $MAKE..."
 $MAKE
