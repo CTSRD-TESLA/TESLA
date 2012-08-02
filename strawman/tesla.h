@@ -94,10 +94,10 @@ typedef	int	__tesla_count;
 #define	ANY_REP	-1
 
 /** A repetition of events — this allows globby "?", "*", "+", etc. */
-__tesla_event __tesla_repeat(__tesla_count, __tesla_count, __tesla_event);
-#define	REPEAT(m, n, event)	__tesla_repeat(m, n, event)
-#define	UPTO(n, event)		__tesla_repeat(0, n, event)
-#define	ATLEAST(n, event)	__tesla_repeat(n, ANY_REP, event)
+__tesla_event __tesla_repeat(__tesla_count, __tesla_count, __tesla_event, ...);
+#define	REPEAT(m, n, ...)	__tesla_repeat(m, n, __VA_ARGS__)
+#define	UPTO(n, ...)		__tesla_repeat(0, n, __VA_ARGS__)
+#define	ATLEAST(n, ...)		__tesla_repeat(n, ANY_REP, __VA_ARGS__)
 
 /** A value that could match a lot of function parameters. Maybe anything? */
 void* __tesla_any();

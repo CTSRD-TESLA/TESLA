@@ -32,6 +32,7 @@
 #include "tesla.h"
 
 int example_syscall(struct credential *cred, int index, int op);
+int something(int op);
 
 int do_operation(int op, struct object *o)
 {
@@ -46,7 +47,7 @@ int do_operation(int op, struct object *o)
 	TESLA_GLOBAL(
 		TSEQUENCE(
 			entered(example_syscall),
-			UPTO(4, entered(do_operation)),
+			UPTO(4, entered(something), leaving(something)),
 			leaving(example_syscall)
 		)
 	);
