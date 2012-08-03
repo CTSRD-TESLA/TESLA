@@ -30,6 +30,8 @@ TESLA_OBJ=$(patsubst %,%.o, Tesla tool)
 
 all: ${TESLA}
 
+-include $(TESLA_OBJ:.o=.o.d)
+
 clean:
 	rm -f ${TESLA} *.o *.d
 
