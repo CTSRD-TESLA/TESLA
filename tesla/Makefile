@@ -19,8 +19,7 @@ LDFLAGS=$(shell llvm-config --ldflags) ${LIBS}
 # LLVM and Clang libraries (gathered by watching what CMake does elsewhere).
 LLVM_LIBS=$(patsubst %,LLVM%,MC Object Support)
 CLANG_LIBS= $(patsubst %,clang%, \
-	Tooling Basic Frontend Driver Serialization Parse \
-	Sema Edit Analysis AST Lex Basic)
+	Analysis AST Basic Driver Edit Frontend Lex Parse Sema Serialization Tooling)
 
 LIBS=$(patsubst %,-l %,${CLANG_LIBS} ${LLVM_LIBS})
 
