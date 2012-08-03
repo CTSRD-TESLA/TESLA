@@ -37,6 +37,6 @@ clean:
 ${TESLA}: ${TESLA_OBJ}
 	${CXX} ${CXXFLAGS} ${LDFLAGS} $^ -o $@ ${LIBS}
 
-%.o: %.cpp
+%.o: %.cpp Makefile
 	${CXX} ${CXXFLAGS} -MMD -MT $@ -MF $@.d -o $@ -c $<
 
