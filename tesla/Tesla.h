@@ -79,6 +79,7 @@ private:
 class Desc {
 public:
   virtual ~Desc() {}
+  virtual std::set<clang::FunctionDecl*> FunctionsToInstrument();
   virtual void References(std::set<Reference>&) const = 0;
   virtual llvm::StringRef Description() const = 0;
 };
@@ -183,6 +184,7 @@ private:
 class FunctionEvent : public TeslaEvent {
 public:
   FunctionEvent(clang::FunctionDecl *Function) : Function(Function) {}
+  std::set<clang::FunctionDecl*> FunctionsToInstrument();
   void References(std::set<Reference>&) const {}
 
 protected:
@@ -244,6 +246,7 @@ public:
 
   BooleanExpr(BooleanOp Operation, TeslaExpr *LHS, TeslaExpr *RHS);
 
+  std::set<clang::FunctionDecl*> FunctionsToInstrument();
   void References(std::set<Reference>&) const;
   llvm::StringRef Description() const { return Descrip; }
 
@@ -267,6 +270,7 @@ public:
     for (auto I = Events.begin(); I != Events.end(); I++) delete *I;
   }
 
+  std::set<clang::FunctionDecl*> FunctionsToInstrument();
   void References(std::set<Reference>&) const;
   llvm::StringRef Description() const { return Descrip; }
 
@@ -283,6 +287,8 @@ private:
 class TeslaAssertion : public Desc {
 public:
   TeslaAssertion(Location, const AutomatonContext*, TeslaExpr*);
+
+  std::set<clang::FunctionDecl*> FunctionsToInstrument();
 
   void References(std::set<Reference>&) const;
   std::set<Reference> References() const;

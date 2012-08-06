@@ -65,6 +65,13 @@ public:
       llvm::outs()
         << "TESLA inline assertion:\n"
         << Assertion->Description() << "\n"
+        << "Functions:";
+
+      for (auto Fn : Assertion->FunctionsToInstrument())
+        llvm::outs() << " " << Fn->getName();
+
+      llvm::outs()
+        << "\n"
         << "References:";
 
       for (auto Ref : Assertion->References())

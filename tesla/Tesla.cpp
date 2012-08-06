@@ -47,6 +47,26 @@ using std::vector;
 
 namespace tesla {
 
+// Some STL helpers.
+template<class T>
+set<T>& operator += (set<T>& lhs, const set<T>& rhs) {
+  lhs.insert(rhs.begin(), rhs.end());
+  return lhs;
+}
+
+template<class T>
+set<T> operator + (const set<T>& lhs, const set<T>& rhs) {
+  set<T> total;
+  total += lhs;
+  total += rhs;
+  return total;
+}
+
+
+set<FunctionDecl*> Desc::FunctionsToInstrument() {
+  return set<FunctionDecl*>();
+}
+
 Reference::Reference(NamedDecl *D) : Decl(D), Literal(NULL) {}
 Reference::Reference(Expr *E) : Decl(NULL), Literal(E) {}
 
@@ -264,6 +284,13 @@ Now::Now(Location Loc)
   : ID(Loc), Descrip(("AssertionPoint(" + Loc.Description() + ")").str()) {}
 
 
+set<FunctionDecl*> FunctionEvent::FunctionsToInstrument() {
+  set<FunctionDecl*> Fns;
+  if (Function) Fns.insert(Function);
+  return Fns;
+}
+
+
 FunctionCall::FunctionCall(
     FunctionDecl *Fn, vector<Reference>& Params, Reference& RetVal)
   : FunctionEvent(Fn), Params(Params), RetVal(RetVal)
@@ -396,6 +423,15 @@ BooleanExpr::BooleanExpr(BooleanOp Operation, TeslaExpr *LHS, TeslaExpr *RHS)
   Descrip = ("(" + L + " " + O + " " + R + ")").str();
 }
 
+set<FunctionDecl*> BooleanExpr::FunctionsToInstrument() {
+  return LHS->FunctionsToInstrument() + RHS->FunctionsToInstrument();
+  set<FunctionDecl*> Fns;
+  Fns += LHS->FunctionsToInstrument();
+  Fns += RHS->FunctionsToInstrument();
+
+  return Fns;
+}
+
 void BooleanExpr::References(set<Reference>& References) const {
   LHS->References(References);
   RHS->References(References);
@@ -428,6 +464,10 @@ TeslaAssertion::TeslaAssertion(
     Location Loc, const AutomatonContext *Context, TeslaExpr *Expr)
   : Loc(Loc), Context(Context), Expression(Expr)
 {
+}
+
+set<FunctionDecl*> TeslaAssertion::FunctionsToInstrument() {
+  return Expression->FunctionsToInstrument();
 }
 
 void TeslaAssertion::References(set<Reference>& References) const {
@@ -501,6 +541,13 @@ Sequence::Sequence(MutableArrayRef<OwningPtr<TeslaEvent> > Events) {
 
   // Only take these references *after* building the description string!
   for (auto& E : Events) this->Events.push_back(E.take());
+}
+
+set<FunctionDecl*> Sequence::FunctionsToInstrument() {
+  set<FunctionDecl*> Fns;
+  for (auto E : Events) Fns += E->FunctionsToInstrument();
+
+  return Fns;
 }
 
 void Sequence::References(set<Reference>& References) const {
