@@ -47,9 +47,6 @@ using std::vector;
 
 namespace tesla {
 
-typedef CallExpr::arg_iterator ArgIterator;
-
-
 Reference::Reference(NamedDecl *D) : Decl(D), Literal(NULL) {}
 Reference::Reference(Expr *E) : Decl(NULL), Literal(E) {}
 
