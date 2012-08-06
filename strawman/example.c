@@ -47,6 +47,7 @@ int do_operation(int op, struct object *o)
 	TESLA_GLOBAL(
 		TSEQUENCE(
 			entered(example_syscall),
+			something(42) == 0,
 			UPTO(4, entered(something), leaving(something)),
 			leaving(example_syscall)
 		)

@@ -96,6 +96,10 @@ TeslaEvent* TeslaEvent::Parse(Expr *E, Location AssertionLocation,
     if (D->getName() == "__tesla_now") return new Now(AssertionLocation);
   }
 
+  // Is it a call-and-return like "foo(x) == y"?
+  if (auto Bop = dyn_cast<BinaryOperator>(E))
+    return FunctionCall::Parse(Bop, Ctx);
+
   // Otherwise, we expect a call to a TESLA "function" like __tesla_predicate().
   auto Call = dyn_cast<CallExpr>(E);
   if (!Call) {
@@ -238,6 +242,10 @@ FunctionCall* FunctionCall::Parse(CallExpr *Call, ASTContext& Ctx) {
     return NULL;
   }
 
+  return Parse(Bop, Ctx);
+}
+
+FunctionCall* FunctionCall::Parse(BinaryOperator *Bop, ASTContext& Ctx) {
   Expr *LHS = Bop->getLHS();
   bool LHSisICE = LHS->isIntegerConstantExpr(Ctx);
 

@@ -186,6 +186,8 @@ public:
   llvm::StringRef Description() const { return Descrip; }
 
   static FunctionCall* Parse(clang::CallExpr*, clang::ASTContext&);
+  static FunctionCall* Parse(
+      clang::BinaryOperator *Bop, clang::ASTContext& Ctx);
 
 private:
   clang::ArrayRef<clang::Expr*> Params;
