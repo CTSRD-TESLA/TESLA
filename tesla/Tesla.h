@@ -181,7 +181,7 @@ private:
 class FunctionCall : public FunctionEvent {
 public:
   FunctionCall(clang::FunctionDecl *Fn,
-      clang::ArrayRef<clang::Expr*> Params, clang::Expr *RetVal);
+      llvm::ArrayRef<clang::Expr*> Params, clang::Expr *RetVal);
 
   llvm::StringRef Description() const { return Descrip; }
 
@@ -190,7 +190,7 @@ public:
       clang::BinaryOperator *Bop, clang::ASTContext& Ctx);
 
 private:
-  clang::ArrayRef<clang::Expr*> Params;
+  llvm::ArrayRef<clang::Expr*> Params;
   clang::Expr *RetVal;
 
   std::string Descrip;
