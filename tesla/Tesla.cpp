@@ -32,16 +32,74 @@
 
 #include <memory>
 
+#include "llvm/ADT/APFloat.h"
+
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 
 using namespace clang;
 using namespace llvm;
+
+using std::set;
 using std::string;
+using std::vector;
 
 namespace tesla {
 
 typedef CallExpr::arg_iterator ArgIterator;
+
+
+Reference::Reference(NamedDecl *D) : Decl(D), Literal(NULL) {}
+Reference::Reference(Expr *E) : Decl(NULL), Literal(E) {}
+
+string Reference::Description() const {
+  if (Decl) return Decl->getName();
+
+  if (auto Char = dyn_cast<CharacterLiteral>(Literal)) {
+    string type;
+    switch (Char->getKind()) {
+      case CharacterLiteral::Ascii:  type = "Ascii"; break;
+      case CharacterLiteral::Wide:   type = "wide";  break;
+      case CharacterLiteral::UTF16:  type = "UTF16"; break;
+      case CharacterLiteral::UTF32:  type = "UTF32"; break;
+    }
+
+    return "char(" + type
+      + APInt(sizeof(unsigned), Char->getValue()).toString(10, false)
+      + ")";
+
+  }
+
+  if (auto Float = dyn_cast<FloatingLiteral>(Literal)) {
+    SmallString<10> Str;
+    Float->getValue().toString(Str);
+    return Str.str();
+  }
+
+  if (auto Int = dyn_cast<IntegerLiteral>(Literal))
+    return Int->getValue().toString(10, true);    // TODO: is signed????
+
+  if (auto String = dyn_cast<StringLiteral>(Literal))
+    return String->getString();
+
+  if (auto Bool = dyn_cast<CXXBoolLiteralExpr>(Literal))
+    return Bool->getValue() ? "true" : "false";
+
+  if (isa<CXXNullPtrLiteralExpr>(Literal))
+    return "NULL";
+
+  assert(false);   // unhandled ICE!?
+}
+
+bool Reference::operator < (const Reference& other) const {
+  return get() < other.get();
+}
+
+const void* Reference::get() const {
+  if (Decl) return Decl;
+  else return Literal;
+}
 
 
 const AutomatonContext PerThreadContext("per-thread");
@@ -168,6 +226,10 @@ void Repetition::Init(OwningArrayPtr<TeslaEvent*>& Events) {
   this->Events.reset(Events.take());
 }
 
+void Repetition::References(set<Reference>& References) const {
+  for (size_t I = 0; I < Len; I++) Events[I]->References(References);
+}
+
 Repetition* Repetition::Parse(CallExpr *Call, Location AssertLoc,
     ASTContext& Ctx) {
 
@@ -206,7 +268,7 @@ Now::Now(Location Loc)
 
 
 FunctionCall::FunctionCall(
-    FunctionDecl *Fn, ArrayRef<Expr*> Params, Expr *RetVal)
+    FunctionDecl *Fn, vector<Reference>& Params, Reference& RetVal)
   : FunctionEvent(Fn), Params(Params), RetVal(RetVal)
 {
   SmallString<50> D;
@@ -215,6 +277,11 @@ FunctionCall::FunctionCall(
   D += ")";
 
   Descrip = D.str();
+}
+
+void FunctionCall::References(set<Reference>& References) const {
+  for (auto E : Params) References.insert(E);
+  References.insert(RetVal);
 }
 
 FunctionCall* FunctionCall::Parse(CallExpr *Call, ASTContext& Ctx) {
@@ -254,7 +321,7 @@ FunctionCall* FunctionCall::Parse(BinaryOperator *Bop, ASTContext& Ctx) {
     return NULL;
   }
 
-  Expr *RetVal = LHSisICE ? LHS : RHS;
+  Reference RetVal(LHSisICE ? LHS : RHS);
   Expr *FnCall = LHSisICE ? RHS : LHS;
 
   auto FnCallExpr = dyn_cast<CallExpr>(FnCall);
@@ -271,22 +338,28 @@ FunctionCall* FunctionCall::Parse(BinaryOperator *Bop, ASTContext& Ctx) {
     return NULL;
   }
 
-  ArrayRef<Expr*> Params(FnCallExpr->getArgs(), FnCallExpr->getNumArgs());
-  for (auto P : Params) {
-    P = P->IgnoreImplicit();
+  vector<Reference> Params;
+  for (auto I = FnCallExpr->arg_begin(); I != FnCallExpr->arg_end(); ++I) {
+    auto P = I->IgnoreImplicit();
 
     // Each parameter must be one of:
     //  - a call to a TESLA pseudo-function,
     //  - a reference to a named declaration or
     //  - an integer constant expression.
     if (auto Call = dyn_cast<CallExpr>(P)) {
-      if (!Call->getDirectCallee()) {
+      auto Fn = Call->getDirectCallee();
+      if (!Fn) {
         Report("Should only call TESLA pseudo-functions here",
             P->getLocStart(), Ctx) << P->getSourceRange();
         return NULL;
       }
 
-    } else if (!(isa<DeclRefExpr>(P) || P->isIntegerConstantExpr(Ctx))) {
+      Params.push_back(Fn);
+    } else if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
+      Params.push_back(DRE->getDecl());
+    } else if (P->isIntegerConstantExpr(Ctx)) {
+      Params.push_back(P);
+    } else {
       P->dump();
 
       Report("Invalid argument to function within TESLA assertion",
@@ -326,6 +399,11 @@ BooleanExpr::BooleanExpr(BooleanOp Operation, TeslaExpr *LHS, TeslaExpr *RHS)
   Descrip = ("(" + L + " " + O + " " + R + ")").str();
 }
 
+void BooleanExpr::References(set<Reference>& References) const {
+  LHS->References(References);
+  RHS->References(References);
+}
+
 BooleanExpr* BooleanExpr::Parse(BinaryOperator *Bop, Location AssertionLocation,
     ASTContext& Ctx) {
   BooleanOp Op;
@@ -353,6 +431,16 @@ TeslaAssertion::TeslaAssertion(
     Location Loc, const AutomatonContext *Context, TeslaExpr *Expr)
   : Loc(Loc), Context(Context), Expression(Expr)
 {
+}
+
+void TeslaAssertion::References(set<Reference>& References) const {
+  Expression->References(References);
+}
+
+set<Reference> TeslaAssertion::References() const {
+  set<Reference> Refs;
+  References(Refs);
+  return Refs;
 }
 
 StringRef TeslaAssertion::Description() const {
@@ -416,6 +504,10 @@ Sequence::Sequence(MutableArrayRef<OwningPtr<TeslaEvent> > Events) {
 
   // Only take these references *after* building the description string!
   for (auto& E : Events) this->Events.push_back(E.take());
+}
+
+void Sequence::References(set<Reference>& References) const {
+  for (auto E : Events) E->References(References);
 }
 
 Sequence* Sequence::Parse(CallExpr *Call, Location AssertionLocation,

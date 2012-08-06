@@ -39,7 +39,9 @@
 
 #include "clang/Basic/Diagnostic.h"
 
+#include <set>
 #include <string>
+#include <vector>
 
 // We don't need to include these to take pointers and references to them.
 namespace clang {
@@ -48,16 +50,36 @@ namespace clang {
   class CallExpr;
   class Expr;
   class FunctionDecl;
+  class NamedDecl;
 
   struct StmtRange;
 }
 
 namespace tesla {
 
+/// A reference to a declaration or literal. Small and cheap to copy.
+class Reference {
+public:
+  Reference(clang::NamedDecl *D);
+  Reference(clang::Expr *E);
+
+  std::string Description() const;
+
+  bool isValid() const { return (Decl || Literal); }
+  bool operator < (const Reference&) const;
+
+private:
+  const void* get() const;
+
+  clang::NamedDecl *Decl;
+  clang::Expr *Literal;
+};
+
 /// Something that can describe itself.
 class Desc {
 public:
   virtual ~Desc() {}
+  virtual void References(std::set<Reference>&) const = 0;
   virtual llvm::StringRef Description() const = 0;
 };
 
@@ -68,6 +90,8 @@ public:
 class AutomatonContext : public Desc {
 public:
   AutomatonContext(llvm::StringRef Name);
+
+  void References(std::set<Reference>&) const {}
   llvm::StringRef Description() const { return Descrip; }
 
   static const AutomatonContext* Parse(clang::Expr*, clang::ASTContext&);
@@ -87,6 +111,8 @@ private:
 class Location : public Desc {
 public:
   Location(llvm::StringRef Filename, llvm::APInt Line, llvm::APInt Counter);
+
+  void References(std::set<Reference>&) const {}
   llvm::StringRef Description() const { return Descrip; }
 
   static Location* Parse(
@@ -119,6 +145,8 @@ public:
       llvm::APInt Min, llvm::APInt Max);
 
   void Init(llvm::OwningArrayPtr<TeslaEvent*>& Events);
+
+  void References(std::set<Reference>&) const;
   llvm::StringRef Description() const { return Descrip; }
 
   static Repetition* Parse(
@@ -141,6 +169,8 @@ private:
 class Now : public TeslaEvent {
 public:
   Now(Location Loc);
+
+  void References(std::set<Reference>&) const {}
   llvm::StringRef Description() const { return Descrip; }
 
 private:
@@ -148,10 +178,12 @@ private:
   std::string Descrip;
 };
 
+
 /// A TESLA event that has to do with a function.
 class FunctionEvent : public TeslaEvent {
 public:
   FunctionEvent(clang::FunctionDecl *Function) : Function(Function) {}
+  void References(std::set<Reference>&) const {}
 
 protected:
   clang::FunctionDecl *Function;
@@ -181,8 +213,9 @@ private:
 class FunctionCall : public FunctionEvent {
 public:
   FunctionCall(clang::FunctionDecl *Fn,
-      llvm::ArrayRef<clang::Expr*> Params, clang::Expr *RetVal);
+      std::vector<Reference>& Params, Reference& RetVal);
 
+  void References(std::set<Reference>&) const;
   llvm::StringRef Description() const { return Descrip; }
 
   static FunctionCall* Parse(clang::CallExpr*, clang::ASTContext&);
@@ -190,8 +223,8 @@ public:
       clang::BinaryOperator *Bop, clang::ASTContext& Ctx);
 
 private:
-  llvm::ArrayRef<clang::Expr*> Params;
-  clang::Expr *RetVal;
+  std::vector<Reference> Params;
+  Reference RetVal;
 
   std::string Descrip;
 };
@@ -210,6 +243,8 @@ public:
   enum BooleanOp { BOp_And, BOp_Or, BOp_Xor };
 
   BooleanExpr(BooleanOp Operation, TeslaExpr *LHS, TeslaExpr *RHS);
+
+  void References(std::set<Reference>&) const;
   llvm::StringRef Description() const { return Descrip; }
 
   static BooleanExpr* Parse(
@@ -232,6 +267,7 @@ public:
     for (auto I = Events.begin(); I != Events.end(); I++) delete *I;
   }
 
+  void References(std::set<Reference>&) const;
   llvm::StringRef Description() const { return Descrip; }
 
   static Sequence* Parse(clang::CallExpr*, Location AssertionLocation,
@@ -247,6 +283,9 @@ private:
 class TeslaAssertion : public Desc {
 public:
   TeslaAssertion(Location, const AutomatonContext*, TeslaExpr*);
+
+  void References(std::set<Reference>&) const;
+  std::set<Reference> References() const;
 
   static TeslaAssertion* Parse(clang::CallExpr*, clang::ASTContext&);
   virtual llvm::StringRef Description() const;

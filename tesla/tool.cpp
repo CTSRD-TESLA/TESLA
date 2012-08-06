@@ -62,7 +62,16 @@ public:
     if (!F->getName().startswith("__tesla_inline_assertion")) return true;
 
     if (TeslaAssertion *Assertion = TeslaAssertion::Parse(E, *Context)) {
-      llvm::outs() << Assertion->Description() << "\n";
+      llvm::outs()
+        << "TESLA inline assertion:\n"
+        << Assertion->Description() << "\n"
+        << "References:";
+
+      for (auto Ref : Assertion->References())
+        llvm::outs() << " " << Ref.Description();
+
+      llvm::outs() << "\n\n";
+
       return true;
     }
 

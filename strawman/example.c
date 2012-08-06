@@ -69,3 +69,8 @@ int example_syscall(struct credential *cred, int index, int op)
 	return 0;
 }
 
+void caller_with_literals()
+{
+	do_operation(3, 0);
+}
+
