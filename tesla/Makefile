@@ -23,7 +23,7 @@ CLANG_LIBS= $(patsubst %,clang%, \
 
 LIBS=$(patsubst %,-l %,${CLANG_LIBS} ${LLVM_LIBS})
 
-.PHONY: all clean
+.PHONY: all clean test
 
 TESLA=tesla
 TESLA_OBJ=$(patsubst %,%.o, Tesla tool)
@@ -34,6 +34,9 @@ all: ${TESLA}
 
 clean:
 	rm -f ${TESLA} *.o *.d
+
+test:
+	cd ../strawman && ${MAKE} run-tesla
 
 ${TESLA}: ${TESLA_OBJ}
 	${CXX} ${CXXFLAGS} ${LDFLAGS} $^ -o $@ ${LIBS}
