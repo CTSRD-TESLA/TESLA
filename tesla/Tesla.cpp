@@ -212,9 +212,6 @@ FunctionCall::FunctionCall(
   SmallString<50> D;
   D += "call(";
   D += Fn->getName();
-  D += "(";
-  for (auto P : Params) ;  // TODO: do something with params
-  // TODO: do something with retval, too
   D += ")";
 
   Descrip = D.str();
@@ -275,6 +272,28 @@ FunctionCall* FunctionCall::Parse(BinaryOperator *Bop, ASTContext& Ctx) {
   }
 
   ArrayRef<Expr*> Params(FnCallExpr->getArgs(), FnCallExpr->getNumArgs());
+  for (auto P : Params) {
+    P = P->IgnoreImplicit();
+
+    // Each parameter must be one of:
+    //  - a call to a TESLA pseudo-function,
+    //  - a reference to a named declaration or
+    //  - an integer constant expression.
+    if (auto Call = dyn_cast<CallExpr>(P)) {
+      if (!Call->getDirectCallee()) {
+        Report("Should only call TESLA pseudo-functions here",
+            P->getLocStart(), Ctx) << P->getSourceRange();
+        return NULL;
+      }
+
+    } else if (!(isa<DeclRefExpr>(P) || P->isIntegerConstantExpr(Ctx))) {
+      P->dump();
+
+      Report("Invalid argument to function within TESLA assertion",
+          P->getLocStart(), Ctx) << P->getSourceRange();
+      return NULL;
+    }
+  }
 
   return new FunctionCall(Fn, Params, RetVal);
 }
