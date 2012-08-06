@@ -1,94 +1,127 @@
-#ifndef	TESLA_H
-#define	TESLA_H
-
 /*
- * This file provides pretty ifdefs around Tesla primitives, allowing us to
- * write reasonable readable assertions like:
+ * Copyright (c) 2012 Jonathan Anderson
+ * All rights reserved.
  *
- * TESLA_ASSERT(syscall) {
- * 	previously(returned(0, check_auth(user, file)))
- * 	|| previously(returned(0, give_override_permission(user))
- * 	|| eventually(invoked(audit_submit(user, file)))
- * }
+ * This software was developed by SRI International and the University of
+ * Cambridge Computer Laboratory under DARPA/AFRL contract (FA8750-10-C-0237)
+ * ("CTSRD"), as part of the DARPA CRASH research programme.
  *
- * If 'T' has already been defined, the pretty shorthand above will not be
- * available; rather you'll need to refer to:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  *
- * __tesla_start_of_assertion(
- * 	__tesla_storage_perthread(),
- * 	__tesla_invoked(syscall),
- * 	__tesla_returned(__tesla_dont_care, syscall));
- *
- * {
- * 	__tesla_previously(__tesla_returned( ... ))
- * 	...
- * }
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
 
-#ifdef	T
-#warning Not defining Tesla shorthand notation; 'T' already defined
-#else
-#define	TESLA_PROVIDE_SHORTHAND
-#endif
+#ifndef	TESLA_H
 
-struct __tesla_event;
+#ifndef	TESLA
 
-/* Temporal qualifiers */
-int __tesla_now(struct __tesla_event *event);
-int __tesla_previously(struct __tesla_event *event);
-int __tesla_eventually(struct __tesla_event *event);
+/* If TESLA is not defined, provide macros that do nothing. */
+#define tassert(X)
+#define assert_previously(predicate)
+#define assert_eventually(predicate)
 
-/* Point expressions */
-typedef int __tesla_result; /* TODO: more flexibility (want C++ templates) */
-__tesla_result __tesla_dont_care;
+#else	/* TESLA */
 
-struct __tesla_event* __tesla_invoked(void *fn);
-struct __tesla_event* __tesla_returned(__tesla_result ret, void *fn);
-struct __tesla_event* __tesla_field_assigned(void *base, void *ptr, void *val);
+#include <stdbool.h>
 
-void __tesla_automata(void *);
-#define	automata(x) __tesla_automata(x)
+/** Basic TESLA types (magic for the compiler to munge). */
+typedef struct __tesla_event {} __tesla_event;
+typedef struct __tesla_locality {} __tesla_locality;
 
-/* Tesla storage: global or per-thread */
-struct __tesla_storage_specifier;
-struct __tesla_storage_specifier* __tesla_storage_global();
-struct __tesla_storage_specifier* __tesla_storage_perthread();
+/**
+ * TESLA events can be serialised either with respect to the current thread
+ * or, using explicit synchronisation, the global execution context.
+ */
+extern __tesla_locality *__tesla_global;
+extern __tesla_locality *__tesla_perthread;
 
-/* Markers for the beginning of instrumentation. */
-void __tesla_start_of_assertion(
-	struct __tesla_storage_specifier *storage,
-	struct __tesla_event *scope_begin,
-	struct __tesla_event *scope_end);
+#define	TESLA_GLOBAL(pred)	TESLA_ASSERT(__tesla_global, pred)
+#define	TESLA_PERTHREAD(pred)	TESLA_ASSERT(__tesla_perthread, pred)
 
 
-#ifdef	TESLA_PROVIDE_SHORTHAND
+/** Magic "function" representing a TESLA assertion. */
+void __tesla_inline_assertion(const char *filename, int line, int count,
+		__tesla_locality*, bool);
 
-#define	T(x) __tesla_##x
-
-#define	now(x)			T(now(x))
-#define	previously(x)		T(previously(x))
-#define	eventually(x)		T(eventually(x))
-
-#define	invoked(fn)		T(invoked((void *)fn))
-#define	returned(ret, fn)	T(returned(ret, (void *)fn))
-#define	assigned(base, member, value) \
-	T(field_assigned((void*) base, (void*) &(base->member), (void*) value))
-
-#define	dont_care	T(dont_care)
-
-#define TESLA_ASSERT(scope) \
-	__tesla_start_of_assertion( \
-		T(storage_perthread()), \
-		invoked(scope), \
-		returned(dont_care, scope));
-
-#define TESLA_ASSERT_GLOBAL(scope) \
-	__tesla_start_of_assertion( \
-		T(storage_global()), \
-		invoked(scope), \
-		returned(dont_care, scope));
-
-#endif
+/** A more programmer-friendly version of __tesla_inline_assertion. */
+#define TESLA_ASSERT(locality, predicate)				\
+	__tesla_inline_assertion(					\
+		__FILE__, __LINE__, __COUNTER__,			\
+		locality, predicate					\
+	)
 
 
-#endif  /* TESLA_H */
+/** A sequence of TESLA events. Can be combined with && or ||. */
+bool __tesla_sequence(__tesla_event, ...);
+#define	TSEQUENCE(x, ...)	__tesla_sequence(x, __VA_ARGS__)
+
+
+/* TESLA events: */
+/** Entering a function. */
+__tesla_event __tesla_entered(void*);
+#define	entered(f)	__tesla_entered(f)
+
+/** Exiting a function. */
+__tesla_event __tesla_leaving(void*);
+#define	leaving(f)	__tesla_leaving(f)
+
+/** Reaching the inline assertion. */
+__tesla_event __tesla_now;
+#define	TESLA_NOW &__tesla_now
+
+/** The result of a function call (e.g., foo(x) == y). */
+__tesla_event __tesla_call(bool);
+
+/** A number of times to match an event: positive or "any number". */
+typedef	int	__tesla_count;
+#define	ANY_REP	-1
+
+/** A repetition of events — this allows globby "?", "*", "+", etc. */
+__tesla_event __tesla_repeat(__tesla_count, __tesla_count, __tesla_event, ...);
+#define	REPEAT(m, n, ...)	__tesla_repeat(m, n, __VA_ARGS__)
+#define	UPTO(n, ...)		__tesla_repeat(0, n, __VA_ARGS__)
+#define	ATLEAST(n, ...)		__tesla_repeat(n, ANY_REP, __VA_ARGS__)
+
+/** A value that could match a lot of function parameters. Maybe anything? */
+void* __tesla_any();
+#define ANY __tesla_any()
+
+
+/** A more programmer-friendly way to write assertions about the past. */
+#define since(bound, call)						\
+	__tesla_sequence(						\
+		bound,							\
+		__tesla_call(call),					\
+		__tesla_now						\
+	)
+
+/** A more programmer-friendly way to write assertions about the future. */
+#define before(bound, call)						\
+	__tesla_sequence(						\
+		__tesla_now,						\
+		__tesla_call(call),					\
+		bound							\
+	)
+
+
+#endif /* TESLA */
+
+#endif /* TESLA_H */
+

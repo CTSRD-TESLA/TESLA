@@ -5,7 +5,9 @@ TESLA=${TESLA_DIR}/tesla
 EXAMPLE=example.c
 
 CC=clang -D TESLA
-PARSE=${CC} -fsyntax-only
+CFLAGS=-I ../include/tesla
+
+PARSE=${CC} -fsyntax-only ${CFLAGS}
 
 all: ${TESLA} check-syntax
 
