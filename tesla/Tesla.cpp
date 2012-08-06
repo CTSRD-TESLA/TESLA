@@ -202,7 +202,7 @@ Repetition* Repetition::Parse(CallExpr *Call, Location AssertLoc,
 
 
 Now::Now(Location Loc)
-  : ID(Loc), Descrip(("InlineAssertion(" + Loc.Description() + ")").str()) {}
+  : ID(Loc), Descrip(("AssertionPoint(" + Loc.Description() + ")").str()) {}
 
 
 FunctionCall::FunctionCall(
