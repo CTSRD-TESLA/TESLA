@@ -424,6 +424,9 @@ BooleanExpr::BooleanExpr(BooleanOp Operation, TeslaExpr *LHS, TeslaExpr *RHS)
 }
 
 set<FunctionDecl*> BooleanExpr::FunctionsToInstrument() {
+  assert(LHS);
+  assert(RHS);
+
   return LHS->FunctionsToInstrument() + RHS->FunctionsToInstrument();
   set<FunctionDecl*> Fns;
   Fns += LHS->FunctionsToInstrument();
@@ -452,10 +455,15 @@ BooleanExpr* BooleanExpr::Parse(BinaryOperator *Bop, Location AssertionLocation,
       return NULL;
   }
 
-  TeslaExpr *LHS = TeslaExpr::Parse(Bop->getLHS(), AssertionLocation, Ctx);
-  TeslaExpr *RHS = TeslaExpr::Parse(Bop->getRHS(), AssertionLocation, Ctx);
+  OwningPtr<TeslaExpr> LHS(
+      TeslaExpr::Parse(Bop->getLHS(), AssertionLocation, Ctx));
 
-  return new BooleanExpr(Op, LHS, RHS);
+  OwningPtr<TeslaExpr> RHS(
+      TeslaExpr::Parse(Bop->getRHS(), AssertionLocation, Ctx));
+
+  if (!LHS || !RHS) return NULL;
+
+  return new BooleanExpr(Op, LHS.take(), RHS.take());
 }
 
 
@@ -511,6 +519,7 @@ TeslaAssertion* TeslaAssertion::Parse(CallExpr *E, ASTContext& Ctx) {
       AutomatonContext::Parse(E->getArg(3), Ctx);
 
     TeslaExpr *Expression = TeslaExpr::Parse(E->getArg(4), Loc, Ctx);
+    if (!Expression) return NULL;
 
     return new TeslaAssertion(Loc, Context, Expression);
 }
