@@ -196,10 +196,10 @@ TeslaEvent* TeslaEvent::Parse(Expr *E, Location AssertionLocation,
     return Repetition::Parse(Call, AssertionLocation, Ctx);
 
   if (Callee->getName() == "__tesla_entered")
-    return new FunctionEntry(Callee);
+    return FunctionEntry::Parse(Call, Ctx);
 
   if (Callee->getName() == "__tesla_leaving")
-    return new FunctionExit(Callee);
+    return FunctionExit::Parse(Call, Ctx);
 
   if (Callee->getName() == "__tesla_call")
     return FunctionCall::Parse(Call, Ctx);
@@ -401,10 +401,59 @@ FunctionEntry::FunctionEntry(clang::FunctionDecl *Function)
   : FunctionEvent(Function),
     Descrip(("entered(" + Function->getName() + ")").str()) {}
 
+FunctionEntry* FunctionEntry::Parse(CallExpr *Call, ASTContext& Ctx) {
+  assert(Call->getDirectCallee() != NULL);
+  assert(Call->getDirectCallee()->getName() == "__tesla_entered");
+
+  if ((Call->getNumArgs() != 1) || (Call->getArg(0) == NULL)) {
+    Report("__tesla_entered predicate should have one argument: the function",
+        Call->getLocStart(), Ctx)
+      << Call->getSourceRange();
+    return NULL;
+  }
+
+  auto FnRef = dyn_cast<DeclRefExpr>(Call->getArg(0)->IgnoreImplicit());
+  if (!FnRef) {
+    Report("Expected a function call", Call->getLocStart(), Ctx)
+      << Call->getSourceRange();
+    return NULL;
+  }
+
+  auto Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
+  assert(Fn != NULL);
+
+  return new FunctionEntry(Fn);
+}
+
+
 
 FunctionExit::FunctionExit(clang::FunctionDecl *Function)
   : FunctionEvent(Function),
     Descrip(("exited(" + Function->getName() + ")").str()) {}
+
+FunctionExit* FunctionExit::Parse(CallExpr *Call, ASTContext& Ctx) {
+  assert(Call->getDirectCallee() != NULL);
+  assert(Call->getDirectCallee()->getName() == "__tesla_leaving");
+
+  if ((Call->getNumArgs() != 1) || (Call->getArg(0) == NULL)) {
+    Report("__tesla_leaving predicate should have one argument: the function",
+        Call->getLocStart(), Ctx)
+      << Call->getSourceRange();
+    return NULL;
+  }
+
+  auto FnRef = dyn_cast<DeclRefExpr>(Call->getArg(0)->IgnoreImplicit());
+  if (!FnRef) {
+    Report("Expected a function call", Call->getLocStart(), Ctx)
+      << Call->getSourceRange();
+    return NULL;
+  }
+
+  auto Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
+  assert(Fn != NULL);
+
+  return new FunctionExit(Fn);
+}
 
 
 BooleanExpr::BooleanExpr(BooleanOp Operation, TeslaExpr *LHS, TeslaExpr *RHS)

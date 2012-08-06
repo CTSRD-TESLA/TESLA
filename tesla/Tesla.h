@@ -197,6 +197,8 @@ public:
   FunctionEntry(clang::FunctionDecl *Function);
   llvm::StringRef Description() const { return Descrip; }
 
+  static FunctionEntry* Parse(clang::CallExpr*, clang::ASTContext&);
+
 private:
   llvm::SmallString<32> Descrip;
 };
@@ -206,6 +208,8 @@ class FunctionExit : public FunctionEvent {
 public:
   FunctionExit(clang::FunctionDecl *Function);
   llvm::StringRef Description() const { return Descrip; }
+
+  static FunctionExit* Parse(clang::CallExpr*, clang::ASTContext&);
 
 private:
   llvm::SmallString<32> Descrip;
