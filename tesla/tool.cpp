@@ -63,7 +63,8 @@ public:
 
     if (TeslaAssertion *Assertion = TeslaAssertion::Parse(E, *Context)) {
       llvm::outs()
-        << "TESLA inline assertion:\n"
+        << "TESLA inline assertion at " << Assertion->SourceLocation().Description()
+        << ":\n"
         << Assertion->Description() << "\n"
         << "Functions:";
 

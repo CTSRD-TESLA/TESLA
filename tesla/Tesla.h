@@ -292,6 +292,8 @@ class TeslaAssertion : public Desc {
 public:
   TeslaAssertion(Location, const AutomatonContext*, TeslaExpr*);
 
+  Location SourceLocation() const { return Loc; }
+
   std::set<clang::FunctionDecl*> FunctionsToInstrument();
 
   void References(std::set<Reference>&) const;
