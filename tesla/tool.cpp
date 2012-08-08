@@ -66,7 +66,7 @@ public:
         << "TESLA inline assertion at " << Assertion->SourceLocation().Description()
         << ":\n"
         << Assertion->Description() << "\n"
-        << "Functions:";
+        << "Functions to instrument:";
 
       for (auto Fn : Assertion->FunctionsToInstrument())
         llvm::outs() << " " << Fn->getName();
