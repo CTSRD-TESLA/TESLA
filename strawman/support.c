@@ -28,15 +28,23 @@
  * SUCH DAMAGE.
  */
 
-#include "support.h"
+#include "demo.h"
 
-int security_check(struct credential *subject, struct object *object, int op)
+int
+security_check(struct credential *subject, struct object *object, int op)
 {
   return 0;
 }
 
-int log_audit_record(struct object *object, int op)
+int
+log_audit_record(struct object *object, int op)
 {
   return 0;
+}
+
+int
+some_helper(int op)
+{
+	return 0;
 }
 

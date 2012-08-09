@@ -28,14 +28,57 @@
  * SUCH DAMAGE.
  */
 
-#ifndef	SUPPORT_H
-#define	SUPPORT_H
+#include "demo.h"
+#include "tesla.h"
 
-struct object {};
-struct credential {};
+#include <stdio.h>
 
-int security_check(struct credential *subject, struct object *object, int op);
-int log_audit_record(struct object *object, int op);
+/*
+ * This file contains stubs to make the demo compile without actually
+ * finishing the TESLA instrumenter (which will strip out calls to
+ * TESLA pseudo-functions like __tesla_inline_assertion).
+ *
+ * As the TESLA instrumenter becomes more real, this file should shrink to
+ * nothing.
+ */
 
-#endif	/* !SUPPORT_H */
+/* TESLA localities (per-thread vs global). */
+__tesla_locality *__tesla_global;
+__tesla_locality *__tesla_perthread;
+
+/* Inline assertions and events. */
+void
+__tesla_inline_assertion(const char *filename, int line, int count,
+		__tesla_locality *loc, bool predicate)
+{
+}
+
+bool __tesla_sequence(__tesla_event ev, ...) { return false; }
+
+__tesla_event __tesla_now;
+
+__tesla_event __tesla_entered(void *x) { return __tesla_now; }
+__tesla_event __tesla_leaving(void *x) { return __tesla_now; }
+__tesla_event __tesla_call(bool b) { return __tesla_now; }
+__tesla_event __tesla_repeat(__tesla_count min, __tesla_count max,
+	__tesla_event ev, ...) { return __tesla_now; }
+
+void* __tesla_any() { return 0; }
+
+/* Stub instrumentation functions. */
+void
+__tesla_callee_enter_example_syscall(
+	struct credential *cred, int index, int op)
+{
+	printf("[STUB] called %s(0x%lx, %d, %d)\n",
+			 __func__, (unsigned long) cred, index, op);
+}
+
+void
+__tesla_callee_return_example_syscall(
+	int retval, struct credential *cred, int index, int op)
+{
+	printf("[STUB] %s(0x%lx, %d, %d) == %d\n",
+			 __func__, (unsigned long) cred, index, op, retval);
+}
 

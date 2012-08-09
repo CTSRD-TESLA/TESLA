@@ -28,51 +28,17 @@
  * SUCH DAMAGE.
  */
 
-#include "demo.h"
-#include "tesla.h"
+#ifndef	DEMO_H
+#define	DEMO_H
 
-int
-do_operation(int op, struct object *o)
-{
-	/* An example of using high-level TESLA macros. */
-	TESLA_PERTHREAD(
-		since(entered(example_syscall), security_check(ANY, o, op) == 0)
-		||
-		before(leaving(example_syscall), log_audit_record(o, op) == 0)
-	);
+struct object {};
+struct credential {};
 
-	/* An example of using the lower-level TESLA interface. */
-	TESLA_GLOBAL(
-		TSEQUENCE(
-			entered(example_syscall),
-			some_helper(42) == 0,
-			UPTO(4, entered(some_helper), leaving(some_helper)),
-			leaving(example_syscall)
-		)
-	);
+int security_check(struct credential *subject, struct object *object, int op);
+int log_audit_record(struct object *object, int op);
 
-  return 0;
-}
+int example_syscall(struct credential *cred, int index, int op);
+int some_helper(int op);
 
-struct object objects[10];
-
-int
-example_syscall(struct credential *cred, int index, int op)
-{
-	int error;
-	struct object *o = objects + index;
-
-	if ((error = security_check(cred, o, op))) return error;
-	do_operation(op, o);
-
-	return 0;
-}
-
-/* TODO: instrument a varargs function */
-
-void
-caller_with_literals()
-{
-	do_operation(3, 0);
-}
+#endif	/* !DEMO_H */
 

@@ -31,48 +31,23 @@
 #include "demo.h"
 #include "tesla.h"
 
-int
-do_operation(int op, struct object *o)
-{
-	/* An example of using high-level TESLA macros. */
-	TESLA_PERTHREAD(
-		since(entered(example_syscall), security_check(ANY, o, op) == 0)
-		||
-		before(leaving(example_syscall), log_audit_record(o, op) == 0)
-	);
+#include <stdio.h>
 
-	/* An example of using the lower-level TESLA interface. */
-	TESLA_GLOBAL(
-		TSEQUENCE(
-			entered(example_syscall),
-			some_helper(42) == 0,
-			UPTO(4, entered(some_helper), leaving(some_helper)),
-			leaving(example_syscall)
-		)
-	);
-
-  return 0;
-}
-
-struct object objects[10];
+#ifndef REVISION
+#error Must -D REVISION=\"something\"
+#endif
 
 int
-example_syscall(struct credential *cred, int index, int op)
-{
-	int error;
-	struct object *o = objects + index;
+main(int argc, char *argv[]) {
+	struct credential cred;
 
-	if ((error = security_check(cred, o, op))) return error;
-	do_operation(op, o);
+	printf("TESLA demo application; version %s\n\n", REVISION);
+
+	printf("Calling the 'example_syscall' function...\n");
+	int retval = example_syscall(&cred, 0, 0);
+
+	printf("'example_syscall' returned %d\n", retval);
 
 	return 0;
-}
-
-/* TODO: instrument a varargs function */
-
-void
-caller_with_literals()
-{
-	do_operation(3, 0);
 }
 

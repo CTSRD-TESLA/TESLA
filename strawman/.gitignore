@@ -1,7 +1,1 @@
-*.o
-*.ll
-syscalls.c-tesla.h
-syscalls.c.vars
-generated.spec
-generated.c
-test
+demo
