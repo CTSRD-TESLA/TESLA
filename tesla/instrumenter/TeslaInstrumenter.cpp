@@ -31,9 +31,7 @@
 #include "Instrumentation.h"
 
 #include "llvm/Function.h"
-#include "llvm/IRBuilder.h"
 #include "llvm/LLVMContext.h"
-#include "llvm/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
