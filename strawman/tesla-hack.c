@@ -96,3 +96,15 @@ __tesla_callee_return_some_helper(int retval, int op)
 	printf("[STUB] %s(%d) == %d\n", __func__, op, retval);
 }
 
+void
+__tesla_callee_enter_void_helper(struct object *o)
+{
+	printf("[STUB] %s(0x%lx)\n", __func__, (unsigned long) o);
+}
+
+void
+__tesla_callee_return_void_helper(struct object *o)
+{
+	printf("[STUB] %s(0x%lx) returned\n", __func__, (unsigned long) o);
+}
+

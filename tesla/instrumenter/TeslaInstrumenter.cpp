@@ -58,6 +58,7 @@ public:
     vector<string> FnNames;
     FnNames.push_back("example_syscall");
     FnNames.push_back("some_helper");
+    FnNames.push_back("void_helper");
 
     for (auto Name : FnNames)
       FunctionsToInstrument[Name] =

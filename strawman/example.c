@@ -46,7 +46,7 @@ do_operation(int op, struct object *o)
 		TSEQUENCE(
 			entered(example_syscall),
 			some_helper(42) == 0,
-			UPTO(4, entered(some_helper), leaving(some_helper)),
+			UPTO(4, entered(void_helper), leaving(void_helper)),
 			leaving(example_syscall)
 		)
 	);
@@ -63,6 +63,7 @@ example_syscall(struct credential *cred, int index, int op)
 	struct object *o = objects + index;
 
 	if ((error = security_check(cred, o, op))) return error;
+	void_helper(o);
 	do_operation(op, o);
 
 	return 0;

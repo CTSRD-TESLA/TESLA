@@ -39,6 +39,7 @@ int log_audit_record(struct object *object, int op);
 
 int example_syscall(struct credential *cred, int index, int op);
 int some_helper(int op);
+void void_helper(struct object *object);
 
 #endif	/* !DEMO_H */
 

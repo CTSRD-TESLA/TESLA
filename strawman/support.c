@@ -42,3 +42,8 @@ log_audit_record(struct object *object, int op)
   return 0;
 }
 
+void
+void_helper(struct object *object)
+{
+}
+
