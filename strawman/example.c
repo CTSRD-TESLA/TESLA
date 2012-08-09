@@ -63,6 +63,7 @@ example_syscall(struct credential *cred, int index, int op)
 	struct object *o = objects + index;
 
 	if ((error = security_check(cred, o, op))) return error;
+	some_helper(op);
 	void_helper(o);
 	do_operation(op, o);
 
