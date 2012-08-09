@@ -72,7 +72,7 @@ void
 __tesla_callee_enter_example_syscall(
 	struct credential *cred, int index, int op)
 {
-	printf("[STUB] called %s(0x%lx, %d, %d)\n",
+	printf("[STUB] %s(0x%lx, %d, %d)\n",
 			 __func__, (unsigned long) cred, index, op);
 }
 
