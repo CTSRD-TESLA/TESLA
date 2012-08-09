@@ -42,6 +42,8 @@
  * nothing.
  */
 
+#warning Compiling TESLA hacks; instrumenter unfinished?
+
 /* TESLA localities (per-thread vs global). */
 __tesla_locality *__tesla_global;
 __tesla_locality *__tesla_perthread;
