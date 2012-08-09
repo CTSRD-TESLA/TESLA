@@ -8,24 +8,26 @@ INSTRUMENTER= \
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
 CFLAGS=-I ../include/tesla
 
+BIN=demo
 EXAMPLE=example
 
 PARSE=${CC} -fsyntax-only ${CFLAGS}
 
-all: tesla demo
+all: tesla ${BIN}
 
 clean:
-	rm -f *.ll *.tesla
+	rm -f ${BIN} *.ll *.o *.tesla
 
 tesla:
 	cd ${TESLA_DIR} && ${MAKE}
 
-demo: main.o support.o tesla-hack.o example.instr.o
-	${CC} $^ -o $@
-
 run-tesla: analyse instrument
 analyse: tesla example.tesla
 instrument: tesla example.ll example.instr.ll
+
+# Build the demo application.
+${BIN}: main.o support.o tesla-hack.o example.instr.o
+	${CC} $^ -o $@
 
 # Run the TESLA analyser over C code.
 %.tesla: %.c
