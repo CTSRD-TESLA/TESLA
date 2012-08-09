@@ -31,6 +31,7 @@
 #include "Instrumentation.h"
 
 #include "llvm/Function.h"
+#include "llvm/Instructions.h"
 #include "llvm/IRBuilder.h"
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
@@ -69,7 +70,40 @@ bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
   if (&Fn != this->Fn) return false;
   if (ReturnEvent == NULL) return false;
 
-  // TODO: implement!
+  // First, build up the set of blocks that return from the function.
+  vector<BasicBlock*> ReturnBlocks;
+
+  // We explicitly iterate over BasicBlocks (rather than using an InstIterator)
+  // because we need the blocks themselves (later, we'll split them).
+  for (auto &Block : Fn) {
+    auto *Return = dyn_cast<ReturnInst>(Block.getTerminator());
+    if (Return) ReturnBlocks.push_back(&Block);
+  }
+
+  // Finally, instrument the returns.
+  for (auto *Block : ReturnBlocks) {
+    auto *Return = cast<ReturnInst>(Block->getTerminator());
+    Value *RetVal = Return->getReturnValue();
+
+    vector<Value*> InstrumentationArgs;
+    if (RetVal) InstrumentationArgs.push_back(RetVal);
+    InstrumentationArgs.insert(InstrumentationArgs.end(), Args.begin(), Args.end());
+
+    // Split into two blocks: one to hold instrumentation, one to do the return.
+    // This split frees us from worrying about predecessors, phi-nodes, etc.
+    auto *InstrumentationBlock = Block;
+    auto *ReturnBlock = Block->splitBasicBlock(Return, "epilogue");
+
+    // Remove the instrumentation block's terminator (an unconditional branch to
+    // the return block) and replace it with instrumentation + branch.
+    //
+    // We will use whatever SSA register is about to be returned: no worrying
+    // about lvalues and rvalues like when we tried to do this in Clang!
+    InstrumentationBlock->getTerminator()->eraseFromParent();
+    IRBuilder<> Builder(InstrumentationBlock);
+    Builder.CreateCall(ReturnEvent, InstrumentationArgs);
+    Builder.CreateBr(ReturnBlock);
+  }
 
   return false;
 }
