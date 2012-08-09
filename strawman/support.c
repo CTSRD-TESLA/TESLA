@@ -42,9 +42,3 @@ log_audit_record(struct object *object, int op)
   return 0;
 }
 
-int
-some_helper(int op)
-{
-	return 0;
-}
-

@@ -10,7 +10,7 @@ CFLAGS=-I ../include/tesla
 
 BIN=demo
 EXAMPLE=example
-TO_INSTRUMENT=example support
+TO_INSTRUMENT=example handcoded support
 INSTR=$(patsubst %,%.instr,${TO_INSTRUMENT})
 IR=$(patsubst %,%.ll,main tesla-hack ${INSTR})
 OBJ=$(patsubst %,%.o,main tesla-hack ${INSTR})

@@ -84,3 +84,15 @@ __tesla_callee_return_example_syscall(
 			 __func__, (unsigned long) cred, index, op, retval);
 }
 
+void
+__tesla_callee_enter_some_helper(int op)
+{
+	printf("[STUB] %s(%d)\n", __func__, op);
+}
+
+void
+__tesla_callee_return_some_helper(int retval, int op)
+{
+	printf("[STUB] %s(%d) == %d\n", __func__, op, retval);
+}
+

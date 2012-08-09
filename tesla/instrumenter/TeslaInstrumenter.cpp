@@ -57,6 +57,7 @@ public:
     // TODO: remove hardcoded function names
     vector<string> FnNames;
     FnNames.push_back("example_syscall");
+    FnNames.push_back("some_helper");
 
     for (auto Name : FnNames)
       FunctionsToInstrument[Name] =
