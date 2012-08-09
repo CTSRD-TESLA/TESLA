@@ -10,23 +10,27 @@ CFLAGS=-I ../include/tesla
 
 BIN=demo
 EXAMPLE=example
+TO_INSTRUMENT=example support
+INSTR=$(patsubst %,%.instr,${TO_INSTRUMENT})
+IR=$(patsubst %,%.ll,main tesla-hack ${INSTR})
+OBJ=$(patsubst %,%.o,main tesla-hack ${INSTR})
 
 PARSE=${CC} -fsyntax-only ${CFLAGS}
 
 all: tesla ${BIN}
 
 clean:
-	rm -f ${BIN} *.ll *.o *.tesla
+	rm -f ${BIN} ${IR} ${OBJ} *.tesla
 
 tesla:
 	cd ${TESLA_DIR} && ${MAKE}
 
 run-tesla: analyse instrument
 analyse: tesla example.tesla
-instrument: tesla example.ll example.instr.ll
+instrument: tesla ${TO_INSTRUMENT}
 
 # Build the demo application.
-${BIN}: main.o support.o tesla-hack.o example.instr.o
+${BIN}: ${OBJ}
 	${CC} $^ -o $@
 
 # Run the TESLA analyser over C code.
