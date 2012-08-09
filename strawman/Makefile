@@ -17,9 +17,6 @@ all: tesla check-syntax
 clean:
 	rm -f *.ll *.tesla
 
-clean:
-	rm -f *.ll
-
 tesla:
 	cd ${TESLA_DIR} && ${MAKE}
 
