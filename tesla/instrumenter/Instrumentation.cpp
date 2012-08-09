@@ -136,7 +136,8 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
     if (Where & FE_Return) {
       // Instrumentation of returns must include the returned value...
       vector<Type*> RetTypes(ArgTypes);
-      RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
+      if (!Fn->getReturnType()->isVoidTy())
+        RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
 
       string Name = ("__tesla_callee_return_" + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
