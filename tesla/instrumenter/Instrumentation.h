@@ -52,6 +52,10 @@ enum FnEvent {
   FE_Both   = 3
 };
 
+
+
+
+/// Function instrumentation (callee context).
 class CalleeInstrumentation {
 public:
   /// Construct an object that can instrument a given function.
