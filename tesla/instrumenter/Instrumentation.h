@@ -36,9 +36,9 @@
 #include <vector>
 
 namespace llvm {
-	class Function;
-	class LLVMContext;
-	class Module;
+  class Function;
+  class LLVMContext;
+  class Module;
   class Value;
 }
 
@@ -51,8 +51,6 @@ enum FnEvent {
   FE_Return = 2,
   FE_Both   = 3
 };
-
-
 
 
 /// Function instrumentation (callee context).
@@ -80,10 +78,10 @@ private:
                         llvm::Function *Return
                        );
 
-	llvm::Function *Fn;             ///< The function to instrument.
-	llvm::Function *EntryEvent;     ///< Call when entering instrumented function.
-	llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.
-	std::vector<llvm::Value*> Args; ///< Translation of arguments for IRBuilder.
+  llvm::Function *Fn;             ///< The function to instrument.
+  llvm::Function *EntryEvent;     ///< Call when entering instrumented function.
+  llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.
+  std::vector<llvm::Value*> Args; ///< Translation of arguments for IRBuilder.
 };
 
 }
