@@ -51,17 +51,10 @@ bool CalleeInstrumentation::InstrumentEntry(Function &Fn) {
   if (&Fn != this->Fn) return false;
   if (EntryEvent == NULL) return false;
 
-  // Instrumenting function entry is easy: just add a new BasicBlock at the
-  // beginning which calls out to instrumentation and then carries on like normal.
-  BasicBlock* PrologueInstr =
-    BasicBlock::Create(getGlobalContext(), "prologue", &Fn);
-
+  // Instrumenting function entry is easy: just add a new call to
+  // instrumentation at the beginning of the function's entry block.
   BasicBlock& Entry = Fn.getEntryBlock();
-  PrologueInstr->moveBefore(&Entry);
-
-  IRBuilder<> PrologueBuilder(PrologueInstr);
-  PrologueBuilder.CreateCall(EntryEvent, Args);
-  PrologueBuilder.CreateBr(&Entry);
+  CallInst::Create(EntryEvent, Args)->insertBefore(Entry.getFirstNonPHI());
 
   return true;
 }
@@ -89,20 +82,7 @@ bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
     if (RetVal) InstrumentationArgs.push_back(RetVal);
     InstrumentationArgs.insert(InstrumentationArgs.end(), Args.begin(), Args.end());
 
-    // Split into two blocks: one to hold instrumentation, one to do the return.
-    // This split frees us from worrying about predecessors, phi-nodes, etc.
-    auto *InstrumentationBlock = Block;
-    auto *ReturnBlock = Block->splitBasicBlock(Return, "epilogue");
-
-    // Remove the instrumentation block's terminator (an unconditional branch to
-    // the return block) and replace it with instrumentation + branch.
-    //
-    // We will use whatever SSA register is about to be returned: no worrying
-    // about lvalues and rvalues like when we tried to do this in Clang!
-    InstrumentationBlock->getTerminator()->eraseFromParent();
-    IRBuilder<> Builder(InstrumentationBlock);
-    Builder.CreateCall(ReturnEvent, InstrumentationArgs);
-    Builder.CreateBr(ReturnBlock);
+    CallInst::Create(ReturnEvent, InstrumentationArgs)->insertBefore(Return);
   }
 
   return false;
