@@ -11,6 +11,8 @@ INSTRUMENTER= \
 		-tesla-callee -tesla-caller
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
+DIFF=$(shell which colordiff || echo "diff")
+
 CFLAGS=-I ../include/tesla
 
 BIN=demo
@@ -51,7 +53,7 @@ ${BIN}: ${OBJ}
 %.instr.ll: %.ll
 	${INSTRUMENTER} $< -o $@
 	# We *expect* diff to produce an output!
-	diff -u $< $@ && exit 1 || exit 0
+	${DIFF} -u $< $@ && exit 1 || exit 0
 
 # Compile C code to LLVM IR.
 %.ll: %.c
