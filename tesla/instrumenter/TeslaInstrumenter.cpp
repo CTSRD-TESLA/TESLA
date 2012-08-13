@@ -74,10 +74,11 @@ public:
     auto *FnInstrumenter = I->second;
     assert(FnInstrumenter != NULL);
 
-    FnInstrumenter->InstrumentEntry(F);
-    FnInstrumenter->InstrumentReturn(F);
+    bool modifiedIR = false;
+    modifiedIR |= FnInstrumenter->InstrumentEntry(F);
+    modifiedIR |= FnInstrumenter->InstrumentReturn(F);
 
-    return false;
+    return modifiedIR;
   }
 
 private:
