@@ -15,18 +15,21 @@ CFLAGS=-I ../include/tesla
 
 BIN=demo
 EXAMPLE=example
-TO_INSTRUMENT=example handcoded support
-INSTR=$(patsubst %,%.instr,${TO_INSTRUMENT})
+
+C=example support main tesla-hack
+IR=handcoded
+
+INSTR=$(patsubst %,%.instr,$C ${IR})
 INSTRUMENTED_IR=$(patsubst %,%.ll,${INSTR})
-ALL_IR=$(patsubst %,%.ll,main tesla-hack) ${INSTR}
-OBJ=$(patsubst %,%.o,main tesla-hack ${INSTR})
+
+OBJ=$(patsubst %,%.o,${INSTR})
 
 PARSE=${CC} -fsyntax-only ${CFLAGS}
 
 all: tesla ${BIN}
 
 clean:
-	rm -f ${BIN} ${ALL_IR} ${OBJ} *.tesla
+	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} *.tesla
 
 tesla:
 	cd ${TESLA_DIR} && ${MAKE}
