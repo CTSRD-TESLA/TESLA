@@ -15,7 +15,8 @@ BIN=demo
 EXAMPLE=example
 TO_INSTRUMENT=example handcoded support
 INSTR=$(patsubst %,%.instr,${TO_INSTRUMENT})
-IR=$(patsubst %,%.ll,main tesla-hack ${INSTR})
+INSTRUMENTED_IR=$(patsubst %,%.ll,${INSTR})
+ALL_IR=$(patsubst %,%.ll,main tesla-hack) ${INSTR}
 OBJ=$(patsubst %,%.o,main tesla-hack ${INSTR})
 
 PARSE=${CC} -fsyntax-only ${CFLAGS}
@@ -23,14 +24,14 @@ PARSE=${CC} -fsyntax-only ${CFLAGS}
 all: tesla ${BIN}
 
 clean:
-	rm -f ${BIN} ${IR} ${OBJ} *.tesla
+	rm -f ${BIN} ${ALL_IR} ${OBJ} *.tesla
 
 tesla:
 	cd ${TESLA_DIR} && ${MAKE}
 
 run-tesla: analyse instrument
 analyse: tesla example.tesla
-instrument: tesla ${TO_INSTRUMENT}
+instrument: tesla ${INSTRUMENTED_IR}
 
 # Build the demo application.
 ${BIN}: ${OBJ}
