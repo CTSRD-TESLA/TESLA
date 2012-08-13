@@ -85,6 +85,22 @@ __tesla_callee_return_example_syscall(
 }
 
 void
+__tesla_caller_call_example_syscall(
+	struct credential *cred, int index, int op)
+{
+	printf("[STUB] %s(0x%lx, %d, %d)\n",
+			 __func__, (unsigned long) cred, index, op);
+}
+
+void
+__tesla_caller_return_example_syscall(
+	int retval, struct credential *cred, int index, int op)
+{
+	printf("[STUB] %s(0x%lx, %d, %d) == %d\n",
+			 __func__, (unsigned long) cred, index, op, retval);
+}
+
+void
 __tesla_callee_enter_some_helper(int op)
 {
 	printf("[STUB] %s(%d)\n", __func__, op);
@@ -97,6 +113,18 @@ __tesla_callee_return_some_helper(int retval, int op)
 }
 
 void
+__tesla_caller_call_some_helper(int op)
+{
+	printf("[STUB] %s(%d)\n", __func__, op);
+}
+
+void
+__tesla_caller_return_some_helper(int retval, int op)
+{
+	printf("[STUB] %s(%d) == %d\n", __func__, op, retval);
+}
+
+void
 __tesla_callee_enter_void_helper(struct object *o)
 {
 	printf("[STUB] %s(0x%lx)\n", __func__, (unsigned long) o);
@@ -104,6 +132,18 @@ __tesla_callee_enter_void_helper(struct object *o)
 
 void
 __tesla_callee_return_void_helper(struct object *o)
+{
+	printf("[STUB] %s(0x%lx) returned\n", __func__, (unsigned long) o);
+}
+
+void
+__tesla_caller_call_void_helper(struct object *o)
+{
+	printf("[STUB] %s(0x%lx)\n", __func__, (unsigned long) o);
+}
+
+void
+__tesla_caller_return_void_helper(struct object *o)
 {
 	printf("[STUB] %s(0x%lx) returned\n", __func__, (unsigned long) o);
 }

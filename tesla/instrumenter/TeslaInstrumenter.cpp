@@ -31,6 +31,7 @@
 #include "Instrumentation.h"
 
 #include "llvm/Function.h"
+#include "llvm/Instructions.h"
 #include "llvm/LLVMContext.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
@@ -46,6 +47,7 @@ using std::vector;
 
 namespace tesla {
 
+/// Instruments function calls in the callee context.
 class TeslaCalleeInstrumenter : public FunctionPass {
 public:
   static char ID;
@@ -83,9 +85,58 @@ private:
   map<string,CalleeInstrumentation*> FunctionsToInstrument;
 };
 
+
+/// Instruments function calls in the caller context.
+class TeslaCallerInstrumenter : public BasicBlockPass {
+public:
+  static char ID;
+  TeslaCallerInstrumenter() : BasicBlockPass(ID) {}
+
+  virtual bool doInitialization(Module &M) {
+    // TODO: remove hardcoded function names
+    vector<string> FnNames;
+    FnNames.push_back("example_syscall");
+    FnNames.push_back("some_helper");
+    FnNames.push_back("void_helper");
+
+    for (auto Name : FnNames)
+      FunctionsToInstrument[Name] =
+        CallerInstrumentation::Build(getGlobalContext(), M, Name, FE_Both);
+
+    return false;
+  }
+
+  virtual bool runOnBasicBlock(BasicBlock &Block) {
+    bool modifiedIR = false;
+
+    for (auto &Inst : Block) {
+      if (!isa<CallInst>(Inst)) continue;
+      CallInst &Call = cast<CallInst>(Inst);
+
+      auto I = FunctionsToInstrument.find(Call.getCalledFunction()->getName());
+      if (I == FunctionsToInstrument.end()) continue;
+
+      auto *Instrumenter = I->second;
+      assert(Instrumenter != NULL);
+
+      modifiedIR |= Instrumenter->Instrument(Inst);
+    }
+
+    return modifiedIR;
+  }
+
+private:
+  map<string,CallerInstrumentation*> FunctionsToInstrument;
+};
+
 }
 
 char tesla::TeslaCalleeInstrumenter::ID = 0;
-static RegisterPass<tesla::TeslaCalleeInstrumenter> X("tesla-callee",
+char tesla::TeslaCallerInstrumenter::ID = 0;
+
+static RegisterPass<tesla::TeslaCalleeInstrumenter> Callee("tesla-callee",
   "TESLA instrumentation: callee context");
+
+static RegisterPass<tesla::TeslaCallerInstrumenter> Caller("tesla-caller",
+  "TESLA instrumentation: caller context");
 

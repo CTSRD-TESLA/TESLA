@@ -140,5 +140,80 @@ CalleeInstrumentation::CalleeInstrumentation(
   for (auto &Arg : Fn->getArgumentList()) Args.push_back(&Arg);
 }
 
+
+CallerInstrumentation* CallerInstrumentation::Build(
+  LLVMContext &Context, Module &M, StringRef FnName, FnEvent Where)
+{
+  Function *Fn = M.getFunction(FnName);
+  if (Fn == NULL) return NULL;
+
+  Function *Call = NULL;
+  Function *Return = NULL;
+
+  if (Fn) {
+    // Instrumentation functions do not return.
+    Type *VoidTy = Type::getVoidTy(Context);
+
+    // Get the argument types of the function to be instrumented.
+    vector<Type*> ArgTypes;
+    for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
+
+    // Declare or retrieve instrumentation functions.
+    if (Where & FE_Entry) {
+      string Name = ("__tesla_caller_call_" + FnName).str();
+      auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
+      Call = cast<Function>(M.getOrInsertFunction(Name, InstrType));
+      assert(Call != NULL);
+    }
+
+    if (Where & FE_Return) {
+      // Instrumentation of returns must include the returned value...
+      vector<Type*> RetTypes(ArgTypes);
+      if (!Fn->getReturnType()->isVoidTy())
+        RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
+
+      string Name = ("__tesla_caller_return_" + FnName).str();
+      auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
+      Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
+      assert(Return != NULL);
+    }
+  }
+
+  return new CallerInstrumentation(Fn, Call, Return);
+}
+
+CallerInstrumentation::CallerInstrumentation(
+  Function *Fn, Function *Entry, Function *Return)
+  : Fn(Fn), CallEvent(Entry), ReturnEvent(Return)
+{
+  assert(CallEvent || ReturnEvent);
+}
+
+bool CallerInstrumentation::Instrument(Instruction &Inst) {
+  assert(isa<CallInst>(Inst));
+  CallInst &Call = cast<CallInst>(Inst);
+
+  bool modifiedIR = false;
+
+  vector<Value*> Args;
+  for (size_t i = 0; i < Call.getNumArgOperands(); i++)
+    Args.push_back(Call.getArgOperand(i));
+
+  if (CallEvent != NULL) {
+     CallInst::Create(CallEvent, Args)->insertBefore(&Inst);
+     modifiedIR = true;
+  }
+
+  if (ReturnEvent != NULL) {
+    vector<Value*> RetArgs(Args);
+    if (!Call.getType()->isVoidTy()) RetArgs.insert(RetArgs.begin(), &Call);
+
+    CallInst::Create(ReturnEvent, RetArgs)->insertAfter(&Inst);
+    modifiedIR = true;
+  }
+
+   return modifiedIR;
+}
+
 }
 

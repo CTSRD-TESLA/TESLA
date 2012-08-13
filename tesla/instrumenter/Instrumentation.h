@@ -37,6 +37,7 @@
 
 namespace llvm {
   class Function;
+  class Instruction;
   class LLVMContext;
   class Module;
   class Value;
@@ -82,6 +83,41 @@ private:
   llvm::Function *EntryEvent;     ///< Call when entering instrumented function.
   llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.
   std::vector<llvm::Value*> Args; ///< Translation of arguments for IRBuilder.
+};
+
+
+/// Instrumentation on a single instruction that does not change control flow.
+class InstInstrumentation {
+public:
+   /// Optionally decorate an instruction with calls to instrumentation.
+   /// @returns whether or not any instrumentation was actually added.
+   virtual bool Instrument(llvm::Instruction&) = 0;
+};
+
+
+/// Function instrumentation (caller context).
+class CallerInstrumentation : public InstInstrumentation
+{
+public:
+  /// Construct an object that can instrument a given function.
+  static CallerInstrumentation* Build(llvm::LLVMContext &Context,
+                                      llvm::Module &M,
+                                      llvm::StringRef FnName,
+                                      FnEvent Where
+                                     );
+
+  bool Instrument(llvm::Instruction&);
+
+private:
+  /// Private constructor: clients should use CalleeInstrumention::Build().
+  CallerInstrumentation(llvm::Function *Fn,
+                        llvm::Function *Call,
+                        llvm::Function *Return
+                       );
+
+  llvm::Function *Fn;             ///< The function to instrument.
+  llvm::Function *CallEvent;      ///< Call when calling instrumented function.
+  llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.
 };
 
 }
