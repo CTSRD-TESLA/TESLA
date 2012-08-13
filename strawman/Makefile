@@ -6,7 +6,9 @@
 TESLA_DIR=../tesla
 ANALYSER=${TESLA_DIR}/analyser/tesla
 INSTRUMENTER= \
-	opt -S -load ${TESLA_DIR}/instrumenter/TeslaInstrumenter.dylib -tesla
+	opt -S \
+		-load ${TESLA_DIR}/instrumenter/TeslaInstrumenter.dylib \
+		-tesla-callee
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
 CFLAGS=-I ../include/tesla

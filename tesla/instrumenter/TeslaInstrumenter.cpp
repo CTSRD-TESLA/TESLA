@@ -46,10 +46,10 @@ using std::vector;
 
 namespace tesla {
 
-class TeslaInstrumenter : public FunctionPass {
+class TeslaCalleeInstrumenter : public FunctionPass {
 public:
   static char ID;
-  TeslaInstrumenter() : FunctionPass(ID) {}
+  TeslaCalleeInstrumenter() : FunctionPass(ID) {}
 
   virtual bool doInitialization(Module &M) {
     Context = &getGlobalContext();
@@ -88,6 +88,7 @@ private:
 
 }
 
-char tesla::TeslaInstrumenter::ID = 0;
-static RegisterPass<tesla::TeslaInstrumenter> X("tesla", "TESLA instrumenter");
+char tesla::TeslaCalleeInstrumenter::ID = 0;
+static RegisterPass<tesla::TeslaCalleeInstrumenter> X("tesla-callee",
+  "TESLA instrumentation: callee context");
 
