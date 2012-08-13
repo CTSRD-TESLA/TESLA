@@ -52,8 +52,6 @@ public:
   TeslaCalleeInstrumenter() : FunctionPass(ID) {}
 
   virtual bool doInitialization(Module &M) {
-    Context = &getGlobalContext();
-
     // TODO: remove hardcoded function names
     vector<string> FnNames;
     FnNames.push_back("example_syscall");
@@ -62,7 +60,7 @@ public:
 
     for (auto Name : FnNames)
       FunctionsToInstrument[Name] =
-        CalleeInstrumentation::Build(*Context, M, Name, FE_Both);
+        CalleeInstrumentation::Build(getGlobalContext(), M, Name, FE_Both);
 
     return false;
   }
@@ -82,7 +80,6 @@ public:
   }
 
 private:
-  LLVMContext *Context;
   map<string,CalleeInstrumentation*> FunctionsToInstrument;
 };
 
