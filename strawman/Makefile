@@ -12,6 +12,7 @@ INSTRUMENTER= \
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
 DIFF=$(shell which colordiff || echo "diff")
+VERBOSE?=false
 
 CFLAGS=-I ../include/tesla
 
@@ -36,7 +37,9 @@ clean:
 tesla:
 	cd ${TESLA_DIR} && ${MAKE}
 
-run-tesla: analyse instrument
+run-tesla:
+	VERBOSE=true ${MAKE} analyse instrument
+
 analyse: tesla example.tesla
 instrument: tesla ${INSTRUMENTED_IR}
 
@@ -47,13 +50,13 @@ ${BIN}: ${OBJ}
 # Run the TESLA analyser over C code.
 %.tesla: %.c
 	${ANALYSER} $< -- ${PARSE} > $@
-	cat $@
+	${VERBOSE} && cat $@
 
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll
 	${INSTRUMENTER} $< -o $@
 	# We *expect* diff to produce an output!
-	${DIFF} -u $< $@ && exit 1 || exit 0
+	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 
 # Compile C code to LLVM IR.
 %.ll: %.c
