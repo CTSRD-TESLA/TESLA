@@ -45,24 +45,29 @@ instrument: tesla ${INSTRUMENTED_IR}
 
 # Build the demo application.
 ${BIN}: ${OBJ}
-	${CC} $^ -o $@
+	@echo "[LINK]  $^ > $@"
+	@${CC} $^ -o $@
 
 # Run the TESLA analyser over C code.
 %.tesla: %.c
-	${ANALYSER} $< -- ${PARSE} > $@
-	${VERBOSE} && cat $@
+	@echo "[TESLA] $^ > $@"
+	@${ANALYSER} $< -- ${PARSE} > $@
+	@${VERBOSE} && cat $@
 
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll
-	${INSTRUMENTER} $< -o $@
-	# We *expect* diff to produce an output!
-	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
+	@echo "[TESLA] $^ > $@"
+	@${INSTRUMENTER} $< -o $@
+	@# We *expect* diff to produce an output!
+	@${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 
 # Compile C code to LLVM IR.
 %.ll: %.c
-	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
+	@echo "[CC]    $^ > $@"
+	@${CC} ${CFLAGS} -S -emit-llvm $< -o $@
 
 # Compile IR to object code.
 %.o: %.ll
-	${CC} -c ${CFLAGS} $< -o $@
+	@echo "[LLC]   $^ > $@"
+	@${CC} -c $< -o $@
 
