@@ -46,6 +46,12 @@
 
 /* Stub instrumentation functions. */
 void
+__tesla_instrumentation_assertion_reached(char *file, int line, int count)
+{
+	printf("[STUB] assertion @ %s:%u#%u\n", file, line, count);
+}
+
+void
 __tesla_instrumentation_callee_enter_example_syscall(
 	struct credential *cred, int index, int op)
 {

@@ -8,7 +8,7 @@ ANALYSER=${TESLA_DIR}/analyser/tesla
 INSTRUMENTER= \
 	opt -S \
 		-load ${TESLA_DIR}/instrumenter/TeslaInstrumenter.dylib \
-		-tesla-callee -tesla-caller -tesla-strip
+		-tesla-callee -tesla-caller -tesla-asserts
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
 LINK=clang

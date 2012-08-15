@@ -35,7 +35,6 @@
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
 #include "llvm/Pass.h"
-#include "llvm/Support/raw_ostream.h"
 
 #include <map>
 #include <set>
@@ -132,23 +131,49 @@ private:
   map<string,CallerInstrumentation*> FunctionsToInstrument;
 };
 
-/// Strips out calls to TESLA pseudo-functions.
-class TeslaPseudoStrip : public ModulePass {
+/// Converts calls to TESLA pseudo-assertions into instrumentation sites.
+class TeslaAssertionSiteInstrumenter : public ModulePass {
 public:
   static char ID;
-  TeslaPseudoStrip() : ModulePass(ID) {}
+  TeslaAssertionSiteInstrumenter() : ModulePass(ID) {}
 
   virtual bool runOnModule(Module &M) {
     Function *Fn = M.getFunction("__tesla_inline_assertion");
     if (!Fn) return false;
 
+    // We need to forward the first three arguments to instrumentation.
+    StringRef InstrName = "__tesla_instrumentation_assertion_reached";
+
+    assert(Fn->arg_size() > 3);
+    vector<Type*> ArgTypes;
+    for (auto &Arg : Fn->getArgumentList()) {
+      ArgTypes.push_back(Arg.getType());
+      if (ArgTypes.size() == 3) break;
+    }
+
+    FunctionType *InstrType =
+      FunctionType::get(Type::getVoidTy(M.getContext()), ArgTypes, false);
+
+    Constant *Instr = M.getOrInsertFunction(InstrName, InstrType);
+
+    // Find all calls to TESLA assertion pseudo-function.
     set<CallInst*> Calls;
     for (auto I = Fn->use_begin(); I != Fn->use_end(); ++I) {
+      // TODO: may be invoke!
       CallInst *Call = cast<CallInst>(*I);
       Calls.insert(Call);
     }
 
+    // Translate these pseudo-calls into instrumentation calls.
     for (auto *Call : Calls) {
+      vector<Value*> Args;
+      assert(Call->getNumArgOperands() >= ArgTypes.size());
+      for (unsigned I = 0; I < ArgTypes.size(); ++I)
+        Args.push_back(Call->getArgOperand(I));
+
+      CallInst *InstrCall = CallInst::Create(Instr, Args, "", Call);
+
+      // Delete the call to the pseudo-function.
       Call->removeFromParent();
       delete Call;
     }
@@ -164,7 +189,7 @@ public:
 
 char tesla::TeslaCalleeInstrumenter::ID = 0;
 char tesla::TeslaCallerInstrumenter::ID = 0;
-char tesla::TeslaPseudoStrip::ID = 0;
+char tesla::TeslaAssertionSiteInstrumenter::ID = 0;
 
 static RegisterPass<tesla::TeslaCalleeInstrumenter> Callee("tesla-callee",
   "TESLA instrumentation: callee context");
@@ -172,6 +197,6 @@ static RegisterPass<tesla::TeslaCalleeInstrumenter> Callee("tesla-callee",
 static RegisterPass<tesla::TeslaCallerInstrumenter> Caller("tesla-caller",
   "TESLA instrumentation: caller context");
 
-static RegisterPass<tesla::TeslaPseudoStrip> Stripper("tesla-strip",
-  "TESLA: strip pseudo-calls");
+static RegisterPass<tesla::TeslaAssertionSiteInstrumenter> Assertions(
+  "tesla-asserts", "TESLA: convert assertion sites");
 
