@@ -29,6 +29,7 @@
  */
 
 #ifndef	TESLA_H
+#define	TESLA_H
 
 #ifndef	TESLA
 
