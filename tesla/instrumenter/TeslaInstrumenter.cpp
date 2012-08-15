@@ -33,15 +33,18 @@
 #include "llvm/Function.h"
 #include "llvm/Instructions.h"
 #include "llvm/LLVMContext.h"
+#include "llvm/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include <map>
+#include <set>
 #include <vector>
 
 using namespace llvm;
 
 using std::map;
+using std::set;
 using std::string;
 using std::vector;
 
@@ -129,14 +132,63 @@ private:
   map<string,CallerInstrumentation*> FunctionsToInstrument;
 };
 
+/// Strips out calls to TESLA pseudo-functions.
+class TeslaPseudoStrip : public ModulePass {
+public:
+  static char ID;
+  TeslaPseudoStrip() : ModulePass(ID) {}
+
+  virtual bool runOnModule(Module &M) {
+    bool modifiedIR = false;
+
+    set<CallInst*> Calls;
+    set<Function*> Fns;
+
+    for (auto &Fn : M.getFunctionList()) {
+      StringRef Name = Fn.getName();
+
+      if (Name.startswith("__tesla_")
+          && !Name.startswith("__tesla_instrumentation_")) {
+        for (auto I = Fn.use_begin(); I != Fn.use_end(); ++I) {
+          assert(isa<CallInst>(*I));
+          Calls.insert(cast<CallInst>(*I));
+        }
+
+        Fns.insert(&Fn);
+      }
+    }
+
+    for (CallInst *Call : Calls) {
+      Call->removeFromParent();
+      delete Call;
+      modifiedIR = true;
+    }
+
+    for (Function *Fn : Fns) {
+      assert(Fn->use_empty());
+
+      Fn->removeFromParent();
+      delete Fn;
+
+      modifiedIR = true;
+    }
+
+    return modifiedIR;
+  }
+};
+
 }
 
 char tesla::TeslaCalleeInstrumenter::ID = 0;
 char tesla::TeslaCallerInstrumenter::ID = 0;
+char tesla::TeslaPseudoStrip::ID = 0;
 
 static RegisterPass<tesla::TeslaCalleeInstrumenter> Callee("tesla-callee",
   "TESLA instrumentation: callee context");
 
 static RegisterPass<tesla::TeslaCallerInstrumenter> Caller("tesla-caller",
   "TESLA instrumentation: caller context");
+
+static RegisterPass<tesla::TeslaPseudoStrip> Stripper("tesla-strip",
+  "TESLA: strip pseudo-calls");
 

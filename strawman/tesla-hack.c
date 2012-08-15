@@ -44,13 +44,6 @@
 
 #warning Compiling TESLA hacks; instrumenter unfinished?
 
-/* Inline assertions and events. */
-void
-__tesla_inline_assertion(const char *filename, int line, int count,
-		__tesla_locality *loc, bool predicate)
-{
-}
-
 /* Stub instrumentation functions. */
 void
 __tesla_instrumentation_callee_enter_example_syscall(
