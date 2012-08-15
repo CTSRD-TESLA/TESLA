@@ -41,20 +41,23 @@
 #include "clang/Tooling/CompilationDatabase.h"
 #include "clang/Tooling/Tooling.h"
 
+#include <fstream>
+
 using namespace clang;
 using namespace clang::tooling;
 using namespace llvm;
 using namespace tesla;
+
+using std::string;
+using std::vector;
 
 
 namespace tesla {
 
 class TeslaVisitor : public RecursiveASTVisitor<TeslaVisitor> {
 public:
-  explicit TeslaVisitor(ASTContext *Context)
-      : Context(Context), Diag(Context->getDiagnostics())
-  {
-  }
+  explicit TeslaVisitor(ASTContext *Context, raw_ostream &Output)
+      : Context(Context), Diag(Context->getDiagnostics()), Out(Output) {}
 
   bool VisitCallExpr(CallExpr *E) {
     FunctionDecl *F = E->getDirectCallee();
@@ -62,24 +65,7 @@ public:
     if (!F->getName().startswith("__tesla_inline_assertion")) return true;
 
     if (TeslaAssertion *Assertion = TeslaAssertion::Parse(E, *Context)) {
-      llvm::outs()
-        << "TESLA inline assertion at " << Assertion->SourceLocation().Description()
-        << ":\n"
-        << Assertion->Description() << "\n"
-        << "Functions to instrument:";
-
-      for (auto Fn : Assertion->FunctionsToInstrument())
-        llvm::outs() << " " << Fn->getName();
-
-      llvm::outs()
-        << "\n"
-        << "References:";
-
-      for (auto Ref : Assertion->References())
-        llvm::outs() << " " << Ref.Description();
-
-      llvm::outs() << "\n\n";
-
+      Out << Assertion->Description() << "\n";
       return true;
     }
 
@@ -94,39 +80,49 @@ public:
 private:
   ASTContext *Context;
   DiagnosticsEngine& Diag;
+  raw_ostream &Out;
 };
 
 
 class TeslaConsumer : public clang::ASTConsumer {
 public:
-  explicit TeslaConsumer(ASTContext *Context) : Visitor(Context) {}
+  explicit TeslaConsumer(ASTContext *Context, string& OutputFilename)
+    : Output(OutputFilename.c_str(), OutputError), Visitor(Context, Output)
+  {
+    if (Output.has_error()) errs() << OutputError;
+  }
 
   virtual void HandleTranslationUnit(clang::ASTContext &Context) {
-    Visitor.TraverseDecl(Context.getTranslationUnitDecl());
+    if (!Output.has_error())
+      Visitor.TraverseDecl(Context.getTranslationUnitDecl());
   }
+
 private:
+  string OutputError;
+  raw_fd_ostream Output;
   TeslaVisitor Visitor;
 };
 
-class TeslaAction : public clang::ASTFrontendAction {
-public:
-  virtual clang::ASTConsumer *CreateASTConsumer(
-    clang::CompilerInstance &Compiler, llvm::StringRef InFile) {
-    return new TeslaConsumer(&Compiler.getASTContext());
-  }
-};
+cl::opt<string> OutputFile(
+  "o",
+  cl::desc("<output file>"),
+  cl::Required);
 
-cl::opt<std::string> BuildPath(
-  "p",
-  cl::desc("<build-path, DiagnosticsEngine&>"),
-  cl::Optional);
-
-cl::list<std::string> SourcePaths(
+cl::list<string> SourcePaths(
   cl::Positional,
   cl::desc("<source0> [... <sourceN>]"),
   cl::OneOrMore);
 
 }
+
+class TeslaAction : public clang::ASTFrontendAction {
+public:
+  virtual clang::ASTConsumer *CreateASTConsumer(
+    clang::CompilerInstance &Compiler, llvm::StringRef InFile)
+  {
+    return new TeslaConsumer(&Compiler.getASTContext(), OutputFile);
+  }
+};
 
 int main(int argc, const char **argv) {
   llvm::OwningPtr<CompilationDatabase> Compilations(
