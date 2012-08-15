@@ -233,10 +233,10 @@ void Repetition::Init(OwningArrayPtr<TeslaEvent*>& Events) {
   if (HasMin) Range = "[" + MinStr + "," + (HasMax ? (MaxStr + "]") : ")");
   else Range = "(" + (HasMax ? ("," + MaxStr + "]") : "ANY)");
 
-  Descrip = ("repeat(" + Range + ": ").str();
+  Descrip = ("(Repeat " + Range).str();
   for (unsigned I = 0; I < Len; I++) {
     assert(Events[I] != NULL);
-    Descrip += (Events[I]->Description() + " ").str();
+    Descrip += (" " + Events[I]->Description()).str();
   }
   Descrip += ")";
 
@@ -280,8 +280,7 @@ Repetition* Repetition::Parse(CallExpr *Call, Location AssertLoc,
 }
 
 
-Now::Now(Location Loc)
-  : ID(Loc), Descrip(("AssertionPoint(" + Loc.Description() + ")").str()) {}
+Now::Now(Location Loc) : ID(Loc), Descrip("assert") {}
 
 
 set<FunctionDecl*> FunctionEvent::FunctionsToInstrument() {
@@ -296,7 +295,7 @@ FunctionCall::FunctionCall(
   : FunctionEvent(Fn), Params(Params), RetVal(RetVal)
 {
   SmallString<50> D;
-  D += "call(";
+  D += "(call ";
   D += Fn->getName();
   D += ")";
 
@@ -399,7 +398,7 @@ FunctionCall* FunctionCall::Parse(BinaryOperator *Bop, ASTContext& Ctx) {
 
 FunctionEntry::FunctionEntry(clang::FunctionDecl *Function)
   : FunctionEvent(Function),
-    Descrip(("entered(" + Function->getName() + ")").str()) {}
+    Descrip(("(entered " + Function->getName() + ")").str()) {}
 
 FunctionEntry* FunctionEntry::Parse(CallExpr *Call, ASTContext& Ctx) {
   assert(Call->getDirectCallee() != NULL);
@@ -429,7 +428,7 @@ FunctionEntry* FunctionEntry::Parse(CallExpr *Call, ASTContext& Ctx) {
 
 FunctionExit::FunctionExit(clang::FunctionDecl *Function)
   : FunctionEvent(Function),
-    Descrip(("exited(" + Function->getName() + ")").str()) {}
+    Descrip(("(exited " + Function->getName() + ")").str()) {}
 
 FunctionExit* FunctionExit::Parse(CallExpr *Call, ASTContext& Ctx) {
   assert(Call->getDirectCallee() != NULL);
@@ -469,7 +468,7 @@ BooleanExpr::BooleanExpr(BooleanOp Operation, TeslaExpr *LHS, TeslaExpr *RHS)
     case BOp_Xor: O = "xor";  break;
   }
 
-  Descrip = ("(" + L + " " + O + " " + R + ")").str();
+  Descrip = ("(" + O + "\n" + L + "\n" + R + "\n)").str();
 }
 
 set<FunctionDecl*> BooleanExpr::FunctionsToInstrument() {
@@ -541,8 +540,8 @@ StringRef TeslaAssertion::Description() const {
   StringRef C = (Context ? Context->Description() : "<null>");
   StringRef E = (Expression ? Expression->Description() : "<null>");
 
-  return (Twine() + "InlineAssertion { '" + Loc.Description()
-      + "', " + C + ": " + E + " }"
+  return (Twine() + "InlineAssertion " + Loc.Description()
+      + " " + C + ":\n" + E + "\n"
     ).str();
 }
 
@@ -590,10 +589,10 @@ TeslaExpr* TeslaExpr::Parse(Expr *E, Location AssertionLocation,
 
 
 Sequence::Sequence(MutableArrayRef<OwningPtr<TeslaEvent> > Events) {
-  Descrip = "Seq[";
+  Descrip = "[Seq";
   for (auto& E : Events) {
-    Descrip += E->Description();
     Descrip += " ";
+    Descrip += E->Description();
   }
   Descrip += "]";
 
