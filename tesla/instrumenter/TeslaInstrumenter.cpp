@@ -64,7 +64,7 @@ public:
 
     for (auto Name : FnNames)
       FunctionsToInstrument[Name] =
-        CalleeInstrumentation::Build(getGlobalContext(), M, Name, FE_Both);
+        CalleeInstrumentation::Build(M.getContext(), M, Name, FE_Both);
 
     return false;
   }
@@ -103,7 +103,7 @@ public:
 
     for (auto Name : FnNames)
       FunctionsToInstrument[Name] =
-        CallerInstrumentation::Build(getGlobalContext(), M, Name, FE_Both);
+        CallerInstrumentation::Build(M.getContext(), M, Name, FE_Both);
 
     return false;
   }
