@@ -107,7 +107,7 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
 
     // Declare or retrieve instrumentation functions.
     if (Where & FE_Entry) {
-      string Name = ("__tesla_callee_enter_" + FnName).str();
+      string Name = ("__tesla_instrumentation_callee_enter_" + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
       Entry = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Entry != NULL);
@@ -119,7 +119,7 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
       if (!Fn->getReturnType()->isVoidTy())
         RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
 
-      string Name = ("__tesla_callee_return_" + FnName).str();
+      string Name = ("__tesla_instrumentation_callee_return_" + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
       Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Return != NULL);
@@ -160,7 +160,7 @@ CallerInstrumentation* CallerInstrumentation::Build(
 
     // Declare or retrieve instrumentation functions.
     if (Where & FE_Entry) {
-      string Name = ("__tesla_caller_call_" + FnName).str();
+      string Name = ("__tesla_instrumentation_caller_call_" + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
       Call = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Call != NULL);
@@ -172,7 +172,7 @@ CallerInstrumentation* CallerInstrumentation::Build(
       if (!Fn->getReturnType()->isVoidTy())
         RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
 
-      string Name = ("__tesla_caller_return_" + FnName).str();
+      string Name = ("__tesla_instrumentation_caller_return_" + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
       Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Return != NULL);
