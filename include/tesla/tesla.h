@@ -124,5 +124,5 @@ void* __tesla_any();
 
 #endif /* TESLA */
 
-#endif /* TESLA_H */
+#endif	/* TESLA_H */
 
