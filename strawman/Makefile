@@ -11,6 +11,8 @@ INSTRUMENTER= \
 		-tesla-callee -tesla-caller
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
+LINK=clang
+
 DIFF=$(shell which colordiff || echo "diff")
 VERBOSE?=false
 
@@ -46,7 +48,7 @@ instrument: tesla ${INSTRUMENTED_IR}
 # Build the demo application.
 ${BIN}: ${OBJ}
 	@echo "[LINK]  $^ > $@"
-	@${CC} $^ -o $@
+	@${LINK} $^ -o $@
 
 # Run the TESLA analyser over C code.
 %.tesla: %.c
