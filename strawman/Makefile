@@ -39,11 +39,13 @@ clean:
 tesla:
 	cd ${TESLA_DIR} && ${MAKE}
 
-run-tesla:
-	VERBOSE=true ${MAKE} analyse instrument
+run-tesla: analyse instrument
 
-analyse: tesla example.tesla
-instrument: tesla ${INSTRUMENTED_IR}
+analyse: tesla
+	@${MAKE} VERBOSE=true example.tesla
+
+instrument: tesla
+	@${MAKE} VERBOSE=true ${INSTRUMENTED_IR}
 
 # Build the demo application.
 ${BIN}: ${OBJ}
@@ -53,8 +55,10 @@ ${BIN}: ${OBJ}
 # Run the TESLA analyser over C code.
 %.tesla: %.c
 	@echo "[TESLA] $^ > $@"
-	@${ANALYSER} $< -- ${PARSE} -D TESLA_ANALYSIS > $@
-	@${VERBOSE} && cat $@
+	@${ANALYSER} $< -o $@ -- ${PARSE} -D TESLA_ANALYSIS
+	@${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
+	            && cat $@ && echo "===== end of TESLA analysis =====" \
+	            || exit 0
 
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll
