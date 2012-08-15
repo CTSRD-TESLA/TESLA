@@ -51,7 +51,7 @@ do_operation(int op, struct object *o)
 		)
 	);
 
-  return 0;
+	return 0;
 }
 
 struct object objects[10];
