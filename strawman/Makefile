@@ -51,7 +51,7 @@ ${BIN}: ${OBJ}
 # Run the TESLA analyser over C code.
 %.tesla: %.c
 	@echo "[TESLA] $^ > $@"
-	@${ANALYSER} $< -- ${PARSE} > $@
+	@${ANALYSER} $< -- ${PARSE} -D TESLA_ANALYSIS > $@
 	@${VERBOSE} && cat $@
 
 # Instrument LLVM IR using TESLA.

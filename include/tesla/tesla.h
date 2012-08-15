@@ -31,31 +31,16 @@
 #ifndef	TESLA_H
 #define	TESLA_H
 
-#ifndef	TESLA
-
-/* If TESLA is not defined, provide macros that do nothing. */
-#define tassert(X)
-#define assert_previously(predicate)
-#define assert_eventually(predicate)
-
-#else	/* TESLA */
+#ifdef  TESLA
 
 #include <stdbool.h>
 
 /** Basic TESLA types (magic for the compiler to munge). */
-typedef struct __tesla_event {} __tesla_event;
-typedef struct __tesla_locality {} __tesla_locality;
+typedef	struct __tesla_event {}		__tesla_event;
+typedef	struct __tesla_locality {}	__tesla_locality;
 
-/**
- * TESLA events can be serialised either with respect to the current thread
- * or, using explicit synchronisation, the global execution context.
- */
-extern __tesla_locality *__tesla_global;
-extern __tesla_locality *__tesla_perthread;
-
-#define	TESLA_GLOBAL(pred)	TESLA_ASSERT(__tesla_global, pred)
-#define	TESLA_PERTHREAD(pred)	TESLA_ASSERT(__tesla_perthread, pred)
-
+/** A number of times to match an event: positive or "any number". */
+typedef	int	__tesla_count;
 
 /** Magic "function" representing a TESLA assertion. */
 void __tesla_inline_assertion(const char *filename, int line, int count,
@@ -68,6 +53,19 @@ void __tesla_inline_assertion(const char *filename, int line, int count,
 		locality, predicate					\
 	)
 
+#define	TESLA_GLOBAL(pred)	TESLA_ASSERT(__tesla_global, pred)
+#define	TESLA_PERTHREAD(pred)	TESLA_ASSERT(__tesla_perthread, pred)
+
+
+/* Only define the following things if doing TESLA analysis, not compiling. */
+#ifdef	TESLA_ANALYSIS
+
+/**
+ * TESLA events can be serialised either with respect to the current thread
+ * or, using explicit synchronisation, the global execution context.
+ */
+extern __tesla_locality *__tesla_global;
+extern __tesla_locality *__tesla_perthread;
 
 /** A sequence of TESLA events. Can be combined with && or ||. */
 bool __tesla_sequence(__tesla_event, ...);
@@ -90,8 +88,6 @@ __tesla_event __tesla_now;
 /** The result of a function call (e.g., foo(x) == y). */
 __tesla_event __tesla_call(bool);
 
-/** A number of times to match an event: positive or "any number". */
-typedef	int	__tesla_count;
 #define	ANY_REP	-1
 
 /** A repetition of events — this allows globby "?", "*", "+", etc. */
@@ -102,7 +98,7 @@ __tesla_event __tesla_repeat(__tesla_count, __tesla_count, __tesla_event, ...);
 
 /** A value that could match a lot of function parameters. Maybe anything? */
 void* __tesla_any();
-#define ANY __tesla_any()
+#define	ANY	__tesla_any()
 
 
 /** A more programmer-friendly way to write assertions about the past. */
@@ -122,7 +118,27 @@ void* __tesla_any();
 	)
 
 
-#endif /* TESLA */
+#else	/* !TESLA_ANALYSIS */
+
+/*
+ * We are not doing TESLA analysis, no we don't want a lot of artefacts left
+ * behind like 'extern struct __tesla_locality* __tesla_global'.
+ *
+ * All that we do want to leave behind are the inline assertion sites, which
+ * we can translate into instrumentation calls.
+ */
+
+#define	TSEQUENCE(...)		true
+#define	since(...)		true
+#define	before(...)		true
+
+#define	__tesla_global		((struct __tesla_locality*) 0)
+#define	__tesla_perthread	((struct __tesla_locality*) 0)
+
+
+#endif	/* TESLA_ANALYSIS */
+
+#endif	/* TESLA */
 
 #endif	/* TESLA_H */
 

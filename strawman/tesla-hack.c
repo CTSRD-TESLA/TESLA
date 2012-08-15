@@ -44,28 +44,12 @@
 
 #warning Compiling TESLA hacks; instrumenter unfinished?
 
-/* TESLA localities (per-thread vs global). */
-__tesla_locality *__tesla_global;
-__tesla_locality *__tesla_perthread;
-
 /* Inline assertions and events. */
 void
 __tesla_inline_assertion(const char *filename, int line, int count,
 		__tesla_locality *loc, bool predicate)
 {
 }
-
-bool __tesla_sequence(__tesla_event ev, ...) { return false; }
-
-__tesla_event __tesla_now;
-
-__tesla_event __tesla_entered(void *x) { return __tesla_now; }
-__tesla_event __tesla_leaving(void *x) { return __tesla_now; }
-__tesla_event __tesla_call(bool b) { return __tesla_now; }
-__tesla_event __tesla_repeat(__tesla_count min, __tesla_count max,
-	__tesla_event ev, ...) { return __tesla_now; }
-
-void* __tesla_any() { return 0; }
 
 /* Stub instrumentation functions. */
 void
