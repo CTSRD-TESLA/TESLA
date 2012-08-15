@@ -139,41 +139,24 @@ public:
   TeslaPseudoStrip() : ModulePass(ID) {}
 
   virtual bool runOnModule(Module &M) {
-    bool modifiedIR = false;
+    Function *Fn = M.getFunction("__tesla_inline_assertion");
+    if (!Fn) return false;
 
     set<CallInst*> Calls;
-    set<Function*> Fns;
-
-    for (auto &Fn : M.getFunctionList()) {
-      StringRef Name = Fn.getName();
-
-      if (Name.startswith("__tesla_")
-          && !Name.startswith("__tesla_instrumentation_")) {
-        for (auto I = Fn.use_begin(); I != Fn.use_end(); ++I) {
-          assert(isa<CallInst>(*I));
-          Calls.insert(cast<CallInst>(*I));
-        }
-
-        Fns.insert(&Fn);
-      }
+    for (auto I = Fn->use_begin(); I != Fn->use_end(); ++I) {
+      CallInst *Call = cast<CallInst>(*I);
+      Calls.insert(Call);
     }
 
-    for (CallInst *Call : Calls) {
+    for (auto *Call : Calls) {
       Call->removeFromParent();
       delete Call;
-      modifiedIR = true;
     }
 
-    for (Function *Fn : Fns) {
-      assert(Fn->use_empty());
+    Fn->removeFromParent();
+    delete Fn;
 
-      Fn->removeFromParent();
-      delete Fn;
-
-      modifiedIR = true;
-    }
-
-    return modifiedIR;
+    return true;
   }
 };
 
