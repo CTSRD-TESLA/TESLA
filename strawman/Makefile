@@ -22,6 +22,8 @@ BIN=demo
 EXAMPLE=example
 
 C=example support main tesla-hack
+TESLA=$(patsubst %,%.tesla,$C)
+
 IR=handcoded
 
 INSTR=$(patsubst %,%.instr,$C ${IR})
@@ -47,6 +49,10 @@ analyse: tesla
 instrument: tesla
 	@${MAKE} VERBOSE=true ${INSTRUMENTED_IR}
 
+.tesla: ${TESLA}
+	@echo "[CAT]   $^ > $@"
+	@cat $^ > $@
+
 # Build the demo application.
 ${BIN}: ${OBJ}
 	@echo "[LINK]  $^ > $@"
@@ -61,7 +67,7 @@ ${BIN}: ${OBJ}
 	            || exit 0
 
 # Instrument LLVM IR using TESLA.
-%.instr.ll: %.ll
+%.instr.ll: %.ll .tesla
 	@echo "[TESLA] $^ > $@"
 	@${INSTRUMENTER} $< -o $@
 	@# We *expect* diff to produce an output!
