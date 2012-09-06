@@ -1,7 +1,7 @@
 .PHONY: clean run-tesla tesla
 
 # Hold onto all LLVM IR files for manual inspection.
-.PRECIOUS: %.ll
+.PRECIOUS: %.ll %.instr.ll
 
 TESLA_DIR=../tesla
 ANALYSER=${TESLA_DIR}/analyser/tesla
