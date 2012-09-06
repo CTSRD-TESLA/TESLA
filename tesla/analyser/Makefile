@@ -12,21 +12,25 @@ CXX=clang++
 CXXFLAGS= \
 	-fno-exceptions -fno-rtti \
 	-Wno-c++11-extensions \
+	-I ../common \
 	$(shell llvm-config --cxxflags)
 
-LDFLAGS=$(shell llvm-config --ldflags) ${LIBS}
+LDFLAGS= \
+	$(shell llvm-config --ldflags) \
+	$(shell llvm-config --libs ) \
+	-L ../common ${LIBS}
 
 # LLVM and Clang libraries (gathered by watching what CMake does elsewhere).
 LLVM_LIBS=$(patsubst %,LLVM%,MC Object Support)
 CLANG_LIBS= $(patsubst %,clang%, \
 	Analysis AST Basic Driver Edit Frontend Lex Parse Sema Serialization Tooling)
 
-LIBS=$(patsubst %,-l %,${CLANG_LIBS} ${LLVM_LIBS})
+LIBS=$(patsubst %,-l %,${CLANG_LIBS} ${LLVM_LIBS} Tesla TeslaClang)
 
 .PHONY: all clean test
 
 TESLA=tesla
-TESLA_OBJ=$(patsubst %,%.o, Tesla tool)
+TESLA_OBJ=$(patsubst %,%.o, tool)
 
 all: ${TESLA}
 

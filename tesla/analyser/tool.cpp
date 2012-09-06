@@ -65,7 +65,7 @@ public:
     if (!F->getName().startswith("__tesla_inline_assertion")) return true;
 
     if (TeslaAssertion *Assertion = TeslaAssertion::Parse(E, *Context)) {
-      Out << Assertion->Description() << "\n";
+      Out << "---\n" << Assertion->Yaml()->str() << "\n";
       return true;
     }
 
