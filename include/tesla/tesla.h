@@ -33,6 +33,7 @@
 
 #ifdef  TESLA
 
+#include <limits.h>
 #include <stdbool.h>
 
 /** Basic TESLA types (magic for the compiler to munge). */
@@ -88,7 +89,7 @@ __tesla_event __tesla_now;
 /** The result of a function call (e.g., foo(x) == y). */
 __tesla_event __tesla_call(bool);
 
-#define	ANY_REP	-1
+#define	ANY_REP	INT_MAX
 
 /** A repetition of events — this allows globby "?", "*", "+", etc. */
 __tesla_event __tesla_repeat(__tesla_count, __tesla_count, __tesla_event, ...);
