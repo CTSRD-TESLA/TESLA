@@ -47,6 +47,7 @@ do_operation(int op, struct object *o)
 			entered(example_syscall),
 			some_helper(42) == 0,
 			UPTO(4, entered(void_helper), leaving(void_helper)),
+			ATLEAST(2, entered(example_syscall)),
 			leaving(example_syscall)
 		)
 	);
