@@ -10,3 +10,6 @@ clean:
 	cd analyser && ${MAKE} clean
 	cd instrumenter && ${MAKE} clean
 
+doc:
+	cd .. && ${MAKE} doc
+

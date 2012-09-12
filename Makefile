@@ -1,0 +1,4 @@
+
+doc: Doxyfile
+	doxygen $?
+

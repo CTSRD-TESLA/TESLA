@@ -38,6 +38,9 @@ all: ${TESLA}
 clean:
 	rm -f ${TESLA} *.o *.d
 
+doc:
+	cd ../../ && ${MAKE} doc
+
 test:
 	cd ../strawman && ${MAKE} run-tesla
 

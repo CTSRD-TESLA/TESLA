@@ -8,6 +8,9 @@ clean:
 
 cmake: CMakeCache.txt
 
+doc:
+	cd ../.. && ${MAKE} doc
+
 CMakeCache.txt: CMakeLists.txt
 	cmake \
 		-G Ninja \
