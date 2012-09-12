@@ -20,12 +20,11 @@ LDFLAGS= \
 	$(shell llvm-config --libs ) \
 	-L ../common ${LIBS}
 
-# LLVM and Clang libraries (gathered by watching what CMake does elsewhere).
-LLVM_LIBS=$(patsubst %,LLVM%,MC Object Support)
+# Clang libraries (gathered by watching what CMake does elsewhere).
 CLANG_LIBS= $(patsubst %,clang%, \
 	Analysis AST Basic Driver Edit Frontend Lex Parse Sema Serialization Tooling)
 
-LIBS=$(patsubst %,-l %,${CLANG_LIBS} ${LLVM_LIBS} Tesla TeslaClang)
+LIBS=$(patsubst %,-l %,${CLANG_LIBS} Tesla TeslaClang)
 
 .PHONY: all clean test
 
