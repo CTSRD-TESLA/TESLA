@@ -3,6 +3,8 @@
 # Hold onto all LLVM IR files for manual inspection.
 .PRECIOUS: %.ll %.instr.ll
 
+.SILENT:
+
 TESLA_DIR=../tesla
 ANALYSER=${TESLA_DIR}/analyser/tesla
 INSTRUMENTER= \
@@ -39,47 +41,47 @@ clean:
 	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} *.tesla
 
 tesla:
-	cd ${TESLA_DIR} && ${MAKE}
+	cd ${TESLA_DIR} && ${MAKE} --quiet
 
 run-tesla: analyse instrument
 
 analyse: tesla
-	@${MAKE} VERBOSE=true example.tesla
+	${MAKE} VERBOSE=true example.tesla
 
 instrument: tesla
-	@${MAKE} VERBOSE=true ${INSTRUMENTED_IR}
+	${MAKE} VERBOSE=true ${INSTRUMENTED_IR}
 
 .tesla: ${TESLA}
 	@echo "[CAT]   $^ > $@"
-	@cat $^ > $@
+	cat $^ > $@
 
 # Build the demo application.
 ${BIN}: ${OBJ}
 	@echo "[LINK]  $^ > $@"
-	@${LINK} $^ -o $@
+	${LINK} $^ -o $@
 
 # Run the TESLA analyser over C code.
 %.tesla: %.c
 	@echo "[TESLA] $^ > $@"
-	@${ANALYSER} $< -o $@ -- ${PARSE} -D TESLA_ANALYSIS
-	@${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
+	${ANALYSER} $< -o $@ -- ${PARSE} -D TESLA_ANALYSIS
+	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
 	            && cat $@ && echo "===== end of TESLA analysis =====" \
 	            || exit 0
 
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll .tesla
 	@echo "[TESLA] $^ > $@"
-	@${INSTRUMENTER} $< -o $@
-	@# We *expect* diff to produce an output!
-	@${VERBOSE} && ${DIFF} -u $< $@ || exit 0
+	${INSTRUMENTER} -tesla-spec .tesla $< -o $@
+	# We *expect* diff to produce an output!
+	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 
 # Compile C code to LLVM IR.
 %.ll: %.c
 	@echo "[CC]    $^ > $@"
-	@${CC} ${CFLAGS} -S -emit-llvm $< -o $@
+	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
 
 # Compile IR to object code.
 %.o: %.ll
 	@echo "[LLC]   $^ > $@"
-	@${CC} -c $< -o $@
+	${CC} -c $< -o $@
 
