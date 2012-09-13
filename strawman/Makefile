@@ -6,10 +6,10 @@
 .SILENT:
 
 TESLA_DIR=../tesla
-ANALYSER=${TESLA_DIR}/analyser/tesla
+ANALYSER=${TESLA_DIR}/build/analyser/tesla
 INSTRUMENTER= \
 	opt -S \
-		-load ${TESLA_DIR}/instrumenter/TeslaInstrumenter.dylib \
+		-load ${TESLA_DIR}/build/instrumenter/TeslaInstrumenter.dylib \
 		-tesla-callee -tesla-caller -tesla-asserts
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
@@ -41,7 +41,7 @@ clean:
 	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} *.tesla
 
 tesla:
-	cd ${TESLA_DIR} && ${MAKE} --quiet
+	cd ${TESLA_DIR} && ${MAKE} --quiet build
 
 run-tesla: analyse instrument
 

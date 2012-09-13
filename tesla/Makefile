@@ -1,15 +1,23 @@
-.PHONY: all clean
+.PHONY: all build clean cmake
 
-all:
-	cd common && ${MAKE}
-	cd analyser && ${MAKE}
-	cd instrumenter && ${MAKE}
+all: build doc
+
+build: cmake
+	cd build && ninja
 
 clean:
-	cd common && ${MAKE} clean
-	cd analyser && ${MAKE} clean
-	cd instrumenter && ${MAKE} clean
+	rm -rf build
+
+cmake: build/CMakeCache.txt
 
 doc:
 	cd .. && ${MAKE} doc
+
+build/CMakeCache.txt: CMakeLists.txt
+	mkdir -p build
+	cd build && cmake \
+		-G Ninja \
+		-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+		-DCMAKE_CXX_FLAGS="-Wno-c++11-extensions" \
+		..
 
