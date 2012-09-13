@@ -131,6 +131,7 @@ public:
 
   yaml::Node* Yaml() const;
 
+  //! Parse from a Clang AST.
   static Location* Parse(
       clang::Expr *Filename, clang::Expr *Line, clang::Expr *Counter,
       clang::ASTContext& Diag);

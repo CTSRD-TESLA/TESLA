@@ -94,7 +94,7 @@ private:
   llvm::OwningPtr<TeslaExpr> RHS;
 };
 
-/// A sequence of TESLA events, eg entry(syscall), predicate(foo), TESLA_NOW.
+//! A sequence of TESLA events, eg entry(syscall), predicate(foo), TESLA_NOW.
 class Sequence : public TeslaExpr {
 public:
   Sequence(llvm::MutableArrayRef<llvm::OwningPtr<TeslaEvent> > Events);
@@ -110,7 +110,7 @@ private:
 };
 
 
-/// An inline TESLA assertion.
+//! An inline TESLA assertion.
 class TeslaAssertion : public yaml::HasYaml {
 public:
   TeslaAssertion(Location, const AutomatonContext*, TeslaExpr*);
