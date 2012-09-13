@@ -168,14 +168,7 @@ string Map::str(unsigned IndentLevel) const {
   const string I = Indent(IndentLevel);
   ostringstream out;
 
-  /**
-   * For now, don't use the abbreviated map syntax, as LLVM's YAML parser will
-   * sometimes choke on it (specifically, if there is an inline "flow syntax"
-   * map within a "block syntax" map).
-   *
-   * @see http://llvm.org/bugs/show_bug.cgi?id=13834
-   */
-  //if (isGrandparent()) {
+  if (isGrandparent()) {
     // General-case formatting.
     out << "\n";
 
@@ -187,7 +180,6 @@ string Map::str(unsigned IndentLevel) const {
 
       out << I << Key << ": " << Value->str(IndentLevel + 1) << "\n";
     }
-#if 0
   } else {
     // Optimisation for simple cases.
     out << "{ ";
@@ -203,7 +195,6 @@ string Map::str(unsigned IndentLevel) const {
 
     out << "}";
   }
-#endif
 
   return out.str();
 }
