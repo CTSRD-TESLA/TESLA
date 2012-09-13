@@ -71,7 +71,7 @@ ${BIN}: ${OBJ}
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll .tesla
 	@echo "[TESLA] $^ > $@"
-	${INSTRUMENTER} -tesla-spec .tesla $< -o $@
+	${INSTRUMENTER} -tesla-automata .tesla $< -o $@
 	# We *expect* diff to produce an output!
 	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 

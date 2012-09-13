@@ -47,6 +47,12 @@ using std::set;
 using std::string;
 using std::vector;
 
+
+static cl::opt<string>
+SpecFile("tesla-automata", cl::init(".tesla"), cl::Hidden,
+  cl::desc("TESLA automata descriptions (YAML)"));
+
+
 namespace tesla {
 
 /// Instruments function calls in the callee context.
