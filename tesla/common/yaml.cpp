@@ -201,7 +201,7 @@ string Map::str(unsigned IndentLevel) const {
       out << Key << ": " << Value->str() << ", ";
     }
 
-    out << " }";
+    out << "}";
   }
 #endif
 
