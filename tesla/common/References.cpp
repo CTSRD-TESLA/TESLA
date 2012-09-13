@@ -88,10 +88,13 @@ Location::Location(StringRef Filename, APInt Line, APInt Counter)
   : Filename(Filename), Line(Line), Counter(Counter) {}
 
 yaml::Node* Location::Yaml() const {
-  return yaml::Value::of(Filename
-      + ":" + Line.toString(10, false)
-      + "#" + Counter.toString(10, false)
-    );
+  auto Map = new yaml::Map;
+
+  Map->set("filename", Filename);
+  Map->set("line", Line.getLimitedValue());
+  Map->set("counter", Counter.getLimitedValue());
+
+  return Map;
 }
 
 }
