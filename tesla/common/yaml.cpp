@@ -32,12 +32,14 @@
 
 #include <sstream>
 
-using namespace tesla::yaml;
 
 using std::ostringstream;
 using std::pair;
 using std::string;
 
+
+namespace tesla {
+namespace yaml {
 
 string Indent(unsigned IndentLevel) {
   return string(IndentLevel, ' ');
@@ -215,4 +217,8 @@ string Map::json() const {
 
   return out.str();
 }
+
+
+} // namespace yaml
+} // namespace tesla
 
