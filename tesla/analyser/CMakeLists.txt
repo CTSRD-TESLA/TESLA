@@ -1,5 +1,17 @@
-add_llvm_executable(tesla tool.cpp)
-target_link_libraries(tesla Tesla TeslaClang)
+find_package(Protobuf REQUIRED)
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_INCLUDE_DIRS})
+
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
+
+add_llvm_executable(tesla
+	automata.cpp
+	expressions.cpp
+	events.cpp
+	helpers.cpp
+	references.cpp
+	tool.cpp
+)
+target_link_libraries(tesla TeslaProto)
 
 # Link this executable against the Clang and LLVM libraries:
 

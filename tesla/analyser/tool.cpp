@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
  */
 
-#include "Tesla.h"
+#include "parsers.h"
 
 #include "llvm/Support/CommandLine.h"
 
@@ -40,6 +40,8 @@
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Tooling/CompilationDatabase.h"
 #include "clang/Tooling/Tooling.h"
+
+#include <google/protobuf/text_format.h>
 
 #include <fstream>
 
@@ -64,17 +66,21 @@ public:
     if (!F) return true;
     if (!F->getName().startswith("__tesla_inline_assertion")) return true;
 
-    if (TeslaAssertion *Assertion = TeslaAssertion::Parse(E, *Context)) {
-      Out << "---\n" << Assertion->Yaml()->str() << "\n";
-      return true;
+    Automaton Auto;
+    if (!ParseInlineAssertion(&Auto, E, *Context)) {
+      static int ParseFailure =
+        Diag.getCustomDiagID(DiagnosticsEngine::Error,
+          "Failed to parse TESLA inline assertion");
+
+      Diag.Report(E->getLocStart(), ParseFailure) << E->getSourceRange();
+      return false;
     }
 
-    static int ParseFailure =
-      Diag.getCustomDiagID(DiagnosticsEngine::Error,
-        "Failed to parse TESLA inline assertion");
+    string Str;
+    google::protobuf::TextFormat::PrintToString(Auto, &Str);
+    Out << Str << "===\n";
 
-    Diag.Report(E->getLocStart(), ParseFailure) << E->getSourceRange();
-    return false;
+    return true;
   }
 
 private:

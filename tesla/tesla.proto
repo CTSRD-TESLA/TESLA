@@ -1,0 +1,126 @@
+package tesla;
+
+
+/**
+ * A TESLA finite-state automaton.
+ */
+message Automaton {
+  /** Where the automaton is defined (an identifier). */
+  required Location location = 1;
+
+  /**
+   * An automaton's context (e.g. thread-local) has implications for its
+   * storage and synchronization.
+   */
+  enum Context { Global = 1; ThreadLocal = 2; };
+  required Context context = 2;
+
+  /** The temporal expression. */
+  required Expression expression = 3;
+}
+
+/** An identifier for an automaton based on where it was defined. */
+message Location {
+  required string filename = 1;
+  required int32 line = 2;
+  required int32 counter = 3;
+}
+
+/**
+ * A temporal expression.
+ * e.g. previously(foo) || eventually(bar)
+ *
+ * This is a union type.
+ */
+message Expression {
+  optional BooleanExpr booleanExpr = 1;
+  optional Sequence sequence = 2;
+}
+
+/** A boolean combination of expressions (with equal precedence). */
+message BooleanExpr {
+  enum Operation { BE_And = 1; BE_Or = 2; BE_Xor = 3; }
+
+  required Operation operation = 1;
+  repeated Expression expression = 2;
+}
+
+/** A sequence of temporal events. */
+message Sequence {
+  repeated Event event = 1;
+}
+
+
+/**
+ * A temporal event.
+ *
+ * An event can be instrumented. An event can occur any number of times
+ * in a real execution.
+ *
+ * This is a union type.
+ */
+message Event {
+  optional Repetition repetition = 1;
+  optional Now now = 2;
+  optional FunctionEvent function = 3;
+}
+
+/** A series of events, repeated some number of times. */
+message Repetition {
+  /** The events to repeat. The order of these events matters. */
+  repeated Event event = 1;
+
+  /** If set, the repetition must occur at least 'min' times. */
+  optional int32 min = 2;
+
+  /** If set, the repetition may occur no more than 'max' times. */
+  optional int32 max = 3;
+}
+
+/**
+ * Execution has reached the point in the instrumented code where an
+ * inline assertion was defined.
+ */
+message Now {
+  required Location location = 1;
+}
+
+/** A function has been called or has returned. */
+message FunctionEvent {
+  enum Direction { Entry = 1; Exit = 2; }
+  enum CallContext { Caller = 1; Callee = 2; }
+
+  /** The function to be instrumented. */
+  required FunctionRef function = 1;
+
+  /** We can instrument call, return or both. */
+  optional Direction direction = 2;
+
+  /** We can instrument at call sites, within called functions or both. */
+  optional CallContext context = 3;
+
+  /** Argument values that we care about. */
+  repeated Argument argument = 4;
+
+  /** If set, the return value that we expect / care about. */
+  optional Argument expectedReturnValue = 5;
+}
+
+/** A function that can be instrumented. */
+message FunctionRef {
+  /**
+   * The function's name.
+   *
+   * TODO: we may need further disambiguation if two modules contain
+   *       static functions with the same name. This may only matter when
+   *       compiling via LLVM IR: I think this will fail when linking ELF
+   *       object files.
+   */
+  required string name = 1;
+}
+
+/** An argument to a function. TODO: complete this! */
+message Argument {
+  optional string identifier = 1;
+}
+

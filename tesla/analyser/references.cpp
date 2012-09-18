@@ -1,4 +1,4 @@
-/*! @file clang/References.cpp  Clang-specific references to things. */
+/*! @file references.cpp  Parsers for TESLA references to C primitives. */
 /*
  * Copyright (c) 2012 Jonathan Anderson
  * All rights reserved.
@@ -29,7 +29,7 @@
  * SUCH DAMAGE.
  */
 
-#include "../References.h"
+#include "parsers.h"
 
 #include "clang/AST/Decl.h"
 
@@ -37,15 +37,23 @@ using namespace clang;
 
 namespace tesla {
 
-FunctionRef FunctionRef::Parse(FunctionDecl *Fn) {
+bool
+ParseFunctionRef(FunctionRef *FnRef, FunctionDecl *Fn, ASTContext& Ctx) {
   assert(Fn && "Cannot parse a NULL function declaration");
-  return FunctionRef(Fn->getName());
+
+  FnRef->set_name(Fn->getName());
+  if (FnRef->name().empty()) {
+    Report("Function must have a name", Fn->getLocStart(), Ctx)
+      << Fn->getSourceRange();
+    return false;
+  }
+
+  return true;
 }
 
 
-Argument::Argument(llvm::StringRef Identifier) : Identifier(Identifier) {}
-
-Argument* Argument::Parse(Expr *E) {
+bool
+ParseArgument(Argument *Arg, Expr *E, ASTContext& Ctx) {
   assert(E && "Cannot parse a NULL expression");
 
 #if 0
@@ -55,7 +63,7 @@ Argument* Argument::Parse(Expr *E) {
   static Argument* Parse(clang::Expr*);
 #endif
 
-  return NULL;
+  return true;
 }
 
 }
