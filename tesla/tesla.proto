@@ -63,8 +63,11 @@ message Location {
  * This is a union type.
  */
 message Expression {
-  optional BooleanExpr booleanExpr = 1;
-  optional Sequence sequence = 2;
+  enum Type { BOOLEAN_EXPR = 1; SEQUENCE = 2; };
+  required Type type = 1;
+
+  optional BooleanExpr booleanExpr = 2;
+  optional Sequence sequence = 3;
 }
 
 /** A boolean combination of expressions (with equal precedence). */
@@ -90,9 +93,12 @@ message Sequence {
  * This is a union type.
  */
 message Event {
-  optional Repetition repetition = 1;
-  optional Now now = 2;
-  optional FunctionEvent function = 3;
+  enum Type { REPETITION = 1; NOW = 2; FUNCTION = 3; }
+  required Type type = 1;
+
+  optional Repetition repetition = 2;
+  optional Now now = 3;
+  optional FunctionEvent function = 4;
 }
 
 /** A series of events, repeated some number of times. */

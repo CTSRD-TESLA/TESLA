@@ -55,11 +55,15 @@ ParseExpression(Expression *Exp, Expr *E, Location AssertLoc,
     ASTContext& Ctx) {
   E = E->IgnoreImplicit();
 
-  if (auto Call = dyn_cast<CallExpr>(E))
+  if (auto Call = dyn_cast<CallExpr>(E)) {
+    Exp->set_type(Expression::SEQUENCE);
     return ParseSequence(Exp->mutable_sequence(), Call, AssertLoc, Ctx);
+  }
 
-  else if (auto Bop = dyn_cast<BinaryOperator>(E))
+  else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
+    Exp->set_type(Expression::BOOLEAN_EXPR);
     return ParseBooleanExpr(Exp->mutable_booleanexpr(), Bop, AssertLoc, Ctx);
+  }
 
   Report("Not a valid TESLA expression", E->getLocStart(), Ctx)
     << E->getSourceRange();

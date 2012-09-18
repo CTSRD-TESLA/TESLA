@@ -65,14 +65,17 @@ ParseEvent(Event *Event, Expr *E, Location AssertLoc, ASTContext& Ctx) {
     }
 
     if (D->getName() == "__tesla_now") {
+      Event->set_type(Event::NOW);
       *Event->mutable_now()->mutable_location() = AssertLoc;
       return true;
     }
   }
 
   // Is it a call-and-return like "foo(x) == y"?
-  else if (auto Bop = dyn_cast<BinaryOperator>(E))
+  else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
+    Event->set_type(Event::FUNCTION);
     return ParseFunctionCall(Event->mutable_function(), Bop, Ctx);
+  }
 
   // Otherwise, it's a call to a TESLA "function" like __tesla_predicate().
   auto Call = dyn_cast<CallExpr>(E);
@@ -91,10 +94,13 @@ ParseEvent(Event *Event, Expr *E, Location AssertLoc, ASTContext& Ctx) {
 
   // We can't use StringSwitch for this because it evaluates all of the
   // possible cases (e.g. ParseFunctionCall(x,y,z)) before switching.
-  if (Callee->getName() == "__tesla_repeat")
+  if (Callee->getName() == "__tesla_repeat") {
+    Event->set_type(Event::REPETITION);
     return ParseRepetition(Event->mutable_repetition(), Call, AssertLoc, Ctx);
+  }
 
-  else if (Callee->getName() == "__tesla_entered")
+  Event->set_type(Event::FUNCTION);
+  if (Callee->getName() == "__tesla_entered")
     return ParseFunctionEntry(Event->mutable_function(), Call, Ctx);
 
   else if (Callee->getName() == "__tesla_leaving")
