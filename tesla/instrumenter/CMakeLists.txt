@@ -5,7 +5,6 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
 
 add_llvm_loadable_module(TeslaInstrumenter
 	Instrumentation.cpp
-	Manifest.cpp
 	TeslaInstrumenter.cpp
 )
 

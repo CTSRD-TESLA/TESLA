@@ -10,15 +10,17 @@ include_directories(${LLVM_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 
 find_package(Protobuf REQUIRED)
-include_directories("." ${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_INCLUDE_DIRS})
+include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
-add_library(TeslaProto ${PROTO_SRCS} ${PROTO_HDRS})
-target_link_libraries(TeslaProto ${PROTOBUF_LIBRARY})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -Wno-c++11-extensions")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wstrict-prototypes -Werror")
 
+include_directories(common)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/common")
+
 add_subdirectory(analyser)
+add_subdirectory(common)
 add_subdirectory(instrumenter)
 
