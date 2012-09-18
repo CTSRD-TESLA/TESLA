@@ -49,6 +49,7 @@
 using namespace llvm;
 
 using std::string;
+using std::vector;
 
 namespace tesla {
 
@@ -99,6 +100,58 @@ Manifest::load(StringRef Path, raw_ostream& ErrorStream) {
   }
 
   return new Manifest(Automata);
+}
+
+
+vector<FunctionEvent>
+Manifest::FunctionsToInstrument() {
+  vector<FunctionEvent> FnEvents;
+
+  for (auto& Ev : Events()) {
+    assert(Event::Type_IsValid(Ev.type()));
+    if (Ev.type() == Event::FUNCTION) FnEvents.push_back(Ev.function());
+  }
+
+  return FnEvents;
+}
+
+vector<Event>
+ExprEvents(const Expression& E) {
+  assert(Expression::Type_IsValid(E.type()));
+
+  vector<Event> Events;
+
+  switch (E.type()) {
+    case Expression::BOOLEAN_EXPR:
+      assert(E.has_booleanexpr());
+      for (auto& Expr : E.booleanexpr().expression()) {
+        auto Sub = ExprEvents(Expr);
+        for (auto& Ev : Sub) assert(Event::Type_IsValid(Ev.type()));
+        Events.insert(Events.end(), Sub.begin(), Sub.end());
+      }
+      break;
+
+    case Expression::SEQUENCE:
+      assert(E.has_sequence());
+      auto Seq = E.sequence().event();
+      Events.insert(Events.begin(), Seq.begin(), Seq.end());
+      break;
+  }
+
+  return Events;
+}
+
+vector<Event>
+Manifest::Events() {
+  vector<Event> AllEvents;
+
+  for (auto *A : Automata) {
+    auto Expr = ExprEvents(A->expression());
+    for (auto& Ev : Expr) assert(Event::Type_IsValid(Ev.type()));
+    AllEvents.insert(AllEvents.end(), Expr.begin(), Expr.end());
+  }
+
+  return AllEvents;
 }
 
 }

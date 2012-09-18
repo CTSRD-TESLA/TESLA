@@ -33,6 +33,8 @@
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
 
+#include <vector>
+
 namespace llvm {
   class raw_ostream;
 }
@@ -40,16 +42,23 @@ namespace llvm {
 namespace tesla {
 
 class Automaton;
-class FunctionRef;
+class Event;
+class FunctionEvent;
 
 /// A description of TESLA instrumentation to perform.
 class Manifest {
 public:
+  //! Returns a copy of all function events named in this manifest.
+  std::vector<FunctionEvent> FunctionsToInstrument();
+
   //! Load a @ref Manifest from a named file.
   static Manifest* load(llvm::StringRef Path, llvm::raw_ostream& Err);
 
 private:
   Manifest(llvm::ArrayRef<Automaton*> Automata);
+
+  //! Returns a copy of all events named in this manifest.
+  std::vector<Event> Events();
 
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
