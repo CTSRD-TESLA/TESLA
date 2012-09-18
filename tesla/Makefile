@@ -1,6 +1,4 @@
-.PHONY: all build clean cmake
-
-all: build doc
+.PHONY: build clean cmake
 
 build: cmake
 	cd build && ninja
