@@ -28,13 +28,24 @@ $ export PATH=${LLVM_PREFIX}/bin:$PATH   # Only if you've customised PREFIX
 $ llvm-config --cxxflags                 # Make sure everything's working
 
 
-Step 2: Build TESLA
+Step 2: Get other dependencies.
+--------------------------------------------------------------------------------
+You will need the Google Protocol Buffers library, which is available as a
+binary package for at least:
+
+ - FreeBSD (`pkg install protobuf` / `pkg_add -r protobuf`)
+ - Mac OS X w/Homebrew (`brew install protobuf`)
+ - Ubuntu (`apt-get install protobuf-dev`)
+ - Fedora (`yum install protobuf`)
+
+
+Step 3: Build TESLA
 --------------------------------------------------------------------------------
 $ cd ${TESLA}/tesla
 $ make
 
 
-Step 3: Run TESLA
+Step 4: Run TESLA
 --------------------------------------------------------------------------------
 Try running TESLA on the supplied 'strawman' example.
 
