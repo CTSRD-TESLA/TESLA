@@ -123,14 +123,14 @@ message Now {
 
 /** A function has been called or has returned. */
 message FunctionEvent {
-  enum Direction { Entry = 1; Exit = 2; }
+  enum Direction { Entry = 1; Exit = 2; EntryAndExit = 3; }
   enum CallContext { Caller = 1; Callee = 2; }
 
   /** The function to be instrumented. */
   required FunctionRef function = 1;
 
   /** We can instrument call, return or both. */
-  optional Direction direction = 2;
+  optional Direction direction = 2 [default = EntryAndExit];
 
   /** We can instrument at call sites, within called functions or both. */
   optional CallContext context = 3;
