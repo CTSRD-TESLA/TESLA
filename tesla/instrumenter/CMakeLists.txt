@@ -8,6 +8,6 @@ add_llvm_loadable_module(TeslaInstrumenter
 
 target_link_libraries(TeslaInstrumenter
 	LLVMSupport
-	TeslaProto
+	TeslaCommon
 )
 
