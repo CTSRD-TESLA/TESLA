@@ -177,7 +177,7 @@ public:
       for (unsigned I = 0; I < ArgTypes.size(); ++I)
         Args.push_back(Call->getArgOperand(I));
 
-      CallInst *InstrCall = CallInst::Create(Instr, Args, "", Call);
+      CallInst::Create(Instr, Args, "", Call);
 
       // Delete the call to the pseudo-function.
       Call->removeFromParent();
