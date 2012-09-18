@@ -29,6 +29,7 @@
  */
 
 #include "Instrumentation.h"
+#include "Manifest.h"
 
 #include "llvm/Function.h"
 #include "llvm/Instructions.h"
@@ -36,11 +37,16 @@
 #include "llvm/Module.h"
 #include "llvm/Pass.h"
 
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/raw_ostream.h"
+
 #include <map>
 #include <set>
 #include <vector>
 
 using namespace llvm;
+
+using google::protobuf::ShutdownProtobufLibrary;
 
 using std::map;
 using std::set;
@@ -49,9 +55,8 @@ using std::vector;
 
 
 static cl::opt<string>
-SpecFile("tesla-automata", cl::init(".tesla"), cl::Hidden,
-  cl::desc("TESLA automata descriptions (YAML)"));
-
+ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
+  cl::desc("TESLA automata manifest"));
 
 namespace tesla {
 
@@ -60,17 +65,25 @@ class TeslaCalleeInstrumenter : public FunctionPass {
 public:
   static char ID;
   TeslaCalleeInstrumenter() : FunctionPass(ID) {}
+  ~TeslaCalleeInstrumenter() { ShutdownProtobufLibrary(); }
 
   virtual bool doInitialization(Module &M) {
-    // TODO: remove hardcoded function names
-    vector<string> FnNames;
-    FnNames.push_back("example_syscall");
-    FnNames.push_back("some_helper");
-    FnNames.push_back("void_helper");
+    OwningPtr<Manifest> Manifest(Manifest::load(ManifestName, llvm::errs()));
+    if (!Manifest) {
+      llvm::errs() << "Unable to read manifest '" << ManifestName << "'\n";
+      return false;
+    }
 
-    for (auto Name : FnNames)
+    for (auto& Fn : Manifest->FunctionsToInstrument()) {
+      if (Fn.context() != FunctionEvent::Callee) continue;
+
+      assert(Fn.has_function());
+      auto Name = Fn.function().name();
+
+      assert(Fn.has_direction());
       FunctionsToInstrument[Name] =
-        CalleeInstrumentation::Build(M.getContext(), M, Name, FE_Both);
+        CalleeInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
+    }
 
     return false;
   }
@@ -99,17 +112,22 @@ class TeslaCallerInstrumenter : public BasicBlockPass {
 public:
   static char ID;
   TeslaCallerInstrumenter() : BasicBlockPass(ID) {}
+  ~TeslaCallerInstrumenter() { ShutdownProtobufLibrary(); }
 
   virtual bool doInitialization(Module &M) {
-    // TODO: remove hardcoded function names
-    vector<string> FnNames;
-    FnNames.push_back("example_syscall");
-    FnNames.push_back("some_helper");
-    FnNames.push_back("void_helper");
+    OwningPtr<Manifest> Manifest(Manifest::load(ManifestName, llvm::errs()));
+    if (!Manifest) {
+      llvm::errs() << "Unable to read manifest '" << ManifestName << "'\n";
+      return false;
+    }
 
-    for (auto Name : FnNames)
+    for (auto& Fn : Manifest->FunctionsToInstrument()) {
+      if (Fn.context() != FunctionEvent::Caller) continue;
+
+      auto Name = Fn.function().name();
       FunctionsToInstrument[Name] =
-        CallerInstrumentation::Build(M.getContext(), M, Name, FE_Both);
+        CallerInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
+    }
 
     return false;
   }
@@ -142,6 +160,7 @@ class TeslaAssertionSiteInstrumenter : public ModulePass {
 public:
   static char ID;
   TeslaAssertionSiteInstrumenter() : ModulePass(ID) {}
+  ~TeslaAssertionSiteInstrumenter() { ShutdownProtobufLibrary(); }
 
   virtual bool runOnModule(Module &M) {
     Function *Fn = M.getFunction("__tesla_inline_assertion");

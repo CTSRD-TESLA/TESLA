@@ -31,6 +31,8 @@
 #ifndef	TESLA_INSTRUMENTATION_H
 #define	TESLA_INSTRUMENTATION_H
 
+#include "tesla.pb.h"
+
 #include "llvm/ADT/StringRef.h"
 
 #include <vector>
@@ -45,15 +47,6 @@ namespace llvm {
 
 namespace tesla {
 
-/// Function instrumentation points.
-enum FnEvent {
-  FE_None   = 0,
-  FE_Entry  = 1,
-  FE_Return = 2,
-  FE_Both   = 3
-};
-
-
 /// Function instrumentation (callee context).
 class CalleeInstrumentation {
 public:
@@ -61,7 +54,7 @@ public:
   static CalleeInstrumentation* Build(llvm::LLVMContext &Context,
                                       llvm::Module &M,
                                       llvm::StringRef FnName,
-                                      FnEvent Where
+                                      FunctionEvent::Direction Dir
                                      );
 
   /// Create instrumentation for function entry.
@@ -103,7 +96,7 @@ public:
   static CallerInstrumentation* Build(llvm::LLVMContext &Context,
                                       llvm::Module &M,
                                       llvm::StringRef FnName,
-                                      FnEvent Where
+                                      FunctionEvent::Direction Dir
                                      );
 
   bool Instrument(llvm::Instruction&);

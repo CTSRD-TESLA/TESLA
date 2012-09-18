@@ -89,7 +89,8 @@ bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
 }
 
 CalleeInstrumentation* CalleeInstrumentation::Build(
-  LLVMContext &Context, Module &M, StringRef FnName, FnEvent Where)
+  LLVMContext &Context, Module &M, StringRef FnName,
+  FunctionEvent::Direction Dir)
 {
   Function *Fn = M.getFunction(FnName);
   if (Fn == NULL) return NULL;
@@ -106,14 +107,14 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
     for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
 
     // Declare or retrieve instrumentation functions.
-    if (Where & FE_Entry) {
+    if (Dir & FunctionEvent::Entry) {
       string Name = ("__tesla_instrumentation_callee_enter_" + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
       Entry = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Entry != NULL);
     }
 
-    if (Where & FE_Return) {
+    if (Dir & FunctionEvent::Exit) {
       // Instrumentation of returns must include the returned value...
       vector<Type*> RetTypes(ArgTypes);
       if (!Fn->getReturnType()->isVoidTy())
@@ -142,7 +143,8 @@ CalleeInstrumentation::CalleeInstrumentation(
 
 
 CallerInstrumentation* CallerInstrumentation::Build(
-  LLVMContext &Context, Module &M, StringRef FnName, FnEvent Where)
+  LLVMContext &Context, Module &M, StringRef FnName,
+  FunctionEvent::Direction Dir)
 {
   Function *Fn = M.getFunction(FnName);
   if (Fn == NULL) return NULL;
@@ -159,14 +161,14 @@ CallerInstrumentation* CallerInstrumentation::Build(
     for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
 
     // Declare or retrieve instrumentation functions.
-    if (Where & FE_Entry) {
+    if (Dir & FunctionEvent::Entry) {
       string Name = ("__tesla_instrumentation_caller_call_" + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
       Call = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Call != NULL);
     }
 
-    if (Where & FE_Return) {
+    if (Dir & FunctionEvent::Exit) {
       // Instrumentation of returns must include the returned value...
       vector<Type*> RetTypes(ArgTypes);
       if (!Fn->getReturnType()->isVoidTy())
