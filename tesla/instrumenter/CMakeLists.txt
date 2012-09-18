@@ -1,6 +1,4 @@
-find_package(Protobuf REQUIRED)
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_INCLUDE_DIRS})
-
+# Dependency tracking: protobuf_generate_cpp() only sort-of works across dirs.
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
 
 add_llvm_loadable_module(TeslaInstrumenter
