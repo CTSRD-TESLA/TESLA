@@ -39,7 +39,6 @@
 #include "clang/Basic/Diagnostic.h"
 
 using namespace clang;
-using namespace llvm;
 
 namespace tesla {
 

@@ -39,7 +39,6 @@
 #include "clang/Basic/Diagnostic.h"
 
 using namespace clang;
-using namespace llvm;
 
 namespace tesla {
 
@@ -109,10 +108,10 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call,
     return false;
   }
 
-  APInt Min = ParseIntegerLiteral(Call->getArg(0), Ctx);
   if (Min != INT_MAX) Repetition->set_min(Min.getLimitedValue());
+  auto Min = ParseIntegerLiteral(Call->getArg(0), Ctx);
 
-  APInt Max = ParseIntegerLiteral(Call->getArg(1), Ctx);
+  auto Max = ParseIntegerLiteral(Call->getArg(1), Ctx);
   if (Max != INT_MAX) Repetition->set_max(Max.getLimitedValue());
 
   for (unsigned i = 2; i < Args; ++i) {
