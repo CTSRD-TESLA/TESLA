@@ -31,14 +31,17 @@
 #include "demo.h"
 #include "tesla.h"
 
+#define previously_in_syscall(x)    since(entered(example_syscall), x)
+#define eventually_in_syscall(x)    before(leaving(example_syscall), x)
+
 int
 perform_operation(int op, struct object *o)
 {
 	/* An example of using high-level TESLA macros. */
 	TESLA_PERTHREAD(
-		since(entered(example_syscall), security_check(ANY, o, op) == 0)
+		previously_in_syscall(security_check(ANY, o, op) == 0)
 		||
-		before(leaving(example_syscall), log_audit_record(o, op) == 0)
+		eventually_in_syscall(log_audit_record(o, op) == 0)
 	);
 
 	/* An example of using the lower-level TESLA interface. */
