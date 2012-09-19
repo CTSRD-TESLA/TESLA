@@ -36,13 +36,6 @@
 #include "clang/AST/ExprCXX.h"
 #include "clang/Basic/Diagnostic.h"
 
-using namespace clang;
-using namespace llvm;
-
-using std::ostringstream;
-using std::string;
-using std::vector;
-
 namespace tesla {
 
 // automata
@@ -84,11 +77,12 @@ bool ParseArgument(Argument*, clang::Expr*, clang::ASTContext&);
 
 // helpers
 //! Report a TESLA error.
-DiagnosticBuilder Report(StringRef Message, SourceLocation, ASTContext&,
-    DiagnosticsEngine::Level Level = DiagnosticsEngine::Error);
+clang::DiagnosticBuilder Report(llvm::StringRef Message, clang::SourceLocation,
+    clang::ASTContext&,
+    clang::DiagnosticsEngine::Level Level = clang::DiagnosticsEngine::Error);
+std::string ParseStringLiteral(clang::Expr*, clang::ASTContext&);
 
-string ParseStringLiteral(Expr*, ASTContext&);
-APInt ParseIntegerLiteral(Expr*, ASTContext&);
+llvm::APInt ParseIntegerLiteral(clang::Expr*, clang::ASTContext&);
 
 }
 

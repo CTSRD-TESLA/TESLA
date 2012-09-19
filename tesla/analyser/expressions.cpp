@@ -31,9 +31,6 @@
 
 #include "parsers.h"
 
-#include <memory>
-#include <sstream>
-
 #include "llvm/ADT/APFloat.h"
 
 #include "clang/AST/ASTContext.h"
@@ -43,10 +40,6 @@
 
 using namespace clang;
 using namespace llvm;
-
-using std::ostringstream;
-using std::string;
-using std::vector;
 
 namespace tesla {
 
