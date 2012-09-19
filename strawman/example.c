@@ -32,7 +32,7 @@
 #include "tesla.h"
 
 int
-do_operation(int op, struct object *o)
+perform_operation(int op, struct object *o)
 {
 	/* An example of using high-level TESLA macros. */
 	TESLA_PERTHREAD(
@@ -66,7 +66,7 @@ example_syscall(struct credential *cred, int index, int op)
 	if ((error = security_check(cred, o, op))) return error;
 	some_helper(op);
 	void_helper(o);
-	do_operation(op, o);
+	perform_operation(op, o);
 
 	return 0;
 }
@@ -76,6 +76,6 @@ example_syscall(struct credential *cred, int index, int op)
 void
 caller_with_literals()
 {
-	do_operation(3, 0);
+	perform_operation(3, 0);
 }
 
