@@ -130,8 +130,6 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call,
 bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call,
                        ASTContext& Ctx) {
   auto Predicate = Call->getDirectCallee();
-
-  // Preconditions
   assert(Predicate != NULL);
   assert(Predicate->getName() == "__tesla_call");
 
