@@ -38,50 +38,68 @@
 
 namespace tesla {
 
-// automata
+//! Parse a TESLA assertion embedded in C code.
 bool ParseInlineAssertion(Automaton*, clang::CallExpr*, clang::ASTContext&);
 
+//! Parse the context (global or per-thread) for an automaton.
 bool ParseContext(Automaton*, clang::Expr*, clang::ASTContext&);
 
+//! Parse the location where an automaton is defined.
 bool ParseLocation(Location*,
                    clang::Expr *Filename, clang::Expr *Line, clang::Expr *Count,
                    clang::ASTContext&);
 
-// expressions
+
+//! Parse a (polymorphic-ish) TESLA expression.
 bool ParseExpression(Expression*, clang::Expr*, Location, clang::ASTContext&);
 
+//! Parse a boolean expression over TESLA expressions.
 bool ParseBooleanExpr(BooleanExpr*, clang::BinaryOperator*, Location,
                       clang::ASTContext&);
 
+//! Parse a sequence of TESLA events.
 bool ParseSequence(Sequence*, clang::CallExpr*, Location, clang::ASTContext&);
 
 
-// events
+//! Parse a (polymorphic-ish) TESLA event.
 bool ParseEvent(Event*, clang::Expr *E, Location AssertionLocation,
                 clang::ASTContext& Ctx);
 
+//! Parse a sequence of repeated events (a la "aba"+).
 bool ParseRepetition(Repetition*, clang::CallExpr*, Location,
                      clang::ASTContext&);
 
+//! Parse a TESLA-wrapped function call: '__tesla_call(f(x) == y)'.
 bool ParseFunctionCall(FunctionEvent*, clang::CallExpr*, clang::ASTContext&);
+
+//! Parse an unwrapped function call: 'f(x) == y'.
 bool ParseFunctionCall(FunctionEvent*, clang::BinaryOperator*,
                        clang::ASTContext&);
+
+//! Parse a __tesla_entered() predicate.
 bool ParseFunctionEntry(FunctionEvent*, clang::CallExpr*, clang::ASTContext&);
+
+//! Parse a __tesla_leaving() predicate.
 bool ParseFunctionExit(FunctionEvent*, clang::CallExpr*, clang::ASTContext&);
 
 
-// references
+//! Parse a reference to a function that requires instrumentation.
 bool ParseFunctionRef(FunctionRef*, clang::FunctionDecl*, clang::ASTContext&);
+
+//! Parse an argument to a function that requires instrumentation.
 bool ParseArgument(Argument*, clang::Expr*, clang::ASTContext&);
 
 
-// helpers
+// Some useful helpers:
 //! Report a TESLA error.
 clang::DiagnosticBuilder Report(llvm::StringRef Message, clang::SourceLocation,
     clang::ASTContext&,
     clang::DiagnosticsEngine::Level Level = clang::DiagnosticsEngine::Error);
+
+//! Parse a literal C string embedded in code.
 std::string ParseStringLiteral(clang::Expr*, clang::ASTContext&);
 
+//! Parse an Integer Constant Expression (ICE).
 llvm::APInt ParseIntegerLiteral(clang::Expr*, clang::ASTContext&);
 
 }
