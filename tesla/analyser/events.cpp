@@ -108,8 +108,8 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call,
     return false;
   }
 
-  if (Min != INT_MAX) Repetition->set_min(Min.getLimitedValue());
   auto Min = ParseIntegerLiteral(Call->getArg(0), Ctx);
+  Repetition->set_min(Min.getLimitedValue());
 
   auto Max = ParseIntegerLiteral(Call->getArg(1), Ctx);
   if (Max != INT_MAX) Repetition->set_max(Max.getLimitedValue());
