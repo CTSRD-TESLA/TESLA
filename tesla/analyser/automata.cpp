@@ -45,28 +45,27 @@ namespace tesla {
 
 bool
 ParseInlineAssertion(Automaton *A, CallExpr *E, ASTContext& Ctx) {
-    FunctionDecl *F = E->getDirectCallee();
-    if (!F) return false;
-    if (!F->getName().startswith("__tesla_inline_assertion")) return false;
+  FunctionDecl *F = E->getDirectCallee();
+  if (!F || !F->getName().startswith("__tesla_inline_assertion")) return false;
 
-    if (E->getNumArgs() != 5) {
-      Report("Wrong number of arguments to TESLA inline assertion",
-          E->getLocStart(), Ctx)
-        << E->getSourceRange();
-      return false;
-    }
+  if (E->getNumArgs() != 5) {
+    Report("Wrong number of arguments to TESLA inline assertion",
+        E->getLocStart(), Ctx)
+      << E->getSourceRange();
+    return false;
+  }
 
-    Expr *Filename    = E->getArg(0);
-    Expr *Line        = E->getArg(1);
-    Expr *Counter     = E->getArg(2);
-    Expr *Context     = E->getArg(3);
-    Expr *Expression  = E->getArg(4);
+  Expr *Filename    = E->getArg(0);
+  Expr *Line        = E->getArg(1);
+  Expr *Counter     = E->getArg(2);
+  Expr *Context     = E->getArg(3);
+  Expr *Expression  = E->getArg(4);
 
-    return
-      ParseLocation(A->mutable_location(), Filename, Line, Counter, Ctx)
-      && ParseContext(A, Context, Ctx)
-      && ParseExpression(A->mutable_expression(), Expression, A->location(), Ctx)
-      ;
+  return
+    ParseLocation(A->mutable_location(), Filename, Line, Counter, Ctx)
+    && ParseContext(A, Context, Ctx)
+    && ParseExpression(A->mutable_expression(), Expression, A->location(), Ctx)
+    ;
 }
 
 
