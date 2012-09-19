@@ -43,31 +43,22 @@ using namespace llvm;
 
 namespace tesla {
 
-bool
-ParseEvent(Event *Event, Expr *E, Location AssertLoc, ASTContext& Ctx) {
+bool ParseEvent(Event *Ev, Expr *E, Location AssertLoc, ASTContext& Ctx) {
   E = E->IgnoreImplicit();
 
-  // Is this a "now" event?
   if (auto Ref = dyn_cast<DeclRefExpr>(E)) {
+    // Is this a "now" event?
     auto D = Ref->getDecl();
-    if (!D) {
-      Report("Reference to nothing", Ref->getLocStart(), Ctx)
-        << Ref->getSourceRange();
+    assert(D);
+    if (D->getName() != "__tesla_now") return false;
 
-      return false;
-    }
-
-    if (D->getName() == "__tesla_now") {
-      Event->set_type(Event::NOW);
-      *Event->mutable_now()->mutable_location() = AssertLoc;
-      return true;
-    }
-  }
-
-  // Is it a call-and-return like "foo(x) == y"?
-  else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
-    Event->set_type(Event::FUNCTION);
-    return ParseFunctionCall(Event->mutable_function(), Bop, Ctx);
+    Ev->set_type(Event::NOW);
+    *Ev->mutable_now()->mutable_location() = AssertLoc;
+    return true;
+  } else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
+    // This is a call-and-return like "foo(x) == y".
+    Ev->set_type(Event::FUNCTION);
+    return ParseFunctionCall(Ev->mutable_function(), Bop, Ctx);
   }
 
   // Otherwise, it's a call to a TESLA "function" like __tesla_predicate().
@@ -88,8 +79,8 @@ ParseEvent(Event *Event, Expr *E, Location AssertLoc, ASTContext& Ctx) {
   // We can't use StringSwitch for this because it evaluates all of the
   // possible cases (e.g. ParseFunctionCall(x,y,z)) before switching.
   if (Callee->getName() == "__tesla_repeat") {
-    Event->set_type(Event::REPETITION);
-    return ParseRepetition(Event->mutable_repetition(), Call, AssertLoc, Ctx);
+    Ev->set_type(Event::REPETITION);
+    return ParseRepetition(Ev->mutable_repetition(), Call, AssertLoc, Ctx);
   }
 
   Event->set_type(Event::FUNCTION);
@@ -108,10 +99,8 @@ ParseEvent(Event *Event, Expr *E, Location AssertLoc, ASTContext& Ctx) {
 }
 
 
-bool
-ParseRepetition(Repetition *Repetition, CallExpr *Call, Location AssertLoc,
-                ASTContext& Ctx) {
-
+bool ParseRepetition(Repetition *Repetition, CallExpr *Call,
+                     Location AssertLoc, ASTContext& Ctx) {
   unsigned Args = Call->getNumArgs();
   if (Args < 3) {
     Report("Repetition must have at least three arguments (min, max, events)",
@@ -126,8 +115,8 @@ ParseRepetition(Repetition *Repetition, CallExpr *Call, Location AssertLoc,
   APInt Max = ParseIntegerLiteral(Call->getArg(1), Ctx);
   if (Max != INT_MAX) Repetition->set_max(Max.getLimitedValue());
 
-  for (unsigned I = 2; I < Args; I++) {
-    auto Ev = Call->getArg(I);
+  for (unsigned i = 2; i < Args; ++i) {
+    auto Ev = Call->getArg(i);
     if (!ParseEvent(Repetition->add_event(), Ev, AssertLoc, Ctx)) {
       Report("Failed to parse repeated event", Ev->getLocStart(), Ctx)
         << Ev->getSourceRange();
@@ -139,8 +128,8 @@ ParseRepetition(Repetition *Repetition, CallExpr *Call, Location AssertLoc,
 }
 
 
-bool
-ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call, ASTContext& Ctx) {
+bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call,
+                       ASTContext& Ctx) {
   auto Predicate = Call->getDirectCallee();
 
   // Preconditions
@@ -166,8 +155,8 @@ ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call, ASTContext& Ctx) {
 }
 
 
-bool
-ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop, ASTContext& Ctx) {
+bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
+                       ASTContext& Ctx) {
   Expr *LHS = Bop->getLHS();
   bool LHSisICE = LHS->isIntegerConstantExpr(Ctx);
 
@@ -240,8 +229,7 @@ ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop, ASTContext& Ctx) {
 }
 
 
-bool
-ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call, ASTContext& Ctx) {
+bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call, ASTContext& Ctx) {
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_entered");
 
@@ -268,8 +256,7 @@ ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call, ASTContext& Ctx) {
 }
 
 
-bool
-ParseFunctionExit(FunctionEvent *Event, CallExpr *Call, ASTContext& Ctx) {
+bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call, ASTContext& Ctx) {
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_leaving");
 

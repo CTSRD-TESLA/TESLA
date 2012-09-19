@@ -43,9 +43,8 @@ using namespace llvm;
 
 namespace tesla {
 
-bool
-ParseExpression(Expression *Exp, Expr *E, Location AssertLoc,
-    ASTContext& Ctx) {
+bool ParseExpression(Expression *Exp, Expr *E, Location AssertLoc,
+                     ASTContext& Ctx) {
   E = E->IgnoreImplicit();
 
   if (auto Call = dyn_cast<CallExpr>(E)) {
@@ -64,32 +63,29 @@ ParseExpression(Expression *Exp, Expr *E, Location AssertLoc,
 }
 
 
-bool
-ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Location Loc,
-                 ASTContext& Ctx) {
+bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Location Loc,
+                      ASTContext& Ctx) {
   switch (Bop->getOpcode()) {
-    case BO_LAnd: Expr->set_operation(BooleanExpr::BE_And); break;
-    case BO_LOr:  Expr->set_operation(BooleanExpr::BE_Or);  break;
-    case BO_Xor:  Expr->set_operation(BooleanExpr::BE_Xor); break;
     default:
       Report("Invalid boolean operation on TESLA expressions",
           Bop->getOperatorLoc(), Ctx)
         << Bop->getSourceRange();
       return false;
+
+    case BO_LAnd: Expr->set_operation(BooleanExpr::BE_And); break;
+    case BO_LOr:  Expr->set_operation(BooleanExpr::BE_Or);  break;
+    case BO_Xor:  Expr->set_operation(BooleanExpr::BE_Xor); break;
   }
 
-  if (!ParseExpression(Expr->add_expression(), Bop->getLHS(), Loc, Ctx))
-    return false;
-
-  if (!ParseExpression(Expr->add_expression(), Bop->getRHS(), Loc, Ctx))
-    return false;
-
-  return true;
+  return (
+    ParseExpression(Expr->add_expression(), Bop->getLHS(), Loc, Ctx)
+    && ParseExpression(Expr->add_expression(), Bop->getRHS(), Loc, Ctx)
+  );
 }
 
 
-bool
-ParseSequence(Sequence *Seq, CallExpr *Call, Location Loc, ASTContext& Ctx) {
+bool ParseSequence(Sequence *Seq, CallExpr *Call, Location Loc,
+                   ASTContext& Ctx) {
   FunctionDecl *Fun = Call->getDirectCallee();
   if (!Fun) {
     Report("Expected direct call to TESLA sequence", Call->getLocStart(), Ctx)
@@ -103,8 +99,8 @@ ParseSequence(Sequence *Seq, CallExpr *Call, Location Loc, ASTContext& Ctx) {
     return false;
   }
 
-  for (unsigned i = 0; i < Call->getNumArgs(); i++)
-    if (!ParseEvent(Seq->add_event(), Call->getArg(i), Loc, Ctx))
+  for (auto Arg = Call->arg_begin(); Arg != Call->arg_end(); ++Arg)
+    if (!ParseEvent(Seq->add_event(), *Arg, Loc, Ctx))
       return false;
 
   return true;

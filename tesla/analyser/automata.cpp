@@ -43,8 +43,7 @@ using namespace llvm;
 
 namespace tesla {
 
-bool
-ParseInlineAssertion(Automaton *A, CallExpr *E, ASTContext& Ctx) {
+bool ParseInlineAssertion(Automaton *A, CallExpr *E, ASTContext& Ctx) {
   FunctionDecl *F = E->getDirectCallee();
   if (!F || !F->getName().startswith("__tesla_inline_assertion")) return false;
 
@@ -69,8 +68,7 @@ ParseInlineAssertion(Automaton *A, CallExpr *E, ASTContext& Ctx) {
 }
 
 
-bool
-ParseContext(Automaton *A, Expr *E, ASTContext& Ctx) {
+bool ParseContext(Automaton *A, Expr *E, ASTContext& Ctx) {
   auto DRE = dyn_cast<DeclRefExpr>(E->IgnoreImplicit());
   if (!DRE) {
     Report("Invalid locality specifier (must be per-thread or global)",
@@ -94,9 +92,8 @@ ParseContext(Automaton *A, Expr *E, ASTContext& Ctx) {
 }
 
 
-bool
-ParseLocation(Location *Loc, Expr *Filename, Expr *Line, Expr *Count,
-              ASTContext& Ctx) {
+bool ParseLocation(Location *Loc, Expr *Filename, Expr *Line, Expr *Count,
+                   ASTContext& Ctx) {
 
   *Loc->mutable_filename() = ParseStringLiteral(Filename, Ctx);
 
