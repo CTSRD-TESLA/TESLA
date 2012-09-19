@@ -75,26 +75,26 @@ bool ParseEvent(Event *Ev, Expr *E, Location AssertLoc, ASTContext& Ctx) {
     return false;
   }
 
-  // We can't use StringSwitch for this because it evaluates all of the
-  // possible cases (e.g. ParseFunctionCall(x,y,z)) before switching.
   if (Callee->getName() == "__tesla_repeat") {
     Ev->set_type(Event::REPETITION);
     return ParseRepetition(Ev->mutable_repetition(), Call, AssertLoc, Ctx);
   }
 
-  Event->set_type(Event::FUNCTION);
-  if (Callee->getName() == "__tesla_entered")
-    return ParseFunctionEntry(Event->mutable_function(), Call, Ctx);
+  typedef bool (*FnEventParser)(FunctionEvent*, CallExpr*, ASTContext&);
+  FnEventParser Parser = llvm::StringSwitch<FnEventParser>(Callee->getName())
+    .Case("__tesla_entered", &ParseFunctionEntry)
+    .Case("__tesla_leaving", &ParseFunctionExit)
+    .Case("__tesla_call",    &ParseFunctionCall)
+    .Default(NULL);
 
-  else if (Callee->getName() == "__tesla_leaving")
-    return ParseFunctionExit(Event->mutable_function(), Call, Ctx);
+  if (!Parser) {
+    Report("Unknown TESLA event", E->getLocStart(), Ctx)
+      << E->getSourceRange();
+    return false;
+  }
 
-  else if (Callee->getName() == "__tesla_call")
-    return ParseFunctionCall(Event->mutable_function(), Call, Ctx);
-
-  Report("Unknown TESLA event", E->getLocStart(), Ctx)
-    << E->getSourceRange();
-  return false;
+  Ev->set_type(Event::FUNCTION);
+  return Parser(Ev->mutable_function(), Call, Ctx);
 }
 
 
