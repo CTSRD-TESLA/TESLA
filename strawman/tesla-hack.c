@@ -84,6 +84,40 @@ __tesla_instrumentation_caller_return_example_syscall(
 }
 
 void
+__tesla_instrumentation_caller_call_security_check(
+	struct credential *subject, struct object *object, int op)
+{
+	printf("[STUB] %s(0x%lx, 0x%lx, %d)\n",
+			 __func__, (unsigned long) subject, (unsigned long) object, op);
+}
+
+void
+__tesla_instrumentation_caller_return_security_check(
+	int retval, struct credential *subject, struct object *object, int op)
+{
+	printf("[STUB] %s(0x%lx, 0x%lx, %d) == %d\n",
+			 __func__, (unsigned long) subject, (unsigned long) object, op,
+			 retval);
+}
+
+void
+__tesla_instrumentation_callee_call_security_check(
+	struct credential *subject, struct object *object, int op)
+{
+	printf("[STUB] %s(0x%lx, 0x%lx, %d)\n",
+			 __func__, (unsigned long) subject, (unsigned long) object, op);
+}
+
+void
+__tesla_instrumentation_callee_return_security_check(
+	int retval, struct credential *subject, struct object *object, int op)
+{
+	printf("[STUB] %s(0x%lx, 0x%lx, %d) == %d\n",
+			 __func__, (unsigned long) subject, (unsigned long) object, op,
+			 retval);
+}
+
+void
 __tesla_instrumentation_callee_enter_some_helper(int op)
 {
 	printf("[STUB] %s(%d)\n", __func__, op);
