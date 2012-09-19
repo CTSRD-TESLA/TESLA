@@ -165,11 +165,10 @@ bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
     return false;
   }
 
-  auto RetVal = (LHSisICE ? LHS : RHS);
+  Expr *RetVal = (LHSisICE ? LHS : RHS);
+  Expr *FnCall = (LHSisICE ? RHS : LHS);
   if (!ParseArgument(Event->mutable_expectedreturnvalue(), RetVal, Ctx))
     return false;
-
-  Expr *FnCall = LHSisICE ? RHS : LHS;
 
   auto FnCallExpr = dyn_cast<CallExpr>(FnCall);
   if (!FnCallExpr) {
