@@ -112,6 +112,8 @@ Manifest::FunctionsToInstrument() {
     if (Ev.type() == Event::FUNCTION) FnEvents.push_back(Ev.function());
   }
 
+  // TODO: unroll repeated events; return a vector<FunctionRef>
+
   return FnEvents;
 }
 
