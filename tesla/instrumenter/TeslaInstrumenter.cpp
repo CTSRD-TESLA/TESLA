@@ -75,7 +75,7 @@ public:
     }
 
     for (auto& Fn : Manifest->FunctionsToInstrument()) {
-      if (Fn.context() != FunctionEvent::Callee) continue;
+      if (!Fn.context() & FunctionEvent::Callee) continue;
 
       assert(Fn.has_function());
       auto Name = Fn.function().name();
@@ -122,7 +122,7 @@ public:
     }
 
     for (auto& Fn : Manifest->FunctionsToInstrument()) {
-      if (Fn.context() != FunctionEvent::Caller) continue;
+      if (!Fn.context() & FunctionEvent::Caller) continue;
 
       auto Name = Fn.function().name();
       FunctionsToInstrument[Name] =
