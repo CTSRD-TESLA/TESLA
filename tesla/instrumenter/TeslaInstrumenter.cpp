@@ -80,7 +80,6 @@ public:
       assert(Fn.has_function());
       auto Name = Fn.function().name();
 
-      assert(Fn.has_direction());
       FunctionsToInstrument[Name] =
         CalleeInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
     }
