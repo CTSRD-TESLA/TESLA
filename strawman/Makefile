@@ -1,4 +1,5 @@
 .PHONY: clean run-tesla tesla
+.SUFFIXES: .c .ll .tesla
 
 # Hold onto all LLVM IR files for manual inspection.
 .PRECIOUS: %.ll %.instr.ll
@@ -61,7 +62,7 @@ ${BIN}: ${OBJ}
 	${LINK} $^ -o $@
 
 # Run the TESLA analyser over C code.
-%.tesla: %.c
+.c.tesla:
 	@echo "[TESLA] $^ > $@"
 	${ANALYSER} $< -o $@ -- ${PARSE} -D TESLA_ANALYSIS
 	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
@@ -76,12 +77,12 @@ ${BIN}: ${OBJ}
 	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 
 # Compile C code to LLVM IR.
-%.ll: %.c
+.c.ll:
 	@echo "[CC]    $^ > $@"
 	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
 
 # Compile IR to object code.
-%.o: %.ll
+.ll.o:
 	@echo "[LLC]   $^ > $@"
 	${CC} -c $< -o $@
 
