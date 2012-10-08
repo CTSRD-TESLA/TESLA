@@ -28,51 +28,80 @@
  * SUCH DAMAGE.
  */
 
-#include "Manifest.h"
+#include "assertion.h"
+
 #include "tesla.pb.h"
 
 #include "llvm/Function.h"
 #include "llvm/Instructions.h"
-#include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
-#include "llvm/Pass.h"
 
-#include "llvm/Support/raw_ostream.h"
-
+#include <set>
 
 using namespace llvm;
-using namespace tesla;
 
+using std::set;
 using std::string;
+using std::vector;
 
 
-int
-main(int argc, char *argv[]) {
-  if (argc < 2) {
-    fprintf(stderr, "Usage:  %s MANIFEST-FILE\n", argv[0]);
-    return 1;
-  }
+namespace tesla {
 
-  string ManifestName(argv[1]);
+char tesla::TeslaAssertionSiteInstrumenter::ID = 0;
 
-  OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs(), ManifestName));
-  if (!Manifest) {
-    llvm::errs() << "Unable to read manifest '" << ManifestName << "'\n";
-    return false;
-  }
-
-  for (auto& Fn : Manifest->FunctionsToInstrument()) {
-    llvm::outs() << "Fn: " << Fn.ShortDebugString() << "\n";
-    if (Fn.context() != FunctionEvent::Callee) continue;
-
-    assert(Fn.has_function());
-    auto Name = Fn.function().name();
-
-    assert(Fn.has_direction());
-    llvm::outs() << "Direction: " << Fn.direction() << "\n";
-  }
-
-  google::protobuf::ShutdownProtobufLibrary();
-  return 0;
+TeslaAssertionSiteInstrumenter::~TeslaAssertionSiteInstrumenter() {
+  ::google::protobuf::ShutdownProtobufLibrary();
 }
+
+bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
+  Function *Fn = M.getFunction("__tesla_inline_assertion");
+  if (!Fn) return false;
+
+  // We need to forward the first three arguments to instrumentation.
+  StringRef InstrName = "__tesla_instrumentation_assertion_reached";
+
+  assert(Fn->arg_size() > 3);
+  vector<Type*> ArgTypes;
+  for (auto &Arg : Fn->getArgumentList()) {
+    ArgTypes.push_back(Arg.getType());
+    if (ArgTypes.size() == 3) break;
+  }
+
+  FunctionType *InstrType =
+    FunctionType::get(Type::getVoidTy(M.getContext()), ArgTypes, false);
+
+  Constant *Instr = M.getOrInsertFunction(InstrName, InstrType);
+
+  // Find all calls to TESLA assertion pseudo-function.
+  set<CallInst*> Calls;
+  for (auto I = Fn->use_begin(); I != Fn->use_end(); ++I) {
+    // TODO: may be invoke!
+    CallInst *Call = cast<CallInst>(*I);
+    Calls.insert(Call);
+  }
+
+  // Translate these pseudo-calls into instrumentation calls.
+  for (auto *Call : Calls) {
+    vector<Value*> Args;
+    assert(Call->getNumArgOperands() >= ArgTypes.size());
+    for (unsigned I = 0; I < ArgTypes.size(); ++I)
+      Args.push_back(Call->getArgOperand(I));
+
+    CallInst::Create(Instr, Args, "", Call);
+
+    // Delete the call to the pseudo-function.
+    Call->removeFromParent();
+    delete Call;
+  }
+
+  Fn->removeFromParent();
+  delete Fn;
+
+  return true;
+}
+
+}
+
+static RegisterPass<tesla::TeslaAssertionSiteInstrumenter> Assertions(
+  "tesla-asserts", "TESLA: convert assertion sites");
 

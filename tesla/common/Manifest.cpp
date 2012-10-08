@@ -39,6 +39,7 @@
 #include "llvm/Module.h"
 #include "llvm/Pass.h"
 
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
@@ -53,6 +54,9 @@ using std::vector;
 
 namespace tesla {
 
+cl::opt<string> ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
+  cl::desc("TESLA automata manifest"));
+
 const string Manifest::SEP = "===\n";
 
 Manifest::Manifest(ArrayRef<Automaton*> Automata)
@@ -65,7 +69,7 @@ Manifest::Manifest(ArrayRef<Automaton*> Automata)
 
 
 Manifest*
-Manifest::load(StringRef Path, raw_ostream& ErrorStream) {
+Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
   llvm::SourceMgr SM;
   OwningPtr<MemoryBuffer> Buffer;
 
@@ -102,6 +106,7 @@ Manifest::load(StringRef Path, raw_ostream& ErrorStream) {
   return new Manifest(Automata);
 }
 
+StringRef Manifest::defaultLocation() { return ManifestName; }
 
 vector<FunctionEvent> Manifest::FunctionsToInstrument() {
   vector<FunctionEvent> FnEvents;

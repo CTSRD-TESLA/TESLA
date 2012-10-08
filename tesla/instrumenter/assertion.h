@@ -28,24 +28,23 @@
  * SUCH DAMAGE.
  */
 
-#ifndef	TESLA_INSTRUMENTATION_H
-#define	TESLA_INSTRUMENTATION_H
+#include "llvm/Pass.h"
 
 namespace llvm {
-  class Instruction;
+  class Module;
 }
 
 namespace tesla {
 
-/// Instrumentation on a single instruction that does not change control flow.
-class InstInstrumentation {
+/// Converts calls to TESLA pseudo-assertions into instrumentation sites.
+class TeslaAssertionSiteInstrumenter : public llvm::ModulePass {
 public:
-   /// Optionally decorate an instruction with calls to instrumentation.
-   /// @returns whether or not any instrumentation was actually added.
-   virtual bool Instrument(llvm::Instruction&) = 0;
+  static char ID;
+  TeslaAssertionSiteInstrumenter() : ModulePass(ID) {}
+  ~TeslaAssertionSiteInstrumenter();
+
+  virtual bool runOnModule(llvm::Module &M);
 };
 
 }
-
-#endif	/* !TESLA_INSTRUMENTATION_H */
 

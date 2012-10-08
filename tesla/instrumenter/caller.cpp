@@ -1,3 +1,4 @@
+/*! @file caller.cpp  Code for instrumenting function calls (caller context). */
 /*
  * Copyright (c) 2012 Jonathan Anderson
  * All rights reserved.
@@ -28,119 +29,22 @@
  * SUCH DAMAGE.
  */
 
-#include "Instrumentation.h"
+#include "caller.h"
 
-#include "llvm/Function.h"
+#include "Manifest.h"
+
 #include "llvm/Instructions.h"
 #include "llvm/IRBuilder.h"
-#include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
 
-#include <map>
-#include <vector>
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
-using std::map;
 using std::string;
 using std::vector;
 
 namespace tesla {
-
-bool CalleeInstrumentation::InstrumentEntry(Function &Fn) {
-  if (&Fn != this->Fn) return false;
-  if (EntryEvent == NULL) return false;
-
-  // Instrumenting function entry is easy: just add a new call to
-  // instrumentation at the beginning of the function's entry block.
-  BasicBlock& Entry = Fn.getEntryBlock();
-  CallInst::Create(EntryEvent, Args)->insertBefore(Entry.getFirstNonPHI());
-
-  return true;
-}
-
-bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
-  if (&Fn != this->Fn) return false;
-  if (ReturnEvent == NULL) return false;
-
-  // First, build up the set of blocks that return from the function.
-  vector<BasicBlock*> ReturnBlocks;
-
-  // We explicitly iterate over BasicBlocks (rather than using an InstIterator)
-  // because we need the blocks themselves (later, we'll split them).
-  for (auto &Block : Fn) {
-    auto *Return = dyn_cast<ReturnInst>(Block.getTerminator());
-    if (Return) ReturnBlocks.push_back(&Block);
-  }
-
-  // Finally, instrument the returns.
-  for (auto *Block : ReturnBlocks) {
-    auto *Return = cast<ReturnInst>(Block->getTerminator());
-    Value *RetVal = Return->getReturnValue();
-
-    vector<Value*> InstrumentationArgs;
-    if (RetVal) InstrumentationArgs.push_back(RetVal);
-    InstrumentationArgs.insert(InstrumentationArgs.end(), Args.begin(), Args.end());
-
-    CallInst::Create(ReturnEvent, InstrumentationArgs)->insertBefore(Return);
-  }
-
-  return false;
-}
-
-CalleeInstrumentation* CalleeInstrumentation::Build(
-  LLVMContext &Context, Module &M, StringRef FnName,
-  FunctionEvent::Direction Dir)
-{
-  Function *Fn = M.getFunction(FnName);
-  if (Fn == NULL) return NULL;
-
-  Function *Entry = NULL;
-  Function *Return = NULL;
-
-  if (Fn) {
-    // Instrumentation functions do not return.
-    Type *VoidTy = Type::getVoidTy(Context);
-
-    // Get the argument types of the function to be instrumented.
-    vector<Type*> ArgTypes;
-    for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
-
-    // Declare or retrieve instrumentation functions.
-    if (Dir & FunctionEvent::Entry) {
-      string Name = ("__tesla_instrumentation_callee_enter_" + FnName).str();
-      auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
-      Entry = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-      assert(Entry != NULL);
-    }
-
-    if (Dir & FunctionEvent::Exit) {
-      // Instrumentation of returns must include the returned value...
-      vector<Type*> RetTypes(ArgTypes);
-      if (!Fn->getReturnType()->isVoidTy())
-        RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
-
-      string Name = ("__tesla_instrumentation_callee_return_" + FnName).str();
-      auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
-      Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-      assert(Return != NULL);
-    }
-  }
-
-  return new CalleeInstrumentation(Fn, Entry, Return);
-}
-
-CalleeInstrumentation::CalleeInstrumentation(
-  Function *Fn, Function *Entry, Function *Return)
-  : Fn(Fn), EntryEvent(Entry), ReturnEvent(Return) {
-
-  // Record the arguments passed to the instrumented function.
-  //
-  // LLVM's SSA magic will keep these around for us until we need them, even if
-  // C code overwrites its parameters.
-  for (auto &Arg : Fn->getArgumentList()) Args.push_back(&Arg);
-}
-
 
 CallerInstrumentation* CallerInstrumentation::Build(
   LLVMContext &Context, Module &M, StringRef FnName,
@@ -217,5 +121,50 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
    return modifiedIR;
 }
 
+
+char tesla::TeslaCallerInstrumenter::ID = 0;
+
+TeslaCallerInstrumenter::~TeslaCallerInstrumenter() {
+  ::google::protobuf::ShutdownProtobufLibrary();
 }
+
+bool TeslaCallerInstrumenter::doInitialization(Module &M) {
+  OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
+  if (!Manifest) return false;
+
+  for (auto& Fn : Manifest->FunctionsToInstrument()) {
+    if (!Fn.context() & FunctionEvent::Caller) continue;
+
+    auto Name = Fn.function().name();
+    FunctionsToInstrument[Name] =
+      CallerInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
+  }
+
+  return false;
+}
+
+bool TeslaCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
+  bool modifiedIR = false;
+
+  for (auto &Inst : Block) {
+    if (!isa<CallInst>(Inst)) continue;
+    CallInst &Call = cast<CallInst>(Inst);
+
+    auto I = FunctionsToInstrument.find(Call.getCalledFunction()->getName());
+    if (I == FunctionsToInstrument.end()) continue;
+
+    auto *Instrumenter = I->second;
+    assert(Instrumenter != NULL);
+
+    modifiedIR |= Instrumenter->Instrument(Inst);
+  }
+
+  return modifiedIR;
+}
+
+
+}
+
+static RegisterPass<tesla::TeslaCallerInstrumenter> Caller("tesla-caller",
+  "TESLA instrumentation: caller context");
 

@@ -52,7 +52,15 @@ public:
   std::vector<FunctionEvent> FunctionsToInstrument();
 
   //! Load a @ref Manifest from a named file.
-  static Manifest* load(llvm::StringRef Path, llvm::raw_ostream& Err);
+  static Manifest* load(llvm::raw_ostream& Err,
+                        llvm::StringRef Path = defaultLocation());
+
+  /*!
+   * The default location to look for a TESLA manifest.
+   *
+   * This could be specified by a command-line option.
+   */
+  static llvm::StringRef defaultLocation();
 
 private:
   Manifest(llvm::ArrayRef<Automaton*> Automata);
