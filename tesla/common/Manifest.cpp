@@ -103,8 +103,7 @@ Manifest::load(StringRef Path, raw_ostream& ErrorStream) {
 }
 
 
-vector<FunctionEvent>
-Manifest::FunctionsToInstrument() {
+vector<FunctionEvent> Manifest::FunctionsToInstrument() {
   vector<FunctionEvent> FnEvents;
 
   for (auto& Ev : Events()) {
@@ -117,8 +116,7 @@ Manifest::FunctionsToInstrument() {
   return FnEvents;
 }
 
-vector<Event>
-ExprEvents(const Expression& E) {
+vector<Event> ExprEvents(const Expression& E) {
   assert(Expression::Type_IsValid(E.type()));
 
   vector<Event> Events;
@@ -143,8 +141,7 @@ ExprEvents(const Expression& E) {
   return Events;
 }
 
-vector<Event>
-Manifest::Events() {
+vector<Event> Manifest::Events() {
   vector<Event> AllEvents;
 
   for (auto *A : Automata) {
