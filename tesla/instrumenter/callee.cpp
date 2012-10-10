@@ -30,6 +30,7 @@
  */
 
 #include "callee.h"
+#include "names.h"
 
 #include "Instrumentation.h"
 #include "Manifest.h"
@@ -111,7 +112,7 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
 
     // Declare or retrieve instrumentation functions.
     if (Dir & FunctionEvent::Entry) {
-      string Name = ("__tesla_instrumentation_callee_enter_" + FnName).str();
+      string Name = (CALLEE_ENTER + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
       Entry = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Entry != NULL);
@@ -123,7 +124,7 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
       if (!Fn->getReturnType()->isVoidTy())
         RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
 
-      string Name = ("__tesla_instrumentation_callee_return_" + FnName).str();
+      string Name = (CALLEE_LEAVE + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
       Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Return != NULL);

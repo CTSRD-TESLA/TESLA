@@ -29,6 +29,7 @@
  */
 
 #include "assertion.h"
+#include "names.h"
 
 #include "tesla.pb.h"
 
@@ -58,7 +59,7 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   if (!Fn) return false;
 
   // We need to forward the first three arguments to instrumentation.
-  StringRef InstrName = "__tesla_instrumentation_assertion_reached";
+  StringRef InstrName = ASSERTION_REACHED;
 
   assert(Fn->arg_size() > 3);
   vector<Type*> ArgTypes;

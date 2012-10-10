@@ -30,6 +30,7 @@
  */
 
 #include "caller.h"
+#include "names.h"
 
 #include "Manifest.h"
 
@@ -66,7 +67,7 @@ CallerInstrumentation* CallerInstrumentation::Build(
 
     // Declare or retrieve instrumentation functions.
     if (Dir & FunctionEvent::Entry) {
-      string Name = ("__tesla_instrumentation_caller_call_" + FnName).str();
+      string Name = (CALLER_ENTER + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
       Call = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Call != NULL);
@@ -78,7 +79,7 @@ CallerInstrumentation* CallerInstrumentation::Build(
       if (!Fn->getReturnType()->isVoidTy())
         RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
 
-      string Name = ("__tesla_instrumentation_caller_return_" + FnName).str();
+      string Name = (CALLER_LEAVE + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
       Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
       assert(Return != NULL);
