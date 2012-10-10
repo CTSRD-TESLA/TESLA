@@ -49,6 +49,12 @@ using std::vector;
 
 namespace tesla {
 
+/*!
+ * Create a BasicBlock in a function that passes args through to printf.
+ * TODO: remove this once we do more meaningful instrumentation.
+ */
+BasicBlock* CallPrintf(Function *F, Module& Mod, LLVMContext& Ctx);
+
 
 // ==== CalleeInstrumentation implementation ===================================
 bool CalleeInstrumentation::InstrumentEntry(Function &Fn) {
@@ -82,9 +88,8 @@ bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
     auto *Return = cast<ReturnInst>(Block->getTerminator());
     Value *RetVal = Return->getReturnValue();
 
-    vector<Value*> InstrumentationArgs;
+    vector<Value*> InstrumentationArgs(Args);
     if (RetVal) InstrumentationArgs.push_back(RetVal);
-    InstrumentationArgs.insert(InstrumentationArgs.end(), Args.begin(), Args.end());
 
     CallInst::Create(ReturnEvent, InstrumentationArgs)->insertBefore(Return);
   }
@@ -122,7 +127,7 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
       // Instrumentation of returns must include the returned value...
       vector<Type*> RetTypes(ArgTypes);
       if (!Fn->getReturnType()->isVoidTy())
-        RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
+        RetTypes.push_back(Fn->getReturnType());
 
       string Name = (CALLEE_LEAVE + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
@@ -163,6 +168,12 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
     assert(Fn.has_function());
     auto Name = Fn.function().name();
 
+    // Define the instrumentation functions that receive this function's events.
+    //
+    // Note: this is not necessarily the same as "the functions whose calls are
+    //       instrumented within this module".
+    DefineInstrumentationFunctions(M, Name);
+
     FunctionsToInstrument[Name] =
       CalleeInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
   }
@@ -182,6 +193,92 @@ bool TeslaCalleeInstrumenter::runOnFunction(Function &F) {
   modifiedIR |= FnInstrumenter->InstrumentReturn(F);
 
   return modifiedIR;
+}
+
+void TeslaCalleeInstrumenter::DefineInstrumentationFunctions(
+    Module& Mod, StringRef Name) {
+  // Only instrument functions that are defined in this module.
+  Function *Subject = Mod.getFunction(Name);
+  if (!Subject || Subject->getBasicBlockList().empty()) return;
+
+  LLVMContext& Ctx = Mod.getContext();
+
+  Type *Void = Type::getVoidTy(Ctx);
+  FunctionType *SubType = Subject->getFunctionType();
+
+  // Entry instrumentation mirrors the instrumented function exactly.
+  vector<Type*> EntryArgs(SubType->param_begin(), SubType->param_end());
+  auto *EntryType = FunctionType::get(Void, EntryArgs, SubType->isVarArg());
+
+  // Return instrumentation also includes the return value (if applicable).
+  vector<Type*> ExitArgs(SubType->param_begin(), SubType->param_end());
+  Type *RetType = Subject->getReturnType();
+  if (!RetType->isVoidTy()) ExitArgs.push_back(Subject->getReturnType());
+  auto *ExitType = FunctionType::get(Void, ExitArgs, SubType->isVarArg());
+
+  // Create the (empty) instrumentation functions.
+  auto *CalleeEnter = cast<Function>(Mod.getOrInsertFunction(
+      (CALLEE_ENTER + Name).str(), EntryType));
+
+  auto *CalleeExit = cast<Function>(Mod.getOrInsertFunction(
+      (CALLEE_LEAVE + Name).str(), ExitType));
+
+  auto *CallerEnter = cast<Function>(Mod.getOrInsertFunction(
+      (CALLER_ENTER + Name).str(), EntryType));
+
+  auto *CallerExit = cast<Function>(Mod.getOrInsertFunction(
+      (CALLER_LEAVE + Name).str(), ExitType));
+
+  // For now, these functions should all just call printf.
+  CallPrintf(CalleeEnter, Mod, Ctx);
+  CallPrintf(CalleeExit, Mod, Ctx);
+  CallPrintf(CallerEnter, Mod, Ctx);
+  CallPrintf(CallerExit, Mod, Ctx);
+}
+
+
+
+
+
+// TODO: perform some more meaningful instrumentation.
+Function* Printf(Module& Mod) {
+  auto& Ctx = Mod.getContext();
+
+  FunctionType *PrintfType = FunctionType::get(
+    IntegerType::get(Ctx, 32),                         // return: int32
+    PointerType::getUnqual(IntegerType::get(Ctx, 8)),  // format string: char*
+    true);                                             // use varargs
+
+  Function* Printf = cast<Function>(
+    Mod.getOrInsertFunction("printf", PrintfType));
+
+  return Printf;
+}
+
+
+BasicBlock* CallPrintf(Function *F, Module& Mod, LLVMContext& Ctx) {
+  string FormatStr("[STUB] ");
+  for (auto& Arg : F->getArgumentList()) {
+    auto *T = Arg.getType();
+
+    if (T->isPointerTy()) FormatStr += " 0x%llx";
+    else if (T->isIntegerTy()) FormatStr += " %d";
+    else if (T->isFloatTy()) FormatStr += " %f";
+    else if (T->isDoubleTy()) FormatStr += " %f";
+    else assert(false && "Unhandled arg type");
+  }
+  FormatStr += "\n";
+
+  BasicBlock* Block = BasicBlock::Create(Ctx, "entry", F);
+  IRBuilder<> Builder(Block);
+
+  vector<Value*> Args(1, Builder.CreateGlobalStringPtr(FormatStr + "\n"));
+  for (auto& A : F->getArgumentList()) Args.push_back(&A);
+
+  Builder.CreateCall(Printf(Mod), Args);
+  Builder.CreateRetVoid();
+
+  return Block;
 }
 
 } /* namespace tesla */

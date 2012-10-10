@@ -77,7 +77,7 @@ CallerInstrumentation* CallerInstrumentation::Build(
       // Instrumentation of returns must include the returned value...
       vector<Type*> RetTypes(ArgTypes);
       if (!Fn->getReturnType()->isVoidTy())
-        RetTypes.insert(RetTypes.begin(), Fn->getReturnType());
+        RetTypes.push_back(Fn->getReturnType());
 
       string Name = (CALLER_LEAVE + FnName).str();
       auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
@@ -113,7 +113,7 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
 
   if (ReturnEvent != NULL) {
     vector<Value*> RetArgs(Args);
-    if (!Call.getType()->isVoidTy()) RetArgs.insert(RetArgs.begin(), &Call);
+    if (!Call.getType()->isVoidTy()) RetArgs.push_back(&Call);
 
     CallInst::Create(ReturnEvent, RetArgs)->insertAfter(&Inst);
     modifiedIR = true;

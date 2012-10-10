@@ -61,6 +61,9 @@ public:
   virtual bool runOnFunction(llvm::Function &F);
 
 private:
+  static void DefineInstrumentationFunctions(llvm::Module&,
+                                             llvm::StringRef FnName);
+
   std::map<std::string,CalleeInstrumentation*> FunctionsToInstrument;
 };
 
