@@ -59,8 +59,6 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   if (!Fn) return false;
 
   // We need to forward the first three arguments to instrumentation.
-  StringRef InstrName = ASSERTION_REACHED;
-
   assert(Fn->arg_size() > 3);
   vector<Type*> ArgTypes;
   for (auto &Arg : Fn->getArgumentList()) {
@@ -71,7 +69,7 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   FunctionType *InstrType =
     FunctionType::get(Type::getVoidTy(M.getContext()), ArgTypes, false);
 
-  Constant *Instr = M.getOrInsertFunction(InstrName, InstrType);
+  Constant *Instr = M.getOrInsertFunction(ASSERTION_REACHED, InstrType);
 
   // Find all calls to TESLA assertion pseudo-function.
   set<CallInst*> Calls;
