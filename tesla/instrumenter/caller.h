@@ -35,6 +35,7 @@
 
 #include "Instrumentation.h"
 
+#include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Pass.h"
 
@@ -60,7 +61,7 @@ public:
   virtual bool runOnBasicBlock(llvm::BasicBlock &Block);
 
 private:
-  std::map<std::string,CallerInstrumentation*> FunctionsToInstrument;
+  llvm::StringMap<CallerInstrumentation*> FunctionsToInstrument;
 };
 
 

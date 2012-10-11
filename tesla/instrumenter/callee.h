@@ -33,6 +33,7 @@
 
 #include "tesla.pb.h"
 
+#include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Pass.h"
 
@@ -64,7 +65,7 @@ private:
   static void DefineInstrumentationFunctions(llvm::Module&,
                                              llvm::StringRef FnName);
 
-  std::map<std::string,CalleeInstrumentation*> FunctionsToInstrument;
+  llvm::StringMap<CalleeInstrumentation*> FunctionsToInstrument;
 };
 
 
