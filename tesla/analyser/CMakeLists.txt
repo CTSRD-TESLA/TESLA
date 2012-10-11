@@ -2,12 +2,12 @@
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
 
 add_llvm_executable(tesla
-	automata.cpp
-	expressions.cpp
-	events.cpp
-	helpers.cpp
-	references.cpp
-	tool.cpp
+	Automata.cpp
+	Expressions.cpp
+	Events.cpp
+	Helpers.cpp
+	References.cpp
+	Tool.cpp
 )
 target_link_libraries(tesla TeslaProto)
 

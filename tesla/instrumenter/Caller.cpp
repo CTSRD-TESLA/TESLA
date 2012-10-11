@@ -29,10 +29,9 @@
  * SUCH DAMAGE.
  */
 
-#include "caller.h"
-#include "names.h"
-
+#include "Caller.h"
 #include "Manifest.h"
+#include "Names.h"
 
 #include "llvm/Instructions.h"
 #include "llvm/IRBuilder.h"

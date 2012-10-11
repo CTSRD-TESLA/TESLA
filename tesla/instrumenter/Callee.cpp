@@ -29,11 +29,9 @@
  * SUCH DAMAGE.
  */
 
-#include "callee.h"
-#include "names.h"
-
-#include "Instrumentation.h"
+#include "Callee.h"
 #include "Manifest.h"
+#include "Names.h"
 
 #include "llvm/Function.h"
 #include "llvm/Instructions.h"

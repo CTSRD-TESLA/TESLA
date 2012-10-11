@@ -28,10 +28,9 @@
  * SUCH DAMAGE.
  */
 
+#include "Assertion.h"
 #include "Instrumentation.h"
-
-#include "assertion.h"
-#include "names.h"
+#include "Names.h"
 
 #include "tesla.pb.h"
 
