@@ -30,10 +30,6 @@
 
 #include "llvm/Pass.h"
 
-namespace llvm {
-  class Module;
-}
-
 namespace tesla {
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
