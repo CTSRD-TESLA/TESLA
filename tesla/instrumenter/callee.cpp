@@ -87,7 +87,7 @@ bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
     auto *Return = cast<ReturnInst>(Block->getTerminator());
     Value *RetVal = Return->getReturnValue();
 
-    vector<Value*> InstrumentationArgs(Args);
+    ArgVector InstrumentationArgs(Args);
     if (RetVal) InstrumentationArgs.push_back(RetVal);
 
     CallInst::Create(ReturnEvent, InstrumentationArgs)->insertBefore(Return);
