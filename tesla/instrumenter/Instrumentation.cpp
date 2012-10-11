@@ -1,3 +1,4 @@
+/*! @file Instrumentation.cpp  Miscellaneous instrumentation helpers. */
 /*
  * Copyright (c) 2012 Jonathan Anderson
  * All rights reserved.
@@ -28,51 +29,57 @@
  * SUCH DAMAGE.
  */
 
-#ifndef	TESLA_INSTRUMENTATION_H
-#define	TESLA_INSTRUMENTATION_H
+#include "Instrumentation.h"
 
-#include "llvm/ADT/SmallVector.h"
+#include "llvm/IRBuilder.h"
+#include "llvm/Module.h"
 
-namespace llvm {
-  class BasicBlock;
-  class Function;
-  class Instruction;
-  class LLVMContext;
-  class Module;
-  class Twine;
-  class Type;
-  class Value;
-}
+using namespace llvm;
+
+using std::string;
 
 namespace tesla {
 
-/// Instrumentation on a single instruction that does not change control flow.
-class InstInstrumentation {
-public:
-   /// Optionally decorate an instruction with calls to instrumentation.
-   /// @returns whether or not any instrumentation was actually added.
-   virtual bool Instrument(llvm::Instruction&) = 0;
-};
+/// Find (or create) printf() declaration.
+Function* Printf(Module& Mod) {
+  auto& Ctx = Mod.getContext();
 
-/// A container for function arguments, which shouldn't be very numerous.
-typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
+  FunctionType *PrintfType = FunctionType::get(
+    IntegerType::get(Ctx, 32),                         // return: int32
+    PointerType::getUnqual(IntegerType::get(Ctx, 8)),  // format string: char*
+    true);                                             // use varargs
 
-/// A container for a few types (e.g., of function arguments).
-typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
+  Function* Printf = cast<Function>(
+    Mod.getOrInsertFunction("printf", PrintfType));
 
-/*!
- * Create a BasicBlock that passes values to printf.
- *
- *
- *
- * TODO: remove this once we do more meaningful instrumentation.
- */
-llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
-                             const llvm::Twine& Prefix,
-                             llvm::Function *F = NULL,
-                             llvm::BasicBlock *InsertBefore = NULL);
-
+  return Printf;
 }
 
-#endif	/* !TESLA_INSTRUMENTATION_H */
+const char* Format(Type *T) {
+    if (T->isPointerTy()) return " 0x%llx";
+    if (T->isIntegerTy()) return " %d";
+    if (T->isFloatTy()) return " %f";
+    if (T->isDoubleTy()) return " %f";
+
+    assert(false && "Unhandled arg type");
+}
+
+BasicBlock* CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
+                       BasicBlock *InsertBefore) {
+  string FormatStr(("[STUB] " + Prefix).str());
+  for (auto& Arg : F->getArgumentList()) FormatStr += Format(Arg.getType());
+  FormatStr += "\n";
+
+  auto *Block = BasicBlock::Create(Mod.getContext(), "entry", F, InsertBefore);
+  IRBuilder<> Builder(Block);
+
+  ArgVector PrintfArgs(1, Builder.CreateGlobalStringPtr(FormatStr));
+  for (auto& Arg : F->getArgumentList()) PrintfArgs.push_back(&Arg);
+
+  Builder.CreateCall(Printf(Mod), PrintfArgs);
+
+  return Block;
+}
+
+} /* namespace tesla */
 

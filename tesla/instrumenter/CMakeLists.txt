@@ -5,6 +5,7 @@ add_llvm_loadable_module(TeslaInstrumenter
 	Assertion.cpp
 	Callee.cpp
 	Caller.cpp
+	Instrumentation.cpp
 )
 
 target_link_libraries(TeslaInstrumenter
