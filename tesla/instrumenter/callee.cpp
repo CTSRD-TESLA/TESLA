@@ -271,7 +271,7 @@ BasicBlock* CallPrintf(Function *F, Module& Mod, LLVMContext& Ctx) {
   BasicBlock* Block = BasicBlock::Create(Ctx, "entry", F);
   IRBuilder<> Builder(Block);
 
-  vector<Value*> Args(1, Builder.CreateGlobalStringPtr(FormatStr + "\n"));
+  ArgVector Args(1, Builder.CreateGlobalStringPtr(FormatStr + "\n"));
   for (auto& A : F->getArgumentList()) Args.push_back(&A);
 
   Builder.CreateCall(Printf(Mod), Args);

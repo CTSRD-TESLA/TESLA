@@ -28,6 +28,8 @@
  * SUCH DAMAGE.
  */
 
+#include "Instrumentation.h"
+
 #include "assertion.h"
 #include "names.h"
 
@@ -79,7 +81,7 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   // Translate these pseudo-calls into instrumentation calls.
   for (auto *Call : Calls) {
     assert(Call->getNumArgOperands() >= ArgTypes.size());
-    vector<Value*> Args(Call->op_begin(), Call->op_begin() + ArgTypes.size());
+    ArgVector Args(Call->op_begin(), Call->op_begin() + ArgTypes.size());
 
     CallInst::Create(Instr, Args, "", Call);
 

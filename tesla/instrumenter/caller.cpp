@@ -102,7 +102,7 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
 
   bool modifiedIR = false;
 
-  vector<Value*> Args;
+  ArgVector Args;
   for (size_t i = 0; i < Call.getNumArgOperands(); i++)
     Args.push_back(Call.getArgOperand(i));
 
@@ -112,7 +112,7 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
   }
 
   if (ReturnEvent != NULL) {
-    vector<Value*> RetArgs(Args);
+    ArgVector RetArgs(Args);
     if (!Call.getType()->isVoidTy()) RetArgs.push_back(&Call);
 
     CallInst::Create(ReturnEvent, RetArgs)->insertAfter(&Inst);

@@ -31,8 +31,11 @@
 #ifndef	TESLA_INSTRUMENTATION_H
 #define	TESLA_INSTRUMENTATION_H
 
+#include "llvm/ADT/SmallVector.h"
+
 namespace llvm {
   class Instruction;
+  class Value;
 }
 
 namespace tesla {
@@ -44,6 +47,9 @@ public:
    /// @returns whether or not any instrumentation was actually added.
    virtual bool Instrument(llvm::Instruction&) = 0;
 };
+
+/// A container for function arguments, which shouldn't be very numerous.
+typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
 
 }
 
