@@ -73,11 +73,8 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
 
   // Find all calls to TESLA assertion pseudo-function.
   set<CallInst*> Calls;
-  for (auto I = Fn->use_begin(); I != Fn->use_end(); ++I) {
-    // TODO: may be invoke!
-    CallInst *Call = cast<CallInst>(*I);
-    Calls.insert(Call);
-  }
+  for (auto I = Fn->use_begin(); I != Fn->use_end(); ++I)
+    Calls.insert(cast<CallInst>(*I));
 
   // Translate these pseudo-calls into instrumentation calls.
   for (auto *Call : Calls) {
