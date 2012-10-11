@@ -78,10 +78,8 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
 
   // Translate these pseudo-calls into instrumentation calls.
   for (auto *Call : Calls) {
-    vector<Value*> Args;
     assert(Call->getNumArgOperands() >= ArgTypes.size());
-    for (unsigned I = 0; I < ArgTypes.size(); ++I)
-      Args.push_back(Call->getArgOperand(I));
+    vector<Value*> Args(Call->op_begin(), Call->op_begin() + ArgTypes.size());
 
     CallInst::Create(Instr, Args, "", Call);
 
