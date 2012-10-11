@@ -55,7 +55,7 @@ using std::vector;
 namespace tesla {
 
 cl::opt<string> ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
-  cl::desc("TESLA automata manifest"));
+  cl::desc("Name of TESLA manifest file"));
 
 const string Manifest::SEP = "===\n";
 
