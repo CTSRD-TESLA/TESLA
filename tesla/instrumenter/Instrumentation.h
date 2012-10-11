@@ -35,6 +35,7 @@
 
 namespace llvm {
   class Instruction;
+  class Type;
   class Value;
 }
 
@@ -50,6 +51,9 @@ public:
 
 /// A container for function arguments, which shouldn't be very numerous.
 typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
+
+/// A container for a few types (e.g., of function arguments).
+typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 
 }
 

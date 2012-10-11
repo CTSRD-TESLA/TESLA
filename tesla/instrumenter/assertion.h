@@ -37,7 +37,7 @@ class TeslaAssertionSiteInstrumenter : public llvm::ModulePass {
 public:
   static char ID;
   TeslaAssertionSiteInstrumenter() : ModulePass(ID) {}
-  ~TeslaAssertionSiteInstrumenter();
+  virtual ~TeslaAssertionSiteInstrumenter();
 
   virtual bool runOnModule(llvm::Module &M);
 };

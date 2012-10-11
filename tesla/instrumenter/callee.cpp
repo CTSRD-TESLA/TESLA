@@ -111,7 +111,7 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
     Type *VoidTy = Type::getVoidTy(Context);
 
     // Get the argument types of the function to be instrumented.
-    vector<Type*> ArgTypes;
+    TypeVector ArgTypes;
     for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
 
     // Declare or retrieve instrumentation functions.
@@ -124,7 +124,7 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
 
     if (Dir & FunctionEvent::Exit) {
       // Instrumentation of returns must include the returned value...
-      vector<Type*> RetTypes(ArgTypes);
+      TypeVector RetTypes(ArgTypes);
       if (!Fn->getReturnType()->isVoidTy())
         RetTypes.push_back(Fn->getReturnType());
 
@@ -206,11 +206,11 @@ void TeslaCalleeInstrumenter::DefineInstrumentationFunctions(
   FunctionType *SubType = Subject->getFunctionType();
 
   // Entry instrumentation mirrors the instrumented function exactly.
-  vector<Type*> EntryArgs(SubType->param_begin(), SubType->param_end());
+  TypeVector EntryArgs(SubType->param_begin(), SubType->param_end());
   auto *EntryType = FunctionType::get(Void, EntryArgs, SubType->isVarArg());
 
   // Return instrumentation also includes the return value (if applicable).
-  vector<Type*> ExitArgs(SubType->param_begin(), SubType->param_end());
+  TypeVector ExitArgs(SubType->param_begin(), SubType->param_end());
   Type *RetType = Subject->getReturnType();
   if (!RetType->isVoidTy()) ExitArgs.push_back(Subject->getReturnType());
   auto *ExitType = FunctionType::get(Void, ExitArgs, SubType->isVarArg());

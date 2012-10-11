@@ -45,7 +45,6 @@ using namespace llvm;
 
 using std::set;
 using std::string;
-using std::vector;
 
 
 namespace tesla {
@@ -62,7 +61,7 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
 
   // We need to forward the first three arguments to instrumentation.
   assert(Fn->arg_size() > 3);
-  vector<Type*> ArgTypes;
+  TypeVector ArgTypes;
   for (auto &Arg : Fn->getArgumentList()) {
     ArgTypes.push_back(Arg.getType());
     if (ArgTypes.size() == 3) break;

@@ -43,7 +43,6 @@
 using namespace llvm;
 
 using std::string;
-using std::vector;
 
 namespace tesla {
 
@@ -62,7 +61,7 @@ CallerInstrumentation* CallerInstrumentation::Build(
     Type *VoidTy = Type::getVoidTy(Context);
 
     // Get the argument types of the function to be instrumented.
-    vector<Type*> ArgTypes;
+    TypeVector ArgTypes;
     for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
 
     // Declare or retrieve instrumentation functions.
@@ -75,7 +74,7 @@ CallerInstrumentation* CallerInstrumentation::Build(
 
     if (Dir & FunctionEvent::Exit) {
       // Instrumentation of returns must include the returned value...
-      vector<Type*> RetTypes(ArgTypes);
+      TypeVector RetTypes(ArgTypes);
       if (!Fn->getReturnType()->isVoidTy())
         RetTypes.push_back(Fn->getReturnType());
 
