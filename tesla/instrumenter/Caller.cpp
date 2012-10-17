@@ -45,6 +45,7 @@ using std::string;
 
 namespace tesla {
 
+// ==== CallerInstrumentation implementation ===================================
 CallerInstrumentation* CallerInstrumentation::Build(
   LLVMContext &Context, Module &M, StringRef FnName,
   FunctionEvent::Direction Dir)
@@ -121,6 +122,7 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
 }
 
 
+// ==== TeslaCallerInstrumenter implementation =================================
 char tesla::TeslaCallerInstrumenter::ID = 0;
 
 TeslaCallerInstrumenter::~TeslaCallerInstrumenter() {
