@@ -220,10 +220,10 @@ void TeslaCalleeInstrumenter::DefineInstrumentationFunctions(
       (CALLER_LEAVE + Name).str(), ExitType));
 
   // For now, these functions should all just call printf.
-  IRBuilder<>(CallPrintf(Mod, "entered:" + Name, CalleeEnter)).CreateRetVoid();
-  IRBuilder<>(CallPrintf(Mod, "leaving:" + Name, CalleeExit)).CreateRetVoid();
-  IRBuilder<>(CallPrintf(Mod, "calling:" + Name, CallerEnter)).CreateRetVoid();
-  IRBuilder<>(CallPrintf(Mod, "returned:" + Name, CallerExit)).CreateRetVoid();
+  IRBuilder<>(CallPrintf(Mod, "[CALE] " + Name, CalleeEnter)).CreateRetVoid();
+  IRBuilder<>(CallPrintf(Mod, "[RETE] " + Name, CalleeExit)).CreateRetVoid();
+  IRBuilder<>(CallPrintf(Mod, "[CALR] " + Name, CallerEnter)).CreateRetVoid();
+  IRBuilder<>(CallPrintf(Mod, "[RETR] " + Name, CallerExit)).CreateRetVoid();
 }
 
 } /* namespace tesla */

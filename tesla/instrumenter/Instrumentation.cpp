@@ -66,7 +66,7 @@ const char* Format(Type *T) {
 
 BasicBlock* CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
                        BasicBlock *InsertBefore) {
-  string FormatStr(("[STUB] " + Prefix).str());
+  string FormatStr(Prefix.str());
   for (auto& Arg : F->getArgumentList()) FormatStr += Format(Arg.getType());
   FormatStr += "\n";
 
