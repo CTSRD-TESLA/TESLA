@@ -46,6 +46,10 @@ using std::string;
 namespace tesla {
 
 // ==== CallerInstrumentation implementation ===================================
+void CallerInstrumentation::AddDirection(FunctionEvent::Direction Dir) {
+  this->Dir = static_cast<FunctionEvent::Direction>(this->Dir | Dir);
+}
+
 CallerInstrumentation* CallerInstrumentation::Build(
   LLVMContext &Context, Module &M, StringRef FnName,
   FunctionEvent::Direction Dir)
@@ -53,46 +57,38 @@ CallerInstrumentation* CallerInstrumentation::Build(
   Function *Fn = M.getFunction(FnName);
   if (Fn == NULL) return NULL;
 
-  Function *Call = NULL;
-  Function *Return = NULL;
+  // Instrumentation functions do not return.
+  Type *VoidTy = Type::getVoidTy(Context);
 
-  if (Fn) {
-    // Instrumentation functions do not return.
-    Type *VoidTy = Type::getVoidTy(Context);
+  // Get the argument types of the function to be instrumented.
+  TypeVector ArgTypes;
+  for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
 
-    // Get the argument types of the function to be instrumented.
-    TypeVector ArgTypes;
-    for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
+  // Declare or retrieve instrumentation functions.
+  string Name = (CALLER_ENTER + FnName).str();
+  auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
+  Function *Call = cast<Function>(M.getOrInsertFunction(Name, InstrType));
+  assert(Call != NULL);
 
-    // Declare or retrieve instrumentation functions.
-    if (Dir & FunctionEvent::Entry) {
-      string Name = (CALLER_ENTER + FnName).str();
-      auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
-      Call = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-      assert(Call != NULL);
-    }
+  // Instrumentation of returns must include the returned value...
+  TypeVector RetTypes(ArgTypes);
+  if (!Fn->getReturnType()->isVoidTy())
+    RetTypes.push_back(Fn->getReturnType());
 
-    if (Dir & FunctionEvent::Exit) {
-      // Instrumentation of returns must include the returned value...
-      TypeVector RetTypes(ArgTypes);
-      if (!Fn->getReturnType()->isVoidTy())
-        RetTypes.push_back(Fn->getReturnType());
+  Name = (CALLER_LEAVE + FnName).str();
+  InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
+  Function *Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
+  assert(Return != NULL);
 
-      string Name = (CALLER_LEAVE + FnName).str();
-      auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
-      Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-      assert(Return != NULL);
-    }
-  }
-
-  return new CallerInstrumentation(Fn, Call, Return);
+  return new CallerInstrumentation(Fn, Call, Return, Dir);
 }
 
 CallerInstrumentation::CallerInstrumentation(
-  Function *Fn, Function *Entry, Function *Return)
-  : Fn(Fn), CallEvent(Entry), ReturnEvent(Return)
+  Function *Fn, Function *Entry, Function *Return, FunctionEvent::Direction Dir)
+  : Fn(Fn), Dir(Dir), CallEvent(Entry), ReturnEvent(Return)
 {
-  assert(CallEvent || ReturnEvent);
+  assert(CallEvent != NULL);
+  assert(ReturnEvent != NULL);
 }
 
 bool CallerInstrumentation::Instrument(Instruction &Inst) {
@@ -105,12 +101,12 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
   for (size_t i = 0; i < Call.getNumArgOperands(); i++)
     Args.push_back(Call.getArgOperand(i));
 
-  if (CallEvent != NULL) {
+  if (Dir & FunctionEvent::Entry) {
      CallInst::Create(CallEvent, Args)->insertBefore(&Inst);
      modifiedIR = true;
   }
 
-  if (ReturnEvent != NULL) {
+  if (Dir & FunctionEvent::Exit) {
     ArgVector RetArgs(Args);
     if (!Call.getType()->isVoidTy()) RetArgs.push_back(&Call);
 
@@ -137,8 +133,12 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
     if (!Fn.context() & FunctionEvent::Caller) continue;
 
     auto Name = Fn.function().name();
-    FunctionsToInstrument[Name] =
-      CallerInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
+    auto *Existing = FunctionsToInstrument[Name];
+
+    if (Existing) Existing->AddDirection(Fn.direction());
+    else
+      FunctionsToInstrument[Name] =
+        CallerInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
   }
 
   return false;

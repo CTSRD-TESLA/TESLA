@@ -79,6 +79,9 @@ public:
                                       FunctionEvent::Direction Dir
                                      );
 
+  /// Instrument a (possibly new) direction (entry, exit, both).
+  void AddDirection(FunctionEvent::Direction);
+
   /// Create instrumentation for function entry.
   /// @returns whether or not any changes were actually made
   bool InstrumentEntry(llvm::Function &Fn);
@@ -91,10 +94,13 @@ private:
   /// Private constructor: clients should use CalleeInstrumention::Build().
   CalleeInstrumentation(llvm::Function *Fn,
                         llvm::Function *Entry,
-                        llvm::Function *Return
+                        llvm::Function *Return,
+                        FunctionEvent::Direction Dir
                        );
 
   llvm::Function *Fn;             ///< The function to instrument.
+  FunctionEvent::Direction Dir;   ///< When to instrument (call or return).
+
   llvm::Function *EntryEvent;     ///< Call when entering instrumented function.
   llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.
   ArgVector Args;                 ///< Translated function arguments.

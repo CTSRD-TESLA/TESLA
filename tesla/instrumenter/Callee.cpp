@@ -47,9 +47,14 @@ using std::vector;
 namespace tesla {
 
 // ==== CalleeInstrumentation implementation ===================================
+void CalleeInstrumentation::AddDirection(FunctionEvent::Direction Dir) {
+  this->Dir = static_cast<FunctionEvent::Direction>(this->Dir | Dir);
+}
+
 bool CalleeInstrumentation::InstrumentEntry(Function &Fn) {
   if (&Fn != this->Fn) return false;
-  if (EntryEvent == NULL) return false;
+  if (!(Dir & FunctionEvent::Entry)) return false;
+  assert(EntryEvent != NULL);
 
   // Instrumenting function entry is easy: just add a new call to
   // instrumentation at the beginning of the function's entry block.
@@ -61,7 +66,8 @@ bool CalleeInstrumentation::InstrumentEntry(Function &Fn) {
 
 bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
   if (&Fn != this->Fn) return false;
-  if (ReturnEvent == NULL) return false;
+  if (!(Dir & FunctionEvent::Exit)) return false;
+  assert(ReturnEvent != NULL);
 
   // First, build up the set of blocks that return from the function.
   vector<BasicBlock*> ReturnBlocks;
@@ -94,44 +100,35 @@ CalleeInstrumentation* CalleeInstrumentation::Build(
   Function *Fn = M.getFunction(FnName);
   if (Fn == NULL) return NULL;
 
-  Function *Entry = NULL;
-  Function *Return = NULL;
+  // Instrumentation functions do not return.
+  Type *VoidTy = Type::getVoidTy(Context);
 
-  if (Fn) {
-    // Instrumentation functions do not return.
-    Type *VoidTy = Type::getVoidTy(Context);
+  // Get the argument types of the function to be instrumented.
+  TypeVector ArgTypes;
+  for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
 
-    // Get the argument types of the function to be instrumented.
-    TypeVector ArgTypes;
-    for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
+  // Declare or retrieve instrumentation functions.
+  string Name = (CALLEE_ENTER + FnName).str();
+  auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
+  Function *Entry = cast<Function>(M.getOrInsertFunction(Name, InstrType));
+  assert(Entry != NULL);
 
-    // Declare or retrieve instrumentation functions.
-    if (Dir & FunctionEvent::Entry) {
-      string Name = (CALLEE_ENTER + FnName).str();
-      auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
-      Entry = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-      assert(Entry != NULL);
-    }
+  // Instrumentation of returns must include the returned value...
+  TypeVector RetTypes(ArgTypes);
+  if (!Fn->getReturnType()->isVoidTy())
+    RetTypes.push_back(Fn->getReturnType());
 
-    if (Dir & FunctionEvent::Exit) {
-      // Instrumentation of returns must include the returned value...
-      TypeVector RetTypes(ArgTypes);
-      if (!Fn->getReturnType()->isVoidTy())
-        RetTypes.push_back(Fn->getReturnType());
+  Name = (CALLEE_LEAVE + FnName).str();
+  InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
+  Function *Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
+  assert(Return != NULL);
 
-      string Name = (CALLEE_LEAVE + FnName).str();
-      auto InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
-      Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-      assert(Return != NULL);
-    }
-  }
-
-  return new CalleeInstrumentation(Fn, Entry, Return);
+  return new CalleeInstrumentation(Fn, Entry, Return, Dir);
 }
 
 CalleeInstrumentation::CalleeInstrumentation(
-  Function *Fn, Function *Entry, Function *Return)
-  : Fn(Fn), EntryEvent(Entry), ReturnEvent(Return) {
+  Function *Fn, Function *Entry, Function *Return, FunctionEvent::Direction Dir)
+  : Fn(Fn), Dir(Dir), EntryEvent(Entry), ReturnEvent(Return) {
 
   // Record the arguments passed to the instrumented function.
   //
@@ -157,6 +154,13 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
 
     assert(Fn.has_function());
     auto Name = Fn.function().name();
+
+    // If we've already defined the instrumentation, just record the direction.
+    auto *Existing = FunctionsToInstrument[Name];
+    if (Existing) {
+      Existing->AddDirection(Fn.direction());
+      continue;
+    }
 
     // Define the instrumentation functions that receive this function's events.
     //
