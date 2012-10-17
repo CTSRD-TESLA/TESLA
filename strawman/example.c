@@ -40,7 +40,7 @@ perform_operation(int op, struct object *o)
 	/* An example of using high-level TESLA macros. */
 	TESLA_PERTHREAD(
 		previously_in_syscall(security_check(ANY, o, op) == 0)
-		||
+		&&
 		eventually_in_syscall(log_audit_record(o, op) == 0)
 	);
 
@@ -53,6 +53,8 @@ perform_operation(int op, struct object *o)
 			ATLEAST(2, entered(example_syscall)),
 			leaving(example_syscall)
 		)
+		||
+		eventually_in_syscall(log_audit_record(o, op) == 0)
 	);
 
 	return 0;
