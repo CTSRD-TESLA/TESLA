@@ -108,15 +108,35 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
 
 StringRef Manifest::defaultLocation() { return ManifestName; }
 
+vector<FunctionEvent> Manifest::FunctionsToInstrument(const Event& Ev) {
+  vector<FunctionEvent> FnEvents;
+
+  switch (Ev.type()) {
+      default: assert(false && "Unhandled event type");
+
+      case Event::NOW:                break;    // not a function, do nothing
+      case Event::FUNCTION:
+        FnEvents.push_back(Ev.function());
+        break;
+
+      case Event::REPETITION:
+        for (auto Ev : Ev.repetition().event()) {
+          auto SubEvents = FunctionsToInstrument(Ev);
+          FnEvents.insert(FnEvents.end(), SubEvents.begin(), SubEvents.end());
+        }
+        break;
+    }
+
+  return FnEvents;
+}
+
 vector<FunctionEvent> Manifest::FunctionsToInstrument() {
   vector<FunctionEvent> FnEvents;
 
   for (auto& Ev : Events()) {
-    assert(Event::Type_IsValid(Ev.type()));
-    if (Ev.type() == Event::FUNCTION) FnEvents.push_back(Ev.function());
+    auto SubEvents = FunctionsToInstrument(Ev);
+    FnEvents.insert(FnEvents.end(), SubEvents.begin(), SubEvents.end());
   }
-
-  // TODO: unroll repeated events; return a vector<FunctionRef>
 
   return FnEvents;
 }

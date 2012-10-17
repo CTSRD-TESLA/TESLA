@@ -68,6 +68,9 @@ private:
   //! Returns a copy of all events named in this manifest.
   std::vector<Event> Events();
 
+  //! Extract all @ref FunctionEvent instances from a single @ref Event.
+  std::vector<FunctionEvent> FunctionsToInstrument(const Event& Ev);
+
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
   //! Memory to store automata in.
