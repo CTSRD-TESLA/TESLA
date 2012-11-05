@@ -154,6 +154,10 @@ bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call,
 
 bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
                        ASTContext& Ctx) {
+  // Since we might care about the return value, we must instrument exiting
+  // the function rather than entering it.
+  Event->set_direction(FunctionEvent::Exit);
+
   Expr *LHS = Bop->getLHS();
   bool LHSisICE = LHS->isIntegerConstantExpr(Ctx);
 
