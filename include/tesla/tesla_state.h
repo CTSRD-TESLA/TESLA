@@ -94,37 +94,41 @@ struct tesla_instance {
 	u_int			ti_state[TESLA_STATE_SIZE];
 };
 
-/*
+/**
  * Instances of tesla_state each have a "scope", used to determine where data
- * should be stored, and how it should be synchronised.  Two scopes are
- * currently supported: thread-local and global.  Thread-local storage does
- * not require explicit synchronisation, as accesses are serialised by the
- * executing thread, whereas global storage does.  On the other hand,
- * thread-local storage is accessible only to the thread itself, so cannot be
- * used to track events across multiple threads.  Global storage is globally
- * visible, but requires explicit (and potentially expensive)
+ * should be stored, and how it should be synchronised.
+ *
+ * Two scopes are currently supported: thread-local and global. Thread-local
+ * storage does not require explicit synchronisation, as accesses are
+ * serialised by the executing thread, whereas global storage does.  On the
+ * other hand, thread-local storage is accessible only to the thread itself,
+ * so cannot be used to track events across multiple threads.  Global storage
+ * is globally visible, but requires explicit (and potentially expensive)
  * synchronisation.
  */
 #define	TESLA_SCOPE_PERTHREAD	1
 #define	TESLA_SCOPE_GLOBAL	2
 
-/*
- * Allocate, free, and flush tesla_state instances.  The latter will mark as
- * free all currently instantiated automata for an assertion, while leaving
- * the tesla_state reusable.  Note: for per-thread storage,
- * tesla_state_flush() affects only the current thread.
+/**
+ * Create a new TESLA automata class.
  *
- * The 'limit argument specifies the maximum number of automata to support,
- * and memory use scales linearly with this value.  It is recommended that
- * the limit be prime, and ideally at least 10x the actual number you might
- * use in practice, in order to ensure an adequately sparse hash table.
+ * @param  scope  @ref TESLA_SCOPE_PERTHREAD or @ref TESLA_SCOPE_GLOBAL.
+ * @param  limit  Maximum number of automata to support.
+ *                Memory use scales linearly with this value.
+ *                It is recommended that the limit be prime, and ideally at
+ *                least 10x the actual number you might use in practice, in
+ *                order to ensure an adequately sparse hash table.
  */
 int	tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 	    const char *name, const char *description);
+
+/** Free a @ref tesla_state instance. */
 void	tesla_state_destroy(struct tesla_state *tsp);
+
+/** Free currently instantiated automata, leaving the tesla_state reusable. */
 void	tesla_state_flush(struct tesla_state *tsp);
 
-/*
+/**
  * Set the action to take when a TESLA assertion fails; implemented via a
  * callback from the TESLA runtime.
  */
