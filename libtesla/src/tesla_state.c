@@ -164,15 +164,15 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 	for (i = 0; i < ttp->tt_length; i++) {
 		tip = &ttp->tt_instances[i];
 		if (free_tip == NULL &&
-		    tip->ti_keys[0] == 0 &&
-		    tip->ti_keys[1] == 0 &&
-		    tip->ti_keys[2] == 0 &&
-		    tip->ti_keys[3] == 0)
+		    tip->ti_key.tk_keys[0] == 0 &&
+		    tip->ti_key.tk_keys[1] == 0 &&
+		    tip->ti_key.tk_keys[2] == 0 &&
+		    tip->ti_key.tk_keys[3] == 0)
 			free_tip = tip;
-		if (tip->ti_keys[0] != key0 ||
-		    tip->ti_keys[1] != key1 ||
-		    tip->ti_keys[2] != key2 ||
-		    tip->ti_keys[3] != key3)
+		if (tip->ti_key.tk_keys[0] != key0 ||
+		    tip->ti_key.tk_keys[1] != key1 ||
+		    tip->ti_key.tk_keys[2] != key2 ||
+		    tip->ti_key.tk_keys[3] != key3)
 			continue;
 		if (alloc != NULL)
 			*alloc = 0;
@@ -181,10 +181,10 @@ tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
 	}
 	if (free_tip != NULL) {
 		tip = free_tip;
-		tip->ti_keys[0] = key0;
-		tip->ti_keys[1] = key1;
-		tip->ti_keys[2] = key2;
-		tip->ti_keys[3] = key3;
+		tip->ti_key.tk_keys[0] = key0;
+		tip->ti_key.tk_keys[1] = key1;
+		tip->ti_key.tk_keys[2] = key2;
+		tip->ti_key.tk_keys[3] = key3;
 		/* Note: ti_state left zero'd. */
 		*tipp = tip;
 		ttp->tt_free--;
@@ -241,7 +241,7 @@ tesla_instance_foreach1(struct tesla_state *tsp, register_t key0,
 	}
 	for (i = 0; i < ttp->tt_length; i++) {
 		tip = &ttp->tt_instances[i];
-		if (tip->ti_keys[0] != key0)
+		if (tip->ti_key.tk_keys[0] != key0)
 			continue;
 		handler(tip, arg);
 	}
@@ -268,10 +268,10 @@ tesla_instance_destroy(struct tesla_state *tsp, struct tesla_instance *tip)
 	tip->ti_state[1] = 0;
 	tip->ti_state[2] = 0;
 	tip->ti_state[3] = 0;
-	tip->ti_keys[0] = 0;
-	tip->ti_keys[1] = 0;
-	tip->ti_keys[2] = 0;
-	tip->ti_keys[3] = 0;
+	tip->ti_key.tk_keys[0] = 0;
+	tip->ti_key.tk_keys[1] = 0;
+	tip->ti_key.tk_keys[2] = 0;
+	tip->ti_key.tk_keys[3] = 0;
 
 	/*
 	 * XXXRW: this will need revisiting if we change locking strategies.

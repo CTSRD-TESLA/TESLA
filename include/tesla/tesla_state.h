@@ -50,6 +50,20 @@
  */
 struct tesla_state;
 
+#define	TESLA_KEY_SIZE		4
+
+/**
+ * A TESLA instance can be identified by a @ref tesla_state and a
+ * @ref tesla_key. This key represents the values of event parameters (e.g. a
+ * credential passed to a security check), some of which may not be specified.
+ *
+ * Clients can use @ref tesla_key to look up sets of automata instances, using
+ * "ANY" to specify don't-care parameters.
+ */
+struct tesla_key {
+	register_t	tk_keys[TESLA_KEY_SIZE];
+};
+
 /*
  * Each automata instance is captured by a struct tesla_instance, which holds
  * data capturing the state of an in-execution automata.  Storage and
@@ -62,11 +76,10 @@ struct tesla_state;
  * is important that this structure be no bigger than necessary, as one will
  * be allocated for every potential intance of an automata.
  */
-#define	TESLA_KEY_SIZE		4
 #define	TESLA_STATE_SIZE	4
 struct tesla_instance {
-	register_t	ti_keys[TESLA_KEY_SIZE];
-	u_int		ti_state[TESLA_STATE_SIZE];
+	struct tesla_key	ti_key;
+	u_int			ti_state[TESLA_STATE_SIZE];
 };
 
 /*
