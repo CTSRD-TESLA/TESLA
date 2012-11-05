@@ -1,4 +1,5 @@
 add_library(tesla SHARED
+	tesla_debug.c
 	tesla_state.c
 	tesla_state_global.c
 	tesla_state_perthread.c

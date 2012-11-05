@@ -252,6 +252,9 @@ tesla_instance_foreach1(struct tesla_state *tsp, register_t key0,
 void
 tesla_instance_put(struct tesla_state *tsp, struct tesla_instance *tip)
 {
+#ifdef DEBUG
+	assert_instanceof(tip, tsp);
+#endif
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
 		tesla_state_global_unlock(tsp);

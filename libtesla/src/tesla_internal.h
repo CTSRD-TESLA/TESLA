@@ -110,4 +110,19 @@ void	tesla_state_perthread_flush(struct tesla_state *tsp);
 int	tesla_state_perthread_gettable(struct tesla_state *tsp,
 	    struct tesla_table **ttpp);
 
+/*
+ * Debug helpers.
+ */
+
+/**
+ * Assert that a @ref tesla_instance is an instance of a @ref tesla_state.
+ *
+ * This could be expensive (a linear walk over all @ref tesla_instance in
+ * @ref #tclass), so it should only be called from debug code.
+ *
+ * @param   i          the instance to test
+ * @param   tclass     the expected class of @ref #i
+ */
+void	assert_instanceof(struct tesla_instance *i, struct tesla_state *tclass);
+
 #endif /* TESLA_INTERNAL_H */
