@@ -37,6 +37,9 @@
 int
 perform_operation(int op, struct object *o)
 {
+	/* A very simple TESLA assertion. */
+	TESLA_PERTHREAD(previously_in_syscall(security_check(ANY, o, op) == 0));
+
 	/* An example of using high-level TESLA macros. */
 	TESLA_PERTHREAD(
 		previously_in_syscall(security_check(ANY, o, op) == 0)
