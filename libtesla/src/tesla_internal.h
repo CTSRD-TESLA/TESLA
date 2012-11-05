@@ -76,6 +76,15 @@ struct tesla_state {
 	struct tesla_table	ts_table;	/* Table of instances. */
 };
 
+/**
+ * Get the @ref tesla_table for this @ref tesla_state.
+ *
+ * If the table is stored in @ref TESLA_SCOPE_GLOBAL, the @ref tesla_state
+ * passed in will be left in a locked state; it is the responsibility of the
+ * caller to unlock it when done with the table.
+ */
+int	tesla_gettable_locked(struct tesla_state*, struct tesla_table**);
+
 /*
  * When the assertion fails, what to do?
  */

@@ -142,111 +142,95 @@ tesla_state_flush(struct tesla_state *tsp)
 }
 
 int
-tesla_instance_get4(struct tesla_state *tsp, register_t key0, register_t key1,
-    register_t key2, register_t key3, struct tesla_instance **tipp, int *alloc)
+tesla_gettable_locked(struct tesla_state *tsp, struct tesla_table **ttp)
 {
-	struct tesla_instance *tip, *free_tip;
+#ifdef ASSERTS
+	assert(tsp != NULL);
+	assert(ttp != NULL);
+#endif
+
+	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
+		tesla_state_global_lock(tsp);
+		*ttp = &tsp->ts_table;
+		return (TESLA_SUCCESS);
+	} else
+		return tesla_state_perthread_gettable(tsp, ttp);
+}
+
+int
+tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k)
+{
+#ifdef ASSERTS
+	assert(pattern);
+	assert(k);
+#endif
+
+	// The pattern's mask must be a subset of the target's (ANY matches
+	// 42 but not the other way around).
+	if ((pattern->tk_mask & k->tk_mask) != pattern->tk_mask) return (0);
+
+	for (size_t i = 0; i < TESLA_KEY_SIZE; i++) {
+		// Only check keys specified by the bitmasks.
+		register_t mask = (1 << i);
+		if ((pattern->tk_mask & mask) != mask) continue;
+
+		// A non-match of any sub-key implies a non-match of the key.
+		if (pattern->tk_keys[i] != k->tk_keys[i]) return (0);
+	}
+
+	return (1);
+}
+
+int
+tesla_instance_get(struct tesla_state *tclass, struct tesla_key *pattern,
+		   struct tesla_instance **out)
+{
+#ifdef ASSERTS
+	assert(tclass);
+	assert(pattern);
+	assert(out);
+#endif
+
+	struct tesla_instance *instance, *next_free_instance;
 	struct tesla_table *ttp;
 	u_int i;
 	int error;
 
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_global_lock(tsp);
-		ttp = &tsp->ts_table;
-	} else {
-		error = tesla_state_perthread_gettable(tsp, &ttp);
-		if (error != TESLA_SUCCESS)
-			return (error);
+	error = tesla_gettable_locked(tclass, &ttp);
+	if (error != TESLA_SUCCESS)
+		return (error);
+
+	next_free_instance = NULL;
+	for (i = 0; i < ttp->tt_length; i++) {
+		instance = &ttp->tt_instances[i];
+
+		// If we found the droids we're looking for, go no further.
+		if (tesla_key_matches(pattern, &instance->ti_key)) {
+			*out = instance;
+			assert(*out != NULL);
+			return (TESLA_SUCCESS);
+		}
+
+		// No luck yet; make a note if this slot is empty.
+		if (next_free_instance == NULL && instance->ti_key.tk_mask == 0)
+			next_free_instance = instance;
 	}
 
-	/* XXXRW: Absolutely the wrong algorithm. */
-	free_tip = NULL;
-	for (i = 0; i < ttp->tt_length; i++) {
-		tip = &ttp->tt_instances[i];
-		if (free_tip == NULL &&
-		    tip->ti_key.tk_keys[0] == 0 &&
-		    tip->ti_key.tk_keys[1] == 0 &&
-		    tip->ti_key.tk_keys[2] == 0 &&
-		    tip->ti_key.tk_keys[3] == 0)
-			free_tip = tip;
-		if (tip->ti_key.tk_keys[0] != key0 ||
-		    tip->ti_key.tk_keys[1] != key1 ||
-		    tip->ti_key.tk_keys[2] != key2 ||
-		    tip->ti_key.tk_keys[3] != key3)
-			continue;
-		if (alloc != NULL)
-			*alloc = 0;
-		*tipp = tip;
-		return (TESLA_SUCCESS);
-	}
-	if (free_tip != NULL) {
-		tip = free_tip;
-		tip->ti_key.tk_keys[0] = key0;
-		tip->ti_key.tk_keys[1] = key1;
-		tip->ti_key.tk_keys[2] = key2;
-		tip->ti_key.tk_keys[3] = key3;
+	// The named instance does not exist; create it.
+	if (next_free_instance != NULL) {
+		instance = next_free_instance;
+		instance->ti_key = *pattern;
 		/* Note: ti_state left zero'd. */
-		*tipp = tip;
+		*out = instance;
 		ttp->tt_free--;
-		if (alloc != NULL)
-			*alloc = 1;
+		assert(*out != NULL);
 		return (TESLA_SUCCESS);
 	}
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_global_unlock(tsp);
+
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL) {
+		tesla_state_global_unlock(tclass);
 	}
 	return (TESLA_ERROR_ENOMEM);
-}
-
-int
-tesla_instance_get3(struct tesla_state *tsp, register_t key0, register_t key1,
-    register_t key2, struct tesla_instance **tipp, int *alloc)
-{
-
-	return (tesla_instance_get4(tsp, key0, key1, key2, 0, tipp, alloc));
-}
-
-int
-tesla_instance_get2(struct tesla_state *tsp, register_t key0, register_t key1,
-    struct tesla_instance **tipp, int *alloc)
-{
-
-	return (tesla_instance_get4(tsp, key0, key1, 0, 0, tipp, alloc));
-}
-
-int
-tesla_instance_get1(struct tesla_state *tsp, register_t key0,
-    struct tesla_instance **tipp, int *alloc)
-{
-
-	return (tesla_instance_get4(tsp, key0, 0, 0, 0, tipp, alloc));
-}
-
-void
-tesla_instance_foreach1(struct tesla_state *tsp, register_t key0,
-    tesla_instance_foreach_callback handler, void *arg)
-{
-	struct tesla_instance *tip;
-	struct tesla_table *ttp;
-	int error;
-	u_int i;
-
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_global_lock(tsp);
-		ttp = &tsp->ts_table;
-	} else {
-		error = tesla_state_perthread_gettable(tsp, &ttp);
-		if (error != TESLA_SUCCESS)
-			return;
-	}
-	for (i = 0; i < ttp->tt_length; i++) {
-		tip = &ttp->tt_instances[i];
-		if (tip->ti_key.tk_keys[0] != key0)
-			continue;
-		handler(tip, arg);
-	}
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_state_global_unlock(tsp);
 }
 
 void

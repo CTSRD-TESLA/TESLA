@@ -47,13 +47,7 @@ void
 assert_instanceof(struct tesla_instance *instance, struct tesla_state *tclass)
 {
 	struct tesla_table *ttp;
-	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL) {
-		/* The global lock must be held; we're about to unlock it! */
-		ttp = &tclass->ts_table;
-	} else {
-		assert(tesla_state_perthread_gettable(tclass, &ttp)
-		       == TESLA_SUCCESS);
-	}
+	assert(tesla_gettable_locked(tclass, &ttp) == TESLA_SUCCESS);
 
 	int instance_belongs_to_class = 0;
 	for (size_t i = 0; i < ttp->tt_length; i++) {
@@ -71,5 +65,8 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_state *tclass)
 #else
 	assert(instance_belongs_to_class);
 #endif
+
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_state_global_unlock(tclass);
 }
 

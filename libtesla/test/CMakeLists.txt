@@ -1,5 +1,6 @@
 set(TESTS
 	fork
+	match
 )
 
 foreach(test ${TESTS})

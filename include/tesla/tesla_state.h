@@ -58,11 +58,23 @@ struct tesla_state;
  * credential passed to a security check), some of which may not be specified.
  *
  * Clients can use @ref tesla_key to look up sets of automata instances, using
- * "ANY" to specify don't-care parameters.
+ * the bitmask to specify don't-care parameters.
  */
 struct tesla_key {
+	/** A bitmask of the keys that are actually set. */
+	register_t	tk_mask;
+
+	/** The keys / event parameters that name this automata instance. */
 	register_t	tk_keys[TESLA_KEY_SIZE];
 };
+
+/**
+ * Check to see if a key matches a pattern.
+ *
+ * @returns  1 if @ref #k matches @ref pattern, 0 otherwise
+ */
+int	tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k);
+
 
 /*
  * Each automata instance is captured by a struct tesla_instance, which holds
@@ -120,22 +132,9 @@ typedef void	(*tesla_assert_fail_callback)(struct tesla_instance *tip);
 void	tesla_state_setaction(struct tesla_state *tsp,
 	    tesla_assert_fail_callback handler);
 
-/*
- * Interfaces to look up/allocate, release, free, and flush automata state
- * from a struct tesla_state.  New automata instances are returned with their
- * state field set to (0); automata generators should use state between 1
- * and the maximum positive integer to avoid collisions with the state
- * infrastructure.
- */
-int	tesla_instance_get1(struct tesla_state *tsp, register_t key1,
-	    struct tesla_instance **tip, int *allocated);
-int	tesla_instance_get2(struct tesla_state *tsp, register_t key1,
-	    register_t key2, struct tesla_instance **tip, int *allocated);
-int	tesla_instance_get3(struct tesla_state *tsp, register_t key1,
-	    register_t key2, register_t key3, struct tesla_instance **tip, int *allocated);
-int	tesla_instance_get4(struct tesla_state *tsp, register_t key1,
-	    register_t key2, register_t key3, register_t key4,
-	    struct tesla_instance **tip, int *allocated);
+/** Retrieve a TESLA automata class, creating if it does not exist. */
+int	tesla_state_get(struct tesla_state **tspp, u_int scope, u_int limit,
+	    const char *name, const char *description);
 
 /*
  * Iterator to handle sets of matching automata.  Handler will be called once
