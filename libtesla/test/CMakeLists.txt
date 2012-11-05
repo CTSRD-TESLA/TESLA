@@ -1,6 +1,7 @@
 set(TESTS
 	fork
 	match
+	lookup
 )
 
 foreach(test ${TESTS})

@@ -35,6 +35,8 @@
 
 #include <sys/types.h>		/* register_t */
 
+#include "tesla_iterator.h"
+
 /*
  * tesla_state is part of the libtesla runtime environment.  tesla_state is
  * used by compiled TESLA assertions to hold state for in-execution automata.
@@ -140,22 +142,18 @@ void	tesla_state_setaction(struct tesla_state *tsp,
 int	tesla_state_get(struct tesla_state **tspp, u_int scope, u_int limit,
 	    const char *name, const char *description);
 
-/*
- * Iterator to handle sets of matching automata.  Handler will be called once
- * for each matching instance -- the iterator will call tesla_instance_put()
- * as needed, so the handler won't call it.
+/**
+ * Find all automata instances in a class that match a particular key.
  *
- * Note: calling tesla_instance_destroy() from the foreach handler is not
- * permitted.
+ * @param[in]  tclass   the class of automata to match
+ * @param[in]  key      must remain valid as long as the iterator is in use
+ * @param[out] iter     the return
  *
- * XXXRW: It's not clear if this is sufficient to handle multi-clause
- * expressions, as the results must be composed, so this might need to be
- * revisited.
+ * @returns    a standard TESLA error code (e.g., TESLA_ERROR_ENOMEM)
  */
-typedef void	(*tesla_instance_foreach_callback)
-		    (struct tesla_instance *tip, void *arg);
-void	tesla_instance_foreach1(struct tesla_state *tsp, register_t key0,
-	    tesla_instance_foreach_callback handler, void *arg);
+int
+tesla_match(struct tesla_state *tclass, struct tesla_key *key,
+	    struct tesla_iterator **iter);
 
 /*
  * Once an instance has been queried, it must be "returned" to its
