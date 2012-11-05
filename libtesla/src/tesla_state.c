@@ -251,14 +251,7 @@ tesla_instance_destroy(struct tesla_state *tsp, struct tesla_instance *tip)
 	struct tesla_table *ttp;
 	int error;
 
-	tip->ti_state[0] = 0;
-	tip->ti_state[1] = 0;
-	tip->ti_state[2] = 0;
-	tip->ti_state[3] = 0;
-	tip->ti_key.tk_keys[0] = 0;
-	tip->ti_key.tk_keys[1] = 0;
-	tip->ti_key.tk_keys[2] = 0;
-	tip->ti_key.tk_keys[3] = 0;
+	bzero(tip, sizeof(struct tesla_instance));
 
 	/*
 	 * XXXRW: this will need revisiting if we change locking strategies.
