@@ -155,27 +155,31 @@ int
 tesla_match(struct tesla_state *tclass, struct tesla_key *key,
 	    struct tesla_iterator **iter);
 
-/*
+/**
  * Once an instance has been queried, it must be "returned" to its
  * tesla_state, which will release synchronisation on the instance.
  */
 void	tesla_instance_put(struct tesla_state *tsp,
 	    struct tesla_instance *tip);
 
-/*
+/**
  * This interface releases an instance for reuse; some types of automata will
  * prefer tesla_state_flush(), which clears all instances associated with a
- * particular tesla_state.  An instance passed to tesla_instance_destroy()
- * will not require a call to tesla_instance_put().
+ * particular tesla_state.
+ *
+ * An instance passed to tesla_instance_destroy() will not require a call to
+ * tesla_instance_put().
  */
 void	tesla_instance_destroy(struct tesla_state *tsp,
 	    struct tesla_instance *tip);
 
-/*
- * Function to invoke when a TESLA assertion fails.  May not actually fail
- * stop at this point, so assertions must handle continuation after this
- * call.  Further cases of this particular instance firing should be
- * suppressed so that DTrace probes fire only once per failure.
+/**
+ * Function to invoke when a TESLA assertion fails.
+ *
+ * May not actually fail stop at this point, so assertions must handle
+ * continuation after this call.  Further cases of this particular instance
+ * firing should be suppressed so that e.g. DTrace probes fire only once
+ * per failure.
  */
 void	tesla_assert_fail(struct tesla_state *tsp,
 	    struct tesla_instance *tip);
