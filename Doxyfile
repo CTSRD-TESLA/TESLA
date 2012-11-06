@@ -110,7 +110,7 @@ WARN_LOGFILE           =
 # configuration options related to the input files
 #---------------------------------------------------------------------------
 
-INPUT                  = include tesla
+INPUT                  = include libtesla tesla
 INPUT_ENCODING         = UTF-8
 RECURSIVE              = YES
 
