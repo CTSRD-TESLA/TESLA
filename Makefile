@@ -1,4 +1,6 @@
-.PHONY: build clean cmake
+.PHONY: build clean cmake test
+
+all: build test
 
 build: cmake
 	cd build && ninja
@@ -12,6 +14,9 @@ cmake: build/CMakeCache.txt
 doc: Doxyfile
 	mkdir -p doxygen
 	doxygen $?
+
+test: build
+	./run-tests
 
 build/CMakeCache.txt: CMakeLists.txt
 	mkdir -p build
