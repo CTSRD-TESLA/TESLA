@@ -1,4 +1,5 @@
 .PHONY: build clean cmake test
+.SILENT:
 
 all: build test
 
