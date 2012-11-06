@@ -6,11 +6,11 @@
 
 .SILENT:
 
-TESLA_DIR=../tesla
-ANALYSER=${TESLA_DIR}/build/analyser/tesla
+BUILD_DIR=../build
+ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyser
 INSTRUMENTER= \
 	opt -S \
-		-load ${TESLA_DIR}/build/instrumenter/TeslaInstrumenter.dylib \
+		-load ${BUILD_DIR}/tesla/instrumenter/TeslaInstrumenter.dylib \
 		-tesla-callee -tesla-caller -tesla-asserts
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
@@ -42,7 +42,7 @@ clean:
 	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} *.tesla
 
 tesla:
-	cd ${TESLA_DIR} && ${MAKE} --quiet build
+	cd ${BUILD_DIR} && ninja
 
 run-tesla: analyse instrument
 
