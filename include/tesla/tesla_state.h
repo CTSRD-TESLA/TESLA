@@ -142,6 +142,10 @@ void	tesla_state_setaction(struct tesla_state *tsp,
 int	tesla_state_get(struct tesla_state **tspp, u_int scope, u_int limit,
 	    const char *name, const char *description);
 
+/** Find (or create) an automata instance that matches a key. */
+int	tesla_instance_get(struct tesla_state *tclass, struct tesla_key *key,
+	    struct tesla_instance **instance);
+
 /**
  * Find all automata instances in a class that match a particular key.
  *
