@@ -58,7 +58,7 @@ MALLOC_DECLARE(M_TESLA);
 #endif
 
 struct tesla_iterator {
-	struct tesla_state	*tclass;
+	struct tesla_class	*tclass;
 	struct tesla_table	*table;
 
 	struct tesla_key	*pattern;
@@ -69,7 +69,7 @@ struct tesla_iterator {
 
 
 int
-tesla_match(struct tesla_state *tclass, struct tesla_key *pattern,
+tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 	    struct tesla_iterator **iter_out)
 {
 	struct tesla_iterator *iter = 0;
@@ -146,7 +146,7 @@ void
 tesla_iterator_free(struct tesla_iterator *it)
 {
 	if (it->tclass->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_state_global_unlock(it->tclass);
+		tesla_class_global_unlock(it->tclass);
 
 #ifdef _KERNEL
 	free(it, M_TESLA);

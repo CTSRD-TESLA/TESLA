@@ -29,8 +29,8 @@ main(int argc, char **argv)
 {
 	printf("Creating new TESLA class... ");
 	int err;
-	struct tesla_state *class;
-	err = tesla_state_new(&class, TESLA_SCOPE_PERTHREAD, 23,
+	struct tesla_class *class;
+	err = tesla_class_new(&class, TESLA_SCOPE_PERTHREAD, 23,
 		"classA", "a class of TESLA automata");
 	if (err) {
 		printf("error: '%s'\n", tesla_strerror(err));

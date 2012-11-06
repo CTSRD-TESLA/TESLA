@@ -59,17 +59,17 @@ MALLOC_DEFINE(M_TESLA, "tesla", "TESLA internal state");
 #endif
 
 int
-tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
+tesla_class_new(struct tesla_class **tspp, u_int scope, u_int limit,
     const char *name, const char *description)
 {
-	struct tesla_state *tsp;
+	struct tesla_class *tsp;
 	size_t len;
 	int error;
 
 #ifdef _KERNEL
 	KASSERT((scope == TESLA_SCOPE_PERTHREAD) ||
 	    (scope == TESLA_SCOPE_GLOBAL),
-	    ("tesla_state_new: invalid scope %u", scope));
+	    ("tesla_class_new: invalid scope %u", scope));
 #else
 	assert(scope == TESLA_SCOPE_PERTHREAD || scope == TESLA_SCOPE_GLOBAL);
 #endif
@@ -101,7 +101,7 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 #endif
 
 	if (scope == TESLA_SCOPE_PERTHREAD) {
-		error = tesla_state_perthread_new(tsp);
+		error = tesla_class_perthread_new(tsp);
 		if (error != TESLA_SUCCESS) {
 #ifdef _KERNEL
 			free(tsp, M_TESLA);
@@ -111,19 +111,19 @@ tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
 			return (error);
 		}
 	} else
-		tesla_state_global_new(tsp);
+		tesla_class_global_new(tsp);
 	*tspp = tsp;
 	return (TESLA_SUCCESS);
 }
 
 void
-tesla_state_destroy(struct tesla_state *tsp)
+tesla_class_destroy(struct tesla_class *tsp)
 {
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_state_global_destroy(tsp);
+		tesla_class_global_destroy(tsp);
 	else
-		tesla_state_perthread_destroy(tsp);
+		tesla_class_perthread_destroy(tsp);
 #ifdef _KERNEL
 	free(tsp, M_TESLA);
 #else
@@ -132,17 +132,17 @@ tesla_state_destroy(struct tesla_state *tsp)
 }
 
 void
-tesla_state_flush(struct tesla_state *tsp)
+tesla_class_flush(struct tesla_class *tsp)
 {
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_state_global_flush(tsp);
+		tesla_class_global_flush(tsp);
 	else
-		tesla_state_perthread_flush(tsp);
+		tesla_class_perthread_flush(tsp);
 }
 
 int
-tesla_gettable_locked(struct tesla_state *tsp, struct tesla_table **ttp)
+tesla_gettable_locked(struct tesla_class *tsp, struct tesla_table **ttp)
 {
 #ifdef ASSERTS
 	assert(tsp != NULL);
@@ -150,11 +150,11 @@ tesla_gettable_locked(struct tesla_state *tsp, struct tesla_table **ttp)
 #endif
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_global_lock(tsp);
+		tesla_class_global_lock(tsp);
 		*ttp = &tsp->ts_table;
 		return (TESLA_SUCCESS);
 	} else
-		return tesla_state_perthread_gettable(tsp, ttp);
+		return tesla_class_perthread_gettable(tsp, ttp);
 }
 
 int
@@ -182,7 +182,7 @@ tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k)
 }
 
 int
-tesla_instance_get(struct tesla_state *tclass, struct tesla_key *pattern,
+tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
 		   struct tesla_instance **out)
 {
 #ifdef ASSERTS
@@ -228,25 +228,25 @@ tesla_instance_get(struct tesla_state *tclass, struct tesla_key *pattern,
 	}
 
 	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_state_global_unlock(tclass);
+		tesla_class_global_unlock(tclass);
 	}
 	return (TESLA_ERROR_ENOMEM);
 }
 
 void
-tesla_instance_put(struct tesla_state *tsp, struct tesla_instance *tip)
+tesla_instance_put(struct tesla_class *tsp, struct tesla_instance *tip)
 {
 #ifdef DEBUG
 	assert_instanceof(tip, tsp);
 #endif
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_state_global_unlock(tsp);
+		tesla_class_global_unlock(tsp);
 	/* No action required for TESLA_SCOPE_PERTHREAD. */
 }
 
 void
-tesla_instance_destroy(struct tesla_state *tsp, struct tesla_instance *tip)
+tesla_instance_destroy(struct tesla_class *tsp, struct tesla_instance *tip)
 {
 	struct tesla_table *ttp;
 	int error;
@@ -258,9 +258,9 @@ tesla_instance_destroy(struct tesla_state *tsp, struct tesla_instance *tip)
 	 */
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
 		tsp->ts_table.tt_free++;
-		tesla_state_global_unlock(tsp);
+		tesla_class_global_unlock(tsp);
 	} else  {
-		error = tesla_state_perthread_gettable(tsp, &ttp);
+		error = tesla_class_perthread_gettable(tsp, &ttp);
 		if (error != TESLA_SUCCESS)
 			return;
 		ttp->tt_free++;
@@ -268,7 +268,7 @@ tesla_instance_destroy(struct tesla_state *tsp, struct tesla_instance *tip)
 }
 
 void
-tesla_assert_fail(struct tesla_state *tsp, struct tesla_instance *tip)
+tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip)
 {
 
 	if (tsp->ts_handler != NULL) {
@@ -302,7 +302,7 @@ tesla_assert_fail(struct tesla_state *tsp, struct tesla_instance *tip)
 }
 
 void
-tesla_state_setaction(struct tesla_state *tsp,
+tesla_class_setaction(struct tesla_class *tsp,
     tesla_assert_fail_callback handler)
 {
 

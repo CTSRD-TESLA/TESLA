@@ -20,14 +20,14 @@ struct tesla_instance *instances[6];
 const size_t INSTANCES = sizeof(instances) / sizeof(instances[0]);
 
 /** Create an instance of an automata class using three key values. */
-void	create_instance(struct tesla_state*, struct tesla_instance**,
+void	create_instance(struct tesla_class*, struct tesla_instance**,
 	                register_t key0, register_t key1, register_t key2);
 
 /**
  * Search through @ref instances using a pattern @ref tesla_key, returning a
  * bitmask of which instances were matched.
  */
-int	search_for_pattern(struct tesla_state*, struct tesla_key *pattern);
+int	search_for_pattern(struct tesla_class*, struct tesla_key *pattern);
 
 int
 main(int argc, char **argv)
@@ -35,14 +35,14 @@ main(int argc, char **argv)
 	int err;
 
 	/* Create two classes of automata: 'classA' and 'classB'. */
-	struct tesla_state *classA;
-	err = tesla_state_new(&classA, TESLA_SCOPE_PERTHREAD, 23,
+	struct tesla_class *classA;
+	err = tesla_class_new(&classA, TESLA_SCOPE_PERTHREAD, 23,
 		"classA", "a class of TESLA automata");
 	if (err)
 		errx(1, "error in 'new': %s\n", tesla_strerror(err));
 
-	struct tesla_state *classB;
-	err = tesla_state_new(&classB, TESLA_SCOPE_GLOBAL, 23,
+	struct tesla_class *classB;
+	err = tesla_class_new(&classB, TESLA_SCOPE_GLOBAL, 23,
 		"classB", "another class of TESLA automata");
 	if (err)
 		errx(1, "error in 'new': %s\n", tesla_strerror(err));
@@ -111,7 +111,7 @@ main(int argc, char **argv)
 
 
 void
-create_instance(struct tesla_state *tclass, struct tesla_instance **instance,
+create_instance(struct tesla_class *tclass, struct tesla_instance **instance,
                 register_t key0, register_t key1, register_t key2)
 {
 	struct tesla_key key;
@@ -129,7 +129,7 @@ create_instance(struct tesla_state *tclass, struct tesla_instance **instance,
 }
 
 int
-search_for_pattern(struct tesla_state *tclass, struct tesla_key *pattern) {
+search_for_pattern(struct tesla_class *tclass, struct tesla_key *pattern) {
 	struct tesla_iterator *iter;
 	int found = 0;
 

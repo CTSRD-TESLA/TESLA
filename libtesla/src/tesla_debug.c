@@ -44,7 +44,7 @@
 
 
 void
-assert_instanceof(struct tesla_instance *instance, struct tesla_state *tclass)
+assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 {
 	struct tesla_table *ttp;
 	assert(tesla_gettable_locked(tclass, &ttp) == TESLA_SUCCESS);
@@ -67,6 +67,6 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_state *tclass)
 #endif
 
 	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_state_global_unlock(tclass);
+		tesla_class_global_unlock(tclass);
 }
 

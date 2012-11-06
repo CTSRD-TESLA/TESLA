@@ -56,7 +56,7 @@
  * investigation required.
  */
 static void
-tesla_state_global_lock_init(struct tesla_state *tsp)
+tesla_class_global_lock_init(struct tesla_class *tsp)
 {
 
 #ifdef _KERNEL
@@ -68,7 +68,7 @@ tesla_state_global_lock_init(struct tesla_state *tsp)
 }
 
 static void
-tesla_state_global_lock_destroy(struct tesla_state *tsp)
+tesla_class_global_lock_destroy(struct tesla_class *tsp)
 {
 
 #ifdef _KERNEL
@@ -80,7 +80,7 @@ tesla_state_global_lock_destroy(struct tesla_state *tsp)
 }
 
 void
-tesla_state_global_lock(struct tesla_state *tsp)
+tesla_class_global_lock(struct tesla_class *tsp)
 {
 
 #ifdef _KERNEL
@@ -92,7 +92,7 @@ tesla_state_global_lock(struct tesla_state *tsp)
 }
 
 void
-tesla_state_global_unlock(struct tesla_state *tsp)
+tesla_class_global_unlock(struct tesla_class *tsp)
 {
 
 #ifdef _KERNEL
@@ -104,29 +104,29 @@ tesla_state_global_unlock(struct tesla_state *tsp)
 }
 
 int
-tesla_state_global_new(struct tesla_state *tsp)
+tesla_class_global_new(struct tesla_class *tsp)
 {
 
-	tesla_state_global_lock_init(tsp);
+	tesla_class_global_lock_init(tsp);
 	tsp->ts_table.tt_length = tsp->ts_limit;
 	tsp->ts_table.tt_free = tsp->ts_limit;
 	return (TESLA_SUCCESS);
 }
 
 void
-tesla_state_global_destroy(struct tesla_state *tsp)
+tesla_class_global_destroy(struct tesla_class *tsp)
 {
 
-	tesla_state_global_lock_destroy(tsp);
+	tesla_class_global_lock_destroy(tsp);
 }
 
 void
-tesla_state_global_flush(struct tesla_state *tsp)
+tesla_class_global_flush(struct tesla_class *tsp)
 {
 
-	tesla_state_global_lock(tsp);
+	tesla_class_global_lock(tsp);
 	bzero(&tsp->ts_table.tt_instances,
 	    sizeof(struct tesla_instance) * tsp->ts_table.tt_length);
 	tsp->ts_table.tt_free = tsp->ts_table.tt_length;
-	tesla_state_global_unlock(tsp);
+	tesla_class_global_unlock(tsp);
 }

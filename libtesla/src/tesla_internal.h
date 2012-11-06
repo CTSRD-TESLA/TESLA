@@ -47,7 +47,7 @@ struct tesla_table {
  * Assertion state definition is internal to libtesla so we can change it as
  * we need to.
  */
-struct tesla_state {
+struct tesla_class {
 	const char	*ts_name;	/* Name of the assertion. */
 	const char	*ts_description;/* Description of the assertion. */
 	u_int		 ts_scope;	/* Per-thread or global. */
@@ -77,13 +77,13 @@ struct tesla_state {
 };
 
 /**
- * Get the @ref tesla_table for this @ref tesla_state.
+ * Get the @ref tesla_table for this @ref tesla_class.
  *
- * If the table is stored in @ref TESLA_SCOPE_GLOBAL, the @ref tesla_state
+ * If the table is stored in @ref TESLA_SCOPE_GLOBAL, the @ref tesla_class
  * passed in will be left in a locked state; it is the responsibility of the
  * caller to unlock it when done with the table.
  */
-int	tesla_gettable_locked(struct tesla_state*, struct tesla_table**);
+int	tesla_gettable_locked(struct tesla_class*, struct tesla_table**);
 
 /*
  * When the assertion fails, what to do?
@@ -102,21 +102,21 @@ MALLOC_DECLARE(M_TESLA);
 /*
  * Interfaces to global state management.
  */
-int	tesla_state_global_new(struct tesla_state *tsp);
-void	tesla_state_global_destroy(struct tesla_state *tsp);
-int	tesla_state_global_gettable(struct tesla_state *tsp,
+int	tesla_class_global_new(struct tesla_class *tsp);
+void	tesla_class_global_destroy(struct tesla_class *tsp);
+int	tesla_class_global_gettable(struct tesla_class *tsp,
 	    struct tesla_table **ttpp);
-void	tesla_state_global_flush(struct tesla_state *tsp);
-void	tesla_state_global_lock(struct tesla_state *tsp);
-void	tesla_state_global_unlock(struct tesla_state *tsp);
+void	tesla_class_global_flush(struct tesla_class *tsp);
+void	tesla_class_global_lock(struct tesla_class *tsp);
+void	tesla_class_global_unlock(struct tesla_class *tsp);
 
 /*
  * Interfaces to per-thread state management.
  */
-int	tesla_state_perthread_new(struct tesla_state *tsp);
-void	tesla_state_perthread_destroy(struct tesla_state *tsp);
-void	tesla_state_perthread_flush(struct tesla_state *tsp);
-int	tesla_state_perthread_gettable(struct tesla_state *tsp,
+int	tesla_class_perthread_new(struct tesla_class *tsp);
+void	tesla_class_perthread_destroy(struct tesla_class *tsp);
+void	tesla_class_perthread_flush(struct tesla_class *tsp);
+int	tesla_class_perthread_gettable(struct tesla_class *tsp,
 	    struct tesla_table **ttpp);
 
 /*
@@ -124,7 +124,7 @@ int	tesla_state_perthread_gettable(struct tesla_state *tsp,
  */
 
 /**
- * Assert that a @ref tesla_instance is an instance of a @ref tesla_state.
+ * Assert that a @ref tesla_instance is an instance of a @ref tesla_class.
  *
  * This could be expensive (a linear walk over all @ref tesla_instance in
  * @ref #tclass), so it should only be called from debug code.
@@ -132,6 +132,6 @@ int	tesla_state_perthread_gettable(struct tesla_state *tsp,
  * @param   i          the instance to test
  * @param   tclass     the expected class of @ref #i
  */
-void	assert_instanceof(struct tesla_instance *i, struct tesla_state *tclass);
+void	assert_instanceof(struct tesla_instance *i, struct tesla_class *tclass);
 
 #endif /* TESLA_INTERNAL_H */

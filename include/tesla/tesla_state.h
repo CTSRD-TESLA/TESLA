@@ -38,24 +38,24 @@
 #include "tesla_iterator.h"
 
 /*
- * tesla_state is part of the libtesla runtime environment.  tesla_state is
+ * tesla_class is part of the libtesla runtime environment.  tesla_class is
  * used by compiled TESLA assertions to hold state for in-execution automata.
  *
- * The state of each TESLA assertion is described by struct tesla_state, which
+ * The state of each TESLA assertion is described by struct tesla_class, which
  * is opaque to consumers.  An individual TESLA assertion may contain a
  * number of different automata describing various parts of an expression, and
  * potentially many instances of each automata in flight.  All of this state
- * is maintained in a single tesla_state, and addressed using one or more
+ * is maintained in a single tesla_class, and addressed using one or more
  * keys.  By convention, the first key is the name of the automata; the
  * remainder of the lookup keys are constants that select a specific instance
  * of the automata.
  */
-struct tesla_state;
+struct tesla_class;
 
 #define	TESLA_KEY_SIZE		4
 
 /**
- * A TESLA instance can be identified by a @ref tesla_state and a
+ * A TESLA instance can be identified by a @ref tesla_class and a
  * @ref tesla_key. This key represents the values of event parameters (e.g. a
  * credential passed to a security check), some of which may not be specified.
  *
@@ -84,7 +84,7 @@ int	tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k);
  * synchronisation are managed by the TESLA runtime.
  *
  * The first (n) fields are the automata's keys (see comment above); these
- * must not be modified by the consumer, a they are also used by tesla_state
+ * must not be modified by the consumer, a they are also used by tesla_class
  * for lookup.  Keys are register-sized so that they can hold arbitrary
  * data/pointers that might be arguments to TESLA instrumentation points.  It
  * is important that this structure be no bigger than necessary, as one will
@@ -97,7 +97,7 @@ struct tesla_instance {
 };
 
 /**
- * Instances of tesla_state each have a "scope", used to determine where data
+ * Instances of tesla_class each have a "scope", used to determine where data
  * should be stored, and how it should be synchronised.
  *
  * Two scopes are currently supported: thread-local and global. Thread-local
@@ -121,29 +121,29 @@ struct tesla_instance {
  *                least 10x the actual number you might use in practice, in
  *                order to ensure an adequately sparse hash table.
  */
-int	tesla_state_new(struct tesla_state **tspp, u_int scope, u_int limit,
+int	tesla_class_new(struct tesla_class **tspp, u_int scope, u_int limit,
 	    const char *name, const char *description);
 
-/** Free a @ref tesla_state instance. */
-void	tesla_state_destroy(struct tesla_state *tsp);
+/** Free a @ref tesla_class instance. */
+void	tesla_class_destroy(struct tesla_class *tsp);
 
-/** Free currently instantiated automata, leaving the tesla_state reusable. */
-void	tesla_state_flush(struct tesla_state *tsp);
+/** Free currently instantiated automata, leaving the tesla_class reusable. */
+void	tesla_class_flush(struct tesla_class *tsp);
 
 /**
  * Set the action to take when a TESLA assertion fails; implemented via a
  * callback from the TESLA runtime.
  */
 typedef void	(*tesla_assert_fail_callback)(struct tesla_instance *tip);
-void	tesla_state_setaction(struct tesla_state *tsp,
+void	tesla_class_setaction(struct tesla_class *tsp,
 	    tesla_assert_fail_callback handler);
 
 /** Retrieve a TESLA automata class, creating if it does not exist. */
-int	tesla_state_get(struct tesla_state **tspp, u_int scope, u_int limit,
+int	tesla_class_get(struct tesla_class **tspp, u_int scope, u_int limit,
 	    const char *name, const char *description);
 
 /** Find (or create) an automata instance that matches a key. */
-int	tesla_instance_get(struct tesla_state *tclass, struct tesla_key *key,
+int	tesla_instance_get(struct tesla_class *tclass, struct tesla_key *key,
 	    struct tesla_instance **instance);
 
 /**
@@ -156,25 +156,25 @@ int	tesla_instance_get(struct tesla_state *tclass, struct tesla_key *key,
  * @returns    a standard TESLA error code (e.g., TESLA_ERROR_ENOMEM)
  */
 int
-tesla_match(struct tesla_state *tclass, struct tesla_key *key,
+tesla_match(struct tesla_class *tclass, struct tesla_key *key,
 	    struct tesla_iterator **iter);
 
 /**
  * Once an instance has been queried, it must be "returned" to its
- * tesla_state, which will release synchronisation on the instance.
+ * tesla_class, which will release synchronisation on the instance.
  */
-void	tesla_instance_put(struct tesla_state *tsp,
+void	tesla_instance_put(struct tesla_class *tsp,
 	    struct tesla_instance *tip);
 
 /**
  * This interface releases an instance for reuse; some types of automata will
- * prefer tesla_state_flush(), which clears all instances associated with a
- * particular tesla_state.
+ * prefer tesla_class_flush(), which clears all instances associated with a
+ * particular tesla_class.
  *
  * An instance passed to tesla_instance_destroy() will not require a call to
  * tesla_instance_put().
  */
-void	tesla_instance_destroy(struct tesla_state *tsp,
+void	tesla_instance_destroy(struct tesla_class *tsp,
 	    struct tesla_instance *tip);
 
 /**
@@ -185,7 +185,7 @@ void	tesla_instance_destroy(struct tesla_state *tsp,
  * firing should be suppressed so that e.g. DTrace probes fire only once
  * per failure.
  */
-void	tesla_assert_fail(struct tesla_state *tsp,
+void	tesla_assert_fail(struct tesla_class *tsp,
 	    struct tesla_instance *tip);
 
 #endif /* _TESLA_STATE */

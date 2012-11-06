@@ -57,7 +57,7 @@
  * Kernel and userspace implementations differ quite a lot, due to very
  * different guarantees for kernel per-thread storage and pthread
  * thread-specific state.  For example, the kernel implementation guarantees
- * that space will be available if the initial tesla_state allocation
+ * that space will be available if the initial tesla_class allocation
  * succeedes, and instruments thread create and destroy to ensure this is the
  * case.  However, it has to do a lot more book-keeping, and allocates space
  * that might never be used.  In userspace, per-thread state is allocated the
@@ -69,32 +69,32 @@
 
 /*
  * Global state used to manage per-thread storage slots for TESLA per-thread
- * assertions.  tspd_tesla_statep is non-NULL when a slot has been allocated.
+ * assertions.  tspd_tesla_classp is non-NULL when a slot has been allocated.
  */
-static struct tesla_state_perthread_desc {
-	struct tesla_state	*tspd_tesla_statep;
+static struct tesla_class_perthread_desc {
+	struct tesla_class	*tspd_tesla_classp;
 	size_t			 tspd_len;
-} tesla_state_perthread_desc[TESLA_PERTHREAD_MAX];
-static struct sx tesla_state_perthread_sx;
+} tesla_class_perthread_desc[TESLA_PERTHREAD_MAX];
+static struct sx tesla_class_perthread_sx;
 
 /*
  * Registration state for per-thread storage.
  */
-static eventhandler_tag	tesla_state_perthread_ctor_tag;
-static eventhandler_tag	tesla_state_perthread_dtor_tag;
+static eventhandler_tag	tesla_class_perthread_ctor_tag;
+static eventhandler_tag	tesla_class_perthread_dtor_tag;
 
 static void
-tesla_state_perthread_ctor(__unused void *arg, struct thread *td)
+tesla_class_perthread_ctor(__unused void *arg, struct thread *td)
 {
-	struct tesla_state_perthread_desc *tspdp;
-	struct tesla_state *tsp;
+	struct tesla_class_perthread_desc *tspdp;
+	struct tesla_class *tsp;
 	struct tesla_table *ttp;
 	u_int index;
 
-	sx_slock(&tesla_state_perthread_sx);
+	sx_slock(&tesla_class_perthread_sx);
 	for (index = 0; index < TESLA_PERTHREAD_MAX; index++) {
-		tspdp = &tesla_state_perthread_desc[index];
-		tsp = tspdp->tspd_tesla_statep;
+		tspdp = &tesla_class_perthread_desc[index];
+		tsp = tspdp->tspd_tesla_classp;
 		if (tsp == NULL) {
 			td->td_tesla[index] = NULL;
 			continue;
@@ -104,15 +104,15 @@ tesla_state_perthread_ctor(__unused void *arg, struct thread *td)
 		ttp->tt_free = tsp->ts_limit;
 		td->td_tesla[index] = ttp;
 	}
-	sx_sunlock(&tesla_state_perthread_sx);
+	sx_sunlock(&tesla_class_perthread_sx);
 }
 
 static void
-tesla_state_perthread_dtor_locked(struct thread *td)
+tesla_class_perthread_dtor_locked(struct thread *td)
 {
 	u_int index;
 
-	sx_assert(&tesla_state_perthread_sx, SX_LOCKED);
+	sx_assert(&tesla_class_perthread_sx, SX_LOCKED);
 	for (index = 0; index < TESLA_PERTHREAD_MAX; index++) {
 		if (td->td_tesla[index] == NULL)
 			continue;
@@ -122,29 +122,29 @@ tesla_state_perthread_dtor_locked(struct thread *td)
 }
 
 static void
-tesla_state_perthread_dtor(__unused void *arg, struct thread *td)
+tesla_class_perthread_dtor(__unused void *arg, struct thread *td)
 {
 
-	sx_slock(&tesla_state_perthread_sx);
-	tesla_state_perthread_dtor_locked(td);
-	sx_sunlock(&tesla_state_perthread_sx);
+	sx_slock(&tesla_class_perthread_sx);
+	tesla_class_perthread_dtor_locked(td);
+	sx_sunlock(&tesla_class_perthread_sx);
 }
 
 static void
-tesla_state_perthread_sysinit(__unused void *arg)
+tesla_class_perthread_sysinit(__unused void *arg)
 {
 
-	sx_init(&tesla_state_perthread_sx, "tesla_state_perthread_sx");
-	tesla_state_perthread_ctor_tag = EVENTHANDLER_REGISTER(thread_ctor,
-	    tesla_state_perthread_ctor, NULL, EVENTHANDLER_PRI_ANY);
-	tesla_state_perthread_dtor_tag = EVENTHANDLER_REGISTER(thread_dtor,
-	    tesla_state_perthread_dtor, NULL, EVENTHANDLER_PRI_ANY);
+	sx_init(&tesla_class_perthread_sx, "tesla_class_perthread_sx");
+	tesla_class_perthread_ctor_tag = EVENTHANDLER_REGISTER(thread_ctor,
+	    tesla_class_perthread_ctor, NULL, EVENTHANDLER_PRI_ANY);
+	tesla_class_perthread_dtor_tag = EVENTHANDLER_REGISTER(thread_dtor,
+	    tesla_class_perthread_dtor, NULL, EVENTHANDLER_PRI_ANY);
 }
-SYSINIT(tesla_state_perthread, SI_SUB_TESLA, SI_ORDER_FIRST,
-    tesla_state_perthread_sysinit, NULL);
+SYSINIT(tesla_class_perthread, SI_SUB_TESLA, SI_ORDER_FIRST,
+    tesla_class_perthread_sysinit, NULL);
 
 static void
-tesla_state_perthread_sysuninit(__unused void *arg)
+tesla_class_perthread_sysuninit(__unused void *arg)
 {
 	struct proc *p;
 	struct thread *td;
@@ -153,31 +153,31 @@ tesla_state_perthread_sysuninit(__unused void *arg)
 	 * XXXRW: Possibility of a race for in-flight handlers and
 	 * instrumentation?
 	 */
-	EVENTHANDLER_DEREGISTER(tesla_state_perthread_ctor,
-	    tesla_state_perthread_ctor_tag);
-	EVENTHANDLER_DEREGISTER(tesla_state_perthread_dtor,
-	    tesla_state_perthread_dtor_tag);
+	EVENTHANDLER_DEREGISTER(tesla_class_perthread_ctor,
+	    tesla_class_perthread_ctor_tag);
+	EVENTHANDLER_DEREGISTER(tesla_class_perthread_dtor,
+	    tesla_class_perthread_dtor_tag);
 
 	sx_xlock(&allproc_lock);
-	sx_xlock(&tesla_state_perthread_sx);
+	sx_xlock(&tesla_class_perthread_sx);
 	FOREACH_PROC_IN_SYSTEM(p) {
 		PROC_LOCK(p);
 		FOREACH_THREAD_IN_PROC(p, td) {
-			tesla_state_perthread_dtor_locked(td);
+			tesla_class_perthread_dtor_locked(td);
 		}
 		PROC_UNLOCK(p);
 	}
-	sx_xunlock(&tesla_state_perthread_sx);
+	sx_xunlock(&tesla_class_perthread_sx);
 	sx_xunlock(&allproc_lock);
-	sx_destroy(&tesla_state_perthread_sx);
+	sx_destroy(&tesla_class_perthread_sx);
 }
-SYSUNINIT(tesla_state_perthread, SI_SUB_TESLA, SI_ORDER_FIRST,
-    tesla_state_perthread_sysuninit, NULL);
+SYSUNINIT(tesla_class_perthread, SI_SUB_TESLA, SI_ORDER_FIRST,
+    tesla_class_perthread_sysuninit, NULL);
 
 int
-tesla_state_perthread_new(struct tesla_state *tsp)
+tesla_class_perthread_new(struct tesla_class *tsp)
 {
-	struct tesla_state_perthread_desc *tspdp;
+	struct tesla_class_perthread_desc *tspdp;
 	struct tesla_table *ttp;
 	struct proc *p;
 	struct thread *td;
@@ -188,20 +188,20 @@ tesla_state_perthread_new(struct tesla_state *tsp)
 	 * First, allocate a TESLA per-thread storage slot, if available.
 	 */
 	tspdp = NULL;
-	sx_xlock(&tesla_state_perthread_sx);
+	sx_xlock(&tesla_class_perthread_sx);
 	for (index = 0; index < TESLA_PERTHREAD_MAX; index++) {
-		if (tesla_state_perthread_desc[index].tspd_tesla_statep
+		if (tesla_class_perthread_desc[index].tspd_tesla_classp
 		    == NULL) {
-			tspdp = &tesla_state_perthread_desc[index];
+			tspdp = &tesla_class_perthread_desc[index];
 			break;
 		}
 	}
 	if (tspdp == NULL) {
-		sx_xunlock(&tesla_state_perthread_sx);
+		sx_xunlock(&tesla_class_perthread_sx);
 		return (TESLA_ERROR_ENOMEM);
 	}
 	tsp->ts_perthread_index = index;
-	tspdp->tspd_tesla_statep = tsp;
+	tspdp->tspd_tesla_classp = tsp;
 	tspdp->tspd_len = sizeof(*ttp) + sizeof(struct tesla_instance) *
 	    tsp->ts_limit;
 
@@ -209,7 +209,7 @@ tesla_state_perthread_new(struct tesla_state *tsp)
 	 * Walk all existing threads and add required allocations.  If we
 	 * can't allocate under the process lock, we have to loop out, use
 	 * M_WAITOK, and then repeat.  This looks starvation-prone, but
-	 * actually isn't: holding tesla_state_perthread_sx blocks further
+	 * actually isn't: holding tesla_class_perthread_sx blocks further
 	 * thread allocations from taking place, so the main concern is
 	 * in-progress allocations, which will be bounded in number.
 	 */
@@ -220,7 +220,7 @@ tesla_state_perthread_new(struct tesla_state *tsp)
 loop:
 		if (looped) {
 			KASSERT(ttp == NULL,
-			    ("tesla_state_perthread_new: ttp not NULL"));
+			    ("tesla_class_perthread_new: ttp not NULL"));
 			ttp = malloc(tspdp->tspd_len, M_TESLA,
 			    M_WAITOK | M_ZERO);
 			looped = 0;
@@ -252,21 +252,21 @@ loop:
 	/* Due to races, we may have allocated an extra, so free it now. */
 	if (ttp != NULL)
 		free(ttp, M_TESLA);
-	sx_xunlock(&tesla_state_perthread_sx);
+	sx_xunlock(&tesla_class_perthread_sx);
 	return (TESLA_SUCCESS);
 }
 
 void
-tesla_state_perthread_destroy(struct tesla_state *tsp)
+tesla_class_perthread_destroy(struct tesla_class *tsp)
 {
-	struct tesla_state_perthread_desc *tspdp;
+	struct tesla_class_perthread_desc *tspdp;
 	struct proc *p;
 	struct thread *td;
 	u_int index;
 
-	sx_xlock(&tesla_state_perthread_sx);
+	sx_xlock(&tesla_class_perthread_sx);
 	index = tsp->ts_perthread_index;
-	tspdp = &tesla_state_perthread_desc[index];
+	tspdp = &tesla_class_perthread_desc[index];
 
 	/*
 	 * First, walk all threads and release resources.  This is easier on
@@ -289,13 +289,13 @@ tesla_state_perthread_destroy(struct tesla_state *tsp)
 	/*
 	 * Finally, release the reservation.
 	 */
-	tspdp->tspd_tesla_statep = NULL;
+	tspdp->tspd_tesla_classp = NULL;
 	tspdp->tspd_len = 0;
-	sx_xunlock(&tesla_state_perthread_sx);
+	sx_xunlock(&tesla_class_perthread_sx);
 }
 
 void
-tesla_state_perthread_flush(struct tesla_state *tsp)
+tesla_class_perthread_flush(struct tesla_class *tsp)
 {
 	struct tesla_table *ttp;
 
@@ -306,14 +306,14 @@ tesla_state_perthread_flush(struct tesla_state *tsp)
 }
 
 int
-tesla_state_perthread_gettable(struct tesla_state *tsp,
+tesla_class_perthread_gettable(struct tesla_class *tsp,
     struct tesla_table **ttpp)
 {
 	struct tesla_table *ttp;
 
 	ttp = curthread->td_tesla[tsp->ts_perthread_index];
 	KASSERT(ttp != NULL,
-	    ("tesla_state_perthread_gettable: NULL tesla thread state"));
+	    ("tesla_class_perthread_gettable: NULL tesla thread state"));
 	*ttpp = ttp;
 	return (TESLA_SUCCESS);
 }
@@ -327,7 +327,7 @@ tesla_state_perthread_gettable(struct tesla_state *tsp,
  * per-thread assertions.
  */
 static void
-tesla_state_perthread_destructor(void *arg)
+tesla_class_perthread_destructor(void *arg)
 {
 	struct tesla_table *ttp = arg;
 
@@ -335,7 +335,7 @@ tesla_state_perthread_destructor(void *arg)
 }
 
 static int
-tesla_state_perthread_constructor(struct tesla_state *tsp,
+tesla_class_perthread_constructor(struct tesla_class *tsp,
     struct tesla_table **ttpp)
 {
 	struct tesla_table *ttp;
@@ -356,19 +356,19 @@ tesla_state_perthread_constructor(struct tesla_state *tsp,
 }
 
 int
-tesla_state_perthread_new(struct tesla_state *tsp)
+tesla_class_perthread_new(struct tesla_class *tsp)
 {
 	int error;
 
 	error = pthread_key_create(&tsp->ts_pthread_key,
-	    tesla_state_perthread_destructor);
+	    tesla_class_perthread_destructor);
 	if (error != 0)
 		return (TESLA_ERROR_ENOMEM);
 	return (TESLA_SUCCESS);
 }
 
 void
-tesla_state_perthread_destroy(struct tesla_state *tsp)
+tesla_class_perthread_destroy(struct tesla_class *tsp)
 {
 	int error;
 
@@ -377,7 +377,7 @@ tesla_state_perthread_destroy(struct tesla_state *tsp)
 }
 
 void
-tesla_state_perthread_flush(struct tesla_state *tsp)
+tesla_class_perthread_flush(struct tesla_class *tsp)
 {
 	struct tesla_table *ttp;
 
@@ -390,7 +390,7 @@ tesla_state_perthread_flush(struct tesla_state *tsp)
 }
 
 int
-tesla_state_perthread_gettable(struct tesla_state *tsp,
+tesla_class_perthread_gettable(struct tesla_class *tsp,
     struct tesla_table **ttpp)
 {
 	struct tesla_table *ttp;
@@ -398,7 +398,7 @@ tesla_state_perthread_gettable(struct tesla_state *tsp,
 
 	ttp = pthread_getspecific(tsp->ts_pthread_key);
 	if (ttp == NULL) {
-		error = tesla_state_perthread_constructor(tsp, &ttp);
+		error = tesla_class_perthread_constructor(tsp, &ttp);
 		if (error != 0)
 			return (error);
 	}
