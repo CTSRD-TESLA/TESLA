@@ -1,14 +1,2 @@
-*.ll
-*.tesla
-*.o
-*.so
-*.dylib
-*.d
-CMakeCache.txt
-CMakeFiles
-cmake_install.cmake
-.ninja_log
-*.ninja
-*.a
+build
 doxygen
-*.pb.*

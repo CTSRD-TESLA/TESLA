@@ -1,1 +1,4 @@
+*.ll
+*.o
+*.tesla
 demo
