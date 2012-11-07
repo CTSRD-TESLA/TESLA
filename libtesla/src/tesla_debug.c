@@ -41,7 +41,7 @@ void
 assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 {
 	struct tesla_table *ttp;
-	assert(tesla_gettable_locked(tclass, &ttp) == TESLA_SUCCESS);
+	assert(tesla_gettable(tclass, &ttp) == TESLA_SUCCESS);
 
 	int instance_belongs_to_class = 0;
 	for (size_t i = 0; i < ttp->tt_length; i++) {

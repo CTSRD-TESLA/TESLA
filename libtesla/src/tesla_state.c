@@ -106,13 +106,12 @@ tesla_class_flush(struct tesla_class *tsp)
 }
 
 int
-tesla_gettable_locked(struct tesla_class *tsp, struct tesla_table **ttp)
+tesla_gettable(struct tesla_class *tsp, struct tesla_table **ttp)
 {
 	assert(tsp != NULL);
 	assert(ttp != NULL);
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_class_global_lock(tsp);
 		*ttp = &tsp->ts_table;
 		return (TESLA_SUCCESS);
 	} else
@@ -154,9 +153,14 @@ tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
 	u_int i;
 	int error;
 
-	error = tesla_gettable_locked(tclass, &ttp);
-	if (error != TESLA_SUCCESS)
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_class_global_lock(tclass);
+
+	error = tesla_gettable(tclass, &ttp);
+	if (error != TESLA_SUCCESS) {
+		tesla_class_global_unlock(tclass);
 		return (error);
+	}
 
 	next_free_instance = NULL;
 	for (i = 0; i < ttp->tt_length; i++) {

@@ -136,11 +136,10 @@ struct tesla_class {
 /**
  * Get the @ref tesla_table for this @ref tesla_class.
  *
- * If the table is stored in @ref TESLA_SCOPE_GLOBAL, the @ref tesla_class
- * passed in will be left in a locked state; it is the responsibility of the
- * caller to unlock it when done with the table.
+ * It is the responsibility of the caller to lock the @ref tesla_class
+ * appropriately if the table is stored in @ref TESLA_SCOPE_GLOBAL.
  */
-int	tesla_gettable_locked(struct tesla_class*, struct tesla_table**);
+int	tesla_gettable(struct tesla_class*, struct tesla_table**);
 
 /*
  * When the assertion fails, what to do?

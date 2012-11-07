@@ -60,8 +60,12 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 	iter->tclass = tclass;
 	iter->pattern = pattern;
 
-	int error = tesla_gettable_locked(tclass, &iter->table);
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_class_global_lock(tclass);
+
+	int error = tesla_gettable(tclass, &iter->table);
 	if (error != TESLA_SUCCESS) {
+		tesla_class_global_unlock(tclass);
 		free(iter);
 		return error;
 	}
