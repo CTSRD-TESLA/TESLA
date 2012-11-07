@@ -30,23 +30,10 @@
  * $Id$
  */
 
-#ifdef _KERNEL
-#include <sys/param.h>
-#include <sys/libkern.h>
-#include <sys/lock.h>
-#include <sys/mutex.h>
-#else
-#include <assert.h>
-#include <err.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
+#include "tesla_internal.h"
 
 #include <tesla/tesla_state.h>
 #include <tesla/tesla_util.h>
-
-#include "tesla_internal.h"
 
 /*
  * Currently, this serialises all automata associated with a globally-scoped
@@ -83,24 +70,14 @@ void
 tesla_class_global_lock(struct tesla_class *tsp)
 {
 
-#ifdef _KERNEL
-	mtx_lock(&tsp->ts_lock);
-#else
-	int error = pthread_mutex_lock(&tsp->ts_lock);
-	assert(error == 0);
-#endif
+	tesla_lock(&tsp->ts_lock);
 }
 
 void
 tesla_class_global_unlock(struct tesla_class *tsp)
 {
 
-#ifdef _KERNEL
-	mtx_unlock(&tsp->ts_lock);
-#else
-	int error = pthread_mutex_unlock(&tsp->ts_lock);
-	assert(error == 0);
-#endif
+	tesla_unlock(&tsp->ts_lock);
 }
 
 int

@@ -30,32 +30,10 @@
  * $Id$
  */
 
-#ifdef _KERNEL
-#include "opt_kdb.h"
-#include <sys/param.h>
-#include <sys/kdb.h>
-#include <sys/kernel.h>
-#include <sys/lock.h>
-#include <sys/mutex.h>
-#include <sys/malloc.h>
-#include <sys/systm.h>
-#else
-#include <assert.h>
-#include <err.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#endif
-
-#include <tesla/tesla_util.h>
-#include <tesla/tesla_state.h>
-
 #include "tesla_internal.h"
 
-#ifdef _KERNEL
-MALLOC_DECLARE(M_TESLA);
-#endif
+#include <tesla/tesla_util.h>
+
 
 struct tesla_iterator {
 	struct tesla_class	*tclass;
@@ -75,12 +53,7 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 	struct tesla_iterator *iter = 0;
 	const size_t len = sizeof(struct tesla_iterator);
 
-#ifdef _KERNEL
-	iter = malloc(len, M_TESLA, M_WAITOK | M_ZERO);
-#else
-	iter = malloc(len);
-#endif
-
+	iter = tesla_malloc(len);
 	if (iter == NULL)
 		return (TESLA_ERROR_ENOMEM);
 
@@ -148,10 +121,6 @@ tesla_iterator_free(struct tesla_iterator *it)
 	if (it->tclass->ts_scope == TESLA_SCOPE_GLOBAL)
 		tesla_class_global_unlock(it->tclass);
 
-#ifdef _KERNEL
-	free(it, M_TESLA);
-#else
-	free(it);
-#endif
+	tesla_free(it);
 }
 

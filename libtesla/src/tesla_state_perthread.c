@@ -30,27 +30,9 @@
  * $Id$
  */
 
-#ifdef _KERNEL
-#include <sys/param.h>
-#include <sys/eventhandler.h>
-#include <sys/kernel.h>
-#include <sys/lock.h>
-#include <sys/malloc.h>
-#include <sys/proc.h>
-#include <sys/sx.h>
-#include <sys/systm.h>
-#else
-#include <assert.h>
-#include <err.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
+#include "tesla_internal.h"
 
 #include <tesla/tesla_util.h>
-#include <tesla/tesla_state.h>
-
-#include "tesla_internal.h"
 
 /*
  * Routines for managing TESLA per-thread state, used in per-thread automata.

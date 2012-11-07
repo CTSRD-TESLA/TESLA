@@ -33,6 +33,63 @@
 #ifndef TESLA_INTERNAL_H
 #define	TESLA_INTERNAL_H
 
+#ifdef _KERNEL
+#include "opt_kdb.h"
+#include <sys/param.h>
+#include <sys/kdb.h>
+#include <sys/kernel.h>
+#include <sys/lock.h>
+#include <sys/mutex.h>
+#include <sys/malloc.h>
+#include <sys/systm.h>
+#else
+#include <assert.h>
+#include <err.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#endif
+
+#include <tesla/tesla_state.h>
+
+
+
+// Kernel vs userspace implementation details.
+#ifdef _KERNEL
+
+/** In the kernel, panic really means panic(). */
+#define tesla_panic(...) panic(__VA_ARGS__)
+
+/** Our @ref tesla_assert has the same signature as @ref KASSERT. */
+#define tesla_assert(...) KASSERT(__VA_ARGS__)
+
+/** Emulate simple POSIX assertions. */
+#define assert(cond) KASSERT(cond, "Assertion failed: '" # cond "'")
+
+#define tesla_malloc(len) malloc(len, M_TESLA, M_WAITOK | M_ZERO)
+#define tesla_free(x) free(x, M_TESLA)
+
+#define tesla_lock(l) mtx_lock(l)
+#define tesla_unlock(l) mtx_unlock(l)
+
+#else	/* !_KERNEL */
+
+/** @ref errx() is the userspace equivalent of panic(). */
+#define tesla_panic(...) errx(1, __VA_ARGS__)
+
+/** POSIX @ref assert() doesn't let us provide an error message. */
+#define tesla_assert(condition, ...) assert(condition)
+
+#define tesla_malloc(len) calloc(1, len)
+#define tesla_free(x) free(x)
+
+#define tesla_lock(l) assert(0 == pthread_mutex_lock(l))
+#define tesla_unlock(l) assert(0 == pthread_mutex_unlock(l))
+
+#endif
+
+
 /*
  * Instance table definition, used for both global and per-thread scopes.  A
  * more refined data structure might eventually be used here.

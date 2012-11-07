@@ -31,28 +31,9 @@
  * $Id$
  */
 
-#ifdef _KERNEL
-#include "opt_kdb.h"
-#include <sys/param.h>
-#include <sys/kdb.h>
-#include <sys/kernel.h>
-#include <sys/lock.h>
-#include <sys/mutex.h>
-#include <sys/malloc.h>
-#include <sys/systm.h>
-#else
-#include <assert.h>
-#include <err.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#endif
+#include "tesla_internal.h"
 
 #include <tesla/tesla_util.h>
-#include <tesla/tesla_state.h>
-
-#include "tesla_internal.h"
 
 #ifdef _KERNEL
 MALLOC_DEFINE(M_TESLA, "tesla", "TESLA internal state");
@@ -66,13 +47,9 @@ tesla_class_new(struct tesla_class **tspp, u_int scope, u_int limit,
 	size_t len;
 	int error;
 
-#ifdef _KERNEL
-	KASSERT((scope == TESLA_SCOPE_PERTHREAD) ||
+	tesla_assert((scope == TESLA_SCOPE_PERTHREAD) ||
 	    (scope == TESLA_SCOPE_GLOBAL),
 	    ("tesla_class_new: invalid scope %u", scope));
-#else
-	assert(scope == TESLA_SCOPE_PERTHREAD || scope == TESLA_SCOPE_GLOBAL);
-#endif
 
 	/* XXXRW: Should validate 'limit' argument. */
 
@@ -81,14 +58,9 @@ tesla_class_new(struct tesla_class **tspp, u_int scope, u_int limit,
 	else
 		len = sizeof(*tsp) + sizeof(struct tesla_instance) * limit;
 
-#ifdef _KERNEL
-	tsp = malloc(len, M_TESLA, M_WAITOK | M_ZERO);
-#else
 	tsp = malloc(len);
 	if (tsp == NULL)
 		return (TESLA_ERROR_ENOMEM);
-	bzero(tsp, len);
-#endif
 
 	tsp->ts_name = name;
 	tsp->ts_description = description;
@@ -103,11 +75,7 @@ tesla_class_new(struct tesla_class **tspp, u_int scope, u_int limit,
 	if (scope == TESLA_SCOPE_PERTHREAD) {
 		error = tesla_class_perthread_new(tsp);
 		if (error != TESLA_SUCCESS) {
-#ifdef _KERNEL
-			free(tsp, M_TESLA);
-#else
-			free(tsp);
-#endif
+			tesla_free(tsp);
 			return (error);
 		}
 	} else
@@ -124,11 +92,7 @@ tesla_class_destroy(struct tesla_class *tsp)
 		tesla_class_global_destroy(tsp);
 	else
 		tesla_class_perthread_destroy(tsp);
-#ifdef _KERNEL
-	free(tsp, M_TESLA);
-#else
-	free(tsp);
-#endif
+	tesla_free(tsp);
 }
 
 void
@@ -278,13 +242,8 @@ tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip)
 
 	switch (tsp->ts_action) {
 	case TESLA_ACTION_FAILSTOP:
-#ifdef _KERNEL
-		panic("tesla_assert_failed: %s: %s", tsp->ts_name,
+		tesla_panic("tesla_assert_failed: %s: %s", tsp->ts_name,
 		    tsp->ts_description);
-#else
-		errx(-1, "tesla_assert failed: %s: %s", tsp->ts_name,
-		    tsp->ts_description);
-#endif
 		break;		/* A bit gratuitous. */
 #ifdef NOTYET
 	case TESLA_ACTION_DTRACE:

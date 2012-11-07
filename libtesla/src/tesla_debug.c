@@ -36,12 +36,6 @@
 
 #include "tesla_internal.h"
 
-#ifdef _KERNEL
-#include <kassert.h>
-#else
-#include <assert.h>
-#endif
-
 
 void
 assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
@@ -57,14 +51,10 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 		}
 	}
 
-#ifdef _KERNEL
-	KASSERT(instance_belongs_to_class,
+	tesla_assert(instance_belongs_to_class,
 		("tesla_instance %llx not of class '%s'",
 		 (register_t) instance, tclass->ts_name)
 	       );
-#else
-	assert(instance_belongs_to_class);
-#endif
 
 	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
 		tesla_class_global_unlock(tclass);
