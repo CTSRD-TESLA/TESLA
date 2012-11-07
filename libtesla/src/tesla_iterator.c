@@ -87,11 +87,9 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 int
 tesla_hasnext(struct tesla_iterator *it)
 {
-#ifdef ASSERTS
 	assert(it != NULL);
 	assert(it->next != NULL);
 	assert(it->end != NULL);
-#endif
 
 	return (it->next < it->end);
 }
@@ -100,6 +98,7 @@ struct tesla_instance*
 tesla_next(struct tesla_iterator *it)
 {
 #ifdef DEBUG
+	// This is a potentially expensive check; only do it in debug mode.
 	assert(tesla_hasnext(it));
 #endif
 

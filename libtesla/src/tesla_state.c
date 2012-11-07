@@ -108,10 +108,8 @@ tesla_class_flush(struct tesla_class *tsp)
 int
 tesla_gettable_locked(struct tesla_class *tsp, struct tesla_table **ttp)
 {
-#ifdef ASSERTS
 	assert(tsp != NULL);
 	assert(ttp != NULL);
-#endif
 
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
 		tesla_class_global_lock(tsp);
@@ -124,10 +122,8 @@ tesla_gettable_locked(struct tesla_class *tsp, struct tesla_table **ttp)
 int
 tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k)
 {
-#ifdef ASSERTS
 	assert(pattern);
 	assert(k);
-#endif
 
 	// The pattern's mask must be a subset of the target's (ANY matches
 	// 42 but not the other way around).
@@ -149,11 +145,9 @@ int
 tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
 		   struct tesla_instance **out)
 {
-#ifdef ASSERTS
 	assert(tclass);
 	assert(pattern);
 	assert(out);
-#endif
 
 	struct tesla_instance *instance, *next_free_instance;
 	struct tesla_table *ttp;
