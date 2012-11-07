@@ -90,10 +90,9 @@ int	tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k);
  * is important that this structure be no bigger than necessary, as one will
  * be allocated for every potential intance of an automata.
  */
-#define	TESLA_STATE_SIZE	4
 struct tesla_instance {
 	struct tesla_key	ti_key;
-	u_int			ti_state[TESLA_STATE_SIZE];
+	register_t		ti_state;
 };
 
 /**
