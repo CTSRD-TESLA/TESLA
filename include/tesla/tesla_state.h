@@ -155,8 +155,7 @@ int	tesla_instance_get(struct tesla_class *tclass, struct tesla_key *key,
  *
  * @returns    a standard TESLA error code (e.g., TESLA_ERROR_ENOMEM)
  */
-int
-tesla_match(struct tesla_class *tclass, struct tesla_key *key,
+int	tesla_match(struct tesla_class *tclass, struct tesla_key *key,
 	    struct tesla_iterator **iter);
 
 /**
