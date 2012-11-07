@@ -50,10 +50,8 @@ int
 tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 	    struct tesla_iterator **iter_out)
 {
-	struct tesla_iterator *iter = 0;
 	const size_t len = sizeof(struct tesla_iterator);
-
-	iter = tesla_malloc(len);
+	struct tesla_iterator *iter = tesla_malloc(len);
 	if (iter == NULL)
 		return (TESLA_ERROR_ENOMEM);
 
