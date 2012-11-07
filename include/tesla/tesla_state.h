@@ -61,6 +61,8 @@ struct tesla_class;
  *
  * Clients can use @ref tesla_key to look up sets of automata instances, using
  * the bitmask to specify don't-care parameters.
+ *
+ * Keys are register-sized so that they can hold arbitrary data/pointers.
  */
 struct tesla_key {
 	/** A bitmask of the keys that are actually set. */
@@ -78,18 +80,7 @@ struct tesla_key {
 int	tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k);
 
 
-/*
- * Each automata instance is captured by a struct tesla_instance, which holds
- * data capturing the state of an in-execution automata.  Storage and
- * synchronisation are managed by the TESLA runtime.
- *
- * The first (n) fields are the automata's keys (see comment above); these
- * must not be modified by the consumer, a they are also used by tesla_class
- * for lookup.  Keys are register-sized so that they can hold arbitrary
- * data/pointers that might be arguments to TESLA instrumentation points.  It
- * is important that this structure be no bigger than necessary, as one will
- * be allocated for every potential intance of an automata.
- */
+/** A single instance of an automaton: a name (@ref ti_key) and a state. */
 struct tesla_instance {
 	struct tesla_key	ti_key;
 	register_t		ti_state;
