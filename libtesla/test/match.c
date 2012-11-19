@@ -8,25 +8,7 @@
 #include <err.h>
 #include <stdio.h>
 
-
-
-#include <execinfo.h>
-#include <signal.h>
-#include <stdlib.h>
-
-void signal_handler(int sig) {
-  void *array[10];
-  size_t size;
-
-  // get void*'s for all entries on the stack
-  size = backtrace(array, 10);
-
-  // print out all the frames to stderr
-  fprintf(stderr, "Signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, 2);
-  exit(1);
-}
-
+#include "helpers.h"
 
 #define CREATE_AUTOMATA_INSTANCE(class, instance, key0, key1, key2) { \
 	struct tesla_key key; \
@@ -44,6 +26,8 @@ void signal_handler(int sig) {
 int
 main(int argc, char **argv)
 {
+	install_default_signal_handler();
+
 	struct tesla_key pattern, good, bad;
 
 	pattern.tk_mask = 0x09;

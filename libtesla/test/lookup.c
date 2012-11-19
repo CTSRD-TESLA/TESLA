@@ -13,6 +13,7 @@
 #include <err.h>
 #include <stdio.h>
 
+#include "helpers.h"
 
 
 /** Some automata instances to look up (of more than one class). */
@@ -32,28 +33,27 @@ int	search_for_pattern(struct tesla_class*, struct tesla_key *pattern);
 int
 main(int argc, char **argv)
 {
-	int err;
+	install_default_signal_handler();
 
-	/* Create two classes of automata: 'classA' and 'classB'. */
-	struct tesla_class *classA;
-	err = tesla_class_new(&classA, TESLA_SCOPE_PERTHREAD, 23,
-		"classA", "a class of TESLA automata");
-	if (err)
-		errx(1, "error in 'new': %s\n", tesla_strerror(err));
+	struct tesla_store *global_store;
+	struct tesla_class *glob_automaton;
+	check(tesla_store_get(TESLA_SCOPE_GLOBAL, 1, 3, &global_store));
+	check(tesla_class_get(global_store, 0, &glob_automaton,
+		"glob_automaton", "a class of TESLA automata"));
 
-	struct tesla_class *classB;
-	err = tesla_class_new(&classB, TESLA_SCOPE_GLOBAL, 23,
-		"classB", "another class of TESLA automata");
-	if (err)
-		errx(1, "error in 'new': %s\n", tesla_strerror(err));
+	struct tesla_store *perthread_store;
+	struct tesla_class *thr_automaton;
+	check(tesla_store_get(TESLA_SCOPE_PERTHREAD, 1, 3, &perthread_store));
+	check(tesla_class_get(perthread_store, 0, &thr_automaton,
+		"thr_automaton", "a class of TESLA automata"));
 
 	/* Create some automata instances. */
-	create_instance(classA, &instances[0], 42, 0, 1000);
-	create_instance(classA, &instances[1], 43, 0, 1000);
-	create_instance(classA, &instances[2], 42, 0, -1);
-	create_instance(classB, &instances[3], 42, 0, 1000);
-	create_instance(classB, &instances[4], 43, 1, 1000);
-	create_instance(classB, &instances[5], 42, 1, -1);
+	create_instance(glob_automaton, &instances[0], 42, 0, 1000);
+	create_instance(glob_automaton, &instances[1], 43, 0, 1000);
+	create_instance(glob_automaton, &instances[2], 42, 0, -1);
+	create_instance(thr_automaton, &instances[3], 42, 0, 1000);
+	create_instance(thr_automaton, &instances[4], 43, 1, 1000);
+	create_instance(thr_automaton, &instances[5], 42, 1, -1);
 
 	// Make sure they are all unique; this is n^2, but n is small.
 	for (size_t i = 0; i < INSTANCES; i++) {
@@ -69,24 +69,24 @@ main(int argc, char **argv)
 	// keys[0] == 42 => {0,2,3,5}
 	pattern.tk_mask = 1 << 0;
 	pattern.tk_keys[0] = 42;
-	assert((search_for_pattern(classA, &pattern)
-	        | search_for_pattern(classB, &pattern))
+	assert((search_for_pattern(glob_automaton, &pattern)
+	        | search_for_pattern(thr_automaton, &pattern))
 	       == 0x2D
 	);
 
 	// keys[1] == 0 => {0,1,2,3}
 	pattern.tk_mask = 1 << 1;
 	pattern.tk_keys[1] = 0;     // the value 0 is not special
-	assert((search_for_pattern(classA, &pattern)
-	        | search_for_pattern(classB, &pattern))
+	assert((search_for_pattern(glob_automaton, &pattern)
+	        | search_for_pattern(thr_automaton, &pattern))
 	       == 0x0F
 	);
 
 	// keys[2] == -1 => {2,5}
 	pattern.tk_mask = 1 << 2;
 	pattern.tk_keys[2] = -1;    // the value -1 is not special, either
-	assert((search_for_pattern(classA, &pattern)
-	        | search_for_pattern(classB, &pattern))
+	assert((search_for_pattern(glob_automaton, &pattern)
+	        | search_for_pattern(thr_automaton, &pattern))
 	       == 0x24
 	);
 
@@ -94,15 +94,15 @@ main(int argc, char **argv)
 	pattern.tk_mask = (1 << 0) + (1 << 1);
 	pattern.tk_keys[0] = 42;
 	pattern.tk_keys[1] = 1;
-	assert((search_for_pattern(classA, &pattern)
-	        | search_for_pattern(classB, &pattern))
+	assert((search_for_pattern(glob_automaton, &pattern)
+	        | search_for_pattern(thr_automaton, &pattern))
 	       == 0x20
 	);
 
 	// 'ANY' pattern => all
 	pattern.tk_mask = 0;
-	assert((search_for_pattern(classA, &pattern)
-	        | search_for_pattern(classB, &pattern))
+	assert((search_for_pattern(glob_automaton, &pattern)
+	        | search_for_pattern(thr_automaton, &pattern))
 	       == 0x3F
 	);
 
@@ -120,9 +120,7 @@ create_instance(struct tesla_class *tclass, struct tesla_instance **instance,
 	key.tk_keys[1] = key1;
 	key.tk_keys[2] = key2;
 
-	int err = tesla_instance_get(tclass, &key, instance);
-	if (err != TESLA_SUCCESS)
-		errx(1, "error in 'get': %s\n", tesla_strerror(err));
+	check(tesla_instance_get(tclass, &key, instance));
 
 	assert(instance != NULL);
 	tesla_instance_put(tclass, *instance);

@@ -21,22 +21,25 @@
 #include <tesla/tesla_state.h>
 #include <tesla/tesla_util.h>
 
+#include <assert.h>
+#include <err.h>
 #include <stdio.h>
+
+#include "helpers.h"
 
 
 int
 main(int argc, char **argv)
 {
-	printf("Creating new TESLA class... ");
-	int err;
+	install_default_signal_handler();
+
+	struct tesla_store *global_store, *perthread;
+	assert(tesla_store_get(TESLA_SCOPE_GLOBAL, 1, 5, &global_store) == 0);
+	assert(tesla_store_get(TESLA_SCOPE_PERTHREAD, 1, 5, &perthread) == 0);
+
 	struct tesla_class *class;
-	err = tesla_class_new(&class, TESLA_SCOPE_PERTHREAD, 23,
-		"classA", "a class of TESLA automata");
-	if (err) {
-		printf("error: '%s'\n", tesla_strerror(err));
-		return 1;
-	}
-	printf("done.\n");
+	check(tesla_class_get(perthread, 0, &class,
+		"classA", "a class of TESLA automata"));
 
 	/* TODO: write more libtesla code to actually support forking */
 

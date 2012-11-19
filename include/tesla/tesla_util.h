@@ -44,6 +44,8 @@
 #define	TESLA_ERROR_ENOENT	1	/* Entry not found. */
 #define	TESLA_ERROR_EEXIST	2	/* Entry already present. */
 #define	TESLA_ERROR_ENOMEM	3	/* Insufficient memory. */
+#define	TESLA_ERROR_EINVAL	4	/* Invalid parameters. */
+#define	TESLA_ERROR_UNKNOWN	5	/* An unknown (e.g. platform) error. */
 
 /*
  * Provide string versions of TESLA errors.

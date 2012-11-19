@@ -45,7 +45,11 @@ tesla_strerror(int error)
 		return ("Entry already present");
 	case TESLA_ERROR_ENOMEM:
 		return ("Insufficient memory");
-	default:
+	case TESLA_ERROR_EINVAL:
+		return ("Invalid argument");
+	case TESLA_ERROR_UNKNOWN:
 		return ("Unknown error");
+	default:
+		return ("Invalid error code");
 	}
 }

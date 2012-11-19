@@ -113,15 +113,6 @@ struct tesla_class {
 	u_int		 ts_action;	/* What to do on failure. */
 
 	/*
-	 * State fields if per-thread.
-	 */
-#ifdef _KERNEL
-	u_int		 ts_perthread_index;	/* Per-thread array index. */
-#else
-	pthread_key_t	 ts_pthread_key;
-#endif
-
-	/*
 	 * State fields if global.  Table must be last field as it uses a
 	 * zero-length array.
 	 */
@@ -130,16 +121,32 @@ struct tesla_class {
 #else
 	pthread_mutex_t	 ts_lock;	/* Synchronise ts_table. */
 #endif
-	struct tesla_table	ts_table;	/* Table of instances. */
+
+	struct tesla_table	*ts_table;	/* Table of instances. */
+};
+
+typedef struct tesla_store tesla_store;
+typedef struct tesla_class tesla_class;
+typedef struct tesla_instance tesla_instance;
+
+
+/**
+ * @internal Definition of @ref tesla_store.
+ *
+ * Modifications to this structure should only be made while a lock is held
+ * or in a thread-local context.
+ */
+struct tesla_store {
+	u_int			length;
+	struct tesla_class	*classes;
 };
 
 /**
- * Get the @ref tesla_table for this @ref tesla_class.
- *
- * It is the responsibility of the caller to lock the @ref tesla_class
- * appropriately if the table is stored in @ref TESLA_SCOPE_GLOBAL.
+ * Initialize @ref tesla_class internals.
+ * Locking is the responsibility of the caller.
  */
-int	tesla_gettable(struct tesla_class*, struct tesla_table**);
+int	tesla_class_init(struct tesla_class*, u_int instances);
+
 
 /*
  * When the assertion fails, what to do?
@@ -158,22 +165,8 @@ MALLOC_DECLARE(M_TESLA);
 /*
  * Interfaces to global state management.
  */
-int	tesla_class_global_new(struct tesla_class *tsp);
-void	tesla_class_global_destroy(struct tesla_class *tsp);
-int	tesla_class_global_gettable(struct tesla_class *tsp,
-	    struct tesla_table **ttpp);
-void	tesla_class_global_flush(struct tesla_class *tsp);
 void	tesla_class_global_lock(struct tesla_class *tsp);
 void	tesla_class_global_unlock(struct tesla_class *tsp);
-
-/*
- * Interfaces to per-thread state management.
- */
-int	tesla_class_perthread_new(struct tesla_class *tsp);
-void	tesla_class_perthread_destroy(struct tesla_class *tsp);
-void	tesla_class_perthread_flush(struct tesla_class *tsp);
-int	tesla_class_perthread_gettable(struct tesla_class *tsp,
-	    struct tesla_table **ttpp);
 
 /*
  * Debug helpers.

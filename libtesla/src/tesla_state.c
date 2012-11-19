@@ -39,90 +39,36 @@
 MALLOC_DEFINE(M_TESLA, "tesla", "TESLA internal state");
 #endif
 
+
 int
-tesla_class_new(struct tesla_class **tspp, u_int scope, u_int limit,
-    const char *name, const char *description)
+tesla_class_init(struct tesla_class *tclass, u_int instances)
 {
-	struct tesla_class *tsp;
-	size_t len;
-	int error;
+	assert(tclass != NULL);
+	// TODO: write a TESLA assertion about locking here.
 
-	tesla_assert((scope == TESLA_SCOPE_PERTHREAD) ||
-	    (scope == TESLA_SCOPE_GLOBAL),
-	    ("tesla_class_new: invalid scope %u", scope));
+	tclass->ts_limit = instances;
 
-	/* XXXRW: Should validate 'limit' argument. */
-
-	if (scope == TESLA_SCOPE_PERTHREAD)
-		len = sizeof(*tsp);
-	else
-		len = sizeof(*tsp) + sizeof(struct tesla_instance) * limit;
-
-	tsp = malloc(len);
-	if (tsp == NULL)
-		return (TESLA_ERROR_ENOMEM);
-
-	tsp->ts_name = name;
-	tsp->ts_description = description;
-	tsp->ts_scope = scope;
-	tsp->ts_limit = limit;
 #ifdef _KERNEL
-	tsp->ts_action = TESLA_ACTION_PRINTF;
+	tclass->ts_action = TESLA_ACTION_PRINTF;
 #else
-	tsp->ts_action = TESLA_ACTION_FAILSTOP;	/* XXXRW: Default for now? */
+	tclass->ts_action = TESLA_ACTION_FAILSTOP;
 #endif
 
-	if (scope == TESLA_SCOPE_PERTHREAD) {
-		error = tesla_class_perthread_new(tsp);
-		if (error != TESLA_SUCCESS) {
-			tesla_free(tsp);
-			return (error);
-		}
-	} else
-		tesla_class_global_new(tsp);
-	*tspp = tsp;
+	tclass->ts_table = tesla_malloc(
+		sizeof(struct tesla_table)
+		+ instances * sizeof(struct tesla_instance)
+	);
+	tclass->ts_table->tt_length = instances;
+	tclass->ts_table->tt_free = instances;
+
 	return (TESLA_SUCCESS);
-}
-
-void
-tesla_class_destroy(struct tesla_class *tsp)
-{
-
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_destroy(tsp);
-	else
-		tesla_class_perthread_destroy(tsp);
-	tesla_free(tsp);
-}
-
-void
-tesla_class_flush(struct tesla_class *tsp)
-{
-
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_flush(tsp);
-	else
-		tesla_class_perthread_flush(tsp);
-}
-
-int
-tesla_gettable(struct tesla_class *tsp, struct tesla_table **ttp)
-{
-	assert(tsp != NULL);
-	assert(ttp != NULL);
-
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		*ttp = &tsp->ts_table;
-		return (TESLA_SUCCESS);
-	} else
-		return tesla_class_perthread_gettable(tsp, ttp);
 }
 
 int
 tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k)
 {
-	assert(pattern);
-	assert(k);
+	assert(pattern != NULL);
+	assert(k != NULL);
 
 	// The pattern's mask must be a subset of the target's (ANY matches
 	// 42 but not the other way around).
@@ -144,23 +90,19 @@ int
 tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
 		   struct tesla_instance **out)
 {
-	assert(tclass);
-	assert(pattern);
-	assert(out);
+	assert(tclass != NULL);
+	assert(pattern != NULL);
+	assert(out != NULL);
 
 	struct tesla_instance *instance, *next_free_instance;
-	struct tesla_table *ttp;
 	u_int i;
-	int error;
 
 	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
 		tesla_class_global_lock(tclass);
 
-	error = tesla_gettable(tclass, &ttp);
-	if (error != TESLA_SUCCESS) {
-		tesla_class_global_unlock(tclass);
-		return (error);
-	}
+	struct tesla_table *ttp = tclass->ts_table;
+	assert(ttp != NULL);
+	tesla_assert(ttp->tt_length != 0, "Uninitialized tesla_table");
 
 	next_free_instance = NULL;
 	for (i = 0; i < ttp->tt_length; i++) {
@@ -189,6 +131,7 @@ tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
 		return (TESLA_SUCCESS);
 	}
 
+	// There are no free slots.
 	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL) {
 		tesla_class_global_unlock(tclass);
 	}
@@ -205,28 +148,6 @@ tesla_instance_put(struct tesla_class *tsp, struct tesla_instance *tip)
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
 		tesla_class_global_unlock(tsp);
 	/* No action required for TESLA_SCOPE_PERTHREAD. */
-}
-
-void
-tesla_instance_destroy(struct tesla_class *tsp, struct tesla_instance *tip)
-{
-	struct tesla_table *ttp;
-	int error;
-
-	bzero(tip, sizeof(struct tesla_instance));
-
-	/*
-	 * XXXRW: this will need revisiting if we change locking strategies.
-	 */
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tsp->ts_table.tt_free++;
-		tesla_class_global_unlock(tsp);
-	} else  {
-		error = tesla_class_perthread_gettable(tsp, &ttp);
-		if (error != TESLA_SUCCESS)
-			return;
-		ttp->tt_free++;
-	}
 }
 
 void

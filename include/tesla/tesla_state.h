@@ -37,20 +37,58 @@
 
 #include "tesla_iterator.h"
 
-/*
- * tesla_class is part of the libtesla runtime environment.  tesla_class is
- * used by compiled TESLA assertions to hold state for in-execution automata.
+/**
+ * A storage container for one or more @ref tesla_class objects.
  *
- * The state of each TESLA assertion is described by struct tesla_class, which
- * is opaque to consumers.  An individual TESLA assertion may contain a
- * number of different automata describing various parts of an expression, and
- * potentially many instances of each automata in flight.  All of this state
- * is maintained in a single tesla_class, and addressed using one or more
- * keys.  By convention, the first key is the name of the automata; the
- * remainder of the lookup keys are constants that select a specific instance
- * of the automata.
+ * There may be one @ref tesla_store for each thread (for storing thread-local
+ * automata) plus a single global @ref tesla_store.
+ */
+struct tesla_store;
+
+/**
+ * Retrieve the @ref tesla_store for a context (e.g., a thread).
+ *
+ * If the @ref tesla_store does not exist yet, it will be created.
+ *
+ * @param[in]  context     @ref TESLA_SCOPE_PERTHREAD or @ref TESLA_SCOPE_GLOBAL
+ * @param[in]  classes     number of @ref tesla_class'es to expect
+ * @param[in]  instances   @ref tesla_instance count per @ref tesla_class
+ * @param[out] store       return parameter for @ref tesla_store pointer
+ */
+int	tesla_store_get(int context, u_int classes, u_int instances,
+	                struct tesla_store* *store);
+
+/** Reset all automata in a store to the inactive state. */
+int	tesla_store_reset(struct tesla_store *store);
+
+
+
+/**
+ * A description of a TESLA automaton, which may be instantiated a number of
+ * times with different names and current states.
  */
 struct tesla_class;
+
+/**
+ * Retrieve (or create) a @ref tesla_class from a @ref tesla_store.
+ *
+ * @param[in]   store    where the @ref tesla_class is expected to be stored
+ * @param[in]   id       a client-generated handle (a small integer, used as
+ *                       an index into an array)
+ * @param[out]  tclass   the retrieved (or generated) @ref tesla_class;
+ *                       only set if function returns TESLA_SUCCESS
+ * @param[in]   name     a user-readable name (e.g. an automata filename)
+ * @param[in]   description   a user-readable description (for error messages)
+ *
+ * @returns a TESLA error code (TESLA_SUCCESS, TESLA_ERROR_EINVAL, etc.)
+ */
+int	tesla_class_get(struct tesla_store *store,
+	                u_int id,
+	                struct tesla_class **tclass,
+	                const char *name,
+	                const char *description);
+
+
 
 #define	TESLA_KEY_SIZE		4
 
@@ -102,35 +140,12 @@ struct tesla_instance {
 #define	TESLA_SCOPE_GLOBAL	2
 
 /**
- * Create a new TESLA automata class.
- *
- * @param  scope  @ref TESLA_SCOPE_PERTHREAD or @ref TESLA_SCOPE_GLOBAL.
- * @param  limit  Maximum number of automata to support.
- *                Memory use scales linearly with this value.
- *                It is recommended that the limit be prime, and ideally at
- *                least 10x the actual number you might use in practice, in
- *                order to ensure an adequately sparse hash table.
- */
-int	tesla_class_new(struct tesla_class **tspp, u_int scope, u_int limit,
-	    const char *name, const char *description);
-
-/** Free a @ref tesla_class instance. */
-void	tesla_class_destroy(struct tesla_class *tsp);
-
-/** Free currently instantiated automata, leaving the tesla_class reusable. */
-void	tesla_class_flush(struct tesla_class *tsp);
-
-/**
  * Set the action to take when a TESLA assertion fails; implemented via a
  * callback from the TESLA runtime.
  */
 typedef void	(*tesla_assert_fail_callback)(struct tesla_instance *tip);
 void	tesla_class_setaction(struct tesla_class *tsp,
 	    tesla_assert_fail_callback handler);
-
-/** Retrieve a TESLA automata class, creating if it does not exist. */
-int	tesla_class_get(struct tesla_class **tspp, u_int scope, u_int limit,
-	    const char *name, const char *description);
 
 /** Find (or create) an automata instance that matches a key. */
 int	tesla_instance_get(struct tesla_class *tclass, struct tesla_key *key,
