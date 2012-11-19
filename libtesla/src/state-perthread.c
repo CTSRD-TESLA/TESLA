@@ -32,8 +32,6 @@
 
 #include "tesla_internal.h"
 
-#include <tesla/tesla_util.h>
-
 /*
  * Routines for managing TESLA per-thread state, used in per-thread automata.
  * Kernel and userspace implementations differ quite a lot, due to very

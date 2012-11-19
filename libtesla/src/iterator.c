@@ -32,8 +32,6 @@
 
 #include "tesla_internal.h"
 
-#include <tesla/tesla_util.h>
-
 
 struct tesla_iterator {
 	struct tesla_class	*tclass;

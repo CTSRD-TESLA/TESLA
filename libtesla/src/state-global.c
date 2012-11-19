@@ -30,26 +30,78 @@
  * $Id$
  */
 
-#ifndef TESLA_UTIL_H
-#define	TESLA_UTIL_H
-
-#include <sys/types.h>		/* register_t */
+#include "tesla_internal.h"
 
 /*
- * libtesla functions mostly return error values, and therefore return
- * pointers, etc, via call-by-reference arguments.  These errors are modeled
- * on errno(2), but a separate namespace.
+ * Currently, this serialises all automata associated with a globally-scoped
+ * assertion.  This is undesirable, and we should think about something more
+ * granular, such as using key values to hash to locks.  This might cause
+ * atomicity problems when composing multi-clause expressions, however; more
+ * investigation required.
  */
-#define	TESLA_SUCCESS		0	/* Success. */
-#define	TESLA_ERROR_ENOENT	1	/* Entry not found. */
-#define	TESLA_ERROR_EEXIST	2	/* Entry already present. */
-#define	TESLA_ERROR_ENOMEM	3	/* Insufficient memory. */
-#define	TESLA_ERROR_EINVAL	4	/* Invalid parameters. */
-#define	TESLA_ERROR_UNKNOWN	5	/* An unknown (e.g. platform) error. */
+static void
+tesla_class_global_lock_init(struct tesla_class *tsp)
+{
 
-/*
- * Provide string versions of TESLA errors.
- */
-const char	*tesla_strerror(int error);
+#ifdef _KERNEL
+	mtx_init(&tsp->ts_lock, "tesla", NULL, MTX_DEF);
+#else
+	int error = pthread_mutex_init(&tsp->ts_lock, NULL);
+	assert(error == 0);
+#endif
+}
 
-#endif /* TESLA_UTIL_H */
+static void
+tesla_class_global_lock_destroy(struct tesla_class *tsp)
+{
+
+#ifdef _KERNEL
+	mtx_destroy(&tsp->ts_lock);
+#else
+	int error = pthread_mutex_destroy(&tsp->ts_lock);
+	assert(error == 0);
+#endif
+}
+
+void
+tesla_class_global_lock(struct tesla_class *tsp)
+{
+
+	tesla_lock(&tsp->ts_lock);
+}
+
+void
+tesla_class_global_unlock(struct tesla_class *tsp)
+{
+
+	assert(tsp->ts_scope == TESLA_SCOPE_GLOBAL);
+	tesla_unlock(&tsp->ts_lock);
+}
+
+int
+tesla_class_global_new(struct tesla_class *tsp)
+{
+
+	tesla_class_global_lock_init(tsp);
+	tsp->ts_table->tt_length = tsp->ts_limit;
+	tsp->ts_table->tt_free = tsp->ts_limit;
+	return (TESLA_SUCCESS);
+}
+
+void
+tesla_class_global_destroy(struct tesla_class *tsp)
+{
+
+	tesla_class_global_lock_destroy(tsp);
+}
+
+void
+tesla_class_global_flush(struct tesla_class *tsp)
+{
+
+	tesla_class_global_lock(tsp);
+	bzero(&tsp->ts_table->tt_instances,
+	    sizeof(struct tesla_instance) * tsp->ts_table->tt_length);
+	tsp->ts_table->tt_free = tsp->ts_table->tt_length;
+	tesla_class_global_unlock(tsp);
+}

@@ -5,9 +5,7 @@
  * We should be able to look up automata by exact name or by using ANY.
  */
 
-#include <tesla/tesla.h>
-#include <tesla/tesla_state.h>
-#include <tesla/tesla_util.h>
+#include <tesla/libtesla.h>
 
 #include <assert.h>
 #include <err.h>

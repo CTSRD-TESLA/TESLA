@@ -1,10 +1,10 @@
 add_library(tesla SHARED
-	tesla_debug.c
-	tesla_iterator.c
-	tesla_state.c
-	tesla_state_global.c
-	tesla_state_perthread.c
-	tesla_store.c
-	tesla_util.c
+	debug.c
+	iterator.c
+	state.c
+	state-global.c
+	state-perthread.c
+	store.c
+	util.c
 )
 

@@ -35,7 +35,30 @@
 
 #include <sys/types.h>		/* register_t */
 
-#include "tesla_iterator.h"
+#include "libtesla-iterator.h"
+
+/*
+ * libtesla functions mostly return error values, and therefore return
+ * pointers, etc, via call-by-reference arguments.  These errors are modeled
+ * on errno(2), but a separate namespace.
+ */
+#define	TESLA_SUCCESS		0	/* Success. */
+#define	TESLA_ERROR_ENOENT	1	/* Entry not found. */
+#define	TESLA_ERROR_EEXIST	2	/* Entry already present. */
+#define	TESLA_ERROR_ENOMEM	3	/* Insufficient memory. */
+#define	TESLA_ERROR_EINVAL	4	/* Invalid parameters. */
+#define	TESLA_ERROR_UNKNOWN	5	/* An unknown (e.g. platform) error. */
+
+/** Update all automata instances that match a given key to a new state. */
+int	tesla_update_state(int context, int class_id,
+	const char *name, const char *description,
+	register_t expected_state, register_t new_state,
+	register_t mask, register_t k0, register_t k1, register_t k2, register_t k3);
+
+/*
+ * Provide string versions of TESLA errors.
+ */
+const char	*tesla_strerror(int error);
 
 /**
  * A storage container for one or more @ref tesla_class objects.

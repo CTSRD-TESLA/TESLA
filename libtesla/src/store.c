@@ -35,8 +35,6 @@
 
 #include "tesla_internal.h"
 
-#include <tesla/tesla_util.h>
-
 #ifndef _KERNEL
 #include <errno.h>
 

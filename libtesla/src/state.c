@@ -33,8 +33,6 @@
 
 #include "tesla_internal.h"
 
-#include <tesla/tesla_util.h>
-
 #ifdef _KERNEL
 MALLOC_DEFINE(M_TESLA, "tesla", "TESLA internal state");
 #endif

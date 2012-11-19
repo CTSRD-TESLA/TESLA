@@ -1,5 +1,6 @@
+/** @file  tesla_debug.c    Debugging helpers for TESLA state. */
 /*-
- * Copyright (c) 2011 Robert N. M. Watson
+ * Copyright (c) 2012 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -30,26 +31,31 @@
  * $Id$
  */
 
-#include <tesla/tesla_util.h>
+#include "tesla_internal.h"
 
-const char *
-tesla_strerror(int error)
+void
+assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 {
+	assert(instance != NULL);
+	assert(tclass != NULL);
 
-	switch (error) {
-	case TESLA_SUCCESS:
-		return ("Success");
-	case TESLA_ERROR_ENOENT:
-		return ("Entry not found");
-	case TESLA_ERROR_EEXIST:
-		return ("Entry already present");
-	case TESLA_ERROR_ENOMEM:
-		return ("Insufficient memory");
-	case TESLA_ERROR_EINVAL:
-		return ("Invalid argument");
-	case TESLA_ERROR_UNKNOWN:
-		return ("Unknown error");
-	default:
-		return ("Invalid error code");
+	struct tesla_table *ttp = tclass->ts_table;
+	assert(ttp != NULL);
+
+	int instance_belongs_to_class = 0;
+	for (size_t i = 0; i < ttp->tt_length; i++) {
+		if (instance == &ttp->tt_instances[i]) {
+			instance_belongs_to_class = 1;
+			break;
+		}
 	}
+
+	tesla_assert(instance_belongs_to_class,
+		("tesla_instance %llx not of class '%s'",
+		 (register_t) instance, tclass->ts_name)
+	       );
+
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_class_global_unlock(tclass);
 }
+
