@@ -10,6 +10,15 @@ set_directory_properties(PROPERTIES COMPILE_DEFINITIONS_DEBUG DEBUG)
 
 include_directories("include")
 
+# On FreeBSD, /usr/local/* is not used by default. In order to build LLVM
+# with libxml2, iconv.h, etc., we must add /usr/local paths.
+if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
+  include_directories("/usr/local/include")
+  link_directories("/usr/local/lib")
+endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
+
+set(POSITION_INDEPENDENT_CODE OFF)
+
 add_subdirectory(libtesla)
 add_subdirectory(tesla)
 
