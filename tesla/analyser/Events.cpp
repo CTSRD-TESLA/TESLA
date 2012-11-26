@@ -137,7 +137,7 @@ bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call,
     Report("TESLA predicate should have one (boolean) argument",
         Call->getLocStart(), Ctx)
       << Call->getSourceRange();
-    return NULL;
+    return false;
   }
 
   auto Bop = dyn_cast<BinaryOperator>(Call->getArg(0)->IgnoreImplicit());

@@ -73,7 +73,7 @@ bool ParseContext(Automaton *A, Expr *E, ASTContext& Ctx) {
     Report("Invalid locality specifier (must be per-thread or global)",
         E->getExprLoc(), Ctx)
       << E->getSourceRange();
-    return NULL;
+    return false;
   }
 
   StringRef Name = DRE->getDecl()->getName();
