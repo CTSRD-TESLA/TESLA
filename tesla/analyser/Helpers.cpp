@@ -50,7 +50,7 @@ using std::vector;
 
 namespace tesla {
 
-DiagnosticBuilder tesla::Report(StringRef Message, SourceLocation Loc,
+DiagnosticBuilder Report(StringRef Message, SourceLocation Loc,
     ASTContext& Ctx, DiagnosticsEngine::Level Level) {
 
   DiagnosticsEngine& Diag = Ctx.getDiagnostics();
