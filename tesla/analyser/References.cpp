@@ -37,8 +37,7 @@ using namespace clang;
 
 namespace tesla {
 
-bool
-ParseFunctionRef(FunctionRef *FnRef, FunctionDecl *Fn, ASTContext& Ctx) {
+bool ParseFunctionRef(FunctionRef *FnRef, FunctionDecl *Fn, ASTContext& Ctx) {
   assert(Fn && "Cannot parse a NULL function declaration");
 
   FnRef->set_name(Fn->getName());
@@ -52,16 +51,47 @@ ParseFunctionRef(FunctionRef *FnRef, FunctionDecl *Fn, ASTContext& Ctx) {
 }
 
 
-bool
-ParseArgument(Argument *Arg, Expr *E, ASTContext& Ctx) {
-  assert(E && "Cannot parse a NULL expression");
+bool ParseArgument(Argument *Arg, Expr *E, Automaton *A, ASTContext& Ctx) {
+  assert(Arg != NULL);
+  assert(E != NULL);
 
-#if 0
-  assert(false && "Not implemented");
+  auto P = E->IgnoreImplicit();
 
-  yaml::Node* Yaml() const;
-  static Argument* Parse(clang::Expr*);
-#endif
+  // Each parameter must be one of:
+  //  - a call to a TESLA pseudo-function,
+  //  - a reference to a named declaration or
+  //  - an integer constant expression.
+  if (auto Call = dyn_cast<CallExpr>(P)) {
+    auto Fn = Call->getDirectCallee();
+    if (!Fn) {
+      Report("Should only call TESLA pseudo-functions here",
+          P->getLocStart(), Ctx) << P->getSourceRange();
+      return NULL;
+    }
+
+    if (Fn->getName() != "__tesla_any") {
+      Report("Invalid call; expected __tesla_any()", P->getLocStart(), Ctx)
+        << P->getSourceRange();
+      return NULL;
+    }
+
+    Arg->set_type(Argument::Any);
+  } else if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
+    Arg->set_type(Argument::Variable);
+    *Arg->mutable_value() = DRE->getDecl()->getName();
+  } else if (P->isIntegerConstantExpr(Ctx)) {
+    Arg->set_type(Argument::Constant);
+  } else {
+    P->dump();
+
+    Report("Invalid argument to function within TESLA assertion",
+        P->getLocStart(), Ctx) << P->getSourceRange();
+    return NULL;
+  }
+
+  int CurrentArgCount = A->argcount();
+  Arg->set_index(CurrentArgCount);
+  A->set_argcount(CurrentArgCount + 1);
 
   return true;
 }

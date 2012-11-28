@@ -62,7 +62,7 @@ bool ParseInlineAssertion(Automaton *A, CallExpr *E, ASTContext& Ctx) {
   return
     ParseLocation(A->mutable_location(), Filename, Line, Counter, Ctx)
     && ParseContext(A, Context, Ctx)
-    && ParseExpression(A->mutable_expression(), Expression, A->location(), Ctx)
+    && ParseExpression(A->mutable_expression(), Expression, A, Ctx)
     ;
 }
 

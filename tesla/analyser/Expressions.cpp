@@ -42,18 +42,17 @@ using namespace clang;
 
 namespace tesla {
 
-bool ParseExpression(Expression *Exp, Expr *E, Location AssertLoc,
-                     ASTContext& Ctx) {
+bool ParseExpression(Expression *Exp, Expr *E, Automaton *A, ASTContext& Ctx) {
   E = E->IgnoreImplicit();
 
   if (auto Call = dyn_cast<CallExpr>(E)) {
     Exp->set_type(Expression::SEQUENCE);
-    return ParseSequence(Exp->mutable_sequence(), Call, AssertLoc, Ctx);
+    return ParseSequence(Exp->mutable_sequence(), Call, A, Ctx);
   }
 
   else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
     Exp->set_type(Expression::BOOLEAN_EXPR);
-    return ParseBooleanExpr(Exp->mutable_booleanexpr(), Bop, AssertLoc, Ctx);
+    return ParseBooleanExpr(Exp->mutable_booleanexpr(), Bop, A, Ctx);
   }
 
   Report("Not a valid TESLA expression", E->getLocStart(), Ctx)
@@ -62,7 +61,7 @@ bool ParseExpression(Expression *Exp, Expr *E, Location AssertLoc,
 }
 
 
-bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Location Loc,
+bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Automaton *A,
                       ASTContext& Ctx) {
   switch (Bop->getOpcode()) {
     default:
@@ -77,13 +76,13 @@ bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Location Loc,
   }
 
   return (
-    ParseExpression(Expr->add_expression(), Bop->getLHS(), Loc, Ctx)
-    && ParseExpression(Expr->add_expression(), Bop->getRHS(), Loc, Ctx)
+    ParseExpression(Expr->add_expression(), Bop->getLHS(), A, Ctx)
+    && ParseExpression(Expr->add_expression(), Bop->getRHS(), A, Ctx)
   );
 }
 
 
-bool ParseSequence(Sequence *Seq, CallExpr *Call, Location Loc,
+bool ParseSequence(Sequence *Seq, CallExpr *Call, Automaton *A,
                    ASTContext& Ctx) {
   FunctionDecl *Fun = Call->getDirectCallee();
   if (!Fun) {
@@ -99,7 +98,7 @@ bool ParseSequence(Sequence *Seq, CallExpr *Call, Location Loc,
   }
 
   for (auto Arg = Call->arg_begin(); Arg != Call->arg_end(); ++Arg)
-    if (!ParseEvent(Seq->add_event(), *Arg, Loc, Ctx))
+    if (!ParseEvent(Seq->add_event(), *Arg, A, Ctx))
       return false;
 
   return true;

@@ -47,6 +47,9 @@ message Automaton {
 
   /** The temporal expression. */
   required Expression expression = 3;
+
+  /** The number of arguments referenced by the automaton. */
+  optional int32 argcount = 4 [default = 0];
 }
 
 /** An identifier for an automaton based on where it was defined. */
@@ -155,8 +158,21 @@ message FunctionRef {
   required string name = 1;
 }
 
-/** An argument to a function. TODO: complete this! */
+/** An argument to a function. */
 message Argument {
-  optional string identifier = 1;
+  enum Type { Constant = 1; Variable = 2; Any = 3; }
+  required Type type = 1;
+
+  /**
+   * An index within an automaton.
+   *
+   * For instance, if an assertion refers to foo(x,y) and bar(y,z), the
+   * arguments to foo are [0,1] within the automata and the arguments to bar
+   * are [1,2].
+   */
+  optional int32 index = 2;
+
+  /** A type-specific representation of the expected value (for debugging). */
+  optional string value = 3;
 }
 
