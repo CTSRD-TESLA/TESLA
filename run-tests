@@ -21,4 +21,7 @@ if [ `echo "$PASSED + $FAILED" | bc` != $TOTAL ]; then
 fi
 
 echo "Passed $PASSED/$TOTAL tests"
+if [ "$PASSED" != "$TOTAL" ]; then
+	exit 1
+fi
 
