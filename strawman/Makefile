@@ -12,6 +12,7 @@ INSTRUMENTER= \
 	opt -S \
 		-load ${BUILD_DIR}/tesla/instrumenter/TeslaInstrumenter.dylib \
 		-tesla-callee -tesla-caller -tesla-asserts
+LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
 LINK=clang
@@ -59,7 +60,7 @@ instrument: tesla
 # Build the demo application.
 ${BIN}: ${OBJ}
 	@echo "[LINK]  $^ > $@"
-	${LINK} $^ -o $@
+	${LINK} $^ ${LIBS} -o $@
 
 # Run the TESLA analyser over C code.
 .c.tesla:
