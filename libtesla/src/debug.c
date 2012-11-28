@@ -33,6 +33,8 @@
 
 #include "tesla_internal.h"
 
+#include <stdio.h>
+
 void
 assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 {
@@ -57,5 +59,17 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 
 	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
 		tesla_class_global_unlock(tclass);
+}
+
+void
+print_key(struct tesla_key *key)
+{
+	fprintf(stderr, "%llx [%llx %llx %llx %llx]",
+	       key->tk_mask,
+	       key->tk_keys[0],
+	       key->tk_keys[1],
+	       key->tk_keys[2],
+	       key->tk_keys[3]
+	);
 }
 

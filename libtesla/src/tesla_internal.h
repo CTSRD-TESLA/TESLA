@@ -182,4 +182,7 @@ void	tesla_class_global_unlock(struct tesla_class *tsp);
  */
 void	assert_instanceof(struct tesla_instance *i, struct tesla_class *tclass);
 
+/** Print a @ref tesla_key to stderr. */
+void	print_key(struct tesla_key *key);
+
 #endif /* TESLA_INTERNAL_H */
