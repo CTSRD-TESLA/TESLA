@@ -47,7 +47,6 @@
 #include <err.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #endif
 
