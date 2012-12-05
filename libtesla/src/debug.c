@@ -64,12 +64,16 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 void
 print_key(struct tesla_key *key)
 {
-	fprintf(stderr, "%llx [%llx %llx %llx %llx]",
-	       key->tk_mask,
-	       key->tk_keys[0],
-	       key->tk_keys[1],
-	       key->tk_keys[2],
-	       key->tk_keys[3]
-	);
+	fprintf(stderr, "%llx [ ", key->tk_mask);
+
+	for (int i = 0; i < TESLA_KEY_SIZE; i++) {
+		if (key->tk_mask & (1 << i)) {
+			fprintf(stderr, "%llx ", key->tk_keys[i]);
+		} else {
+			fprintf(stderr, "X ");
+		}
+	}
+
+	fprintf(stderr, "]");
 }
 
