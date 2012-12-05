@@ -51,6 +51,21 @@ bool ParseFunctionRef(FunctionRef *FnRef, FunctionDecl *Fn, ASTContext& Ctx) {
 }
 
 
+bool ParseArgument(Argument *Arg, ParmVarDecl *P, Automaton *A, ASTContext& Ctx)
+{
+  assert(Arg != NULL);
+  assert(P != NULL);
+
+  Arg->set_type(Argument::Variable);
+  *Arg->mutable_value() = P->getName();
+
+  int CurrentArgCount = A->argcount();
+  Arg->set_index(CurrentArgCount);
+  A->set_argcount(CurrentArgCount + 1);
+
+  return true;
+}
+
 bool ParseArgument(Argument *Arg, Expr *E, Automaton *A, ASTContext& Ctx) {
   assert(Arg != NULL);
   assert(E != NULL);

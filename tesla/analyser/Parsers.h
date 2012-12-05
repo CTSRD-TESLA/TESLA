@@ -88,6 +88,10 @@ bool ParseFunctionExit(FunctionEvent*, clang::CallExpr*, Automaton*,
 //! Parse a reference to a function that requires instrumentation.
 bool ParseFunctionRef(FunctionRef*, clang::FunctionDecl*, clang::ASTContext&);
 
+//! Parse a parameter to a function that requires instrumentation.
+bool ParseArgument(Argument*, clang::ParmVarDecl*, Automaton*,
+                   clang::ASTContext&);
+
 //! Parse an argument to a function that requires instrumentation.
 bool ParseArgument(Argument*, clang::Expr*, Automaton*, clang::ASTContext&);
 

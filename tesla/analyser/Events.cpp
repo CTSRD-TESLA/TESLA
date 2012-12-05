@@ -227,6 +227,11 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call, Automaton *A,
   auto Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
   assert(Fn != NULL);
 
+  for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
+    if (!ParseArgument(Event->add_argument(), *I, A, Ctx))
+      return false;
+  }
+
   return ParseFunctionRef(Event->mutable_function(), Fn, Ctx);
 }
 
@@ -254,6 +259,11 @@ bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call, Automaton *A,
 
   auto Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
   assert(Fn != NULL);
+
+  for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
+    if (!ParseArgument(Event->add_argument(), *I, A, Ctx))
+      return false;
+  }
 
   return ParseFunctionRef(Event->mutable_function(), Fn, Ctx);
 }
