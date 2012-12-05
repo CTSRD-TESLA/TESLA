@@ -32,6 +32,10 @@
 
 #include "tesla_internal.h"
 
+#ifndef NDEBUG
+#include <stdio.h>
+#endif
+
 
 struct tesla_iterator {
 	struct tesla_class	*tclass;
@@ -61,12 +65,54 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 
 	iter->table = tclass->ts_table;
 	assert(iter->table != NULL);
+	assert(iter->table->tt_instances != NULL);
 
+	struct tesla_instance *i;
 	iter->end = iter->table->tt_instances + iter->table->tt_length;
 
+	// Fork any generic instances to more specific ones.
+	const int MAX_FORK_COUNT = iter->table->tt_free;
+	struct tesla_instance* to_fork[MAX_FORK_COUNT];
+	int forked = 0;
+
+	for (i = iter->table->tt_instances; i < iter->end; i++) {
+		if ((i->ti_key.tk_mask != 0)
+		    && tesla_key_matches(&i->ti_key, pattern)
+		    && !tesla_key_matches(pattern, &i->ti_key)) {
+#ifndef NDEBUG
+			fprintf(stderr, "need to fork '");
+			print_key(&i->ti_key);
+			fprintf(stderr, "' to '");
+			print_key(pattern);
+			fprintf(stderr, "'\n");
+#endif
+			if (forked >= MAX_FORK_COUNT)
+				return (TESLA_ERROR_ENOMEM);
+
+			to_fork[forked++] = i;
+		}
+	}
+
+	while (forked > 0) {
+		struct tesla_instance *orig = to_fork[--forked];
+		struct tesla_instance *copy;
+
+		int err = tesla_instance_get(tclass, pattern, &copy);
+		if (err != TESLA_SUCCESS)
+			return (err);
+
+#ifndef NDEBUG
+			fprintf(stderr, "forking '");
+			print_key(&orig->ti_key);
+			fprintf(stderr, "' (state %lld) to '", orig->ti_state);
+			print_key(&copy->ti_key);
+			fprintf(stderr, "'\n");
+#endif
+
+		copy->ti_state = orig->ti_state;
+	}
+
 	// Find the first instance that matches the pattern.
-	struct tesla_instance *i;
-	assert(iter->table->tt_instances != NULL);
 	for (i = iter->table->tt_instances; i < iter->end; i++) {
 		if (tesla_key_matches(pattern, &i->ti_key)) {
 			break;

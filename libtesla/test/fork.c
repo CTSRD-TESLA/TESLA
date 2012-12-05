@@ -40,7 +40,40 @@ main(int argc, char **argv)
 	check(tesla_class_get(perthread, 0, &class,
 		"classA", "a class of TESLA automata"));
 
-	/* TODO: write more libtesla code to actually support forking */
+	struct tesla_key general, specific;
+
+	general.tk_mask = 1;
+	general.tk_keys[0] = 42;
+
+	specific.tk_mask = 0xF;
+	specific.tk_keys[0] = 42;
+	specific.tk_keys[1] = 1;
+	specific.tk_keys[2] = 2;
+	specific.tk_keys[3] = 3;
+
+	struct tesla_instance *general_instance;
+	check(tesla_instance_get(class, &general, &general_instance));
+
+	struct tesla_iterator *iter;
+	check(tesla_match(class, &specific, &iter));
+
+	int count = 0;
+	while (tesla_hasnext(iter)) {
+		struct tesla_instance *inst = tesla_next(iter);
+		assert(inst->ti_state == 0);
+
+		assert(inst->ti_key.tk_mask == specific.tk_mask);
+		assert(inst->ti_key.tk_keys[0] == specific.tk_keys[0]);
+		assert(inst->ti_key.tk_keys[1] == specific.tk_keys[1]);
+		assert(inst->ti_key.tk_keys[2] == specific.tk_keys[2]);
+		assert(inst->ti_key.tk_keys[3] == specific.tk_keys[3]);
+
+		count++;
+	}
+
+	tesla_iterator_free(iter);
+
+	assert(count == 1);
 
 	return 0;
 }
