@@ -131,9 +131,11 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call, Automaton *A,
 
 bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call, Automaton *A,
                        ASTContext& Ctx) {
+#ifndef NDEBUG
   auto Predicate = Call->getDirectCallee();
   assert(Predicate != NULL);
   assert(Predicate->getName() == "__tesla_call");
+#endif
 
   if (Call->getNumArgs() != 1) {
     Report("TESLA predicate should have one (boolean) argument",

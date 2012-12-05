@@ -151,7 +151,9 @@ vector<Event> ExprEvents(const Expression& E) {
       assert(E.has_booleanexpr());
       for (auto& Expr : E.booleanexpr().expression()) {
         auto Sub = ExprEvents(Expr);
+#ifndef NDEBUG
         for (auto& Ev : Sub) assert(Event::Type_IsValid(Ev.type()));
+#endif
         Events.insert(Events.end(), Sub.begin(), Sub.end());
       }
       break;
@@ -171,7 +173,9 @@ vector<Event> Manifest::Events() {
 
   for (auto *A : Automata) {
     auto Expr = ExprEvents(A->expression());
+#ifndef NDEBUG
     for (auto& Ev : Expr) assert(Event::Type_IsValid(Ev.type()));
+#endif
     AllEvents.insert(AllEvents.end(), Expr.begin(), Expr.end());
   }
 

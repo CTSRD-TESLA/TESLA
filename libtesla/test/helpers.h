@@ -1,4 +1,8 @@
 
+#ifdef NDEBUG
+#error NDEBUG set but tests only work properly in debug mode
+#endif
+
 #define check(op) do { \
 	int tesla_error = op; \
 	if (tesla_error != TESLA_SUCCESS) { \

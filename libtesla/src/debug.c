@@ -31,6 +31,8 @@
  * $Id$
  */
 
+#ifndef NDEBUG
+
 #include "tesla_internal.h"
 
 #include <stdio.h>
@@ -76,4 +78,6 @@ print_key(struct tesla_key *key)
 
 	fprintf(stderr, "]");
 }
+
+#endif /* !NDEBUG */
 

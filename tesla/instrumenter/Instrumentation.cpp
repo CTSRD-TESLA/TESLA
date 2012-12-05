@@ -62,6 +62,7 @@ const char* Format(Type *T) {
     if (T->isDoubleTy()) return " %f";
 
     assert(false && "Unhandled arg type");
+    abort();
 }
 
 BasicBlock* CallPrintf(Module& Mod, const Twine& Prefix, Function *F,

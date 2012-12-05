@@ -53,6 +53,12 @@
 #include <tesla/libtesla.h>
 
 
+// When not in debug mode, some values might not get checked.
+#ifdef NDEBUG
+#define __debug
+#else
+#define __debug __unused
+#endif
 
 // Kernel vs userspace implementation details.
 #ifdef _KERNEL

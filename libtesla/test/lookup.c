@@ -128,9 +128,11 @@ int
 search_for_pattern(struct tesla_class *tclass, struct tesla_key *pattern) {
 	struct tesla_iterator *iter;
 	int found = 0;
+	int err;
 
-	for (assert(tesla_match(tclass, pattern, &iter) == TESLA_SUCCESS);
-	     tesla_hasnext(iter);) {
+	for (err = tesla_match(tclass, pattern, &iter); tesla_hasnext(iter);) {
+		assert(err == TESLA_SUCCESS);
+
 		struct tesla_instance *inst = tesla_next(iter);
 		assert(inst != NULL);
 		for (size_t i = 0; i < INSTANCES; i++)

@@ -156,15 +156,18 @@ pthread_key()
 	// the critical section below.
 	if (key_initialised) return key;
 
-	assert(pthread_mutex_lock(&lock) == 0);
+	int error __debug = pthread_mutex_lock(&lock);
+	assert(error == 0);
 
 	// Now that we're in the critical section, check again to make sure we
 	// initialise the key twice.
 	if (key_initialised) return key;
 
-	assert(pthread_key_create(&key, NULL) == 0);
+	error = pthread_key_create(&key, NULL);
+	assert(error == 0);
 
-	assert(pthread_mutex_unlock(&lock) == 0);
+	error = pthread_mutex_unlock(&lock);
+	assert(error == 0);
 
 	return key;
 }

@@ -46,7 +46,7 @@ tesla_class_global_lock_init(struct tesla_class *tsp)
 #ifdef _KERNEL
 	mtx_init(&tsp->ts_lock, "tesla", NULL, MTX_DEF);
 #else
-	int error = pthread_mutex_init(&tsp->ts_lock, NULL);
+	__debug int error = pthread_mutex_init(&tsp->ts_lock, NULL);
 	assert(error == 0);
 #endif
 }
@@ -58,7 +58,7 @@ tesla_class_global_lock_destroy(struct tesla_class *tsp)
 #ifdef _KERNEL
 	mtx_destroy(&tsp->ts_lock);
 #else
-	int error = pthread_mutex_destroy(&tsp->ts_lock);
+	__debug int error = pthread_mutex_destroy(&tsp->ts_lock);
 	assert(error == 0);
 #endif
 }

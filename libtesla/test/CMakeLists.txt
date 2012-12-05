@@ -1,3 +1,9 @@
+# Tests must be compiled in debug mode; there's little point in a test that
+# can't fire any of its assertions!
+#
+# This doesn't change any requirements on libraries the tests link against.
+set(CMAKE_BUILD_TYPE Debug)
+
 set(TESTS
 	fork
 	match
