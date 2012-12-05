@@ -5,6 +5,7 @@ add_library(tesla SHARED
 	state-global.c
 	state-perthread.c
 	store.c
+	update.c
 	util.c
 )
 
