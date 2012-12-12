@@ -63,7 +63,7 @@ ${BIN}: ${OBJ}
 	${LINK} $^ ${LIBS} -o $@
 
 # Run the TESLA analyser over C code.
-.c.tesla:
+.c.tesla: tesla
 	@echo "[TESLA] $^ > $@"
 	${ANALYSER} $< -o $@ -- ${PARSE} -D TESLA_ANALYSIS
 	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
