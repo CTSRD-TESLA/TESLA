@@ -69,24 +69,34 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
 
+	// To start automata, we need to fork from the null state.
+	if (expected_state == 0) {
+		struct tesla_instance *inst;
+		CHECK(tesla_instance_get, class, key, &inst);
 
-	struct tesla_iterator *iter;
-	CHECK(tesla_match, class, &key, &iter);
+		DEBUG_PRINT("new instance @ 0x%llx: %llx -> %llx\n",
+		            (register_t) inst, inst->ti_state, new_state);
 
-	while (tesla_hasnext(iter)) {
-		struct tesla_instance *inst = tesla_next(iter);
+		inst->ti_state = new_state;
+	} else {
+		struct tesla_iterator *iter;
+		CHECK(tesla_match, class, key, &iter);
 
-		if (inst->ti_state != expected_state) {
-			tesla_assert_fail(class, inst);
-		} else {
-			DEBUG_PRINT("instance @ 0x%llx: %llx -> %llx\n",
-			            (register_t) inst,
-			            inst->ti_state, new_state);
-			inst->ti_state = new_state;
+		while (tesla_hasnext(iter)) {
+			struct tesla_instance *inst = tesla_next(iter);
+
+			if (inst->ti_state != expected_state) {
+				tesla_assert_fail(class, inst);
+			} else {
+				DEBUG_PRINT("instance @ 0x%llx: %llx -> %llx\n",
+				            (register_t) inst,
+				            inst->ti_state, new_state);
+				inst->ti_state = new_state;
+			}
 		}
-	}
 
-	tesla_iterator_free(iter);
+		tesla_iterator_free(iter);
+	}
 
 	DEBUG_PRINT("====\n\n");
 
