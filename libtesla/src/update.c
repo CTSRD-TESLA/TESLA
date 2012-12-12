@@ -48,11 +48,9 @@
 } while(0)
 
 int
-tesla_update_state(int tesla_context, int class_id,
+tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	const char *name, const char *description,
-	register_t expected_state, register_t new_state,
-	register_t mask,
-	register_t k0, register_t k1, register_t k2, register_t k3)
+	register_t expected_state, register_t new_state)
 {
 #ifndef NDEBUG
 	printf("\n====\n%s()\n", __func__);
@@ -60,9 +58,8 @@ tesla_update_state(int tesla_context, int class_id,
 	       (tesla_context == TESLA_SCOPE_GLOBAL ? "global" : "per-thread"));
 	printf("  class:    %d ('%s')\n", class_id, name);
 	printf("  state:    %lld->%lld\n", expected_state, new_state);
-	printf("  key:      0x%llx: 0x%llx 0x%llx 0x%llx 0x%llx\n",
-	       mask, k0, k1, k2, k3);
 	printf("\n");
+	print_key(key);
 #endif
 
 	struct tesla_store *store;
@@ -71,12 +68,6 @@ tesla_update_state(int tesla_context, int class_id,
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
 
-	struct tesla_key key;
-	key.tk_mask = mask;
-	key.tk_keys[0] = k0;
-	key.tk_keys[1] = k1;
-	key.tk_keys[2] = k2;
-	key.tk_keys[3] = k3;
 
 	struct tesla_iterator *iter;
 	CHECK(tesla_match, class, &key, &iter);

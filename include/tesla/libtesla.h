@@ -49,11 +49,12 @@
 #define	TESLA_ERROR_EINVAL	4	/* Invalid parameters. */
 #define	TESLA_ERROR_UNKNOWN	5	/* An unknown (e.g. platform) error. */
 
+struct tesla_key;
+
 /** Update all automata instances that match a given key to a new state. */
-int	tesla_update_state(int context, int class_id,
+int	tesla_update_state(int context, int class_id, struct tesla_key *key,
 	const char *name, const char *description,
-	register_t expected_state, register_t new_state,
-	register_t mask, register_t k0, register_t k1, register_t k2, register_t k3);
+	register_t expected_state, register_t new_state);
 
 /*
  * Provide string versions of TESLA errors.
