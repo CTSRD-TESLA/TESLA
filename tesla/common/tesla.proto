@@ -172,7 +172,10 @@ message Argument {
    */
   optional int32 index = 2;
 
+  /** The name of the referenced variable (if applicable, for debugging). */
+  optional string name = 3;
+
   /** A type-specific representation of the expected value (for debugging). */
-  optional string value = 3;
+  optional string value = 4;
 }
 

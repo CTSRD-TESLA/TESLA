@@ -57,7 +57,7 @@ bool ParseArgument(Argument *Arg, ParmVarDecl *P, Automaton *A, ASTContext& Ctx)
   assert(P != NULL);
 
   Arg->set_type(Argument::Variable);
-  *Arg->mutable_value() = P->getName();
+  *Arg->mutable_name() = P->getName();
 
   int CurrentArgCount = A->argcount();
   Arg->set_index(CurrentArgCount);
@@ -71,6 +71,7 @@ bool ParseArgument(Argument *Arg, Expr *E, Automaton *A, ASTContext& Ctx) {
   assert(E != NULL);
 
   auto P = E->IgnoreImplicit();
+  llvm::APSInt ConstValue;
 
   // Each parameter must be one of:
   //  - a call to a TESLA pseudo-function,
@@ -93,9 +94,10 @@ bool ParseArgument(Argument *Arg, Expr *E, Automaton *A, ASTContext& Ctx) {
     Arg->set_type(Argument::Any);
   } else if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
     Arg->set_type(Argument::Variable);
-    *Arg->mutable_value() = DRE->getDecl()->getName();
-  } else if (P->isIntegerConstantExpr(Ctx)) {
+    *Arg->mutable_name() = DRE->getDecl()->getName();
+  } else if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Arg->set_type(Argument::Constant);
+    *Arg->mutable_value() = "0x" + ConstValue.toString(16);
   } else {
     P->dump();
 
