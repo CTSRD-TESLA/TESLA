@@ -53,13 +53,14 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	register_t expected_state, register_t new_state)
 {
 #ifndef NDEBUG
-	printf("\n====\n%s()\n", __func__);
-	printf("  context:  %s\n",
+	fprintf(stderr, "\n====\n%s()\n", __func__);
+	fprintf(stderr, "  context:  %s\n",
 	       (tesla_context == TESLA_SCOPE_GLOBAL ? "global" : "per-thread"));
-	printf("  class:    %d ('%s')\n", class_id, name);
-	printf("  state:    %lld->%lld\n", expected_state, new_state);
-	printf("\n");
+	fprintf(stderr, "  class:    %d ('%s')\n", class_id, name);
+	fprintf(stderr, "  state:    %lld->%lld\n", expected_state, new_state);
+	fprintf(stderr, "  key:      ");
 	print_key(key);
+	fprintf(stderr, "\n");
 #endif
 
 	struct tesla_store *store;
