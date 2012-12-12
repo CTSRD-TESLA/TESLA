@@ -2,6 +2,7 @@
 .SILENT:
 
 all: build test
+	cd strawman && ${MAKE}
 
 build: cmake
 	cd build && ninja

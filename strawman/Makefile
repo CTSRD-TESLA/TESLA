@@ -43,7 +43,7 @@ clean:
 	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} *.tesla
 
 tesla:
-	cd .. && ${MAKE}
+	cd .. && ${MAKE} build
 
 run-tesla: analyse instrument
 
