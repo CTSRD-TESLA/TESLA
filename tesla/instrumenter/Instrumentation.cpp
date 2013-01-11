@@ -40,6 +40,7 @@
 using namespace llvm;
 
 using std::string;
+using std::vector;
 
 namespace tesla {
 
@@ -131,6 +132,80 @@ Constant* TeslaContext(Automaton::Context Context, LLVMContext& Ctx) {
   case Automaton::Global: return Global;
   case Automaton::ThreadLocal: return PerThread;
   }
+}
+
+Value* ConstructKey(IRBuilder<>& Builder, Type *RegType,
+                    Function::ArgumentListType& InstrArgs,
+                    FunctionEvent FnEvent) {
+
+  // A struct tesla_key is just a mask and a set of keys.
+  vector<Type*> KeyElements(TESLA_KEY_SIZE + 1, RegType);
+  StructType *KeyType = StructType::create(KeyElements, "tesla_key");
+
+  Value *Key = Builder.CreateAlloca(KeyType, 0, "key");
+
+  // TODO: bzero()?
+  static Constant *Null = ConstantInt::get(RegType, 0);
+  for (int i = 0; i < TESLA_KEY_SIZE; ++i)
+    Builder.CreateStore(Null, Builder.CreateStructGEP(Key, i + 1));
+
+  bool HaveRetVal = FnEvent.has_expectedreturnvalue();
+
+  const int TotalArgs = FnEvent.argument_size()
+     + (HaveRetVal ? 1 : 0);
+
+  if (InstrArgs.size() != TotalArgs)
+    report_fatal_error(
+      "Instrumentation takes " + Twine(InstrArgs.size())
+      + " but description in manifest has " + Twine(FnEvent.argument_size())
+      + " arguments" + (HaveRetVal ? " and a return value" : "")
+    );
+
+  int i = 0;
+  int KeyMask = 0;
+
+  for (auto& InstrArg : InstrArgs) {
+    auto& Arg = (HaveRetVal && (i == 0))
+      ? FnEvent.expectedreturnvalue()
+      : FnEvent.argument(HaveRetVal ? (i - 1) : i);
+    ++i;
+
+    int Index = Arg.index();
+
+    assert(Index < TESLA_KEY_SIZE);
+    assert(&InstrArg != NULL);
+
+    KeyMask |= (1 << Index);
+
+    Value *K = Builder.CreateStructGEP(Key, Index);
+
+    Type *ArgType = InstrArg.getType();
+    if (!CastInst::isCastable(ArgType, RegType))
+      report_fatal_error(
+        "Instrumentation argument " + Twine(i - 1)
+        + " in " + FnEvent.function().name()
+        + " cannot be cast to register_t"
+      );
+
+    Value *Reg;
+
+    if (isa<PointerType>(ArgType)) {
+      Reg = Builder.CreatePointerCast(&InstrArg, RegType);
+    } else if (isa<IntegerType>(ArgType)) {
+      Reg = Builder.CreateIntCast(&InstrArg, RegType, false);
+    } else {
+      assert(false && "instr argument neither int nor pointer");
+    }
+
+    Reg->dump();
+
+    Builder.CreateStore(Reg, K);
+  }
+
+  Value *Mask = Builder.CreateStructGEP(Key, 0);
+  Builder.CreateStore(ConstantInt::get(RegType, KeyMask), Mask);
+
+  return Key;
 }
 
 } /* namespace tesla */

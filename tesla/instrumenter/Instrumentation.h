@@ -33,13 +33,14 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Function.h"
+#include "llvm/IRBuilder.h"
 
 #include "tesla.pb.h"
 
 namespace llvm {
   class BasicBlock;
   class Constant;
-  class Function;
   class Instruction;
   class LLVMContext;
   class Module;
@@ -92,6 +93,17 @@ llvm::Function *FindInstrumentationFn(llvm::Module& M, llvm::StringRef Name,
  */
 llvm::Constant* TeslaContext(Automaton::Context Context,
                              llvm::LLVMContext& Ctx);
+
+/**
+ * Map instrumentation arguments into a @ref tesla_key that can be used to
+ * look up automata.
+ *
+ * @param  RegType     the @ref register_t type
+ */
+llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder,
+                          llvm::Type *RegType,
+                          llvm::Function::ArgumentListType& InstrumentationArgs,
+                          FunctionEvent FnEventDescription);
 
 }
 
