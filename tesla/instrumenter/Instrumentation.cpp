@@ -30,6 +30,7 @@
  */
 
 #include "Instrumentation.h"
+#include "Names.h"
 
 #include "llvm/IRBuilder.h"
 #include "llvm/Module.h"
@@ -80,6 +81,37 @@ BasicBlock* CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
   Builder.CreateCall(Printf(Mod), PrintfArgs);
 
   return Block;
+}
+
+Function *FindInstrumentationFn(Module& M, StringRef Name,
+                                FunctionEvent::Direction Dir,
+                                FunctionEvent::CallContext Ctx) {
+
+  StringRef Prefix;
+  switch (Ctx) {
+  default:
+    // We don't accept e.g. (Entry | Exit); we're looking for one function.
+    assert(false && "Bad CallContext passed to FindInstrumentationFn");
+    break;
+
+  case FunctionEvent::Callee:
+    switch (Dir) {
+      default: assert(false && "Unhandled FunctionEvent::Direction");
+      case FunctionEvent::Entry:  Prefix = CALLEE_ENTER; break;
+      case FunctionEvent::Exit:   Prefix = CALLEE_LEAVE; break;
+    }
+    break;
+
+  case FunctionEvent::Caller:
+    switch (Dir) {
+      default: assert(false && "Unhandled FunctionEvent::Direction");
+      case FunctionEvent::Entry:  Prefix = CALLER_ENTER; break;
+      case FunctionEvent::Exit:   Prefix = CALLER_LEAVE; break;
+    }
+    break;
+  }
+
+  return M.getFunction((Prefix + Name).str());
 }
 
 } /* namespace tesla */

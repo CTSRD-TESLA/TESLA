@@ -32,6 +32,9 @@
 #define	TESLA_INSTRUMENTATION_H
 
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+
+#include "tesla.pb.h"
 
 namespace llvm {
   class BasicBlock;
@@ -71,6 +74,16 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
                              const llvm::Twine& Prefix,
                              llvm::Function *F = NULL,
                              llvm::BasicBlock *InsertBefore = NULL);
+
+/**
+ * Find the function within a given module that receives instrumentation events
+ * of a given type.
+ *
+ * @returns  NULL if no such function exists yet
+ */
+llvm::Function *FindInstrumentationFn(llvm::Module& M, llvm::StringRef Name,
+                                      FunctionEvent::Direction Dir,
+                                      FunctionEvent::CallContext Ctx);
 
 }
 
