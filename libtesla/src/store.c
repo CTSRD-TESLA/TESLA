@@ -44,7 +44,8 @@ struct tesla_store global_store = { .length = 0 };
 pthread_key_t	pthread_key();
 #endif
 
-static int	tesla_store_init(tesla_store*, u_int classes, u_int instances);
+static int	tesla_store_init(tesla_store*,
+		u_int context, u_int classes, u_int instances);
 
 int
 tesla_store_get(int context, u_int classes, u_int instances,
@@ -84,7 +85,7 @@ tesla_store_get(int context, u_int classes, u_int instances,
 	}
 
 	if (store->length == 0) {
-		int error = tesla_store_init(store, classes, instances);
+		int error = tesla_store_init(store, context, classes, instances);
 		if (error != TESLA_SUCCESS) return (error);
 
 		assert(store->classes != NULL);
@@ -96,7 +97,8 @@ tesla_store_get(int context, u_int classes, u_int instances,
 
 
 static int
-tesla_store_init(tesla_store *store, u_int classes, u_int instances)
+tesla_store_init(tesla_store *store, u_int context,
+                 u_int classes, u_int instances)
 {
 	store->length = classes;
 	store->classes = tesla_malloc(classes * sizeof(tesla_class));
@@ -105,7 +107,7 @@ tesla_store_init(tesla_store *store, u_int classes, u_int instances)
 
 	int error = TESLA_SUCCESS;
 	for (u_int i = 0; i < classes; i++) {
-		error = tesla_class_init(store->classes + i, instances);
+		error = tesla_class_init(store->classes + i, context, instances);
 		if (error != TESLA_SUCCESS) break;
 		assert(store->classes[i].ts_table != NULL);
 	}

@@ -41,7 +41,7 @@ MALLOC_DEFINE(M_TESLA, "tesla", "TESLA internal state");
 
 
 int
-tesla_class_init(struct tesla_class *tclass, u_int instances)
+tesla_class_init(struct tesla_class *tclass, u_int context, u_int instances)
 {
 	assert(tclass != NULL);
 	// TODO: write a TESLA assertion about locking here.
@@ -54,6 +54,7 @@ tesla_class_init(struct tesla_class *tclass, u_int instances)
 	tclass->ts_action = TESLA_ACTION_FAILSTOP;
 #endif
 
+	tclass->ts_scope = context;
 	tclass->ts_table = tesla_malloc(
 		sizeof(struct tesla_table)
 		+ instances * sizeof(struct tesla_instance)

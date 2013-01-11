@@ -159,7 +159,7 @@ struct tesla_store {
  * Initialize @ref tesla_class internals.
  * Locking is the responsibility of the caller.
  */
-int	tesla_class_init(struct tesla_class*, u_int instances);
+int	tesla_class_init(struct tesla_class*, u_int context, u_int instances);
 
 
 /*
