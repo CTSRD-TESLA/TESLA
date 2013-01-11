@@ -46,28 +46,38 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	register_t expected_state, register_t new_state)
 {
 #ifndef NDEBUG
-	fprintf(stderr, "\n====\n%s()\n", __func__);
-	fprintf(stderr, "  context:  %s\n",
+	DEBUG_PRINT("\n====\n%s()\n", __func__);
+	DEBUG_PRINT("  context:  %s\n",
 	       (tesla_context == TESLA_SCOPE_GLOBAL ? "global" : "per-thread"));
-	fprintf(stderr, "  class:    %d ('%s')\n", class_id, name);
-	fprintf(stderr, "  state:    %lld->%lld\n", expected_state, new_state);
-	fprintf(stderr, "  key:      ");
+	DEBUG_PRINT("  class:    %d ('%s')\n", class_id, name);
+	DEBUG_PRINT("  state:    %lld->%lld\n", expected_state, new_state);
+	DEBUG_PRINT("  key:      ");
 	print_key(key);
-	fprintf(stderr, "\n");
+	DEBUG_PRINT("\n----\n");
 #endif
 
 	struct tesla_store *store;
 	CHECK(tesla_store_get, tesla_context, 4, 4, &store);
 
+#ifndef NDEBUG
+	DEBUG_PRINT("store: 0x%llx\n", (register_t) store);
+	DEBUG_PRINT("----\n");
+#endif
+
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
+
+#ifndef NDEBUG
+	print_class(class);
+	DEBUG_PRINT("\n----\n");
+#endif
 
 	// To start automata, we need to fork from the null state.
 	if (expected_state == 0) {
 		struct tesla_instance *inst;
 		CHECK(tesla_instance_get, class, key, &inst);
 
-		DEBUG_PRINT("new instance @ 0x%llx: %llx -> %llx\n",
+		DEBUG_PRINT("  new instance @ 0x%llx: %llx -> %llx\n",
 		            (register_t) inst, inst->ti_state, new_state);
 
 		inst->ti_state = new_state;
@@ -81,7 +91,7 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 			if (inst->ti_state != expected_state) {
 				tesla_assert_fail(class, inst);
 			} else {
-				DEBUG_PRINT("instance @ 0x%llx: %llx -> %llx\n",
+				DEBUG_PRINT("  existing instance @ 0x%llx: %llx -> %llx\n",
 				            (register_t) inst,
 				            inst->ti_state, new_state);
 				inst->ti_state = new_state;
@@ -91,7 +101,11 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 		tesla_iterator_free(iter);
 	}
 
-	DEBUG_PRINT("====\n\n");
+#ifndef NDEBUG
+	DEBUG_PRINT("----\n");
+	print_class(class);
+	DEBUG_PRINT("\n====\n\n");
+#endif
 
 	return (TESLA_SUCCESS);
 }
