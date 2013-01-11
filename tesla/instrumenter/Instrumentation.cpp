@@ -29,6 +29,8 @@
  * SUCH DAMAGE.
  */
 
+#include <tesla/libtesla.h>
+
 #include "Instrumentation.h"
 #include "Names.h"
 
@@ -112,6 +114,23 @@ Function *FindInstrumentationFn(Module& M, StringRef Name,
   }
 
   return M.getFunction((Prefix + Name).str());
+}
+
+Constant* TeslaContext(Automaton::Context Context, LLVMContext& Ctx) {
+  static Type *IntType = IntegerType::get(Ctx, 64);
+
+  static auto *Global = ConstantInt::get(IntType, TESLA_SCOPE_GLOBAL);
+  static auto *PerThread = ConstantInt::get(IntType, TESLA_SCOPE_PERTHREAD);
+
+  switch (Context) {
+  default:
+    // does not return
+    report_fatal_error(__FILE__ ":" + Twine(__LINE__) + ": no handler for "
+                        + "Automaton::" + Automaton::Context_Name(Context));
+
+  case Automaton::Global: return Global;
+  case Automaton::ThreadLocal: return PerThread;
+  }
 }
 
 } /* namespace tesla */

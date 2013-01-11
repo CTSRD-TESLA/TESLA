@@ -38,6 +38,7 @@
 
 namespace llvm {
   class BasicBlock;
+  class Constant;
   class Function;
   class Instruction;
   class LLVMContext;
@@ -84,6 +85,13 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
 llvm::Function *FindInstrumentationFn(llvm::Module& M, llvm::StringRef Name,
                                       FunctionEvent::Direction Dir,
                                       FunctionEvent::CallContext Ctx);
+
+/**
+ * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD
+ * or @ref TESLA_SCOPE_GLOBAL).
+ */
+llvm::Constant* TeslaContext(Automaton::Context Context,
+                             llvm::LLVMContext& Ctx);
 
 }
 
