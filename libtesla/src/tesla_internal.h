@@ -179,6 +179,8 @@ MALLOC_DECLARE(M_TESLA);
 /*
  * Interfaces to global state management.
  */
+void	tesla_class_global_lock_init(struct tesla_class *tsp);
+void	tesla_class_global_lock_destroy(struct tesla_class *tsp);
 void	tesla_class_global_lock(struct tesla_class *tsp);
 void	tesla_class_global_unlock(struct tesla_class *tsp);
 

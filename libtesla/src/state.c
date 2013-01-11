@@ -55,6 +55,9 @@ tesla_class_init(struct tesla_class *tclass, u_int context, u_int instances)
 #endif
 
 	tclass->ts_scope = context;
+	if (context == TESLA_SCOPE_GLOBAL)
+		tesla_class_global_lock_init(tclass);
+
 	tclass->ts_table = tesla_malloc(
 		sizeof(struct tesla_table)
 		+ instances * sizeof(struct tesla_instance)

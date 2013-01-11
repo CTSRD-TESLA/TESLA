@@ -39,7 +39,7 @@
  * atomicity problems when composing multi-clause expressions, however; more
  * investigation required.
  */
-static void
+void
 tesla_class_global_lock_init(struct tesla_class *tsp)
 {
 
@@ -51,7 +51,7 @@ tesla_class_global_lock_init(struct tesla_class *tsp)
 #endif
 }
 
-static void
+void
 tesla_class_global_lock_destroy(struct tesla_class *tsp)
 {
 
