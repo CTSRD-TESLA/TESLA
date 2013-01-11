@@ -32,13 +32,6 @@
 
 #include "tesla_internal.h"
 
-#ifdef NDEBUG
-#define DEBUG_PRINT(...)
-#else
-#include <stdio.h>
-#define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
-#endif
-
 #define	CHECK(fn, ...) do { \
 	int err = fn(__VA_ARGS__); \
 	if (err != TESLA_SUCCESS) { \
