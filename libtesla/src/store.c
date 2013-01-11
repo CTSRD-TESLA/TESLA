@@ -168,6 +168,8 @@ pthread_key()
 	error = pthread_key_create(&key, NULL);
 	assert(error == 0);
 
+	key_initialised = 1;
+
 	error = pthread_mutex_unlock(&lock);
 	assert(error == 0);
 
