@@ -200,4 +200,7 @@ void	assert_instanceof(struct tesla_instance *i, struct tesla_class *tclass);
 /** Print a @ref tesla_key to stderr. */
 void	print_key(struct tesla_key *key);
 
+/** Print a @ref tesla_class to stderr. */
+void	print_class(struct tesla_class*);
+
 #endif /* TESLA_INTERNAL_H */
