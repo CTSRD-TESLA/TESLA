@@ -35,7 +35,7 @@
 
 #include "tesla_internal.h"
 
-#include <stdio.h>
+#define print DEBUG_PRINT
 
 void
 assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
@@ -66,17 +66,17 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 void
 print_key(struct tesla_key *key)
 {
-	fprintf(stderr, "%llx [ ", key->tk_mask);
+	print("%llx [ ", key->tk_mask);
 
 	for (int i = 0; i < TESLA_KEY_SIZE; i++) {
 		if (key->tk_mask & (1 << i)) {
-			fprintf(stderr, "%llx ", key->tk_keys[i]);
+			print("%llx ", key->tk_keys[i]);
 		} else {
-			fprintf(stderr, "X ");
+			print("X ");
 		}
 	}
 
-	fprintf(stderr, "]");
+	print("]");
 }
 
 #endif /* !NDEBUG */
