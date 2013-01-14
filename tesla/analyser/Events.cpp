@@ -39,10 +39,13 @@
 #include "clang/Basic/Diagnostic.h"
 
 using namespace clang;
+using std::vector;
 
 namespace tesla {
 
-bool ParseEvent(Event *Ev, Expr *E, Automaton *A, ASTContext& Ctx) {
+bool ParseEvent(Event *Ev, Expr *E, Automaton *A,
+                vector<ValueDecl*>& References, ASTContext& Ctx) {
+
   E = E->IgnoreImplicit();
 
   if (auto Ref = dyn_cast<DeclRefExpr>(E)) {
@@ -57,7 +60,7 @@ bool ParseEvent(Event *Ev, Expr *E, Automaton *A, ASTContext& Ctx) {
   } else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
     // This is a call-and-return like "foo(x) == y".
     Ev->set_type(Event::FUNCTION);
-    return ParseFunctionCall(Ev->mutable_function(), Bop, A, Ctx);
+    return ParseFunctionCall(Ev->mutable_function(), Bop, References, Ctx);
   }
 
   // Otherwise, it's a call to a TESLA "function" like __tesla_predicate().
@@ -77,10 +80,10 @@ bool ParseEvent(Event *Ev, Expr *E, Automaton *A, ASTContext& Ctx) {
 
   if (Callee->getName() == "__tesla_repeat") {
     Ev->set_type(Event::REPETITION);
-    return ParseRepetition(Ev->mutable_repetition(), Call, A, Ctx);
+    return ParseRepetition(Ev->mutable_repetition(), Call, A, References, Ctx);
   }
 
-  typedef bool (*FnEventParser)(FunctionEvent*, CallExpr*, Automaton*,
+  typedef bool (*FnEventParser)(FunctionEvent*, CallExpr*, vector<ValueDecl*>&,
                                 ASTContext&);
 
   FnEventParser Parser = llvm::StringSwitch<FnEventParser>(Callee->getName())
@@ -96,11 +99,12 @@ bool ParseEvent(Event *Ev, Expr *E, Automaton *A, ASTContext& Ctx) {
   }
 
   Ev->set_type(Event::FUNCTION);
-  return Parser(Ev->mutable_function(), Call, A, Ctx);
+  return Parser(Ev->mutable_function(), Call, References, Ctx);
 }
 
 
 bool ParseRepetition(Repetition *Repetition, CallExpr *Call, Automaton *A,
+                     vector<ValueDecl*>& References,
                      ASTContext& Ctx) {
   unsigned Args = Call->getNumArgs();
   if (Args < 3) {
@@ -118,7 +122,7 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call, Automaton *A,
 
   for (unsigned i = 2; i < Args; ++i) {
     auto Ev = Call->getArg(i);
-    if (!ParseEvent(Repetition->add_event(), Ev, A, Ctx)) {
+    if (!ParseEvent(Repetition->add_event(), Ev, A, References, Ctx)) {
       Report("Failed to parse repeated event", Ev->getLocStart(), Ctx)
         << Ev->getSourceRange();
       return false;
@@ -129,7 +133,8 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call, Automaton *A,
 }
 
 
-bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call, Automaton *A,
+bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call,
+                       vector<ValueDecl*>& References,
                        ASTContext& Ctx) {
 #ifndef NDEBUG
   auto Predicate = Call->getDirectCallee();
@@ -152,11 +157,12 @@ bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call, Automaton *A,
     return false;
   }
 
-  return ParseFunctionCall(FnEvent, Bop, A, Ctx);
+  return ParseFunctionCall(FnEvent, Bop, References, Ctx);
 }
 
 
-bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop, Automaton *A,
+bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
+                       vector<ValueDecl*>& References,
                        ASTContext& Ctx) {
   // Since we might care about the return value, we must instrument exiting
   // the function rather than entering it.
@@ -175,7 +181,8 @@ bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop, Automaton *A,
 
   Expr *RetVal = (LHSisICE ? LHS : RHS);
   Expr *FnCall = (LHSisICE ? RHS : LHS);
-  if (!ParseArgument(Event->mutable_expectedreturnvalue(), RetVal, A, Ctx))
+  if (!ParseArgument(Event->mutable_expectedreturnvalue(), RetVal, References,
+                     Ctx))
     return false;
 
   auto FnCallExpr = dyn_cast<CallExpr>(FnCall);
@@ -195,7 +202,8 @@ bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop, Automaton *A,
   if (!ParseFunctionRef(Event->mutable_function(), Fn, Ctx)) return false;
 
   for (auto I = FnCallExpr->arg_begin(); I != FnCallExpr->arg_end(); ++I) {
-    if (!ParseArgument(Event->add_argument(), I->IgnoreImplicit(), A, Ctx))
+    if (!ParseArgument(Event->add_argument(), I->IgnoreImplicit(), References,
+                       Ctx))
       return false;
   }
 
@@ -203,7 +211,8 @@ bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop, Automaton *A,
 }
 
 
-bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call, Automaton *A,
+bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call,
+                        vector<ValueDecl*>& References,
                         ASTContext& Ctx) {
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_entered");
@@ -228,7 +237,7 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call, Automaton *A,
   assert(Fn != NULL);
 
   for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
-    if (!ParseArgument(Event->add_argument(), *I, A, Ctx))
+    if (!ParseArgument(Event->add_argument(), *I, References, Ctx, true))
       return false;
   }
 
@@ -236,7 +245,8 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call, Automaton *A,
 }
 
 
-bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call, Automaton *A,
+bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call,
+                       vector<ValueDecl*>& References,
                        ASTContext& Ctx) {
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_leaving");
@@ -261,7 +271,7 @@ bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call, Automaton *A,
   assert(Fn != NULL);
 
   for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
-    if (!ParseArgument(Event->add_argument(), *I, A, Ctx))
+    if (!ParseArgument(Event->add_argument(), *I, References, Ctx))
       return false;
   }
 

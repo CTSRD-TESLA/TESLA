@@ -34,6 +34,7 @@
 #include "clang/AST/Decl.h"
 
 using namespace clang;
+using std::vector;
 
 namespace tesla {
 
@@ -50,23 +51,43 @@ bool ParseFunctionRef(FunctionRef *FnRef, FunctionDecl *Fn, ASTContext& Ctx) {
   return true;
 }
 
+static int ReferenceIndex(ValueDecl* D, vector<ValueDecl*>& References) {
+  size_t Pos = 0;
 
-bool ParseArgument(Argument *Arg, ParmVarDecl *P, Automaton *A, ASTContext& Ctx)
-{
+  for (auto I = References.begin(); I != References.end(); I++)
+    if (*I == D)
+      return Pos;
+    else
+      ++Pos;
+
+  auto Range = D->getSourceRange();
+  llvm::errs()
+    << "Pushing ValueDecl '" << D->getName() << "' @ "
+    << (register_t) D
+    << " (source @ " << Range.getBegin().getRawEncoding() << ")"
+    << "\n";
+  References.push_back(D);
+
+  return Pos;
+}
+
+bool ParseArgument(Argument *Arg, ParmVarDecl *P,
+                   vector<ValueDecl*>& References,
+                   ASTContext& Ctx) {
+
   assert(Arg != NULL);
   assert(P != NULL);
 
   Arg->set_type(Argument::Variable);
+  Arg->set_index(ReferenceIndex(P, References));
   *Arg->mutable_name() = P->getName();
-
-  int CurrentArgCount = A->argcount();
-  Arg->set_index(CurrentArgCount);
-  A->set_argcount(CurrentArgCount + 1);
 
   return true;
 }
 
-bool ParseArgument(Argument *Arg, Expr *E, Automaton *A, ASTContext& Ctx) {
+bool ParseArgument(Argument *Arg, Expr *E, vector<ValueDecl*>& References,
+                   ASTContext& Ctx) {
+
   assert(Arg != NULL);
   assert(E != NULL);
 
@@ -94,7 +115,11 @@ bool ParseArgument(Argument *Arg, Expr *E, Automaton *A, ASTContext& Ctx) {
     Arg->set_type(Argument::Any);
   } else if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
     Arg->set_type(Argument::Variable);
+    ValueDecl *D = DRE->getDecl();
+
     *Arg->mutable_name() = DRE->getDecl()->getName();
+    Arg->set_index(ReferenceIndex(D, References));
+
   } else if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Arg->set_type(Argument::Constant);
     *Arg->mutable_value() = "0x" + ConstValue.toString(16);
@@ -105,10 +130,6 @@ bool ParseArgument(Argument *Arg, Expr *E, Automaton *A, ASTContext& Ctx) {
         P->getLocStart(), Ctx) << P->getSourceRange();
     return NULL;
   }
-
-  int CurrentArgCount = A->argcount();
-  Arg->set_index(CurrentArgCount);
-  A->set_argcount(CurrentArgCount + 1);
 
   return true;
 }

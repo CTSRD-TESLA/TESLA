@@ -39,6 +39,7 @@
 #include "clang/Basic/Diagnostic.h"
 
 using namespace clang;
+using std::vector;
 
 namespace tesla {
 
@@ -59,10 +60,19 @@ bool ParseInlineAssertion(Automaton *A, CallExpr *E, ASTContext& Ctx) {
   Expr *Context     = E->getArg(3);
   Expr *Expression  = E->getArg(4);
 
+  // Keep track of unique variable references: there may be several references
+  // to the same variable from within different sub-expressions, e.g.
+  //
+  // previously(foo(x) && bar(x))
+  //
+  // in which case foo() and bar() events should both be sent to automata named
+  // by (x), rather than one named (x,NULL) and the other (NULL,x).
+  vector<ValueDecl*> References;
+
   return
     ParseLocation(A->mutable_location(), Filename, Line, Counter, Ctx)
     && ParseContext(A, Context, Ctx)
-    && ParseExpression(A->mutable_expression(), Expression, A, Ctx)
+    && ParseExpression(A->mutable_expression(), Expression, A, References, Ctx)
     ;
 }
 
