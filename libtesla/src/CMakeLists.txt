@@ -9,3 +9,5 @@ add_library(tesla SHARED
 	util.c
 )
 
+install(TARGETS tesla DESTINATION lib)
+
