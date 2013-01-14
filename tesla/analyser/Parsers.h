@@ -103,7 +103,8 @@ bool ParseFunctionRef(FunctionRef*, clang::FunctionDecl*, clang::ASTContext&);
 //! Parse a parameter to a function that requires instrumentation.
 bool ParseArgument(Argument*, clang::ParmVarDecl*,
                    std::vector<clang::ValueDecl*>& References,
-                   clang::ASTContext&);
+                   clang::ASTContext&,
+                   bool AllowAny = false);
 
 //! Parse an argument to a function that requires instrumentation.
 bool ParseArgument(Argument*, clang::Expr*,
