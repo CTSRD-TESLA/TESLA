@@ -77,7 +77,7 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 		struct tesla_instance *inst;
 		CHECK(tesla_instance_get, class, key, &inst);
 
-		DEBUG_PRINT("  new instance @ 0x%llx: %llx -> %llx\n",
+		DEBUG_PRINT("new instance @ 0x%llx: %llx -> %llx\n",
 		            (register_t) inst, inst->ti_state, new_state);
 
 		inst->ti_state = new_state;
@@ -91,7 +91,7 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 			if (inst->ti_state != expected_state) {
 				tesla_assert_fail(class, inst);
 			} else {
-				DEBUG_PRINT("  existing instance @ 0x%llx: %llx -> %llx\n",
+				DEBUG_PRINT("existing instance @ 0x%llx: %llx -> %llx\n",
 				            (register_t) inst,
 				            inst->ti_state, new_state);
 				inst->ti_state = new_state;
