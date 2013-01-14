@@ -101,7 +101,7 @@ print_class(struct tesla_class *c)
 void
 print_key(struct tesla_key *key)
 {
-	print("%llx [ ", key->tk_mask);
+	print("0x%llx [ ", key->tk_mask);
 
 	for (int i = 0; i < TESLA_KEY_SIZE; i++) {
 		if (key->tk_mask & (1 << i)) {
