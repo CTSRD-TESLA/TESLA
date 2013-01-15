@@ -60,12 +60,6 @@ static int ReferenceIndex(ValueDecl* D, vector<ValueDecl*>& References) {
     else
       ++Pos;
 
-  auto Range = D->getSourceRange();
-  llvm::errs()
-    << "Pushing ValueDecl '" << D->getName() << "' @ "
-    << (register_t) D
-    << " (source @ " << Range.getBegin().getRawEncoding() << ")"
-    << "\n";
   References.push_back(D);
 
   return Pos;
