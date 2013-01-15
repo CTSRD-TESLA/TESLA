@@ -94,8 +94,8 @@ Function* FindStateUpdateFn(Module& M, Type *IntType, Type *RegType) {
   LLVMContext& Ctx = M.getContext();
 
   Type *Char = IntegerType::get(Ctx, 8);
-  Type *CharStar = PointerType::get(Char, 0);
-  Type *KeyStar = PointerType::get(KeyType(RegType), 0);
+  Type *CharStar = PointerType::getUnqual(Char);
+  Type *KeyStar = PointerType::getUnqual(KeyType(RegType));
 
   Constant *Fn = M.getOrInsertFunction("tesla_update_state",
       IntType,    // return type
