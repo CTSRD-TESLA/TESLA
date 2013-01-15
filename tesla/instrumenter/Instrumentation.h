@@ -77,6 +77,11 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
                              llvm::Function *F = NULL,
                              llvm::BasicBlock *InsertBefore = NULL);
 
+/*! Find the libtesla function @ref tesla_update_state. */
+llvm::Function* FindStateUpdateFn(llvm::Module&,
+                                  llvm::Type *IntType,
+                                  llvm::Type *RegType);
+
 /**
  * Find the function within a given module that receives instrumentation events
  * of a given type.

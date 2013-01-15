@@ -44,6 +44,8 @@ using std::vector;
 
 namespace tesla {
 
+static StructType* KeyType(Type *RegType);
+
 /// Find (or create) printf() declaration.
 Function* Printf(Module& Mod) {
   auto& Ctx = Mod.getContext();
@@ -85,6 +87,32 @@ BasicBlock* CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
 
   return Block;
 }
+
+
+Function* FindStateUpdateFn(Module& M, Type *IntType, Type *RegType) {
+
+  LLVMContext& Ctx = M.getContext();
+
+  Type *Char = IntegerType::get(Ctx, 8);
+  Type *CharStar = PointerType::get(Char, 0);
+  Type *KeyStar = PointerType::get(KeyType(RegType), 0);
+
+  Constant *Fn = M.getOrInsertFunction("tesla_update_state",
+      IntType,    // return type
+      IntType,    // context
+      IntType,    // class_id
+      KeyStar,    // key
+      CharStar,   // name
+      CharStar,   // description
+      RegType,    // expected_state
+      RegType,    // new_state
+      NULL
+    );
+
+  assert(isa<Function>(Fn));
+  return cast<Function>(Fn);
+}
+
 
 Function *FindInstrumentationFn(Module& M, StringRef Name,
                                 FunctionEvent::Direction Dir,
@@ -134,15 +162,24 @@ Constant* TeslaContext(Automaton::Context Context, LLVMContext& Ctx) {
   }
 }
 
+
+StructType* KeyType(Type *RegType) {
+  static StructType *KeyType = NULL;
+
+  if (KeyType == NULL) {
+    // A struct tesla_key is just a mask and a set of keys.
+    vector<Type*> KeyElements(TESLA_KEY_SIZE + 1, RegType);
+    KeyType = StructType::create(KeyElements, "tesla_key");
+  }
+
+  return KeyType;
+}
+
 Value* ConstructKey(IRBuilder<>& Builder, Type *RegType,
                     Function::ArgumentListType& InstrArgs,
                     FunctionEvent FnEvent) {
 
-  // A struct tesla_key is just a mask and a set of keys.
-  vector<Type*> KeyElements(TESLA_KEY_SIZE + 1, RegType);
-  StructType *KeyType = StructType::create(KeyElements, "tesla_key");
-
-  Value *Key = Builder.CreateAlloca(KeyType, 0, "key");
+  Value *Key = Builder.CreateAlloca(KeyType(RegType), 0, "key");
 
   // TODO: bzero()?
   static Constant *Null = ConstantInt::get(RegType, 0);
