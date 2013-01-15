@@ -24,6 +24,8 @@ build/CMakeCache.txt: CMakeLists.txt
 	mkdir -p build
 	cd build && cmake \
 		-G Ninja \
+		-DCMAKE_C_FLAGS=-fcolor-diagnostics \
+		-DCMAKE_CXX_FLAGS=-fcolor-diagnostics \
 		-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
 		-DCMAKE_BUILD_TYPE=Debug \
 		..
