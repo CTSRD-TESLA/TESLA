@@ -209,9 +209,9 @@ Value* ConstructKey(IRBuilder<>& Builder, Module& M,
   int KeyMask = 0;
 
   for (auto& InstrArg : InstrArgs) {
-    auto& Arg = (HaveRetVal && (i == 0))
+    auto& Arg = (HaveRetVal && (i == (TotalArgs - 1)))
       ? FnEvent.expectedreturnvalue()
-      : FnEvent.argument(HaveRetVal ? (i - 1) : i);
+      : FnEvent.argument(i);
     ++i;
 
     int Index = Arg.index();
