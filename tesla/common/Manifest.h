@@ -48,6 +48,8 @@ class FunctionEvent;
 /// A description of TESLA instrumentation to perform.
 class Manifest {
 public:
+  llvm::ArrayRef<Automaton*> AllAutomata() { return Automata; }
+
   //! Returns a copy of all function events named in this manifest.
   std::vector<FunctionEvent> FunctionsToInstrument();
 
