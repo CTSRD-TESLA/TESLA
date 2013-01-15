@@ -34,6 +34,7 @@
 #include "Instrumentation.h"
 #include "Names.h"
 
+#include "llvm/DataLayout.h"
 #include "llvm/IRBuilder.h"
 #include "llvm/Module.h"
 
@@ -44,7 +45,23 @@ using std::vector;
 
 namespace tesla {
 
-static StructType* KeyType(Type *RegType);
+Type* RegisterType(Module& M) {
+  return DataLayout(&M).getIntPtrType(M.getContext());
+}
+
+StructType* KeyType(Module& M) {
+  const char Name[] = "tesla_key";
+  StructType *T = M.getTypeByName(Name);
+
+  if (T == NULL) {
+    // A struct tesla_key is just a mask and a set of keys.
+    vector<Type*> KeyElements(TESLA_KEY_SIZE + 1, RegisterType(M));
+    T = StructType::create(KeyElements, Name);
+  }
+
+  return T;
+}
+
 
 /// Find (or create) printf() declaration.
 Function* Printf(Module& Mod) {
@@ -89,13 +106,14 @@ BasicBlock* CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
 }
 
 
-Function* FindStateUpdateFn(Module& M, Type *IntType, Type *RegType) {
+Function* FindStateUpdateFn(Module& M, Type *IntType) {
 
   LLVMContext& Ctx = M.getContext();
 
   Type *Char = IntegerType::get(Ctx, 8);
   Type *CharStar = PointerType::getUnqual(Char);
-  Type *KeyStar = PointerType::getUnqual(KeyType(RegType));
+  Type *RegType = RegisterType(M);
+  Type *KeyStar = PointerType::getUnqual(KeyType(M));
 
   Constant *Fn = M.getOrInsertFunction("tesla_update_state",
       IntType,    // return type
@@ -163,23 +181,12 @@ Constant* TeslaContext(Automaton::Context Context, LLVMContext& Ctx) {
 }
 
 
-StructType* KeyType(Type *RegType) {
-  static StructType *KeyType = NULL;
-
-  if (KeyType == NULL) {
-    // A struct tesla_key is just a mask and a set of keys.
-    vector<Type*> KeyElements(TESLA_KEY_SIZE + 1, RegType);
-    KeyType = StructType::create(KeyElements, "tesla_key");
-  }
-
-  return KeyType;
-}
-
-Value* ConstructKey(IRBuilder<>& Builder, Type *RegType,
+Value* ConstructKey(IRBuilder<>& Builder, Module& M,
                     Function::ArgumentListType& InstrArgs,
                     FunctionEvent FnEvent) {
 
-  Value *Key = Builder.CreateAlloca(KeyType(RegType), 0, "key");
+  Value *Key = Builder.CreateAlloca(KeyType(M), 0, "key");
+  Type *RegType = RegisterType(M);
 
   // TODO: bzero()?
   static Constant *Null = ConstantInt::get(RegType, 0);

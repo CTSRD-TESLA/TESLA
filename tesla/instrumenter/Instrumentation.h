@@ -65,6 +65,9 @@ typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
 /// A container for a few types (e.g., of function arguments).
 typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 
+/// Extract the @ref register_t type from a @ref Module.
+llvm::Type* RegisterType(llvm::Module&);
+
 /*!
  * Create a BasicBlock that passes values to printf.
  *
@@ -79,8 +82,7 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
 
 /*! Find the libtesla function @ref tesla_update_state. */
 llvm::Function* FindStateUpdateFn(llvm::Module&,
-                                  llvm::Type *IntType,
-                                  llvm::Type *RegType);
+                                  llvm::Type *IntType);
 
 /**
  * Find the function within a given module that receives instrumentation events
@@ -102,11 +104,8 @@ llvm::Constant* TeslaContext(Automaton::Context Context,
 /**
  * Map instrumentation arguments into a @ref tesla_key that can be used to
  * look up automata.
- *
- * @param  RegType     the @ref register_t type
  */
-llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder,
-                          llvm::Type *RegType,
+llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
