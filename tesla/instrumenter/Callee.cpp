@@ -139,7 +139,7 @@ CalleeInstrumentation::CalleeInstrumentation(
 
 
 // ==== CalleeInstrumenter implementation ======================================
-char tesla::TeslaCalleeInstrumenter::ID = 0;
+char TeslaCalleeInstrumenter::ID = 0;
 
 TeslaCalleeInstrumenter::~TeslaCalleeInstrumenter() {
   google::protobuf::ShutdownProtobufLibrary();

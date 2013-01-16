@@ -119,7 +119,7 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
 
 
 // ==== TeslaCallerInstrumenter implementation =================================
-char tesla::TeslaCallerInstrumenter::ID = 0;
+char TeslaCallerInstrumenter::ID = 0;
 
 TeslaCallerInstrumenter::~TeslaCallerInstrumenter() {
   ::google::protobuf::ShutdownProtobufLibrary();

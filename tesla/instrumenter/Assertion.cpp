@@ -48,7 +48,7 @@ using std::string;
 
 namespace tesla {
 
-char tesla::TeslaAssertionSiteInstrumenter::ID = 0;
+char TeslaAssertionSiteInstrumenter::ID = 0;
 
 TeslaAssertionSiteInstrumenter::~TeslaAssertionSiteInstrumenter() {
   ::google::protobuf::ShutdownProtobufLibrary();
