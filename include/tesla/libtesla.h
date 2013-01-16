@@ -171,6 +171,16 @@ typedef void	(*tesla_assert_fail_callback)(struct tesla_instance *tip);
 void	tesla_class_setaction(struct tesla_class *tsp,
 	    tesla_assert_fail_callback handler);
 
+
+/**
+ * Checks whether or not a TESLA automata instance is active (in use).
+ *
+ * @param  i    pointer to a <b>valid</b> @ref tesla_instance
+ *
+ * @returns     1 if active, 0 if inactive
+ */
+int	tesla_instance_active(struct tesla_instance *i);
+
 /** Find (or create) an automata instance that matches a key. */
 int	tesla_instance_get(struct tesla_class *tclass, struct tesla_key *key,
 	    struct tesla_instance **instance);

@@ -90,6 +90,15 @@ tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k)
 	return (1);
 }
 
+
+int
+tesla_instance_active(struct tesla_instance *i)
+{
+	assert(i != NULL);
+
+	return ((i->ti_state != 0) || (i->ti_key.tk_mask != 0));
+}
+
 int
 tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
 		   struct tesla_instance **out)
@@ -120,7 +129,7 @@ tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
 		}
 
 		// No luck yet; make a note if this slot is empty.
-		if (next_free_instance == NULL && instance->ti_key.tk_mask == 0)
+		if ((next_free_instance == NULL) && !tesla_instance_active(instance))
 			next_free_instance = instance;
 	}
 

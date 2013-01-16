@@ -76,7 +76,7 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 	int forked = 0;
 
 	for (i = iter->table->tt_instances; i < iter->end; i++) {
-		if ((i->ti_key.tk_mask != 0)
+		if (tesla_instance_active(i)
 		    && tesla_key_matches(&i->ti_key, pattern)
 		    && !tesla_key_matches(pattern, &i->ti_key)) {
 #ifndef NDEBUG

@@ -88,7 +88,7 @@ print_class(struct tesla_class *c)
 	print("  %d/%d instances\n", t->tt_length - t->tt_free, t->tt_length);
 	for (size_t i = 0; i < t->tt_length; i++) {
 		struct tesla_instance *inst = &t->tt_instances[i];
-		if (inst->ti_key.tk_mask == 0)
+		if (!tesla_instance_active(inst))
 			continue;
 
 		print("    %2lu: state %d, ", i, (int) inst->ti_state);
