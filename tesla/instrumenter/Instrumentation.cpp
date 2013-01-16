@@ -244,8 +244,6 @@ Value* ConstructKey(IRBuilder<>& Builder, Module& M,
       assert(false && "instr argument neither int nor pointer");
     }
 
-    Reg->dump();
-
     Builder.CreateStore(Reg, K);
   }
 
