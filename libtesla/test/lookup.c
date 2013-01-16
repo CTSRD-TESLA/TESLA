@@ -118,7 +118,7 @@ create_instance(struct tesla_class *tclass, struct tesla_instance **instance,
 	key.tk_keys[1] = key1;
 	key.tk_keys[2] = key2;
 
-	check(tesla_instance_get(tclass, &key, instance));
+	check(tesla_instance_new(tclass, &key, 0, instance));
 
 	assert(instance != NULL);
 	tesla_instance_put(tclass, *instance);

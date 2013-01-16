@@ -99,8 +99,54 @@ tesla_instance_active(struct tesla_instance *i)
 	return ((i->ti_state != 0) || (i->ti_key.tk_mask != 0));
 }
 
+
 int
-tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
+tesla_instance_new(struct tesla_class *tclass, struct tesla_key *name,
+	register_t state, struct tesla_instance **out)
+{
+	assert(tclass != NULL);
+	assert(name != NULL);
+	assert(out != NULL);
+
+	// A new instance must not look inactive.
+	if ((state == 0) && (name->tk_mask == 0))
+		return (TESLA_ERROR_EINVAL);
+
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_class_global_lock(tclass);
+
+	struct tesla_table *ttp = tclass->ts_table;
+	assert(ttp != NULL);
+	tesla_assert(ttp->tt_length != 0, "Uninitialized tesla_table");
+
+	if (ttp->tt_free == 0)
+		return (TESLA_ERROR_ENOMEM);
+
+	for (size_t i = 0; i < ttp->tt_length; i++) {
+		struct tesla_instance *inst = &ttp->tt_instances[i];
+		if (tesla_instance_active(inst))
+			continue;
+
+		// Initialise the new instance.
+		inst->ti_key = *name;
+		inst->ti_state = state;
+
+		ttp->tt_free--;
+		*out = inst;
+		break;
+	}
+
+	tesla_assert(*out != NULL, "no free instances but tt_free was > 0");
+
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL) {
+		tesla_class_global_unlock(tclass);
+	}
+
+	return (TESLA_SUCCESS);
+}
+
+int
+tesla_instance_find(struct tesla_class *tclass, struct tesla_key *pattern,
 		   struct tesla_instance **out)
 {
 	assert(tclass != NULL);
@@ -133,22 +179,11 @@ tesla_instance_get(struct tesla_class *tclass, struct tesla_key *pattern,
 			next_free_instance = instance;
 	}
 
-	// The named instance does not exist; create it.
-	if (next_free_instance != NULL) {
-		instance = next_free_instance;
-		instance->ti_key = *pattern;
-		/* Note: ti_state left zero'd. */
-		*out = instance;
-		ttp->tt_free--;
-		assert(*out != NULL);
-		return (TESLA_SUCCESS);
-	}
-
 	// There are no free slots.
 	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL) {
 		tesla_class_global_unlock(tclass);
 	}
-	return (TESLA_ERROR_ENOMEM);
+	return (TESLA_ERROR_ENOENT);
 }
 
 void

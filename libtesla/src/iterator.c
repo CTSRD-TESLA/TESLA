@@ -97,7 +97,7 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 		struct tesla_instance *orig = to_fork[--forked];
 		struct tesla_instance *copy;
 
-		int err = tesla_instance_get(tclass, pattern, &copy);
+		int err = tesla_instance_new(tclass, pattern, orig->ti_state, &copy);
 		if (err != TESLA_SUCCESS)
 			return (err);
 

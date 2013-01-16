@@ -181,8 +181,17 @@ void	tesla_class_setaction(struct tesla_class *tsp,
  */
 int	tesla_instance_active(struct tesla_instance *i);
 
-/** Find (or create) an automata instance that matches a key. */
-int	tesla_instance_get(struct tesla_class *tclass, struct tesla_key *key,
+
+/** Create a new @ref tesla_instance. */
+int	tesla_instance_new(struct tesla_class *tclass, struct tesla_key *name,
+	    register_t state, struct tesla_instance **out);
+
+/** Clone an existing instance into a new instance. */
+int	tesla_instance_clone(struct tesla_class *tclass,
+	    struct tesla_instance *original, struct tesla_instance **copy);
+
+/** Find an existing automata instance that matches a key. */
+int	tesla_instance_find(struct tesla_class *tclass, struct tesla_key *key,
 	    struct tesla_instance **instance);
 
 /**

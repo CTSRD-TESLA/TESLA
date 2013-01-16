@@ -72,15 +72,13 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	DEBUG_PRINT("\n----\n");
 #endif
 
-	// To start automata, we need to fork from the null state.
+	// If the expected current state is 0, we need to create a new automaton.
 	if (expected_state == 0) {
 		struct tesla_instance *inst;
-		CHECK(tesla_instance_get, class, key, &inst);
+		CHECK(tesla_instance_new, class, key, new_state, &inst);
 
 		DEBUG_PRINT("new instance @ 0x%llx: %llx -> %llx\n",
-		            (register_t) inst, inst->ti_state, new_state);
-
-		inst->ti_state = new_state;
+		            (register_t) inst, expected_state, inst->ti_state);
 	} else {
 		struct tesla_iterator *iter;
 		CHECK(tesla_match, class, key, &iter);

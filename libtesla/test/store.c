@@ -50,9 +50,12 @@ check_store(struct tesla_store *store)
 		key.tk_mask = 1;
 		key.tk_keys[0] = 42 + i;
 
-		check(tesla_instance_get(classes[i], &key, &instance));
+		register_t state = 2 * i + 42;
+
+		check(tesla_instance_new(classes[i], &key, state, &instance));
 		assert(instance != NULL);
 		assert(tesla_instance_active(instance));
+		assert(instance->ti_state == 2 * i + 42);
 		assert(instance->ti_key.tk_mask == 1);
 		assert(instance->ti_key.tk_keys[0] == 42 + i);
 	}

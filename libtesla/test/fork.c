@@ -52,7 +52,7 @@ main(int argc, char **argv)
 	specific.tk_keys[3] = 3;
 
 	struct tesla_instance *general_instance;
-	check(tesla_instance_get(class, &general, &general_instance));
+	check(tesla_instance_new(class, &general, 0, &general_instance));
 
 	struct tesla_iterator *iter;
 	check(tesla_match(class, &specific, &iter));
