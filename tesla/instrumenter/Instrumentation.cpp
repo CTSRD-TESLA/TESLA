@@ -249,7 +249,7 @@ Value* ConstructKey(IRBuilder<>& Builder, Module& M,
     Builder.CreateStore(Reg, K);
   }
 
-  Value *Mask = Builder.CreateStructGEP(Key, 0);
+  Value *Mask = Builder.CreateStructGEP(Key, TotalArgs);
   Builder.CreateStore(ConstantInt::get(RegType, KeyMask), Mask);
 
   return Key;

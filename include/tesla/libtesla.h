@@ -127,11 +127,11 @@ int	tesla_class_get(struct tesla_store *store,
  * Keys are register-sized so that they can hold arbitrary data/pointers.
  */
 struct tesla_key {
-	/** A bitmask of the keys that are actually set. */
-	register_t	tk_mask;
-
 	/** The keys / event parameters that name this automata instance. */
 	register_t	tk_keys[TESLA_KEY_SIZE];
+
+	/** A bitmask of the keys that are actually set. */
+	register_t	tk_mask;
 };
 
 /**
