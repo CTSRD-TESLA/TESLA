@@ -96,6 +96,3 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
 
 }
 
-static RegisterPass<tesla::TeslaAssertionSiteInstrumenter> Assertions(
-  "tesla-asserts", "TESLA: convert assertion sites");
-

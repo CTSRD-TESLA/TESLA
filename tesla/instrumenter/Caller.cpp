@@ -166,6 +166,3 @@ bool TeslaCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
 
 }
 
-static RegisterPass<tesla::TeslaCallerInstrumenter> Caller("tesla-caller",
-  "TESLA instrumentation: caller context");
-

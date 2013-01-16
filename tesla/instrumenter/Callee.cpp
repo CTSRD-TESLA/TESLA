@@ -232,6 +232,3 @@ void TeslaCalleeInstrumenter::DefineInstrumentationFunctions(
 
 } /* namespace tesla */
 
-static RegisterPass<tesla::TeslaCalleeInstrumenter> Callee("tesla-callee",
-  "TESLA instrumentation: callee context");
-

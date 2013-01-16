@@ -8,10 +8,7 @@
 
 BUILD_DIR=../build
 ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyser
-INSTRUMENTER= \
-	opt -S \
-		-load ${BUILD_DIR}/tesla/instrumenter/TeslaInstrumenter.dylib \
-		-tesla-callee -tesla-caller -tesla-asserts
+INSTRUMENTER= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S
 LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 
 CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
