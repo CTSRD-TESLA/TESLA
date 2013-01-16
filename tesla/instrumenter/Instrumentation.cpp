@@ -214,6 +214,9 @@ Value* ConstructKey(IRBuilder<>& Builder, Module& M,
       : FnEvent.argument(i);
     ++i;
 
+    if (Arg.type() != Argument::Variable)
+      continue;
+
     int Index = Arg.index();
 
     assert(Index < TESLA_KEY_SIZE);
