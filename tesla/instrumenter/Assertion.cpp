@@ -1,3 +1,4 @@
+/*! @file Assertion.cpp  Code for instrumenting TESLA assertion sites. */
 /*
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.

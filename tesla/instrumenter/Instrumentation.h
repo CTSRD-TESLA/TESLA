@@ -1,3 +1,4 @@
+/*! @file Instrumentation.h  Declaration of instrumentation helpers. */
 /*
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.

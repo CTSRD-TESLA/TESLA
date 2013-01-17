@@ -1,4 +1,4 @@
-/*! @file callee.cpp  Code for instrumenting function calls (callee context). */
+/*! @file Callee.cpp  Code for instrumenting function calls (callee context). */
 /*
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
