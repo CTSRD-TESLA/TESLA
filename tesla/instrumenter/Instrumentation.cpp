@@ -1,6 +1,6 @@
 /*! @file Instrumentation.cpp  Miscellaneous instrumentation helpers. */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
