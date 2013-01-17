@@ -1,7 +1,7 @@
-find_package(Protobuf REQUIRED)
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${PROTOBUF_INCLUDE_DIRS})
-
+# Dependency tracking: protobuf_generate_cpp() only sort-of works across dirs.
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
+
+set(LLVM_LINK_COMPONENTS ${LLVM_TARGETS_TO_BUILD})
 
 add_llvm_executable(read-manifest read-manifest.cpp)
 
