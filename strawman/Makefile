@@ -51,17 +51,17 @@ instrument: tesla
 	${MAKE} VERBOSE=true ${INSTRUMENTED_IR}
 
 .tesla: ${TESLA}
-	@echo "[CAT]   $^ > $@"
+	@echo "[CAT]     $^ > $@"
 	cat $^ > $@
 
 # Build the demo application.
 ${BIN}: ${OBJ}
-	@echo "[LINK]  $^ > $@"
+	@echo "[LINK]    $^ > $@"
 	${LINK} $^ ${LIBS} -o $@
 
 # Run the TESLA analyser over C code.
 .c.tesla: tesla
-	@echo "[TESLA] $^ > $@"
+	@echo "[TESLA]   $^ > $@"
 	${ANALYSER} $< -o $@ -- ${PARSE} -D TESLA_ANALYSIS
 	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
 	            && cat $@ && echo "===== end of TESLA analysis =====" \
@@ -69,18 +69,18 @@ ${BIN}: ${OBJ}
 
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll .tesla
-	@echo "[TESLA] $^ > $@"
+	@echo "[TESLA]   $^ > $@"
 	${INSTRUMENTER} -tesla-manifest .tesla $< -o $@
 	# We *expect* diff to produce an output!
 	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 
 # Compile C code to LLVM IR.
 .c.ll:
-	@echo "[CC]    $^ > $@"
+	@echo "[CC]      $^ > $@"
 	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
 
 # Compile IR to object code.
 .ll.o:
-	@echo "[LLC]   $^ > $@"
+	@echo "[LLC]     $^ > $@"
 	${CC} -c $< -o $@
 
