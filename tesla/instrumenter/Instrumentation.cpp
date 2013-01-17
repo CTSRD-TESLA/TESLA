@@ -163,7 +163,7 @@ Function *FindInstrumentationFn(Module& M, StringRef Name,
   return M.getFunction((Prefix + Name).str());
 }
 
-Constant* TeslaContext(Automaton::Context Context, LLVMContext& Ctx) {
+Constant* TeslaContext(Assertion::Context Context, LLVMContext& Ctx) {
   static Type *IntType = IntegerType::get(Ctx, 64);
 
   static auto *Global = ConstantInt::get(IntType, TESLA_SCOPE_GLOBAL);
@@ -173,10 +173,10 @@ Constant* TeslaContext(Automaton::Context Context, LLVMContext& Ctx) {
   default:
     // does not return
     report_fatal_error(__FILE__ ":" + Twine(__LINE__) + ": no handler for "
-                        + "Automaton::" + Automaton::Context_Name(Context));
+                        + "Assertion::" + Assertion::Context_Name(Context));
 
-  case Automaton::Global: return Global;
-  case Automaton::ThreadLocal: return PerThread;
+  case Assertion::Global: return Global;
+  case Assertion::ThreadLocal: return PerThread;
   }
 }
 

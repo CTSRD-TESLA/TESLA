@@ -66,8 +66,8 @@ public:
     if (!F) return true;
     if (!F->getName().startswith("__tesla_inline_assertion")) return true;
 
-    Automaton Auto;
-    if (!ParseInlineAssertion(&Auto, E, *Context)) {
+    Assertion Assert;
+    if (!ParseInlineAssertion(&Assert, E, *Context)) {
       static int ParseFailure =
         Diag.getCustomDiagID(DiagnosticsEngine::Error,
           "Failed to parse TESLA inline assertion");
@@ -77,7 +77,7 @@ public:
     }
 
     string Str;
-    google::protobuf::TextFormat::PrintToString(Auto, &Str);
+    google::protobuf::TextFormat::PrintToString(Assert, &Str);
     Out << Str << "===\n";
 
     return true;

@@ -43,7 +43,7 @@ using std::vector;
 
 namespace tesla {
 
-bool ParseEvent(Event *Ev, Expr *E, Automaton *A,
+bool ParseEvent(Event *Ev, Expr *E, Assertion *A,
                 vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   E = E->IgnoreImplicit();
@@ -103,7 +103,7 @@ bool ParseEvent(Event *Ev, Expr *E, Automaton *A,
 }
 
 
-bool ParseRepetition(Repetition *Repetition, CallExpr *Call, Automaton *A,
+bool ParseRepetition(Repetition *Repetition, CallExpr *Call, Assertion *A,
                      vector<ValueDecl*>& References,
                      ASTContext& Ctx) {
   unsigned Args = Call->getNumArgs();

@@ -99,7 +99,7 @@ llvm::Function *FindInstrumentationFn(llvm::Module& M, llvm::StringRef Name,
  * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD
  * or @ref TESLA_SCOPE_GLOBAL).
  */
-llvm::Constant* TeslaContext(Automaton::Context Context,
+llvm::Constant* TeslaContext(Assertion::Context Context,
                              llvm::LLVMContext& Ctx);
 
 /**

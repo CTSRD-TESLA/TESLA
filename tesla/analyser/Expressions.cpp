@@ -43,7 +43,7 @@ using std::vector;
 
 namespace tesla {
 
-bool ParseExpression(Expression *Exp, Expr *E, Automaton *A,
+bool ParseExpression(Expression *Exp, Expr *E, Assertion *A,
                      vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   E = E->IgnoreImplicit();
@@ -65,7 +65,7 @@ bool ParseExpression(Expression *Exp, Expr *E, Automaton *A,
 }
 
 
-bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Automaton *A,
+bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Assertion *A,
                       vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   switch (Bop->getOpcode()) {
@@ -88,7 +88,7 @@ bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Automaton *A,
 }
 
 
-bool ParseSequence(Sequence *Seq, CallExpr *Call, Automaton *A,
+bool ParseSequence(Sequence *Seq, CallExpr *Call, Assertion *A,
                    vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   FunctionDecl *Fun = Call->getDirectCallee();
