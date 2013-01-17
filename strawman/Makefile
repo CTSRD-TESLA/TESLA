@@ -11,13 +11,13 @@ ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyser
 INSTRUMENTER= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
 LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 
-CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
+CC=clang
 LINK=clang
 
 DIFF=$(shell which colordiff || echo "diff")
 VERBOSE?=false
 
-CFLAGS=-I ../include/tesla
+CFLAGS=-I ../include/tesla -D REVISION="\"$(shell ./revision.sh)\""
 
 BIN=demo
 EXAMPLE=example
@@ -31,8 +31,6 @@ INSTR=$(patsubst %,%.instr,$C ${IR})
 INSTRUMENTED_IR=$(patsubst %,%.ll,${INSTR})
 
 OBJ=$(patsubst %,%.o,${INSTR})
-
-PARSE=${CC} -fsyntax-only ${CFLAGS}
 
 all: tesla ${BIN}
 
@@ -62,7 +60,7 @@ ${BIN}: ${OBJ}
 # Run the TESLA analyser over C code.
 .c.tesla: tesla
 	@echo "[TESLA]   $^ > $@"
-	${ANALYSER} $< -o $@ -- ${PARSE} -D TESLA_ANALYSIS
+	${ANALYSER} $< -o $@ -- -fsyntax-only ${CFLAGS} -D TESLA -D TESLA_ANALYSIS
 	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
 	            && cat $@ && echo "===== end of TESLA analysis =====" \
 	            || exit 0
