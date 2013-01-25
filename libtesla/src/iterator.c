@@ -79,13 +79,7 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 		if (tesla_instance_active(i)
 		    && tesla_key_matches(&i->ti_key, pattern)
 		    && !tesla_key_matches(pattern, &i->ti_key)) {
-#ifndef NDEBUG
-			fprintf(stderr, "need to fork '");
-			print_key(&i->ti_key);
-			fprintf(stderr, "' to '");
-			print_key(pattern);
-			fprintf(stderr, "'\n");
-#endif
+
 			if (forked >= MAX_FORK_COUNT)
 				return (TESLA_ERROR_ENOMEM);
 
@@ -100,14 +94,6 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 		int err = tesla_instance_new(tclass, pattern, orig->ti_state, &copy);
 		if (err != TESLA_SUCCESS)
 			return (err);
-
-#ifndef NDEBUG
-			fprintf(stderr, "forking '");
-			print_key(&orig->ti_key);
-			fprintf(stderr, "' (state %td) to '", orig->ti_state);
-			print_key(&copy->ti_key);
-			fprintf(stderr, "'\n");
-#endif
 
 		copy->ti_state = orig->ti_state;
 	}

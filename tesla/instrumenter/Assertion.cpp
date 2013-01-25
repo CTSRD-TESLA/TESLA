@@ -1,5 +1,6 @@
+/*! @file Assertion.cpp  Code for instrumenting TESLA assertion sites. */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -48,7 +49,7 @@ using std::string;
 
 namespace tesla {
 
-char tesla::TeslaAssertionSiteInstrumenter::ID = 0;
+char TeslaAssertionSiteInstrumenter::ID = 0;
 
 TeslaAssertionSiteInstrumenter::~TeslaAssertionSiteInstrumenter() {
   ::google::protobuf::ShutdownProtobufLibrary();
@@ -95,7 +96,4 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
 }
 
 }
-
-static RegisterPass<tesla::TeslaAssertionSiteInstrumenter> Assertions(
-  "tesla-asserts", "TESLA: convert assertion sites");
 

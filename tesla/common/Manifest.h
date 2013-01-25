@@ -41,14 +41,14 @@ namespace llvm {
 
 namespace tesla {
 
-class Automaton;
+class Assertion;
 class Event;
 class FunctionEvent;
 
 /// A description of TESLA instrumentation to perform.
 class Manifest {
 public:
-  llvm::ArrayRef<Automaton*> AllAutomata() { return Automata; }
+  llvm::ArrayRef<Assertion*> AllAssertions() { return Assertions; }
 
   //! Returns a copy of all function events named in this manifest.
   std::vector<FunctionEvent> FunctionsToInstrument();
@@ -65,7 +65,7 @@ public:
   static llvm::StringRef defaultLocation();
 
 private:
-  Manifest(llvm::ArrayRef<Automaton*> Automata);
+  Manifest(llvm::ArrayRef<Assertion*> Automata);
 
   //! Returns a copy of all events named in this manifest.
   std::vector<Event> Events();
@@ -76,10 +76,10 @@ private:
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
   //! Memory to store automata in.
-  llvm::OwningArrayPtr<Automaton*> Storage;
+  llvm::OwningArrayPtr<Assertion*> Storage;
 
   //! Convenience wrapper that provides useful methods.
-  llvm::ArrayRef<Automaton*> Automata;
+  llvm::ArrayRef<Assertion*> Assertions;
 };
 
 }

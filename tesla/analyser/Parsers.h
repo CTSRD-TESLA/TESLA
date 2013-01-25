@@ -39,10 +39,10 @@
 namespace tesla {
 
 //! Parse a TESLA assertion embedded in C code.
-bool ParseInlineAssertion(Automaton*, clang::CallExpr*, clang::ASTContext&);
+bool ParseInlineAssertion(Assertion*, clang::CallExpr*, clang::ASTContext&);
 
 //! Parse the context (global or per-thread) for an automaton.
-bool ParseContext(Automaton*, clang::Expr*, clang::ASTContext&);
+bool ParseContext(Assertion*, clang::Expr*, clang::ASTContext&);
 
 //! Parse the location where an automaton is defined.
 bool ParseLocation(Location*,
@@ -51,28 +51,28 @@ bool ParseLocation(Location*,
 
 
 //! Parse a (polymorphic-ish) TESLA expression.
-bool ParseExpression(Expression*, clang::Expr*, Automaton*,
+bool ParseExpression(Expression*, clang::Expr*, Assertion*,
                      std::vector<clang::ValueDecl*>& References,
                      clang::ASTContext&);
 
 //! Parse a boolean expression over TESLA expressions.
-bool ParseBooleanExpr(BooleanExpr*, clang::BinaryOperator*, Automaton*,
+bool ParseBooleanExpr(BooleanExpr*, clang::BinaryOperator*, Assertion*,
                       std::vector<clang::ValueDecl*>& References,
                       clang::ASTContext&);
 
 //! Parse a sequence of TESLA events.
-bool ParseSequence(Sequence*, clang::CallExpr*, Automaton*,
+bool ParseSequence(Sequence*, clang::CallExpr*, Assertion*,
                    std::vector<clang::ValueDecl*>& References,
                    clang::ASTContext&);
 
 
 //! Parse a (polymorphic-ish) TESLA event.
-bool ParseEvent(Event*, clang::Expr *E, Automaton *A,
+bool ParseEvent(Event*, clang::Expr *E, Assertion *A,
                 std::vector<clang::ValueDecl*>& References,
                 clang::ASTContext& Ctx);
 
 //! Parse a sequence of repeated events (a la "aba"+).
-bool ParseRepetition(Repetition*, clang::CallExpr*, Automaton *A,
+bool ParseRepetition(Repetition*, clang::CallExpr*, Assertion *A,
                      std::vector<clang::ValueDecl*>& References,
                      clang::ASTContext&);
 

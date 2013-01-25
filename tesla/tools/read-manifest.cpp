@@ -55,21 +55,24 @@ main(int argc, char *argv[]) {
 
   string ManifestName(argv[1]);
 
+  auto& out = llvm::outs();
+  auto& err = llvm::errs();
+
   OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs(), ManifestName));
   if (!Manifest) {
-    llvm::errs() << "Unable to read manifest '" << ManifestName << "'\n";
+    err << "Unable to read manifest '" << ManifestName << "'\n";
     return false;
   }
 
   for (auto& Fn : Manifest->FunctionsToInstrument()) {
-    llvm::outs() << "Fn: " << Fn.ShortDebugString() << "\n";
+    out << "Fn: " << Fn.ShortDebugString() << "\n";
     if (Fn.context() != FunctionEvent::Callee) continue;
 
     assert(Fn.has_function());
     auto Name = Fn.function().name();
 
     assert(Fn.has_direction());
-    llvm::outs() << "Direction: " << Fn.direction() << "\n";
+    out << "Direction: " << Fn.direction() << "\n";
   }
 
   google::protobuf::ShutdownProtobufLibrary();

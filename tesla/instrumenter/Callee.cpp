@@ -1,6 +1,6 @@
-/*! @file callee.cpp  Code for instrumenting function calls (callee context). */
+/*! @file Callee.cpp  Code for instrumenting function calls (callee context). */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -139,7 +139,7 @@ CalleeInstrumentation::CalleeInstrumentation(
 
 
 // ==== CalleeInstrumenter implementation ======================================
-char tesla::TeslaCalleeInstrumenter::ID = 0;
+char TeslaCalleeInstrumenter::ID = 0;
 
 TeslaCalleeInstrumenter::~TeslaCalleeInstrumenter() {
   google::protobuf::ShutdownProtobufLibrary();
@@ -231,7 +231,4 @@ void TeslaCalleeInstrumenter::DefineInstrumentationFunctions(
 }
 
 } /* namespace tesla */
-
-static RegisterPass<tesla::TeslaCalleeInstrumenter> Callee("tesla-callee",
-  "TESLA instrumentation: callee context");
 

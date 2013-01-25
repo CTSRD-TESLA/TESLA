@@ -32,9 +32,9 @@ package tesla;
 
 
 /**
- * A TESLA finite-state automaton.
+ * A TESLA assertion describing the temporal behaviour of software.
  */
-message Automaton {
+message Assertion {
   /** Where the automaton is defined (an identifier). */
   required Location location = 1;
 

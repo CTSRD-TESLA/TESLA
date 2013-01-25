@@ -1,5 +1,6 @@
+/*! @file Instrumentation.h  Declaration of instrumentation helpers. */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -98,7 +99,7 @@ llvm::Function *FindInstrumentationFn(llvm::Module& M, llvm::StringRef Name,
  * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD
  * or @ref TESLA_SCOPE_GLOBAL).
  */
-llvm::Constant* TeslaContext(Automaton::Context Context,
+llvm::Constant* TeslaContext(Assertion::Context Context,
                              llvm::LLVMContext& Ctx);
 
 /**

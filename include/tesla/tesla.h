@@ -31,7 +31,7 @@
 #ifndef	TESLA_H
 #define	TESLA_H
 
-#ifdef  TESLA
+#ifdef	TESLA
 
 #include <limits.h>
 #include <stdbool.h>
@@ -48,7 +48,7 @@ void __tesla_inline_assertion(const char *filename, int line, int count,
 		__tesla_locality*, bool);
 
 /** A more programmer-friendly version of __tesla_inline_assertion. */
-#define TESLA_ASSERT(locality, predicate)				\
+#define	TESLA_ASSERT(locality, predicate)				\
 	__tesla_inline_assertion(					\
 		__FILE__, __LINE__, __COUNTER__,			\
 		locality, predicate					\

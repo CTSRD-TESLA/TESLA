@@ -8,19 +8,16 @@
 
 BUILD_DIR=../build
 ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyser
-INSTRUMENTER= \
-	opt -S \
-		-load ${BUILD_DIR}/tesla/instrumenter/TeslaInstrumenter.dylib \
-		-tesla-callee -tesla-caller -tesla-asserts
+INSTRUMENTER= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
 LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 
-CC=clang -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
+CC=clang
 LINK=clang
 
 DIFF=$(shell which colordiff || echo "diff")
 VERBOSE?=false
 
-CFLAGS=-I ../include/tesla
+CFLAGS=-I ../include/tesla -D REVISION="\"$(shell ./revision.sh)\""
 
 BIN=demo
 EXAMPLE=example
@@ -34,8 +31,6 @@ INSTR=$(patsubst %,%.instr,$C ${IR})
 INSTRUMENTED_IR=$(patsubst %,%.ll,${INSTR})
 
 OBJ=$(patsubst %,%.o,${INSTR})
-
-PARSE=${CC} -fsyntax-only ${CFLAGS}
 
 all: tesla ${BIN}
 
@@ -54,36 +49,36 @@ instrument: tesla
 	${MAKE} VERBOSE=true ${INSTRUMENTED_IR}
 
 .tesla: ${TESLA}
-	@echo "[CAT]   $^ > $@"
+	@echo "[CAT]     $^ > $@"
 	cat $^ > $@
 
 # Build the demo application.
 ${BIN}: ${OBJ}
-	@echo "[LINK]  $^ > $@"
+	@echo "[LINK]    $^ > $@"
 	${LINK} $^ ${LIBS} -o $@
 
 # Run the TESLA analyser over C code.
 .c.tesla: tesla
-	@echo "[TESLA] $^ > $@"
-	${ANALYSER} $< -o $@ -- ${PARSE} -D TESLA_ANALYSIS
+	@echo "[TESLA]   $^ > $@"
+	${ANALYSER} $< -o $@ -- -fsyntax-only ${CFLAGS} -D TESLA -D TESLA_ANALYSIS
 	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
 	            && cat $@ && echo "===== end of TESLA analysis =====" \
 	            || exit 0
 
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll .tesla
-	@echo "[TESLA] $^ > $@"
+	@echo "[TESLA]   $^ > $@"
 	${INSTRUMENTER} -tesla-manifest .tesla $< -o $@
 	# We *expect* diff to produce an output!
 	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 
 # Compile C code to LLVM IR.
 .c.ll:
-	@echo "[CC]    $^ > $@"
+	@echo "[CC]      $^ > $@"
 	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
 
 # Compile IR to object code.
 .ll.o:
-	@echo "[LLC]   $^ > $@"
+	@echo "[LLC]     $^ > $@"
 	${CC} -c $< -o $@
 

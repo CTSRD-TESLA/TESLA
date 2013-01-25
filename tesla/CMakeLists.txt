@@ -6,6 +6,7 @@ find_package(LLVM REQUIRED)
 include(AddLLVM)
 
 add_definitions(${LLVM_DEFINITIONS})
+add_definitions(-fvisibility-inlines-hidden)
 include_directories(${LLVM_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 
@@ -22,5 +23,5 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}/common")
 add_subdirectory(analyser)
 add_subdirectory(common)
 add_subdirectory(instrumenter)
-#add_subdirectory(tools)
+add_subdirectory(tools)
 

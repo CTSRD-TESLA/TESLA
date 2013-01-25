@@ -59,12 +59,12 @@ cl::opt<string> ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
 
 const string Manifest::SEP = "===\n";
 
-Manifest::Manifest(ArrayRef<Automaton*> Automata)
-  : Storage(new Automaton*[Automata.size()]),
-    Automata(Storage.get(), Automata.size())
+Manifest::Manifest(ArrayRef<Assertion*> Assertions)
+  : Storage(new Assertion*[Assertions.size()]),
+    Assertions(Storage.get(), Assertions.size())
 {
-  for (size_t i = 0; i < Automata.size(); i++)
-    Storage[i] = Automata[i];
+  for (size_t i = 0; i < Assertions.size(); i++)
+    Storage[i] = Assertions[i];
 }
 
 
@@ -83,7 +83,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     return NULL;
   }
 
-  SmallVector<Automaton*, 3> Automata;
+  SmallVector<Assertion*, 3> Assertions;
   const string& CompleteBuffer = Buffer->getBuffer().str();
 
   // The text file delineates individual automata with the string '==='.
@@ -91,19 +91,19 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     size_t End = CompleteBuffer.find(SEP, Pos + 1);
     const string& Substr = CompleteBuffer.substr(Pos, End - Pos);
 
-    OwningPtr<Automaton> Auto(new Automaton);
+    OwningPtr<Assertion> Auto(new Assertion);
     if (!::google::protobuf::TextFormat::ParseFromString(Substr, &(*Auto))) {
       ErrorStream << "Error parsing TESLA automaton in '" << Path << "'\n";
 
-      for (auto A : Automata) delete A;
+      for (auto A : Assertions) delete A;
       return NULL;
     }
 
-    Automata.push_back(Auto.take());
+    Assertions.push_back(Auto.take());
     Pos = End + SEP.length();
   }
 
-  return new Manifest(Automata);
+  return new Manifest(Assertions);
 }
 
 StringRef Manifest::defaultLocation() { return ManifestName; }
@@ -171,7 +171,7 @@ vector<Event> ExprEvents(const Expression& E) {
 vector<Event> Manifest::Events() {
   vector<Event> AllEvents;
 
-  for (auto *A : Automata) {
+  for (auto *A : Assertions) {
     auto Expr = ExprEvents(A->expression());
 #ifndef NDEBUG
     for (auto& Ev : Expr) assert(Event::Type_IsValid(Ev.type()));

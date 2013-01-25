@@ -153,7 +153,7 @@ tesla_instance_find(struct tesla_class *tclass, struct tesla_key *pattern,
 	assert(pattern != NULL);
 	assert(out != NULL);
 
-	struct tesla_instance *instance, *next_free_instance;
+	struct tesla_instance *instance;
 	u_int i;
 
 	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
@@ -163,27 +163,24 @@ tesla_instance_find(struct tesla_class *tclass, struct tesla_key *pattern,
 	assert(ttp != NULL);
 	tesla_assert(ttp->tt_length != 0, "Uninitialized tesla_table");
 
-	next_free_instance = NULL;
 	for (i = 0; i < ttp->tt_length; i++) {
 		instance = &ttp->tt_instances[i];
+		assert(instance != NULL);
 
 		// If we found the droids we're looking for, go no further.
 		if (tesla_key_matches(pattern, &instance->ti_key)) {
 			*out = instance;
-			assert(*out != NULL);
-			return (TESLA_SUCCESS);
+			break;
 		}
-
-		// No luck yet; make a note if this slot is empty.
-		if ((next_free_instance == NULL) && !tesla_instance_active(instance))
-			next_free_instance = instance;
 	}
 
-	// There are no free slots.
-	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL) {
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
 		tesla_class_global_unlock(tclass);
-	}
-	return (TESLA_ERROR_ENOENT);
+
+	if (*out == NULL)
+		return (TESLA_ERROR_ENOENT);
+
+	return (TESLA_SUCCESS);
 }
 
 void
