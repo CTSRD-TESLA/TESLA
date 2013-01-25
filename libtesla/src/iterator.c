@@ -104,7 +104,7 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 #ifndef NDEBUG
 			fprintf(stderr, "forking '");
 			print_key(&orig->ti_key);
-			fprintf(stderr, "' (state %lld) to '", orig->ti_state);
+			fprintf(stderr, "' (state %td) to '", orig->ti_state);
 			print_key(&copy->ti_key);
 			fprintf(stderr, "'\n");
 #endif

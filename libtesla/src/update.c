@@ -50,7 +50,7 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	DEBUG_PRINT("  context:  %s\n",
 	       (tesla_context == TESLA_SCOPE_GLOBAL ? "global" : "per-thread"));
 	DEBUG_PRINT("  class:    %d ('%s')\n", class_id, name);
-	DEBUG_PRINT("  state:    %lld->%lld\n", expected_state, new_state);
+	DEBUG_PRINT("  state:    %td->%td\n", expected_state, new_state);
 	DEBUG_PRINT("  key:      ");
 	print_key(key);
 	DEBUG_PRINT("\n----\n");
@@ -60,7 +60,7 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	CHECK(tesla_store_get, tesla_context, 4, 4, &store);
 
 #ifndef NDEBUG
-	DEBUG_PRINT("store: 0x%llx\n", (register_t) store);
+	DEBUG_PRINT("store: 0x%tx\n", (register_t) store);
 	DEBUG_PRINT("----\n");
 #endif
 
@@ -77,7 +77,7 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 		struct tesla_instance *inst;
 		CHECK(tesla_instance_new, class, key, new_state, &inst);
 
-		DEBUG_PRINT("new instance @ 0x%llx: %llx -> %llx\n",
+		DEBUG_PRINT("new instance @ 0x%tx: %tx -> %tx\n",
 		            (register_t) inst, expected_state, inst->ti_state);
 	} else {
 		struct tesla_iterator *iter;
@@ -89,7 +89,7 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 			if (inst->ti_state != expected_state) {
 				tesla_assert_fail(class, inst);
 			} else {
-				DEBUG_PRINT("existing instance @ 0x%llx: %llx -> %llx\n",
+				DEBUG_PRINT("existing instance @ 0x%tx: %tx -> %tx\n",
 				            (register_t) inst,
 				            inst->ti_state, new_state);
 				inst->ti_state = new_state;
