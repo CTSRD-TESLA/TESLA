@@ -102,13 +102,13 @@ bool ParseArgument(Argument *Arg, Expr *E, vector<ValueDecl*>& References,
     if (!Fn) {
       Report("Should only call TESLA pseudo-functions here",
           P->getLocStart(), Ctx) << P->getSourceRange();
-      return NULL;
+      return false;
     }
 
     if (Fn->getName() != "__tesla_any") {
       Report("Invalid call; expected __tesla_any()", P->getLocStart(), Ctx)
         << P->getSourceRange();
-      return NULL;
+      return false;
     }
 
     Arg->set_type(Argument::Any);
@@ -127,7 +127,7 @@ bool ParseArgument(Argument *Arg, Expr *E, vector<ValueDecl*>& References,
 
     Report("Invalid argument to function within TESLA assertion",
         P->getLocStart(), Ctx) << P->getSourceRange();
-    return NULL;
+    return false;
   }
 
   return true;
