@@ -17,10 +17,9 @@
 #include "Callee.h"
 #include "Caller.h"
 
-#include "llvm/LLVMContext.h"
-#include "llvm/DataLayout.h"
-#include "llvm/Module.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 #include "llvm/CodeGen/CommandFlags.h"
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Assembly/PrintModulePass.h"
@@ -36,6 +35,8 @@
 #include "llvm/Support/SystemUtils.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/ToolOutputFile.h"
+#include "llvm/PassManager.h"
+
 using namespace llvm;
 
 // Command line options.

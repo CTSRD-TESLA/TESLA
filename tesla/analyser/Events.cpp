@@ -32,6 +32,7 @@
 #include "Parsers.h"
 
 #include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/StringSwitch.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"

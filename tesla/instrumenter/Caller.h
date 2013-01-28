@@ -51,13 +51,14 @@ namespace tesla {
 class CallerInstrumentation;
 
 /// Instruments function calls in the caller context.
-class TeslaCallerInstrumenter : public llvm::BasicBlockPass {
+class TeslaCallerInstrumenter : public llvm::FunctionPass {
 public:
   static char ID;
-  TeslaCallerInstrumenter() : BasicBlockPass(ID) {}
+  TeslaCallerInstrumenter() : FunctionPass(ID) {}
   ~TeslaCallerInstrumenter();
 
   virtual bool doInitialization(llvm::Module &M);
+  virtual bool runOnFunction(llvm::Function &Fn);
   virtual bool runOnBasicBlock(llvm::BasicBlock &Block);
 
 private:

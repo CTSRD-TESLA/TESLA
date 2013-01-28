@@ -33,9 +33,9 @@
 #include "Manifest.h"
 #include "Names.h"
 
-#include "llvm/Instructions.h"
-#include "llvm/IRBuilder.h"
-#include "llvm/Module.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Module.h"
 
 #include "llvm/Support/raw_ostream.h"
 
@@ -142,6 +142,16 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
   }
 
   return false;
+}
+
+bool TeslaCallerInstrumenter::runOnFunction(Function &Fn) {
+  bool modifiedIR = false;
+
+  for (auto &Block : Fn) {
+    modifiedIR |= runOnBasicBlock(Block);
+  }
+
+  return modifiedIR;
 }
 
 bool TeslaCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {

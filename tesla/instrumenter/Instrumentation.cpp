@@ -34,9 +34,9 @@
 #include "Instrumentation.h"
 #include "Names.h"
 
-#include "llvm/DataLayout.h"
-#include "llvm/IRBuilder.h"
-#include "llvm/Module.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Module.h"
 
 using namespace llvm;
 
