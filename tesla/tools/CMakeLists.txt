@@ -3,7 +3,5 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
 
 set(LLVM_LINK_COMPONENTS ${LLVM_TARGETS_TO_BUILD})
 
-add_llvm_executable(read-manifest read-manifest.cpp)
-
-target_link_libraries(read-manifest TeslaCommon)
+add_subdirectory(read-manifest)
 
