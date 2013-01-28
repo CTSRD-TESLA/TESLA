@@ -29,49 +29,91 @@
  * SUCH DAMAGE.
  */
 
-//#include "tesla.pb.h"
+#ifndef AUTOMATON_H
+#define AUTOMATON_H
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/OwningPtr.h"
-#include "llvm/ADT/StringRef.h"
-
-#include <vector>
-
-namespace llvm {
-  class raw_ostream;
-}
 
 namespace tesla {
 
+// TESLA IR classes
 class Assertion;
 class BooleanExpr;
 class Event;
 class Expression;
+class Function;
+class FunctionEvent;
+class Location;
+class Now;
+class Repetition;
 class Sequence;
+
+// Automata classes
 class State;
 class Transition;
 
 typedef llvm::SmallVector<State*,10> StateVector;
-typedef llvm::SmallVector<State*,1> SmallStateVec;
-
 typedef llvm::SmallVector<Transition*,10> TransitionVector;
 
 
 /**
- * A DFA description of a TESLA assertion.
+ * An automata representation of a TESLA assertion.
+ *
+ * This representation can be either deterministic (for easy generation of
+ * instrumentation code) or non-deterministic (for easy creation and analysis).
  *
  * An @ref Automaton owns its consituent @ref State objects; @ref Transition
  * ownership rests with the @ref State objects.
  */
 class Automaton {
 public:
-  static Automaton* Parse(Assertion*, unsigned int id);
+  enum Type {
+    DETERMINISTIC,
+    NON_DETERMINISTIC
+  };
+
+  /**
+   * Convert an assertion into an @ref Automaton.
+   *
+   * @param
+   */
+  static Automaton* Create(Assertion*, unsigned int id,
+                           Type T = NON_DETERMINISTIC);
+
+  bool IsRealisable() const;
 
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
 
   std::string String();
   std::string Dot();
+
+protected:
+  Automaton(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+
+  const size_t id;
+  StateVector States;
+  TransitionVector Transitions;
+};
+
+
+
+/**
+ * A non-deterministic automaton that represents a TESLA assertion.
+ *
+ * An NFA isn't easy to write recognition code for, but it is simple to
+ * construct, allow us to perform visual inspection and can be mechanically
+ * converted to a DFA.
+ *
+ * The flow is, therefore: C -> TESLA IR -> NFA -> DFA -> instrumentation.
+ */
+class NFA : public Automaton {
+public:
+  static NFA* Parse(Assertion*, unsigned int id);
+
+  size_t StateCount() const { return States.size(); }
+  size_t TransitionCount() const { return Transitions.size(); }
 
 private:
   /**
@@ -83,97 +125,51 @@ private:
    *                       Memory ownership of out-transitions rests with the
    *                       originating @ref State.
    *
-   * @returns  A vector of final states.
+   * @returns  Transition out of the sub-automata described by the expression.
    */
-  static SmallStateVec Parse(const Expression&, State& InitialState,
-                             StateVector& States, TransitionVector& Trans);
+  static State* Parse(const Expression&, State& InitialState,
+                      StateVector& States, TransitionVector& Trans);
 
-  static SmallStateVec Parse(const BooleanExpr&, State& InitialState,
-                             StateVector&, TransitionVector&);
+  static State* Parse(const BooleanExpr&, State& InitialState,
+                      StateVector&, TransitionVector&);
 
-  static SmallStateVec Parse(const Sequence&, State& InitialState,
-                             StateVector&, TransitionVector&);
+  static State* Parse(const Sequence&, State& InitialState,
+                      StateVector&, TransitionVector&);
 
-  Automaton(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+  static State* Parse(const Event&, State& InitialState,
+                      StateVector& States, TransitionVector& Trans);
 
-  size_t id;
-  StateVector States;
-  TransitionVector Transitions;
+  static State* Parse(const Repetition&, State& InitialState,
+                      StateVector& States, TransitionVector& Trans);
+
+  static State* Parse(const Now&, State& InitialState,
+                      StateVector& States, TransitionVector& Trans);
+
+  static State* Parse(const FunctionEvent&, State& InitialState,
+                      StateVector& States, TransitionVector& Trans);
+
+  NFA(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 
 
-/// A state in a TESLA DFA.
-class State {
+/**
+ * A DFA description of a TESLA assertion.
+ *
+ * An @ref Automaton owns its consituent @ref State objects; @ref Transition
+ * ownership rests with the @ref State objects.
+ */
+class DFA : public Automaton {
 public:
-  static State* Create(StateVector&);
-  static State* CreateStartState(StateVector&);
+  static DFA* Convert(const NFA&);
 
-  ~State();
-
-  void AddTransition(llvm::OwningPtr<Transition>&);
-
-  size_t ID() const { return id; }
-  bool IsStartState() const { return start; }
-  bool IsAcceptingState() const { return (Transitions.size() == 0); }
-
-  std::string String() const;
-  std::string Dot() const;
+  size_t StateCount() const { return States.size(); }
+  size_t TransitionCount() const { return Transitions.size(); }
 
 private:
-  State(size_t id, bool start = false);
-
-  const size_t id;
-  const bool start;
-
-  llvm::SmallVector<Transition*, 1> Transitions;
+  DFA(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 
+} // namespace tesla
 
-/// A transition from one TESLA state to another.
-class Transition {
-public:
-  static void CreateInit(State& From, const State& To,
-                         TransitionVector& Transitions);
-
-  static Transition* Parse(const Event&, const State& From);
-
-  /**
-   * Parse an @ref Expression that transitions away from an existing @ref State.
-   *
-   * This method may descend recursively to parse e.g. ([ foo, bar ] || baz).
-   *
-   * @returns   the final state(s) of the expression
-   */
-  static Transition* Parse(const Expression& Expr, State& From,
-                           StateVector& States, TransitionVector& Transitions,
-                           size_t& CurrentStateID);
-
-  static Transition* Parse(const BooleanExpr&, State& From, StateVector& States,
-                           TransitionVector& Transitions, size_t& id);
-
-  static Transition* Parse(const Sequence&, State& From, StateVector& States,
-                           TransitionVector& Transitions, size_t& id);
-
-  State* SetDestination(State *S) { To = S; return S; }
-
-  const State& Source() const { return *From; }
-  const State& Destination() const { return *To; }
-
-  std::string ShortLabel() const;
-  std::string String() const;
-  std::string Dot() const;
-
-private:
-  Transition(const Event& E, const State& From);
-  Transition(const State& From, const State& To);
-
-  const bool Init;     //!< this is an initialization transition; Ev == NULL
-  const Event* Ev;
-  const State* From;
-  const State* To;
-};
-
-
-}
-
+#endif   // AUTOMATON_H
 

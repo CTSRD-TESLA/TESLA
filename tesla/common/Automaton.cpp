@@ -30,6 +30,9 @@
  */
 
 #include "Automaton.h"
+#include "State.h"
+#include "Transition.h"
+
 #include "tesla.pb.h"
 
 #include <llvm/ADT/SmallPtrSet.h>
@@ -45,99 +48,18 @@ using std::vector;
 
 namespace tesla {
 
-//! This would be more at home in llvm::SmallVector itself - upstream?
-SmallStateVec operator + (const SmallStateVec& LHS, const SmallStateVec& RHS) {
-  SmallStateVec New(LHS);
-  New.append(RHS.begin(), RHS.end());
 
-  return New;
-}
-
-Automaton* Automaton::Parse(Assertion *A, unsigned int id) {
-  StateVector States;
-  TransitionVector Transitions;
-
-  State *Start = State::Create(States);
-
-  if (Parse(A->expression(), *Start, States, Transitions).empty()) {
-    for (State *S : States)
-      delete S;
-
-    return NULL;
-  }
-
-  return new Automaton(id, States, Transitions);
-}
-
-SmallStateVec Automaton::Parse(const Expression& Expr, State& Start,
-                        StateVector& States, TransitionVector& Transitions) {
-
-  switch (Expr.type()) {
+// ---- Automaton implementation ----------------------------------------------
+Automaton* Automaton::Create(Assertion *A, unsigned int id, Type Type) {
+  switch (Type) {
   default:
-    assert(false && "unhandled Expression::Type");
+    assert(false && "Unhandled Automaton::Type");
 
-  case Expression::BOOLEAN_EXPR:
-    return Parse(Expr.booleanexpr(), Start, States, Transitions);
-
-  case Expression::SEQUENCE:
-    return Parse(Expr.sequence(), Start, States, Transitions);
+  case NON_DETERMINISTIC:
+    return NFA::Parse(A, id);
   }
 
-  llvm_unreachable("fell through Expression::Type switch");
-}
-
-SmallStateVec Automaton::Parse(const BooleanExpr& Expr, State& Branch,
-                               StateVector& States,
-                               TransitionVector& Transitions) {
-
-  assert(Expr.expression_size() == 2);
-  const Expression& LHS = Expr.expression(0);
-  const Expression& RHS = Expr.expression(1);
-
-  SmallStateVec LHSFinal = Parse(LHS, Branch, States, Transitions);
-  SmallStateVec RHSFinal = Parse(RHS, Branch, States, Transitions);
-
-  if (LHSFinal.empty() || RHSFinal.empty())
-    return SmallStateVec();
-
-  switch (Expr.operation()) {
-  default:
-    assert(false && "unhandled BooleanExpr::Operation");
-
-  case BooleanExpr::BE_Or:
-    return LHSFinal + RHSFinal;
-
-  case BooleanExpr::BE_And:
-    // TODO: join two (sets of) final states together
-    return SmallStateVec();
-
-#if 0
-  case BooleanExpr::BE_XOr:
-    // TODO: ???
-#endif
-  }
-
-  llvm_unreachable("fell through BooleanExpr::Operation switch");
-}
-
-SmallStateVec Automaton::Parse(const Sequence& Seq, State& Start,
-                               StateVector& States,
-                               TransitionVector& Transitions) {
-
-  State *Current = &Start;
-  for (const Event& Ev : Seq.event()) {
-    // States own their out-transitions; hold, then transfer ownership.
-    OwningPtr<Transition> T(Transition::Parse(Ev, *Current));
-
-    State *Next = T->SetDestination(State::Create(States));
-
-    Transitions.push_back(T.get());
-
-    Current->AddTransition(T);
-    Current = Next;
-  }
-
-  return SmallStateVec(1, Current);
+  llvm_unreachable("fell through Automaton::Type switch");
 }
 
 
@@ -146,6 +68,14 @@ Automaton::Automaton(size_t id, ArrayRef<State*> S, ArrayRef<Transition*> T)
 {
   States.insert(States.begin(), S.begin(), S.end());
   Transitions.insert(Transitions.begin(), T.begin(), T.end());
+}
+
+bool Automaton::IsRealisable() const {
+  for (const Transition* T : Transitions)
+    if (!T->IsRealisable())
+      return false;
+
+  return true;
 }
 
 string Automaton::String() {
@@ -167,11 +97,9 @@ string Automaton::Dot() {
   ss << "digraph automaton_" << id << " {\n";
 
   ss << "\tnode [ shape = circle ];\n";
+
   for (State *S : States)
-    ss
-      << "\t" << S->ID()
-      << (S->IsAcceptingState() ? " [ shape = doublecircle ]" : "")
-      << ";\n";
+    ss << "\t" << S->Dot() << "\n";
 
   for (Transition *T : Transitions)
     ss
@@ -191,103 +119,159 @@ string Automaton::Dot() {
 
 
 
-// ---- State implementation --------------------------------------------------
-State* State::Create(StateVector& States) {
-  State *New = new State(States.size());
-  States.push_back(New);
-  return New;
-}
+// ---- NFA implementation ----------------------------------------------------
+NFA* NFA::Parse(Assertion *A, unsigned int id) {
+  StateVector States;
+  TransitionVector Transitions;
 
-State* State::CreateStartState(StateVector& States) {
-  State *New = new State(States.size(), true);
-  States.push_back(New);
-  return New;
-}
+  State *Start = State::Create(States);
 
-State::State(size_t id, bool start) : id(id), start(start) {}
-State::~State() {
-  for (Transition *T : Transitions) delete T;
-}
+  if (Parse(A->expression(), *Start, States, Transitions) == NULL) {
+    for (State *S : States)
+      delete S;
 
-void State::AddTransition(OwningPtr<Transition>& T)
-{
-  Transitions.push_back(T.take());
-}
-
-string State::String() const {
-  stringstream ss;
-  ss << "state " << id << ": ";
-
-  for (const auto& I : Transitions) {
-    const Transition& T = *I;
-    ss << T.String();
+    return NULL;
   }
 
-  return ss.str();
+  return new NFA(id, States, Transitions);
 }
 
-// ---- Transition implementation ---------------------------------------------
-void Transition::CreateInit(State& From, const State& To,
-                            TransitionVector& Transitions) {
+State* NFA::Parse(const Expression& Expr, State& Start,
+                  StateVector& States, TransitionVector& Transitions) {
 
-  assert(From.ID() == 0);
+  switch (Expr.type()) {
+  default:
+    assert(false && "unhandled Expression::Type");
 
-  OwningPtr<Transition> T(new Transition(From, To));
-  Transitions.push_back(T.get());
-  From.AddTransition(T);
+  case Expression::BOOLEAN_EXPR:
+    return Parse(Expr.booleanexpr(), Start, States, Transitions);
+
+  case Expression::SEQUENCE:
+    return Parse(Expr.sequence(), Start, States, Transitions);
+  }
+
+  llvm_unreachable("fell through Expression::Type switch");
 }
 
-Transition* Transition::Parse(const Event& Ev, const State& From) {
-  return new Transition(Ev, From);
+State* NFA::Parse(const BooleanExpr& Expr, State& Branch,
+                  StateVector& States, TransitionVector& Transitions) {
+
+  assert(Expr.expression_size() == 2);
+  const Expression& LHS = Expr.expression(0);
+  const Expression& RHS = Expr.expression(1);
+
+  State *LHSFinal = Parse(LHS, Branch, States, Transitions);
+  State *RHSFinal = Parse(RHS, Branch, States, Transitions);
+
+  if (!LHSFinal || !RHSFinal)
+    return NULL;
+
+  State *Join = State::Create(States);
+
+  switch (Expr.operation()) {
+  default:
+    assert(false && "unhandled BooleanExpr::Operation");
+
+  case BooleanExpr::BE_Or:
+    Transition::Create(*LHSFinal, *Join, Transitions);
+    Transition::Create(*RHSFinal, *Join, Transitions);
+    return Join;
+
+  case BooleanExpr::BE_And:
+    // TODO: join two (sets of) final states together
+    Transition::Create(*LHSFinal, *Join, Transitions);
+    Transition::Create(*RHSFinal, *Join, Transitions);
+    return Join;
+
+#if 0
+  case BooleanExpr::BE_XOr:
+    // TODO: ???
+#endif
+  }
+
+  llvm_unreachable("fell through BooleanExpr::Operation switch");
 }
 
-Transition* Transition::Parse(const Expression& Expr, State& From,
-                              StateVector& States,
-                              TransitionVector& Transitions,
-                              size_t& CurrentStateID) {
+State* NFA::Parse(const Sequence& Seq, State& Start,
+                  StateVector& States, TransitionVector& Transitions) {
 
-  assert(false && "unimplemented");
+  State *Current = &Start;
+  for (const Event& Ev : Seq.event())
+    Current = Parse(Ev, *Current, States, Transitions);
+
+  return Current;
 }
 
-Transition::Transition(const Event& E, const State& From)
-  : Init(false), Ev(&E), From(&From) {}
+State* NFA::Parse(const Event& Ev, State& Start,
+                  StateVector& States, TransitionVector& Transitions) {
 
-Transition::Transition(const State& From, const State& To)
-  : Init(true), Ev(NULL), From(&From), To(&To) {}
-
-string Transition::ShortLabel() const {
-  assert(Init || (Ev != NULL));
-
-  if (Init)
-    return "<init>";
-
-  switch (Ev->type()) {
+  switch (Ev.type()) {
   default:
     assert(false && "unhandled Event::Type");
 
   case Event::REPETITION:
-    return "repeat";
+    return Parse(Ev.repetition(), Start, States, Transitions);
 
   case Event::NOW:
-    return "NOW";
+    return Parse(Ev.now(), Start, States, Transitions);
 
-  case Event::FUNCTION:
-    return Ev->function().function().name();
+  case Event::FUNCTION: {
+    return Parse(Ev.function(), Start, States, Transitions);
+  }
   }
 
-  llvm_unreachable("");
+  llvm_unreachable("fell through Event::Type switch");
 }
 
-string Transition::String() const {
-  assert(To);
+State* NFA::Parse(const Repetition& Rep, State& Start,
+                  StateVector& States, TransitionVector& Transitions) {
 
-  return (Twine()
-    + "--"
-    + "EV"
-    + "-->("
-    + Twine(To->ID())
-    + ")"
-  ).str();
+  State *Current = &Start;
+  for (const Event& Ev : Rep.event()) {
+    Current = Parse(Ev, *Current, States, Transitions);
+  }
+
+  // TODO: handle min, max values!
+  Transition::Create(*Current, Start, Transitions);
+
+  return Current;
+}
+
+State* NFA::Parse(const Now& now, State& InitialState,
+                  StateVector& States, TransitionVector& Trans) {
+
+  State *Final = State::Create(States);
+  Transition::Create(InitialState, *Final, now, Trans);
+  return Final;
+}
+
+State* NFA::Parse(const FunctionEvent& Ev, State& InitialState,
+                  StateVector& States, TransitionVector& Trans) {
+
+  State *Final = State::Create(States);
+  Transition::Create(InitialState, *Final, Ev, Trans);
+  return Final;
+}
+
+
+NFA::NFA(size_t id, ArrayRef<State*> S, ArrayRef<Transition*> T)
+  : Automaton(id, S, T)
+{
+}
+
+
+
+// ---- DFA implementation ----------------------------------------------------
+DFA* DFA::Convert(const NFA& N) {
+  assert(false && "NFA->DFA conversion not implemented yet");
+}
+
+DFA::DFA(size_t id, ArrayRef<State*> S, ArrayRef<Transition*> T)
+  : Automaton(id, S, T)
+{
+  for (const Transition* T: T) {
+    assert(T->IsRealisable());
+  }
 }
 
 } // namespace tesla
