@@ -10,6 +10,7 @@ build: cmake
 clean:
 	(cd build && ninja -t clean) || rm -rf build
 	rm -rf doxygen
+	cd strawman && ${MAKE} clean
 
 cmake: build/CMakeCache.txt
 
