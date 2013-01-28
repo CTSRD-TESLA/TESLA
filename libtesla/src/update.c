@@ -32,6 +32,8 @@
 
 #include "tesla_internal.h"
 
+#include <inttypes.h>
+
 #define	CHECK(fn, ...) do { \
 	int err = fn(__VA_ARGS__); \
 	if (err != TESLA_SUCCESS) { \
@@ -50,7 +52,8 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	DEBUG_PRINT("  context:  %s\n",
 	       (tesla_context == TESLA_SCOPE_GLOBAL ? "global" : "per-thread"));
 	DEBUG_PRINT("  class:    %d ('%s')\n", class_id, name);
-	DEBUG_PRINT("  state:    %td->%td\n", expected_state, new_state);
+	DEBUG_PRINT("  state:    %" PRIu64 "->%" PRIu64"\n",
+               expected_state, new_state);
 	DEBUG_PRINT("  key:      ");
 	print_key(key);
 	DEBUG_PRINT("\n----\n");
