@@ -4,6 +4,9 @@
 # This doesn't change any requirements on libraries the tests link against.
 set(CMAKE_BUILD_TYPE Debug)
 
+# We use execinfo here for detailed failure information (e.g. backtraces).
+find_package(ExecInfo REQUIRED)
+
 set(TESTS
 	fork
 	match

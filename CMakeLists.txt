@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
+set(CMAKE_MODULE_PATH
+  ${CMAKE_MODULE_PATH}
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 
 # Always build with all warnings and with warning=>error
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Werror")
