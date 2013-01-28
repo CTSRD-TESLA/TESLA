@@ -55,7 +55,7 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 	}
 
 	tesla_assert(instance_belongs_to_class,
-		("tesla_instance %llx not of class '%s'",
+		("tesla_instance %tx not of class '%s'",
 		 (register_t) instance, tclass->ts_name)
 	       );
 
@@ -66,7 +66,7 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 void
 print_class(struct tesla_class *c)
 {
-	print("struct tesla_class @ 0x%llx {\n", (register_t) c);
+	print("struct tesla_class @ 0x%tx {\n", (register_t) c);
 	print("  name:         '%s',\n", c->ts_name);
 	print("  description:  '[...]',\n");   // TL;DR
 	print("  scope:        ");
@@ -101,11 +101,11 @@ print_class(struct tesla_class *c)
 void
 print_key(struct tesla_key *key)
 {
-	print("0x%llx [ ", key->tk_mask);
+	print("0x%tx [ ", key->tk_mask);
 
 	for (int i = 0; i < TESLA_KEY_SIZE; i++) {
 		if (key->tk_mask & (1 << i)) {
-			print("%llx ", key->tk_keys[i]);
+			print("%tx ", key->tk_keys[i]);
 		} else {
 			print("X ");
 		}
