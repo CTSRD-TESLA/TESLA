@@ -104,6 +104,10 @@ NowTransition::NowTransition(const State& From, const State& To, const Now& Ev)
 
 
 string FnTransition::ShortLabel() const {
+  return Ev.function().name();
+}
+
+string FnTransition::DotLabel() const {
   return (Twine()
     + Ev.function().name()
     + "\\n("

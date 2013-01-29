@@ -77,6 +77,9 @@ public:
   //! A short, human-readable label.
   virtual std::string ShortLabel() const = 0;
 
+  //! A label that can go in a .dot file (can use newline, Greek HTML codes...).
+  virtual std::string DotLabel() const = 0;
+
   virtual std::string String() const;
   virtual std::string Dot() const;
 
@@ -95,7 +98,8 @@ protected:
 class NullTransition : public Transition {
 public:
   bool IsRealisable() const { return false; }
-  std::string ShortLabel() const { return "&#949;"; }    // epsilon
+  std::string ShortLabel() const { return "ε"; }
+  std::string DotLabel() const { return "&#949;"; }    // epsilon
 
 private:
   NullTransition(const State& From, const State& To) : Transition(From, To) {}
@@ -109,6 +113,7 @@ class NowTransition : public Transition {
 public:
   bool IsRealisable() const { return true; }
   std::string ShortLabel() const { return "NOW"; }
+  std::string DotLabel() const { return "NOW"; }
 
 private:
   NowTransition(const State& From, const State& To, const Now& Ev);
@@ -123,6 +128,7 @@ class FnTransition : public Transition {
 public:
   bool IsRealisable() const { return true; }
   std::string ShortLabel() const;
+  std::string DotLabel() const;
 
 private:
   FnTransition(const State& From, const State& To, const FunctionEvent& Ev)

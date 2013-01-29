@@ -108,7 +108,7 @@ string Automaton::Dot() {
       << " -> "
       << T->Destination().ID()
       << " [ label = \""
-      << T->ShortLabel()
+      << T->DotLabel()
       << "\" ];\n"
       ;
 
