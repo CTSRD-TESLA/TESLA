@@ -81,7 +81,7 @@ bool Automaton::IsRealisable() const {
   return true;
 }
 
-string Automaton::String() {
+string Automaton::String() const {
   stringstream ss;
   ss << "automaton " << id << " {\n";
 
@@ -95,7 +95,7 @@ string Automaton::String() {
   return ss.str();
 }
 
-string Automaton::Dot() {
+string Automaton::Dot() const {
   stringstream ss;
   ss << "digraph automaton_" << id << " {\n";
 

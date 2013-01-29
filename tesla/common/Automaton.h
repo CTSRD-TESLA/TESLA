@@ -94,8 +94,8 @@ public:
   //! A longer description.
   std::string Description() const { return description; }
 
-  std::string String();
-  std::string Dot();
+  std::string String() const;
+  std::string Dot() const;
 
   //! Iterate over state transitions.
   TransitionVector::const_iterator begin() const { return Transitions.begin(); }
