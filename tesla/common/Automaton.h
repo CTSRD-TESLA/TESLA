@@ -118,9 +118,6 @@ class NFA : public Automaton {
 public:
   static NFA* Parse(Assertion*, unsigned int id);
 
-  size_t StateCount() const { return States.size(); }
-  size_t TransitionCount() const { return Transitions.size(); }
-
 private:
   /**
    * Parse an @ref Expression that follows from an initial state.
@@ -166,10 +163,7 @@ private:
 class DFA : public Automaton {
 public:
   static DFA* Convert(const NFA&);
-
   bool IsRealisable() const { return true; }
-  size_t StateCount() const { return States.size(); }
-  size_t TransitionCount() const { return Transitions.size(); }
 
 private:
   DFA(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
