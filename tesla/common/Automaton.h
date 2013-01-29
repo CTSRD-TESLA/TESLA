@@ -88,6 +88,10 @@ public:
   std::string String();
   std::string Dot();
 
+  //! Iterate over state transitions.
+  TransitionVector::const_iterator begin() const { return Transitions.begin(); }
+  TransitionVector::const_iterator end() const  { return Transitions.end(); }
+
 protected:
   Automaton(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 
