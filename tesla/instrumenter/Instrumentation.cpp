@@ -31,8 +31,11 @@
 
 #include <tesla/libtesla.h>
 
+#include "Automaton.h"
 #include "Instrumentation.h"
 #include "Names.h"
+#include "State.h"
+#include "Transition.h"
 
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/IRBuilder.h"
@@ -224,6 +227,64 @@ Function *FindInstrumentationFn(Module& M, StringRef Name,
 
   return M.getFunction((Prefix + Name).str());
 }
+
+
+bool AddInstrumentation(const FnTransition& T, const Automaton& A,
+                        Module& M) {
+
+  auto& FnEvent = T.FnEvent();
+  auto& Fn = FnEvent.function();
+
+  // Only build instrumentation for functions defined in this module.
+  Function *F = M.getFunction(Fn.name());
+  if (!F || (F->getBasicBlockList().empty()))
+    return false;
+
+  for (Function *InstrFn : FindInstrumentation(FnEvent, M)) {
+    assert(InstrFn != NULL);
+    LLVMContext& Ctx = InstrFn->getContext();
+
+    // The instrumentation function should always end in a RetVoid;
+    // assert this is so and then trim it so we can add new stuff.
+    auto& PreviousEndBlock = InstrFn->back();
+    assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
+    PreviousEndBlock.getTerminator()->eraseFromParent();
+
+    auto Block = BasicBlock::Create(Ctx, A.Name(), InstrFn);
+    IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
+
+    IRBuilder<> Builder(Block);
+    Type* IntType = RegisterType(M);
+
+    auto CurrentState = ConstantInt::get(IntType, T.Source().ID());
+    auto NextState = ConstantInt::get(IntType, T.Destination().ID());
+
+    Constant *NoError = ConstantInt::get(IntType, 0);
+
+    auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
+    IRBuilder<>(Die).CreateRetVoid();
+
+    vector<Value*> Args;
+    Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
+    Args.push_back(ConstantInt::get(IntType, A.ID()));
+    Args.push_back(ConstructKey(Builder, M,
+                     InstrFn->getArgumentList(), T.FnEvent()));
+    Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
+    Args.push_back(Builder.CreateGlobalStringPtr(A.Description()));
+    Args.push_back(CurrentState);
+    Args.push_back(NextState);
+
+    Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
+    assert(Args.size() == UpdateStateFn->arg_size());
+
+    Value *Error = Builder.CreateCall(UpdateStateFn, Args);
+    Error = Builder.CreateICmpNE(Error, NoError);
+    Builder.CreateRetVoid();
+  }
+
+  return true;
+}
+
 
 Constant* TeslaContext(Assertion::Context Context, LLVMContext& Ctx) {
   static Type *IntType = IntegerType::get(Ctx, 64);

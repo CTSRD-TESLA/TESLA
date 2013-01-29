@@ -52,6 +52,9 @@ namespace llvm {
 
 namespace tesla {
 
+class Automaton;
+class FnTransition;
+
 /// Instrumentation on a single instruction that does not change control flow.
 class InstInstrumentation {
 public:
@@ -80,6 +83,17 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
                              const llvm::Twine& Prefix,
                              llvm::Function *F = NULL,
                              llvm::BasicBlock *InsertBefore = NULL);
+
+/**
+ * Convert a TESLA state transition description into instrumentation code.
+ *
+ * @param  T     the transition in a TESLA automaton
+ * @param  A     the TESLA automaton
+ * @param  M     the module containing the instrumentation functions.
+ */
+bool AddInstrumentation(const FnTransition& T, const Automaton& A,
+                        llvm::Module& M);
+
 }
 
 #endif	/* !TESLA_INSTRUMENTATION_H */
