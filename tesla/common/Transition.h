@@ -39,7 +39,6 @@
 namespace tesla {
 
 // TESLA IR classes
-class Function;
 class FunctionEvent;
 class Location;
 class Now;

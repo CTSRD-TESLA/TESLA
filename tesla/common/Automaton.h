@@ -42,7 +42,6 @@ class Assertion;
 class BooleanExpr;
 class Event;
 class Expression;
-class Function;
 class FunctionEvent;
 class Location;
 class Now;
