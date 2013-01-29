@@ -177,7 +177,7 @@ private:
  */
 class DFA : public Automaton {
 public:
-  static DFA* Convert(const NFA&);
+  static DFA* Convert(const NFA*);
   bool IsRealisable() const { return true; }
 
 private:

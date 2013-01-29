@@ -59,7 +59,7 @@ Automaton* Automaton::Create(Assertion *A, unsigned int id, Type Type) {
 
   // Only convert to DFA if we have to.
   if ((Type == Deterministic) && !N->IsRealisable())
-    return DFA::Convert(*N);
+    return DFA::Convert(N);
 
   return N;
 }
@@ -280,7 +280,7 @@ NFA::NFA(size_t id, Assertion& A, StringRef Name, StringRef Desc,
 
 
 // ---- DFA implementation ----------------------------------------------------
-DFA* DFA::Convert(const NFA& N) {
+DFA* DFA::Convert(const NFA* N) {
   assert(false && "NFA->DFA conversion not implemented yet");
 }
 
