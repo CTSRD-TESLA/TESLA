@@ -146,6 +146,8 @@ public:
   std::string ShortLabel() const;
   std::string DotLabel() const;
 
+  const FunctionEvent& FnEvent() const { return Ev; }
+
   static bool classof(const Transition *T) {
     return T->getKind() == Fn;
   }
