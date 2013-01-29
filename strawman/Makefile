@@ -1,5 +1,5 @@
 .PHONY: clean run-tesla tesla
-.SUFFIXES: .c .ll .tesla
+.SUFFIXES: .c .dot .ll .pdf .tesla
 
 # Hold onto all LLVM IR files for manual inspection.
 .PRECIOUS: %.ll %.instr.ll
@@ -9,9 +9,12 @@
 BUILD_DIR=../build
 ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyser
 INSTRUMENTER= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
+TOOLS=${BUILD_DIR}/tesla/tools
+GRAPH=${TOOLS}/graph-manifest/graph-manifest
 LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 
 CC=clang
+DOT=dot
 LINK=clang
 
 DIFF=$(shell which colordiff || echo "diff")
@@ -19,7 +22,9 @@ VERBOSE?=false
 
 CFLAGS=-I ../include/tesla -D REVISION="\"$(shell ./revision.sh)\""
 
+PDF=tesla.pdf
 BIN=demo
+DOTFILE=$(PDF:.pdf=.dot)
 EXAMPLE=example
 
 C=example support main tesla-hack
@@ -32,10 +37,10 @@ INSTRUMENTED_IR=$(patsubst %,%.ll,${INSTR})
 
 OBJ=$(patsubst %,%.o,${INSTR})
 
-all: tesla ${BIN}
+all: tesla ${BIN} ${PDF}
 
 clean:
-	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} *.tesla
+	rm -f ${PDF} ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${DOTFILE} ${OBJ} *.tesla
 
 tesla:
 	cd .. && ${MAKE} build
@@ -51,6 +56,11 @@ instrument: tesla
 .tesla: ${TESLA}
 	@echo "[CAT]     $^ > $@"
 	cat $^ > $@
+
+# Graph the .tesla file.
+${DOTFILE}: .tesla
+	@echo "[GRAPH]   $^ > $@"
+	${GRAPH} -o $@ $<
 
 # Build the demo application.
 ${BIN}: ${OBJ}
@@ -81,4 +91,9 @@ ${BIN}: ${OBJ}
 .ll.o:
 	@echo "[LLC]     $^ > $@"
 	${CC} -c $< -o $@
+
+# Compile a GraphViz .dot file to PDF.
+.dot.pdf:
+	@echo "[DOT]     $^ > $@"
+	${DOT} -Tpdf -o $@ $<
 
