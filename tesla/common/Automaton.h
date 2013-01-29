@@ -34,6 +34,7 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/OwningPtr.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace tesla {
 
@@ -82,8 +83,15 @@ public:
 
   virtual bool IsRealisable() const;
 
+  const Assertion& getAssertion() const { return assertion; }
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
+
+  //! A short but unique name for this automaton.
+  std::string Name() const { return name; }
+
+  //! A longer description.
+  std::string Description() const { return description; }
 
   std::string String();
   std::string Dot();
@@ -93,9 +101,14 @@ public:
   TransitionVector::const_iterator end() const  { return Transitions.end(); }
 
 protected:
-  Automaton(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+  Automaton(size_t id, Assertion&, llvm::StringRef Name, llvm::StringRef Desc,
+            llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 
   const size_t id;
+  const Assertion& assertion;
+  const std::string name;
+  const std::string description;
+
   StateVector States;
   TransitionVector Transitions;
 };
@@ -151,7 +164,8 @@ private:
   static State* Parse(const FunctionEvent&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 
-  NFA(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+  NFA(size_t id, Assertion& A, llvm::StringRef Name, llvm::StringRef Desc,
+      llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 
 
@@ -166,7 +180,8 @@ public:
   bool IsRealisable() const { return true; }
 
 private:
-  DFA(size_t id, llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+  DFA(size_t id, Assertion& A, llvm::StringRef Name, llvm::StringRef Desc,
+      llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 
 } // namespace tesla

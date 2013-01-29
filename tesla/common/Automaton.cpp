@@ -38,6 +38,8 @@
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Twine.h>
 
+#include <google/protobuf/text_format.h>
+
 #include <sstream>
 
 using namespace llvm;
@@ -57,14 +59,15 @@ Automaton* Automaton::Create(Assertion *A, unsigned int id, Type Type) {
 
   // Only convert to DFA if we have to.
   if ((Type == Deterministic) && !N->IsRealisable())
-    return DFA::Convert(N);
+    return DFA::Convert(*N);
 
   return N;
 }
 
 
-Automaton::Automaton(size_t id, ArrayRef<State*> S, ArrayRef<Transition*> T)
-  : id(id)
+Automaton::Automaton(size_t id, Assertion& A, StringRef Name, StringRef Desc,
+                     ArrayRef<State*> S, ArrayRef<Transition*> T)
+  : id(id), assertion(A), name(Name), description(Desc)
 {
   States.insert(States.begin(), S.begin(), S.end());
   Transitions.insert(Transitions.begin(), T.begin(), T.end());
@@ -133,7 +136,19 @@ NFA* NFA::Parse(Assertion *A, unsigned int id) {
     return NULL;
   }
 
-  return new NFA(id, States, Transitions);
+  const Location &Loc = A->location();
+  string Name = (Twine()
+    + Loc.filename()
+    + ":"
+    + Twine(Loc.line())
+    + "#"
+    + Twine(Loc.counter())
+  ).str();
+
+  string Description;
+  ::google::protobuf::TextFormat::PrintToString(*A, &Description);
+
+  return new NFA(id, *A, Name, Description, States, Transitions);
 }
 
 State* NFA::Parse(const Expression& Expr, State& Start,
@@ -254,8 +269,9 @@ State* NFA::Parse(const FunctionEvent& Ev, State& InitialState,
 }
 
 
-NFA::NFA(size_t id, ArrayRef<State*> S, ArrayRef<Transition*> T)
-  : Automaton(id, S, T)
+NFA::NFA(size_t id, Assertion& A, StringRef Name, StringRef Desc,
+         ArrayRef<State*> S, ArrayRef<Transition*> T)
+  : Automaton(id, A, Name, Desc, S, T)
 {
 }
 
@@ -266,8 +282,9 @@ DFA* DFA::Convert(const NFA& N) {
   assert(false && "NFA->DFA conversion not implemented yet");
 }
 
-DFA::DFA(size_t id, ArrayRef<State*> S, ArrayRef<Transition*> T)
-  : Automaton(id, S, T)
+DFA::DFA(size_t id, Assertion& A, StringRef Name, StringRef Desc,
+         ArrayRef<State*> S, ArrayRef<Transition*> T)
+  : Automaton(id, A, Name, Desc, S, T)
 {
   for (const Transition* T: T) {
     assert(T->IsRealisable());
