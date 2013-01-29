@@ -35,6 +35,7 @@
 #include "Types.h"
 
 #include <llvm/ADT/OwningPtr.h>
+#include <llvm/Support/Casting.h>
 
 namespace tesla {
 
@@ -83,12 +84,18 @@ public:
   virtual std::string String() const;
   virtual std::string Dot() const;
 
+  //! Information for LLVM's RTTI (isa<>, cast<>, etc.).
+  enum TransitionKind { Null, Now, Fn };
+  TransitionKind getKind() const { return Kind; }
+
 protected:
+
   static void Register(llvm::OwningPtr<Transition>&, State&,
                        TransitionVector&);
 
-  Transition(const State& From, const State& To);
+  Transition(const TransitionKind Kind, const State& From, const State& To);
 
+  const TransitionKind Kind;
   const State& From;
   const State& To;
 };
@@ -101,8 +108,13 @@ public:
   std::string ShortLabel() const { return "ε"; }
   std::string DotLabel() const { return "&#949;"; }    // epsilon
 
+  static bool classof(const Transition *T) {
+    return T->getKind() == Null;
+  }
+
 private:
-  NullTransition(const State& From, const State& To) : Transition(From, To) {}
+  NullTransition(const State& From, const State& To)
+    : Transition(Null, From, To) {}
 
   friend class Transition;
 };
@@ -114,6 +126,10 @@ public:
   bool IsRealisable() const { return true; }
   std::string ShortLabel() const { return "NOW"; }
   std::string DotLabel() const { return "NOW"; }
+
+  static bool classof(const Transition *T) {
+    return T->getKind() == Now;
+  }
 
 private:
   NowTransition(const State& From, const State& To, const NowEvent& Ev);
@@ -130,9 +146,13 @@ public:
   std::string ShortLabel() const;
   std::string DotLabel() const;
 
+  static bool classof(const Transition *T) {
+    return T->getKind() == Fn;
+  }
+
 private:
   FnTransition(const State& From, const State& To, const FunctionEvent& Ev)
-    : Transition(From, To), Ev(Ev) {}
+    : Transition(Fn, From, To), Ev(Ev) {}
 
   const FunctionEvent& Ev;
 

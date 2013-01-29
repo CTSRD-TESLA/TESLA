@@ -72,8 +72,9 @@ void Transition::Register(OwningPtr<Transition>& T, State& From,
 }
 
 
-Transition::Transition(const State& From, const State& To)
-  : From(From), To(To) {}
+Transition::Transition(const TransitionKind Kind,
+                       const State& From, const State& To)
+  : Kind(Kind), From(From), To(To) {}
 
 
 string Transition::String() const {
@@ -99,8 +100,9 @@ string Transition::Dot() const {
 }
 
 
-NowTransition::NowTransition(const State& From, const State& To, const Now& Ev)
-  : Transition(From, To), Loc(Ev.location()) {}
+NowTransition::NowTransition(const State& From, const State& To,
+                             const NowEvent& Ev)
+  : Transition(Now, From, To), Loc(Ev.location()) {}
 
 
 string FnTransition::ShortLabel() const {
