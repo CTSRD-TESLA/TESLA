@@ -132,6 +132,35 @@ Function* FindStateUpdateFn(Module& M, Type *IntType) {
 }
 
 
+SmallVector<Function*,3> FindInstrumentation(const FunctionEvent& FnEvent,
+                                             Module& M) {
+
+  // Find existing instrumentation stubs.
+  SmallVector<FunctionEvent::CallContext,2> Contexts;
+  if (FnEvent.context() == FunctionEvent::CallerAndCallee) {
+    Contexts.push_back(FunctionEvent::Callee);
+    Contexts.push_back(FunctionEvent::Caller);
+  } else {
+    Contexts.push_back(FnEvent.context());
+  }
+
+  SmallVector<FunctionEvent::Direction,2> Directions;
+  if (FnEvent.direction() == FunctionEvent::EntryAndExit) {
+    Directions.push_back(FunctionEvent::Entry);
+    Directions.push_back(FunctionEvent::Exit);
+  } else {
+    Directions.push_back(FnEvent.direction());
+  }
+
+  SmallVector<Function*,3> ToInstrument;
+  for (auto C : Contexts)
+    for (auto D : Directions)
+      ToInstrument.push_back(
+        FindInstrumentationFn(M, FnEvent.function().name(), D, C));
+
+  return ToInstrument;
+}
+
 Function *FindInstrumentationFn(Module& M, StringRef Name,
                                 FunctionEvent::Direction Dir,
                                 FunctionEvent::CallContext Ctx) {

@@ -85,6 +85,10 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
 llvm::Function* FindStateUpdateFn(llvm::Module&,
                                   llvm::Type *IntType);
 
+//! Find all functions within a module that will be notified of a Fn event.
+llvm::SmallVector<llvm::Function*,3>
+  FindInstrumentation(const FunctionEvent&, llvm::Module&);
+
 /**
  * Find the function within a given module that receives instrumentation events
  * of a given type.
