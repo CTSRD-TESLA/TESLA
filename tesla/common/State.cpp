@@ -65,11 +65,11 @@ void State::AddTransition(OwningPtr<Transition>& T)
 
 string State::String() const {
   std::stringstream ss;
-  ss << "state " << id << ": ";
+  ss << "state " << id << ":";
 
   for (const auto& I : Transitions) {
     const Transition& T = *I;
-    ss << T.String();
+    ss << " " << T.String();
   }
 
   return ss.str();
