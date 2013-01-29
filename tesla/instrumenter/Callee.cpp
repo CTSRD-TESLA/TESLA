@@ -69,6 +69,8 @@ bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
   if (!(Dir & FunctionEvent::Exit)) return false;
   assert(ReturnEvent != NULL);
 
+  bool ModifiedIR = false;
+
   // First, build up the set of blocks that return from the function.
   vector<BasicBlock*> ReturnBlocks;
 
@@ -88,9 +90,10 @@ bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
     if (RetVal) InstrumentationArgs.push_back(RetVal);
 
     CallInst::Create(ReturnEvent, InstrumentationArgs)->insertBefore(Return);
+    ModifiedIR = true;
   }
 
-  return false;
+  return ModifiedIR;
 }
 
 CalleeInstrumentation* CalleeInstrumentation::Build(
@@ -149,6 +152,8 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
   OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
   if (!Manifest) return false;
 
+  bool ModifiedIR = false;
+
   for (auto& Fn : Manifest->FunctionsToInstrument()) {
     if (!Fn.context() & FunctionEvent::Callee) continue;
 
@@ -170,9 +175,11 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
 
     FunctionsToInstrument[Name] =
       CalleeInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
+
+    ModifiedIR = true;
   }
 
-  return false;
+  return ModifiedIR;
 }
 
 bool TeslaCalleeInstrumenter::runOnFunction(Function &F) {
