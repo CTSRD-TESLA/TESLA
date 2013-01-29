@@ -124,6 +124,8 @@ string Automaton::Dot() const {
 
 // ---- NFA implementation ----------------------------------------------------
 NFA* NFA::Parse(Assertion *A, unsigned int id) {
+  assert(A != NULL);
+
   StateVector States;
   TransitionVector Transitions;
 
