@@ -80,7 +80,7 @@ public:
   static Automaton* Create(Assertion*, unsigned int id,
                            Type T = NON_DETERMINISTIC);
 
-  bool IsRealisable() const;
+  virtual bool IsRealisable() const;
 
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
@@ -106,6 +106,9 @@ protected:
  * converted to a DFA.
  *
  * The flow is, therefore: C -> TESLA IR -> NFA -> DFA -> instrumentation.
+ *
+ * Objects of this type might accidentally be realisable (that is, DFAs), but
+ * the type system makes no guarantees.
  */
 class NFA : public Automaton {
 public:
@@ -154,13 +157,13 @@ private:
 /**
  * A DFA description of a TESLA assertion.
  *
- * An @ref Automaton owns its consituent @ref State objects; @ref Transition
- * ownership rests with the @ref State objects.
+ * Objects of this type are guaranteed to be realisable.
  */
 class DFA : public Automaton {
 public:
   static DFA* Convert(const NFA&);
 
+  bool IsRealisable() const { return true; }
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
 
