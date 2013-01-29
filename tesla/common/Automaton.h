@@ -68,8 +68,8 @@ typedef llvm::SmallVector<Transition*,10> TransitionVector;
 class Automaton {
 public:
   enum Type {
-    DETERMINISTIC,
-    NON_DETERMINISTIC
+    Deterministic,
+    NonDeterministic
   };
 
   /**
@@ -78,7 +78,7 @@ public:
    * @param
    */
   static Automaton* Create(Assertion*, unsigned int id,
-                           Type T = NON_DETERMINISTIC);
+                           Type T = NonDeterministic);
 
   virtual bool IsRealisable() const;
 

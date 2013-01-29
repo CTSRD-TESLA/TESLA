@@ -51,15 +51,15 @@ namespace tesla {
 
 // ---- Automaton implementation ----------------------------------------------
 Automaton* Automaton::Create(Assertion *A, unsigned int id, Type Type) {
-  switch (Type) {
-  default:
-    assert(false && "Unhandled Automaton::Type");
+  // First, do the easy thing: parse into an NFA.
+  NFA *N = NFA::Parse(A, id);
+  assert(N != NULL);
 
-  case NON_DETERMINISTIC:
-    return NFA::Parse(A, id);
-  }
+  // Only convert to DFA if we have to.
+  if ((Type == Deterministic) && !N->IsRealisable())
+    return DFA::Convert(N);
 
-  llvm_unreachable("fell through Automaton::Type switch");
+  return N;
 }
 
 
