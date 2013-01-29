@@ -83,6 +83,7 @@ public:
 
   virtual bool IsRealisable() const;
 
+  size_t ID() const { return id; }
   const Assertion& getAssertion() const { return assertion; }
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
