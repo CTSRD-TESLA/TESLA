@@ -79,7 +79,7 @@ Transition::Transition(const State& From, const State& To)
 string Transition::String() const {
   return (Twine()
     + "--"
-    + "EV"
+    + ShortLabel()
     + "-->("
     + Twine(To.ID())
     + ")"
