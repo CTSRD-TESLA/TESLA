@@ -41,7 +41,7 @@ namespace tesla {
 // TESLA IR classes
 class FunctionEvent;
 class Location;
-class Now;
+class NowEvent;
 
 /// A transition from one TESLA state to another.
 class Transition {
@@ -63,7 +63,7 @@ public:
   static void Create(State& From, const State& To, const FunctionEvent&,
                      TransitionVector&);
 
-  static void Create(State& From, const State& To, const Now&,
+  static void Create(State& From, const State& To, const NowEvent&,
                      TransitionVector&);
 
   virtual ~Transition() {}
@@ -116,7 +116,7 @@ public:
   std::string DotLabel() const { return "NOW"; }
 
 private:
-  NowTransition(const State& From, const State& To, const Now& Ev);
+  NowTransition(const State& From, const State& To, const NowEvent& Ev);
 
   const Location& Loc;
 

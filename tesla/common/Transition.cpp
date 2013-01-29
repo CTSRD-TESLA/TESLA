@@ -50,7 +50,7 @@ void Transition::Create(State& From, const State& To,
   Register(T, From, Transitions);
 }
 
-void Transition::Create(State& From, const State& To, const Now& Ev,
+void Transition::Create(State& From, const State& To, const NowEvent& Ev,
                         TransitionVector& Transitions) {
 
   OwningPtr<Transition> T(new NowTransition(From, To, Ev));

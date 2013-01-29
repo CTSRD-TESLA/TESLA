@@ -44,7 +44,7 @@ class Event;
 class Expression;
 class FunctionEvent;
 class Location;
-class Now;
+class NowEvent;
 class Repetition;
 class Sequence;
 
@@ -145,7 +145,7 @@ private:
   static State* Parse(const Repetition&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 
-  static State* Parse(const Now&, State& InitialState,
+  static State* Parse(const NowEvent&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 
   static State* Parse(const FunctionEvent&, State& InitialState,

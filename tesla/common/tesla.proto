@@ -100,7 +100,7 @@ message Event {
   required Type type = 1;
 
   optional Repetition repetition = 2;
-  optional Now now = 3;
+  optional NowEvent now = 3;
   optional FunctionEvent function = 4;
 }
 
@@ -120,7 +120,7 @@ message Repetition {
  * Execution has reached the point in the instrumented code where an
  * inline assertion was defined.
  */
-message Now {
+message NowEvent {
   required Location location = 1;
 }
 

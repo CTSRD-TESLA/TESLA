@@ -237,7 +237,7 @@ State* NFA::Parse(const Repetition& Rep, State& Start,
   return Current;
 }
 
-State* NFA::Parse(const Now& now, State& InitialState,
+State* NFA::Parse(const NowEvent& now, State& InitialState,
                   StateVector& States, TransitionVector& Trans) {
 
   State *Final = State::Create(States);
