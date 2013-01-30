@@ -20,7 +20,7 @@ LINK=clang
 DIFF=$(shell which colordiff || echo "diff")
 VERBOSE?=false
 
-CFLAGS=-I ../include/tesla -D REVISION="\"$(shell ./revision.sh)\""
+CFLAGS=-I ../include/tesla -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
 
 PDF=tesla.pdf
 BIN=demo
@@ -70,7 +70,7 @@ ${BIN}: ${OBJ}
 # Run the TESLA analyser over C code.
 .c.tesla: tesla
 	@echo "[TESLA]   $^ > $@"
-	${ANALYSER} $< -o $@ -- -fsyntax-only ${CFLAGS} -D TESLA -D TESLA_ANALYSIS
+	${ANALYSER} $< -o $@ -- -fsyntax-only ${CFLAGS} -D TESLA_ANALYSIS
 	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
 	            && cat $@ && echo "===== end of TESLA analysis =====" \
 	            || exit 0

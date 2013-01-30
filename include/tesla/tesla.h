@@ -31,8 +31,6 @@
 #ifndef	TESLA_H
 #define	TESLA_H
 
-#ifdef	TESLA
-
 #include <limits.h>
 #include <stdbool.h>
 
@@ -138,8 +136,6 @@ void* __tesla_any();
 
 
 #endif	/* TESLA_ANALYSIS */
-
-#endif	/* TESLA */
 
 #endif	/* TESLA_H */
 
