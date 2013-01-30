@@ -37,6 +37,7 @@
 
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Twine.h>
+#include <llvm/Support/raw_ostream.h>  // TODO: remove once DFA::Convert(NFA) works
 
 #include <google/protobuf/text_format.h>
 
@@ -281,7 +282,10 @@ NFA::NFA(size_t id, Assertion& A, StringRef Name, StringRef Desc,
 
 // ---- DFA implementation ----------------------------------------------------
 DFA* DFA::Convert(const NFA* N) {
-  assert(false && "NFA->DFA conversion not implemented yet");
+  assert(N != NULL);
+
+  llvm::errs() << "WARNING: NFA->DFA conversion not implemented yet!\n";
+  return NULL;
 }
 
 DFA::DFA(size_t id, Assertion& A, StringRef Name, StringRef Desc,
