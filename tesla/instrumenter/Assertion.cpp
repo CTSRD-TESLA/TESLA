@@ -56,7 +56,7 @@ TeslaAssertionSiteInstrumenter::~TeslaAssertionSiteInstrumenter() {
 }
 
 bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
-  Function *Fn = M.getFunction("__tesla_inline_assertion");
+  Function *Fn = M.getFunction(ASSERTION_FN_NAME);
   if (!Fn) return false;
 
   // We need to forward the first three arguments to instrumentation.
@@ -93,6 +93,47 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   delete Fn;
 
   return true;
+}
+
+
+void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
+  Location *Loc, CallInst *Call) {
+
+  assert(Call->getCalledFunction()->getName() == ASSERTION_FN_NAME);
+
+  if (Call->getNumArgOperands() < 3)
+    report_fatal_error("TESLA assertion must have at least 3 arguments");
+
+  // The filename should be a global variable.
+  GlobalVariable *NameVar =
+    dyn_cast<GlobalVariable>(Call->getOperand(0)->stripPointerCasts());
+
+  ConstantDataArray *A;
+  if (!NameVar ||
+      !(A = dyn_cast_or_null<ConstantDataArray>(NameVar->getInitializer()))) {
+    Call->dump();
+    report_fatal_error("unable to parse filename from TESLA assertion");
+  }
+
+  *Loc->mutable_filename() = A->getAsString();
+
+
+  // The line and counter values should be constant integers.
+  ConstantInt *Line = dyn_cast<ConstantInt>(Call->getOperand(1));
+  if (!Line) {
+    Call->getOperand(1)->dump();
+    report_fatal_error("assertion line must be a constant int");
+  }
+
+  Loc->set_line(Line->getLimitedValue(INT_MAX));
+
+  ConstantInt *Count = dyn_cast<ConstantInt>(Call->getOperand(2));
+  if (!Count) {
+    Call->getOperand(2)->dump();
+    report_fatal_error("assertion count must be a constant int");
+  }
+
+  Loc->set_counter(Count->getLimitedValue(INT_MAX));
 }
 
 }

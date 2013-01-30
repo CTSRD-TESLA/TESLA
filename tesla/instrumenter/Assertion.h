@@ -30,7 +30,13 @@
 
 #include "llvm/Pass.h"
 
+namespace llvm {
+  class CallInst;
+}
+
 namespace tesla {
+
+class Location;
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
 class TeslaAssertionSiteInstrumenter : public llvm::ModulePass {
@@ -40,6 +46,13 @@ public:
   virtual ~TeslaAssertionSiteInstrumenter();
 
   virtual bool runOnModule(llvm::Module &M);
+
+private:
+  /**
+   * Parse a @ref Location out of a @ref CallInst to the TESLA assertion
+   * pseudo-call.
+   */
+  static void ParseAssertionLocation(Location *Loc, llvm::CallInst*);
 };
 
 }

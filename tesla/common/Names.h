@@ -36,6 +36,8 @@
 
 namespace tesla {
 
+const std::string ASSERTION_FN_NAME = "__tesla_inline_assertion";
+
 const std::string BASE = "__tesla_instrumentation_";
 
 const std::string CALLEE_ENTER = BASE + "callee_enter_";
