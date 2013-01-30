@@ -29,9 +29,11 @@
  * SUCH DAMAGE.
  */
 
+#include "Automaton.h"
 #include "Callee.h"
 #include "Manifest.h"
 #include "Names.h"
+#include "Transition.h"
 
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
@@ -177,6 +179,36 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
       CalleeInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
 
     ModifiedIR = true;
+  }
+
+  // Create code to receive events and translate them to the automata language.
+  int AssertionCount = 0;
+
+  for (auto *Assertion : Manifest->AllAssertions()) {
+    Automaton *A = Automaton::Create(Assertion, AssertionCount++,
+                                     Automaton::Deterministic);
+    if (A == NULL)
+      // TODO: remove once DFA::Convert(NFA) works
+      continue;
+
+    assert(A != NULL && "failed to parse (deterministic) assertion");
+
+    Automaton& Automaton = *A;
+    assert(Automaton.IsRealisable());
+
+    for (const Transition* T : Automaton) {
+      if (auto *FnTrans = dyn_cast<FnTransition>(T))
+        ModifiedIR |= AddInstrumentation(*FnTrans, *A, M);
+
+      else if (__unused auto *Now = dyn_cast<NowTransition>(T)) {
+        // TODO: ModifiedIR |= AddInstrumentation(*Now, *A, M);
+        llvm::errs() << "WARNING: NOW events not handled yet\n";
+        continue;
+      }
+
+      else
+        llvm_unreachable("unhandled Transition kind");
+    }
   }
 
   return ModifiedIR;
