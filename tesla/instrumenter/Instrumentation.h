@@ -85,7 +85,7 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
                              llvm::BasicBlock *InsertBefore = NULL);
 
 /**
- * Convert a TESLA state transition description into instrumentation code.
+ * Convert a TESLA function state transition into instrumentation code.
  *
  * @param  T     the transition in a TESLA automaton
  * @param  A     the TESLA automaton
