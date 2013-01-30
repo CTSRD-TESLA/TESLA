@@ -165,6 +165,10 @@ bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call,
 bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
                        vector<ValueDecl*>& References,
                        ASTContext& Ctx) {
+
+  // TODO: better distinguishing between callee and/or caller
+  Event->set_context(FunctionEvent::Callee);
+
   // Since we might care about the return value, we must instrument exiting
   // the function rather than entering it.
   Event->set_direction(FunctionEvent::Exit);
@@ -218,6 +222,8 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call,
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_entered");
 
+  // TODO: better distinguishing between callee and/or caller
+  Event->set_context(FunctionEvent::Callee);
   Event->set_direction(FunctionEvent::Entry);
 
   if ((Call->getNumArgs() != 1) || (Call->getArg(0) == NULL)) {
@@ -252,6 +258,8 @@ bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call,
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_leaving");
 
+  // TODO: better distinguishing between callee and/or caller
+  Event->set_context(FunctionEvent::Callee);
   Event->set_direction(FunctionEvent::Exit);
 
   if ((Call->getNumArgs() != 1) || (Call->getArg(0) == NULL)) {
