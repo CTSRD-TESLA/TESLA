@@ -48,8 +48,8 @@ message Assertion {
   /** The temporal expression. */
   required Expression expression = 3;
 
-  /** The number of arguments referenced by the automaton. */
-  optional int32 argcount = 4 [default = 0];
+  /** Argument values that will be passed to 'now' event instrumentation. */
+  repeated Argument argument = 5;
 }
 
 /** An identifier for an automaton based on where it was defined. */

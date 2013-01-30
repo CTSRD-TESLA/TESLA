@@ -69,11 +69,22 @@ bool ParseInlineAssertion(Assertion *A, CallExpr *E, ASTContext& Ctx) {
   // by (x), rather than one named (x,NULL) and the other (NULL,x).
   vector<ValueDecl*> References;
 
-  return
+  bool Success =
     ParseLocation(A->mutable_location(), Filename, Line, Counter, Ctx)
     && ParseContext(A, Context, Ctx)
     && ParseExpression(A->mutable_expression(), Expression, A, References, Ctx)
     ;
+
+  // Make a note of unique and non-unique reference counts.
+  size_t RefCount = References.size();
+  for (ValueDecl *D : References)
+    if (Success)
+      Success |= ParseArgument(A->add_argument(), D, References, Ctx);
+
+  assert(References.size() == RefCount &&
+         "mysteriously discovered previously-missed unique reference(s)");
+
+  return Success;
 }
 
 

@@ -65,20 +65,20 @@ static int ReferenceIndex(ValueDecl* D, vector<ValueDecl*>& References) {
   return Pos;
 }
 
-bool ParseArgument(Argument *Arg, ParmVarDecl *P,
+bool ParseArgument(Argument *Arg, ValueDecl *D,
                    vector<ValueDecl*>& References,
                    ASTContext& Ctx, bool AllowAny) {
 
   assert(Arg != NULL);
-  assert(P != NULL);
+  assert(D != NULL);
 
-  *Arg->mutable_name() = P->getName();
+  *Arg->mutable_name() = D->getName();
 
   if (AllowAny)
     Arg->set_type(Argument::Any);
   else {
     Arg->set_type(Argument::Variable);
-    Arg->set_index(ReferenceIndex(P, References));
+    Arg->set_index(ReferenceIndex(D, References));
   }
 
   return true;

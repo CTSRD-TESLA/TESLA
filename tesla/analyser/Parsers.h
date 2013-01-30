@@ -101,7 +101,7 @@ bool ParseFunctionExit(FunctionEvent*, clang::CallExpr*,
 bool ParseFunctionRef(FunctionRef*, clang::FunctionDecl*, clang::ASTContext&);
 
 //! Parse a parameter to a function that requires instrumentation.
-bool ParseArgument(Argument*, clang::ParmVarDecl*,
+bool ParseArgument(Argument*, clang::ValueDecl*,
                    std::vector<clang::ValueDecl*>& References,
                    clang::ASTContext&,
                    bool AllowAny = false);
