@@ -85,7 +85,7 @@ public:
   static llvm::StringRef defaultLocation();
 
 private:
-  Manifest(llvm::ArrayRef<Assertion*> Automata);
+  Manifest(llvm::ArrayRef<Assertion*> Assertions);
 
   //! Returns a copy of all events named in this manifest.
   std::vector<Event> Events();
