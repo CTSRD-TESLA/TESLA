@@ -40,6 +40,7 @@
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -139,6 +140,34 @@ BasicBlock* CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
   Builder.CreateCall(Printf(Mod), PrintfArgs);
 
   return Block;
+}
+
+
+Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
+                   IRBuilder<>& Builder) {
+
+  Type *CurrentType = From->getType();
+
+  if (!CastInst::isCastable(CurrentType, NewType)) {
+    string NewTypeName;
+    raw_string_ostream NameOut(NewTypeName);
+    NewType->print(NameOut);
+
+    report_fatal_error(
+      "Instrumentation argument "
+      + (Name.empty() ? "" : ("'" + Name + "' "))
+      + "cannot be cast to "
+      + NewTypeName
+    );
+  }
+
+  if (isa<PointerType>(CurrentType))
+    return Builder.CreatePointerCast(From, NewType);
+
+  else if (isa<IntegerType>(CurrentType))
+    return Builder.CreateIntCast(From, NewType, false);
+
+  llvm_unreachable("failed to cast something castable");
 }
 
 
@@ -347,27 +376,9 @@ Value* ConstructKey(IRBuilder<>& Builder, Module& M,
 
     KeyMask |= (1 << Index);
 
-    Value *K = Builder.CreateStructGEP(Key, Index);
-
-    Type *ArgType = InstrArg.getType();
-    if (!CastInst::isCastable(ArgType, RegType))
-      report_fatal_error(
-        "Instrumentation argument " + Twine(i - 1)
-        + " in " + FnEvent.function().name()
-        + " cannot be cast to register_t"
-      );
-
-    Value *Reg;
-
-    if (isa<PointerType>(ArgType)) {
-      Reg = Builder.CreatePointerCast(&InstrArg, RegType);
-    } else if (isa<IntegerType>(ArgType)) {
-      Reg = Builder.CreateIntCast(&InstrArg, RegType, false);
-    } else {
-      assert(false && "instr argument neither int nor pointer");
-    }
-
-    Builder.CreateStore(Reg, K);
+    Builder.CreateStore(
+      Cast(&InstrArg, Twine(i - 1).str(), RegType, Builder),
+      Builder.CreateStructGEP(Key, Index));
   }
 
   Value *Mask = Builder.CreateStructGEP(Key, TotalArgs);

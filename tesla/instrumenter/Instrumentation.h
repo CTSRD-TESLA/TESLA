@@ -72,6 +72,15 @@ typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 /// Extract the @ref register_t type from a @ref Module.
 llvm::Type* RegisterType(llvm::Module&);
 
+/**
+ * Cast an integer-ish @ref Value to another type.
+ *
+ * We use this for casting to register_t, but it's possible that other integer
+ * types might work too. Maybe.
+ */
+llvm::Value* Cast(llvm::Value *From, llvm::StringRef Name,
+                  llvm::Type *NewType, llvm::IRBuilder<>&);
+
 /*!
  * Create a BasicBlock that passes values to printf.
  *
