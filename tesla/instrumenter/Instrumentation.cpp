@@ -381,7 +381,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
       Builder.CreateStructGEP(Key, Index));
   }
 
-  Value *Mask = Builder.CreateStructGEP(Key, TotalArgs);
+  Value *Mask = Builder.CreateStructGEP(Key, TESLA_KEY_SIZE);
   Builder.CreateStore(ConstantInt::get(RegType, KeyMask), Mask);
 
   return Key;
