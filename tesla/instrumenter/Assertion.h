@@ -36,6 +36,7 @@ namespace llvm {
 
 namespace tesla {
 
+class Automaton;
 class Location;
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
@@ -53,6 +54,12 @@ private:
    * pseudo-call.
    */
   static void ParseAssertionLocation(Location *Loc, llvm::CallInst*);
+
+  /**
+   * Find (or create) the instrumentation function for an @ref Assertion's
+   * 'NOW' event.
+   */
+  static llvm::Function* InstrumentationFn(const Automaton&, llvm::Module&);
 };
 
 }

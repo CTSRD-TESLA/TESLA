@@ -30,6 +30,7 @@
  */
 
 #include "Assertion.h"
+#include "Automaton.h"
 #include "Instrumentation.h"
 #include "Names.h"
 
@@ -134,6 +135,28 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
   }
 
   Loc->set_counter(Count->getLimitedValue(INT_MAX));
+}
+
+
+Function* TeslaAssertionSiteInstrumenter::InstrumentationFn(
+  const Automaton& A, Module& M) {
+
+  const Assertion& AssertInfo = A.getAssertion();
+  const size_t ArgCount = AssertInfo.argument_size();
+
+  Type *Void = Type::getVoidTy(M.getContext());
+  Type *RegisterT = RegisterType(M);
+
+  // NOW events only take arguments of type register_t.
+  std::vector<Type*> ArgTypes(ArgCount, RegisterT);
+
+  FunctionType *FnType = FunctionType::get(Void, ArgTypes, false);
+  string Name = (ASSERTION_REACHED + "_" + Twine(A.ID())).str();
+
+  Function *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, FnType));
+  assert(InstrFn != NULL && "instrumentation function not a Function!");
+
+  return InstrFn;
 }
 
 }
