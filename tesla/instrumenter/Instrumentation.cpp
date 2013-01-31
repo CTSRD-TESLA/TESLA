@@ -49,10 +49,6 @@ using std::vector;
 
 namespace tesla {
 
-/*! Find the libtesla function @ref tesla_update_state. */
-llvm::Function* FindStateUpdateFn(llvm::Module&,
-                                  llvm::Type *IntType);
-
 //! Find all functions within a module that will be notified of a Fn event.
 llvm::SmallVector<llvm::Function*,3>
   FindInstrumentation(const FunctionEvent&, llvm::Module&);
@@ -68,23 +64,12 @@ llvm::Function *FindInstrumentationFn(llvm::Module& M, llvm::StringRef Name,
                                       FunctionEvent::CallContext Ctx);
 
 /**
- * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD
- * or @ref TESLA_SCOPE_GLOBAL).
- */
-llvm::Constant* TeslaContext(Assertion::Context Context,
-                             llvm::LLVMContext& Ctx);
-
-/**
  * Map instrumentation arguments into a @ref tesla_key that can be used to
  * look up automata.
  */
 llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
-
-//! Map a set of values into a @ref tesla_key.
-llvm::Value* ConstructKey(IRBuilder<>& Builder, Module& M,
-                          ArrayRef<Value*> Args);
 
 Type* tesla::RegisterType(Module& M) {
   return DataLayout(&M).getIntPtrType(M.getContext());

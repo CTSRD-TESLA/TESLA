@@ -73,6 +73,17 @@ typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 llvm::Type* RegisterType(llvm::Module&);
 
 /**
+ * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD
+ * or @ref TESLA_SCOPE_GLOBAL).
+ */
+llvm::Constant* TeslaContext(Assertion::Context Context,
+                             llvm::LLVMContext& Ctx);
+
+/*! Find the libtesla function @ref tesla_update_state. */
+llvm::Function* FindStateUpdateFn(llvm::Module&,
+                                  llvm::Type *IntType);
+
+/**
  * Cast an integer-ish @ref Value to another type.
  *
  * We use this for casting to register_t, but it's possible that other integer
@@ -92,6 +103,10 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
                              const llvm::Twine& Prefix,
                              llvm::Function *F = NULL,
                              llvm::BasicBlock *InsertBefore = NULL);
+
+//! Map a set of values into a @ref tesla_key.
+llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
+                          llvm::ArrayRef<llvm::Value*> Args);
 
 /**
  * Convert a TESLA function state transition into instrumentation code.
