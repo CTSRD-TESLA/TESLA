@@ -1,4 +1,4 @@
-/*! @file names.h  Names of TESLA instrumentation points. */
+/*! @file Manifest.cpp  Contains the definition of @ref Manifest. */
 /*
  * Copyright (c) 2012 Jonathan Anderson
  * All rights reserved.
@@ -29,30 +29,28 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _TESLA_NAMES_H_
-#define _TESLA_NAMES_H_
+#include "tesla.pb.h"
+#include "Names.h"
+
+#include "llvm/ADT/Twine.h"
 
 #include <string>
 
+using llvm::Twine;
+
+
 namespace tesla {
 
-class Location;
+std::string tesla::ShortName(const Location& Loc) {
+  return (Twine()
+    + Loc.filename()
+    + ":"
+    + Twine(Loc.line())
+    + "#"
+    + Twine(Loc.counter())
+  ).str();
+}
 
-const std::string ASSERTION_FN_NAME = "__tesla_inline_assertion";
+} // namespace tesla
 
-const std::string BASE = "__tesla_instrumentation_";
-
-const std::string CALLEE_ENTER = BASE + "callee_enter_";
-const std::string CALLEE_LEAVE = BASE + "callee_return_";
-const std::string CALLER_ENTER = BASE + "caller_call_";
-const std::string CALLER_LEAVE = BASE + "caller_return_";
-
-const std::string ASSERTION_REACHED = BASE + "assertion_reached";
-
-//! Convert a @ref Location into a short, human-readable name.
-std::string ShortName(const Location&);
-
-} /* namespace tesla */
-
-#endif
 

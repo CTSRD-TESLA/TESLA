@@ -30,6 +30,7 @@
  */
 
 #include "Automaton.h"
+#include "Names.h"
 #include "State.h"
 #include "Transition.h"
 
@@ -141,18 +142,11 @@ NFA* NFA::Parse(const Assertion *A, unsigned int id) {
   }
 
   const Location &Loc = A->location();
-  string Name = (Twine()
-    + Loc.filename()
-    + ":"
-    + Twine(Loc.line())
-    + "#"
-    + Twine(Loc.counter())
-  ).str();
 
   string Description;
   ::google::protobuf::TextFormat::PrintToString(*A, &Description);
 
-  return new NFA(id, *A, Name, Description, States, Transitions);
+  return new NFA(id, *A, ShortName(Loc), Description, States, Transitions);
 }
 
 State* NFA::Parse(const Expression& Expr, State& Start,
