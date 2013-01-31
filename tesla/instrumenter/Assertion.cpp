@@ -32,6 +32,7 @@
 #include "Assertion.h"
 #include "Automaton.h"
 #include "Instrumentation.h"
+#include "Manifest.h"
 #include "Names.h"
 
 #include "tesla.pb.h"
@@ -39,6 +40,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/raw_ostream.h"
 
 #include <set>
 
@@ -57,41 +59,95 @@ TeslaAssertionSiteInstrumenter::~TeslaAssertionSiteInstrumenter() {
 }
 
 bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
-  Function *Fn = M.getFunction(ASSERTION_FN_NAME);
-  if (!Fn) return false;
+  // If this module doesn't declare any assertions, just carry on.
+  AssertFn = M.getFunction(ASSERTION_FN_NAME);
+  if (!AssertFn)
+    return false;
 
-  // We need to forward the first three arguments to instrumentation.
-  assert(Fn->arg_size() > 3);
-  TypeVector ArgTypes;
-  for (auto &Arg : Fn->getArgumentList()) {
-    ArgTypes.push_back(Arg.getType());
-    if (ArgTypes.size() == 3) break;
+  // Find all calls to TESLA assertion pseudo-function (before we modify IR).
+  set<CallInst*> AssertCalls;
+  for (auto I = AssertFn->use_begin(); I != AssertFn->use_end(); ++I)
+    AssertCalls.insert(cast<CallInst>(*I));
+
+
+  // If we do use the TESLA assertion function, we need to match it up with
+  // the information parsed by the TESLA analyser (stored in the Manifest).
+  OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
+  if (!Manifest)
+    report_fatal_error("unable to load TESLA manifest");
+
+  return ConvertAssertions(AssertCalls, *Manifest, M);;
+}
+
+
+bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
+    set<CallInst*>& AssertCalls, Manifest& Manifest, Module& M) {
+
+  // Things we'll need later, common to all assertions.
+  Type *RegisterT = RegisterType(M);
+
+  // Convert each assertion into appropriate instrumentation.
+  for (auto *Assert : AssertCalls) {
+    // Prepare to insert new code in place of the assertion.
+    IRBuilder<> Builder(Assert);
+
+    Location Loc;
+    ParseAssertionLocation(&Loc, Assert);
+
+    OwningPtr<const Automaton> A(Manifest.FindAutomaton(Loc));
+    if (!A) {
+      // TODO: remove once DFA::Convert(NFA) works
+      llvm::errs()
+        << "WARNING: no (realisable) automaton for '"
+        << ShortName(Loc)
+        << "'!\n";
+
+      Assert->removeFromParent();
+      delete Assert;
+      continue;
+
+      report_fatal_error(
+        "no automaton '" + ShortName(Loc) + "' in TESLA manifest");
+    }
+
+    // Record named values that might be passed to instrumentation, such as
+    // function parameters and StoreInst results in the current BasicBlock.
+    std::map<string,Value*> ValuesInScope;
+    BasicBlock *Block = Assert->getParent();
+    Function *Fn = Block->getParent();
+
+    for (llvm::Argument& A : Fn->getArgumentList())
+      ValuesInScope[A.getName()] = &A;
+
+    for (Instruction& I : *Block)
+      if (StoreInst *Store = dyn_cast<StoreInst>(&I)) {
+        Value *V = Store->getPointerOperand();
+        if (V->hasName())
+          ValuesInScope[V->getName()] = V;
+      }
+
+    // Find the arguments to the relevant 'now' instrumentation function.
+    const Assertion& AssertInfo = A->getAssertion();
+    size_t ArgCount = AssertInfo.argument_size();
+    std::vector<Value*> Args(ArgCount, NULL);
+
+    for (const Argument& Arg : AssertInfo.argument()) {
+      Value *V = ValuesInScope[Arg.name()];
+      if (V == NULL)
+        report_fatal_error("failed to find assertion arg '" + Arg.name() + "'");
+
+      Args[Arg.index()] = Cast(V, Arg.name(), RegisterT, Builder);
+    }
+
+    Builder.CreateCall(InstrumentationFn(*A, M), Args);
+
+    // Delete the call to the assertion pseudo-function.
+    Assert->removeFromParent();
+    delete Assert;
   }
 
-  FunctionType *InstrType =
-    FunctionType::get(Type::getVoidTy(M.getContext()), ArgTypes, false);
-
-  Constant *Instr = M.getOrInsertFunction(ASSERTION_REACHED, InstrType);
-
-  // Find all calls to TESLA assertion pseudo-function.
-  set<CallInst*> Calls;
-  for (auto I = Fn->use_begin(); I != Fn->use_end(); ++I)
-    Calls.insert(cast<CallInst>(*I));
-
-  // Translate these pseudo-calls into instrumentation calls.
-  for (auto *Call : Calls) {
-    assert(Call->getNumArgOperands() >= ArgTypes.size());
-    ArgVector Args(Call->op_begin(), Call->op_begin() + ArgTypes.size());
-
-    CallInst::Create(Instr, Args, "", Call);
-
-    // Delete the call to the pseudo-function.
-    Call->removeFromParent();
-    delete Call;
-  }
-
-  Fn->removeFromParent();
-  delete Fn;
+  AssertFn->removeFromParent();
+  delete AssertFn;
 
   return true;
 }

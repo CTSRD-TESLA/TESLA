@@ -30,6 +30,9 @@
 
 #include "llvm/Pass.h"
 
+#include <set>
+
+
 namespace llvm {
   class CallInst;
 }
@@ -37,6 +40,7 @@ namespace llvm {
 namespace tesla {
 
 class Automaton;
+class Manifest;
 class Location;
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
@@ -49,6 +53,9 @@ public:
   virtual bool runOnModule(llvm::Module &M);
 
 private:
+  //! Convert assertion declarations into instrumentation calls.
+  bool ConvertAssertions(std::set<llvm::CallInst*>&, Manifest&, llvm::Module&);
+
   /**
    * Parse a @ref Location out of a @ref CallInst to the TESLA assertion
    * pseudo-call.
@@ -60,6 +67,9 @@ private:
    * 'NOW' event.
    */
   static llvm::Function* InstrumentationFn(const Automaton&, llvm::Module&);
+
+  //! The TESLA pseudo-function used to declare assertions.
+  llvm::Function *AssertFn = NULL;
 };
 
 }
