@@ -90,7 +90,8 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 			struct tesla_instance *inst = tesla_next(iter);
 
 			if (inst->ti_state != expected_state) {
-				tesla_assert_fail(class, inst);
+				tesla_assert_fail(class, inst,
+						  expected_state, new_state);
 			} else {
 				DEBUG_PRINT("existing instance @ 0x%tx: %tx -> %tx\n",
 				            (register_t) inst,

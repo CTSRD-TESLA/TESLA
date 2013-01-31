@@ -233,6 +233,7 @@ void	tesla_instance_destroy(struct tesla_class *tsp,
  * per failure.
  */
 void	tesla_assert_fail(struct tesla_class *tsp,
-	    struct tesla_instance *tip);
+		struct tesla_instance *tip, register_t expected_state,
+		register_t actual_state);
 
 #endif /* _TESLA_STATE */

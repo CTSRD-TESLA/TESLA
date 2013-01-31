@@ -33,6 +33,7 @@
 
 #include "tesla_internal.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 
 #ifdef _KERNEL
@@ -196,7 +197,8 @@ tesla_instance_put(struct tesla_class *tsp, struct tesla_instance *tip)
 }
 
 void
-tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip)
+tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip,
+		  register_t expected_state, register_t next_state)
 {
 
 	if (tsp->ts_handler != NULL) {
@@ -206,8 +208,12 @@ tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip)
 
 	switch (tsp->ts_action) {
 	case TESLA_ACTION_FAILSTOP:
-		tesla_panic("tesla_assert_failed: %s: %s", tsp->ts_name,
-		    tsp->ts_description);
+		tesla_panic(
+			"tesla_assert_failed: "
+			"unable to move '%s' %" PRIx64 "->%" PRIx64
+			": current state is %" PRIx64,
+			tsp->ts_name, expected_state, next_state,
+			tip->ti_state);
 		break;		/* A bit gratuitous. */
 #ifdef NOTYET
 	case TESLA_ACTION_DTRACE:
