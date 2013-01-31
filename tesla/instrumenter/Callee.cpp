@@ -195,19 +195,9 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
     const Automaton& Automaton = *A;
     assert(Automaton.IsRealisable());
 
-    for (const Transition* T : Automaton) {
+    for (const Transition* T : Automaton)
       if (auto *FnTrans = dyn_cast<FnTransition>(T))
         ModifiedIR |= AddInstrumentation(*FnTrans, *A, M);
-
-      else if (__unused auto *Now = dyn_cast<NowTransition>(T)) {
-        // TODO: ModifiedIR |= AddInstrumentation(*Now, *A, M);
-        llvm::errs() << "WARNING: NOW events not handled yet\n";
-        continue;
-      }
-
-      else
-        llvm_unreachable("unhandled Transition kind");
-    }
   }
 
   return ModifiedIR;
