@@ -37,7 +37,7 @@ INSTRUMENTED_IR=$(patsubst %,%.ll,${INSTR})
 
 OBJ=$(patsubst %,%.o,${INSTR})
 
-all: tesla ${BIN} ${PDF}
+all: tesla ${PDF} ${BIN}
 
 clean:
 	rm -f ${PDF} ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${DOTFILE} ${OBJ} *.tesla
