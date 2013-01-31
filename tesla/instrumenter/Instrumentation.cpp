@@ -82,6 +82,10 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
+//! Map a set of values into a @ref tesla_key.
+llvm::Value* ConstructKey(IRBuilder<>& Builder, Module& M,
+                          ArrayRef<Value*> Args);
+
 Type* tesla::RegisterType(Module& M) {
   return DataLayout(&M).getIntPtrType(M.getContext());
 }
@@ -338,18 +342,8 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
                            Function::ArgumentListType& InstrArgs,
                            FunctionEvent FnEvent) {
 
-  Value *Key = Builder.CreateAlloca(KeyType(M), 0, "key");
-  Type *RegType = RegisterType(M);
-
-  // TODO: bzero()?
-  static Constant *Null = ConstantInt::get(RegType, 0);
-  for (int i = 0; i < TESLA_KEY_SIZE; ++i)
-    Builder.CreateStore(Null, Builder.CreateStructGEP(Key, i + 1));
-
   bool HaveRetVal = FnEvent.has_expectedreturnvalue();
-
-  const int TotalArgs = FnEvent.argument_size()
-     + (HaveRetVal ? 1 : 0);
+  const int TotalArgs = FnEvent.argument_size() + (HaveRetVal ? 1 : 0);
 
   if (InstrArgs.size() != TotalArgs)
     report_fatal_error(
@@ -358,8 +352,9 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
       + " arguments" + (HaveRetVal ? " and a return value" : "")
     );
 
+  vector<Value*> Args(TotalArgs, NULL);
+
   int i = 0;
-  int KeyMask = 0;
 
   for (auto& InstrArg : InstrArgs) {
     auto& Arg = (HaveRetVal && (i == (TotalArgs - 1)))
@@ -372,14 +367,35 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 
     int Index = Arg.index();
 
-    assert(Index < TESLA_KEY_SIZE);
-    assert(&InstrArg != NULL);
+    assert(Index < TotalArgs);
+    Args[Index] = &InstrArg;
+  }
 
-    KeyMask |= (1 << Index);
+  return ConstructKey(Builder, M, Args);
+}
 
+Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
+                           ArrayRef<Value*> Args) {
+
+  assert(Args.size() <= TESLA_KEY_SIZE);
+
+  Value *Key = Builder.CreateAlloca(KeyType(M), 0, "key");
+  Type *RegType = RegisterType(M);
+
+  static Constant *Null = ConstantInt::get(RegType, 0);
+
+  int i = 0;
+  int KeyMask = 0;
+
+  for (Value* Arg : Args) {
     Builder.CreateStore(
-      Cast(&InstrArg, Twine(i - 1).str(), RegType, Builder),
-      Builder.CreateStructGEP(Key, Index));
+      (Arg == NULL) ? Null : Cast(Arg, Twine(i - 1).str(), RegType, Builder),
+      Builder.CreateStructGEP(Key, i));
+
+    if (Arg != NULL)
+      KeyMask |= (1 << i);
+
+    i++;
   }
 
   Value *Mask = Builder.CreateStructGEP(Key, TESLA_KEY_SIZE);
