@@ -146,6 +146,7 @@ BasicBlock* tesla::CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
 Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
                    IRBuilder<>& Builder) {
 
+  assert(From != NULL);
   Type *CurrentType = From->getType();
 
   if (!CastInst::isCastable(CurrentType, NewType)) {
