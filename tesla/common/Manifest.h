@@ -29,6 +29,8 @@
  * SUCH DAMAGE.
  */
 
+#include "Automaton.h"
+
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
@@ -48,7 +50,25 @@ class FunctionEvent;
 /// A description of TESLA instrumentation to perform.
 class Manifest {
 public:
+  size_t size() const { return Assertions.size(); }
+
   llvm::ArrayRef<Assertion*> AllAssertions() { return Assertions; }
+
+  /**
+   * Find (and create) the @ref Automaton specified at a @ref Location.
+   *
+   * Memory ownership is passed to the caller.
+   */
+  const Automaton* FindAutomaton(const Location&,
+      Automaton::Type = Automaton::Deterministic) const;
+
+  /**
+   * Parse (and create) an automaton from this @ref Manifest.
+   *
+   * Memory ownership is passed to the caller.
+   */
+  const Automaton* ParseAutomaton(size_t ID,
+      Automaton::Type = Automaton::Deterministic) const;
 
   //! Returns a copy of all function events named in this manifest.
   std::vector<FunctionEvent> FunctionsToInstrument();
@@ -81,6 +101,8 @@ private:
   //! Convenience wrapper that provides useful methods.
   const llvm::ArrayRef<Assertion*> Assertions;
 };
+
+bool operator == (const Location&, const Location&);
 
 }
 

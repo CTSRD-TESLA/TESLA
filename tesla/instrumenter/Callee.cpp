@@ -182,18 +182,17 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
   }
 
   // Create code to receive events and translate them to the automata language.
-  int AssertionCount = 0;
+  for (size_t i = 0; i < Manifest->size(); i++) {
+    OwningPtr<const Automaton> A(
+      Manifest->ParseAutomaton(i, Automaton::Deterministic));
 
-  for (auto *Assertion : Manifest->AllAssertions()) {
-    Automaton *A = Automaton::Create(Assertion, AssertionCount++,
-                                     Automaton::Deterministic);
-    if (A == NULL)
+    if (!A)
       // TODO: remove once DFA::Convert(NFA) works
       continue;
 
-    assert(A != NULL && "failed to parse (deterministic) assertion");
+    assert(A && "failed to parse (deterministic) assertion");
 
-    Automaton& Automaton = *A;
+    const Automaton& Automaton = *A;
     assert(Automaton.IsRealisable());
 
     for (const Transition* T : Automaton) {

@@ -46,6 +46,7 @@
 
 #include "llvm/Pass.h"
 
+#include "Names.h"
 #include <google/protobuf/text_format.h>
 
 using namespace llvm;
@@ -59,6 +60,24 @@ cl::opt<string> ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
   cl::desc("Name of TESLA manifest file"));
 
 const string Manifest::SEP = "===\n";
+
+const Automaton* Manifest::FindAutomaton(const Location& Loc,
+                                         Automaton::Type T) const {
+  size_t ID = 0;
+  for (Assertion *A : Assertions) {
+    if (A->location() == Loc)
+      return Automaton::Create(A, ID, T);
+
+    else
+      ID++;
+  }
+
+  return NULL;
+}
+
+const Automaton* Manifest::ParseAutomaton(size_t ID, Automaton::Type T) const{
+  return Automaton::Create(Assertions[ID], ID, T);
+}
 
 Manifest::Manifest(ArrayRef<Assertion*> Assertions)
   : Storage(new Assertion*[Assertions.size()]),
@@ -181,6 +200,16 @@ vector<Event> Manifest::Events() {
   }
 
   return AllEvents;
+}
+
+bool tesla::operator == (const Location& x, const Location& y) {
+  return (
+    // Don't rely on operator==(string&,string&); it might produce unexpected
+    // results depending on the presence of NULL terminators.
+    (strcmp(x.filename().c_str(), y.filename().c_str()) == 0)
+    && (x.line() == y.line())
+    && (x.counter() == y.counter())
+  );
 }
 
 }

@@ -73,10 +73,9 @@ main(int argc, char *argv[]) {
     return false;
   }
 
-  size_t AssertionID = 0;
-  for (Assertion* A : Manifest->AllAssertions()) {
-    err << "Parsing automaton " << AssertionID << "... ";
-    OwningPtr<Automaton> Automaton(Automaton::Create(A, AssertionID++));
+  for (size_t i = 0; i < Manifest->size(); i++) {
+    OwningPtr<const Automaton> Automaton(
+      Manifest->ParseAutomaton(i, Automaton::NonDeterministic));
 
     if (!Automaton) {
       err << "\n";
