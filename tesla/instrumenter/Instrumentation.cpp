@@ -82,7 +82,7 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
-Type* RegisterType(Module& M) {
+Type* tesla::RegisterType(Module& M) {
   return DataLayout(&M).getIntPtrType(M.getContext());
 }
 
@@ -125,8 +125,8 @@ const char* Format(Type *T) {
     abort();
 }
 
-BasicBlock* CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
-                       BasicBlock *InsertBefore) {
+BasicBlock* tesla::CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
+                              BasicBlock *InsertBefore) {
   string FormatStr(Prefix.str());
   for (auto& Arg : F->getArgumentList()) FormatStr += Format(Arg.getType());
   FormatStr += "\n";
@@ -171,7 +171,7 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
 }
 
 
-Function* FindStateUpdateFn(Module& M, Type *IntType) {
+Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
 
   LLVMContext& Ctx = M.getContext();
 
@@ -197,8 +197,8 @@ Function* FindStateUpdateFn(Module& M, Type *IntType) {
 }
 
 
-SmallVector<Function*,3> FindInstrumentation(const FunctionEvent& FnEvent,
-                                             Module& M) {
+SmallVector<Function*,3>
+  tesla::FindInstrumentation(const FunctionEvent& FnEvent, Module& M) {
 
   // Find existing instrumentation stubs.
   SmallVector<FunctionEvent::CallContext,2> Contexts;
@@ -226,9 +226,9 @@ SmallVector<Function*,3> FindInstrumentation(const FunctionEvent& FnEvent,
   return ToInstrument;
 }
 
-Function *FindInstrumentationFn(Module& M, StringRef Name,
-                                FunctionEvent::Direction Dir,
-                                FunctionEvent::CallContext Ctx) {
+Function* tesla::FindInstrumentationFn(Module& M, StringRef Name,
+                                       FunctionEvent::Direction Dir,
+                                       FunctionEvent::CallContext Ctx) {
 
   StringRef Prefix;
   switch (Ctx) {
@@ -258,8 +258,8 @@ Function *FindInstrumentationFn(Module& M, StringRef Name,
 }
 
 
-bool AddInstrumentation(const FnTransition& T, const Automaton& A,
-                        Module& M) {
+bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
+                               Module& M) {
 
   auto& FnEvent = T.FnEvent();
   auto& Fn = FnEvent.function();
@@ -315,7 +315,7 @@ bool AddInstrumentation(const FnTransition& T, const Automaton& A,
 }
 
 
-Constant* TeslaContext(Assertion::Context Context, LLVMContext& Ctx) {
+Constant* tesla::TeslaContext(Assertion::Context Context, LLVMContext& Ctx) {
   static Type *IntType = IntegerType::get(Ctx, 64);
 
   static auto *Global = ConstantInt::get(IntType, TESLA_SCOPE_GLOBAL);
@@ -333,9 +333,9 @@ Constant* TeslaContext(Assertion::Context Context, LLVMContext& Ctx) {
 }
 
 
-Value* ConstructKey(IRBuilder<>& Builder, Module& M,
-                    Function::ArgumentListType& InstrArgs,
-                    FunctionEvent FnEvent) {
+Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
+                           Function::ArgumentListType& InstrArgs,
+                           FunctionEvent FnEvent) {
 
   Value *Key = Builder.CreateAlloca(KeyType(M), 0, "key");
   Type *RegType = RegisterType(M);
