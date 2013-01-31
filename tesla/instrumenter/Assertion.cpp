@@ -76,7 +76,10 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   if (!Manifest)
     report_fatal_error("unable to load TESLA manifest");
 
-  return ConvertAssertions(AssertCalls, *Manifest, M);;
+  return
+    ConvertAssertions(AssertCalls, *Manifest, M)
+    && AddInstrumentation(*Manifest, M)
+    ;
 }
 
 
@@ -148,6 +151,36 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
 
   AssertFn->removeFromParent();
   delete AssertFn;
+
+  return true;
+}
+
+
+bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Manifest& Man,
+                                                        Module& M) {
+  bool ModifiedIR = false;
+
+  for (size_t i = 0; i < Man.size(); i++) {
+    OwningPtr<const Automaton> A(Man.ParseAutomaton(i));
+
+    if (!A) {
+      // TODO: remove when NFA->DFA works
+      continue;
+      report_fatal_error("unable to parse (realisable) automaton");
+    }
+
+    ModifiedIR |= AddInstrumentation(*A, M);
+  }
+
+  return ModifiedIR;
+}
+
+bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Automaton& A,
+                                                        Module& M) {
+
+  string Message = ("[NOW]  automaton " + Twine(A.ID())).str();
+  BasicBlock *PrintfStub = CallPrintf(M, Message, InstrumentationFn(A, M));
+  IRBuilder<>(PrintfStub).CreateRetVoid();
 
   return true;
 }

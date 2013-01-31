@@ -27,7 +27,7 @@ BIN=demo
 DOTFILE=$(PDF:.pdf=.dot)
 EXAMPLE=example
 
-C=example support main tesla-hack
+C=example support main
 TESLA=$(patsubst %,%.tesla,$C)
 
 IR=handcoded

@@ -56,6 +56,12 @@ private:
   //! Convert assertion declarations into instrumentation calls.
   bool ConvertAssertions(std::set<llvm::CallInst*>&, Manifest&, llvm::Module&);
 
+  //! Add instrumentation for all automata in a @ref Manifest.
+  bool AddInstrumentation(const Manifest&, llvm::Module& M);
+
+  //! Add instrumentation to an @ref Automaton's event handler.
+  bool AddInstrumentation(const Automaton&, llvm::Module& M);
+
   /**
    * Parse a @ref Location out of a @ref CallInst to the TESLA assertion
    * pseudo-call.
