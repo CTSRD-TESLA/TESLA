@@ -34,8 +34,12 @@
 #include "Instrumentation.h"
 #include "Manifest.h"
 #include "Names.h"
+#include "State.h"
+#include "Transition.h"
 
 #include "tesla.pb.h"
+
+#include <tesla/libtesla.h>
 
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
@@ -181,6 +185,62 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Automaton& A,
   string Message = ("[NOW]  automaton " + Twine(A.ID())).str();
   BasicBlock *PrintfStub = CallPrintf(M, Message, InstrumentationFn(A, M));
   IRBuilder<>(PrintfStub).CreateRetVoid();
+
+  for (const Transition* T : A)
+    if (auto *NowTrans = dyn_cast<NowTransition>(T))
+      if (!AddInstrumentation(*NowTrans, A, M))
+        report_fatal_error("error instrumenting NOW event");
+
+  return true;
+}
+
+
+bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
+                                                        const Automaton& A,
+                                                        Module& M) {
+
+  Function *InstrFn = InstrumentationFn(A, M);
+  LLVMContext& Ctx = InstrFn->getContext();
+
+  Type *IntType = RegisterType(M);
+  Constant *CurrentState = ConstantInt::get(IntType, T.Source().ID());
+  Constant *NextState = ConstantInt::get(IntType, T.Destination().ID());
+  Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);
+
+  // The arguments to the function should be passed straight through to
+  // libtesla via a tesla_key: they are already in the right order.
+  std::vector<Value*> InstrArgs;
+  for (Value& Arg : InstrFn->getArgumentList()) InstrArgs.push_back(&Arg);
+
+  // The instrumentation function should always end in a RetVoid;
+  // assert this is so and then trim it so we can add new stuff.
+  auto& PreviousEndBlock = InstrFn->back();
+  assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
+  PreviousEndBlock.getTerminator()->eraseFromParent();
+
+  auto Block = BasicBlock::Create(Ctx, A.Name(), InstrFn);
+  IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
+
+  IRBuilder<> Builder(Block);
+
+  auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
+  IRBuilder<>(Die).CreateRetVoid();
+
+  std::vector<Value*> Args;
+  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
+  Args.push_back(ConstantInt::get(IntType, A.ID()));
+  Args.push_back(ConstructKey(Builder, M, InstrArgs));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.Description()));
+  Args.push_back(CurrentState);
+  Args.push_back(NextState);
+
+  Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
+  assert(Args.size() == UpdateStateFn->arg_size());
+
+  Value *Error = Builder.CreateCall(UpdateStateFn, Args);
+  Error = Builder.CreateICmpNE(Error, Success);
+  Builder.CreateRetVoid();
 
   return true;
 }

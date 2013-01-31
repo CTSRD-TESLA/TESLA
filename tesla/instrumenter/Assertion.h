@@ -41,6 +41,7 @@ namespace tesla {
 
 class Automaton;
 class Manifest;
+class NowTransition;
 class Location;
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
@@ -61,6 +62,10 @@ private:
 
   //! Add instrumentation to an @ref Automaton's event handler.
   bool AddInstrumentation(const Automaton&, llvm::Module& M);
+
+  //! Add instrumentation for a single @ref NowTransition.
+  bool AddInstrumentation(const NowTransition&, const Automaton&,
+                          llvm::Module& M);
 
   /**
    * Parse a @ref Location out of a @ref CallInst to the TESLA assertion
