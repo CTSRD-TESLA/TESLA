@@ -78,7 +78,7 @@ public:
    *
    * @param
    */
-  static Automaton* Create(Assertion*, unsigned int id,
+  static Automaton* Create(const Assertion*, unsigned int id,
                            Type T = NonDeterministic);
 
   virtual bool IsRealisable() const;
@@ -102,7 +102,8 @@ public:
   TransitionVector::const_iterator end() const  { return Transitions.end(); }
 
 protected:
-  Automaton(size_t id, Assertion&, llvm::StringRef Name, llvm::StringRef Desc,
+  Automaton(size_t id, const Assertion&,
+            llvm::StringRef Name, llvm::StringRef Desc,
             llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 
   const size_t id;
@@ -130,7 +131,7 @@ protected:
  */
 class NFA : public Automaton {
 public:
-  static NFA* Parse(Assertion*, unsigned int id);
+  static NFA* Parse(const Assertion*, unsigned int id);
 
 private:
   /**
@@ -165,7 +166,7 @@ private:
   static State* Parse(const FunctionEvent&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 
-  NFA(size_t id, Assertion& A, llvm::StringRef Name, llvm::StringRef Desc,
+  NFA(size_t id, const Assertion& A, llvm::StringRef Name, llvm::StringRef Desc,
       llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 

@@ -53,7 +53,7 @@ namespace tesla {
 
 
 // ---- Automaton implementation ----------------------------------------------
-Automaton* Automaton::Create(Assertion *A, unsigned int id, Type Type) {
+Automaton* Automaton::Create(const Assertion *A, unsigned int id, Type Type) {
   // First, do the easy thing: parse into an NFA.
   NFA *N = NFA::Parse(A, id);
   assert(N != NULL);
@@ -66,7 +66,8 @@ Automaton* Automaton::Create(Assertion *A, unsigned int id, Type Type) {
 }
 
 
-Automaton::Automaton(size_t id, Assertion& A, StringRef Name, StringRef Desc,
+Automaton::Automaton(size_t id, const Assertion& A,
+                     StringRef Name, StringRef Desc,
                      ArrayRef<State*> S, ArrayRef<Transition*> T)
   : id(id), assertion(A), name(Name), description(Desc)
 {
@@ -124,7 +125,7 @@ string Automaton::Dot() const {
 
 
 // ---- NFA implementation ----------------------------------------------------
-NFA* NFA::Parse(Assertion *A, unsigned int id) {
+NFA* NFA::Parse(const Assertion *A, unsigned int id) {
   assert(A != NULL);
 
   StateVector States;
@@ -272,7 +273,7 @@ State* NFA::Parse(const FunctionEvent& Ev, State& InitialState,
 }
 
 
-NFA::NFA(size_t id, Assertion& A, StringRef Name, StringRef Desc,
+NFA::NFA(size_t id, const Assertion& A, StringRef Name, StringRef Desc,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
   : Automaton(id, A, Name, Desc, S, T)
 {

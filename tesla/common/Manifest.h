@@ -76,10 +76,10 @@ private:
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
   //! Memory to store automata in.
-  llvm::OwningArrayPtr<Assertion*> Storage;
+  const llvm::OwningArrayPtr<Assertion*> Storage;
 
   //! Convenience wrapper that provides useful methods.
-  llvm::ArrayRef<Assertion*> Assertions;
+  const llvm::ArrayRef<Assertion*> Assertions;
 };
 
 }
