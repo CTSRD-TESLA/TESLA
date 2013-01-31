@@ -1,4 +1,4 @@
-/*! @file names.h  Names of TESLA instrumentation points. */
+/*! @file Names.h  Names of TESLA instrumentation points. */
 /*
  * Copyright (c) 2012 Jonathan Anderson
  * All rights reserved.

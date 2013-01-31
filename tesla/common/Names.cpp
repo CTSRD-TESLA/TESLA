@@ -1,6 +1,6 @@
-/*! @file Manifest.cpp  Contains the definition of @ref Manifest. */
+/*! @file Names.cpp  Implementation of TESLA name helpers. */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
