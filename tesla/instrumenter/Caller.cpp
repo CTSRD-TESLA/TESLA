@@ -80,12 +80,12 @@ CallerInstrumentation* CallerInstrumentation::Build(
   Function *Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
   assert(Return != NULL);
 
-  return new CallerInstrumentation(Fn, Call, Return, Dir);
+  return new CallerInstrumentation(Call, Return, Dir);
 }
 
 CallerInstrumentation::CallerInstrumentation(
-  Function *Fn, Function *Entry, Function *Return, FunctionEvent::Direction Dir)
-  : Fn(Fn), Dir(Dir), CallEvent(Entry), ReturnEvent(Return)
+  Function *Entry, Function *Return, FunctionEvent::Direction Dir)
+  : Dir(Dir), CallEvent(Entry), ReturnEvent(Return)
 {
   assert(CallEvent != NULL);
   assert(ReturnEvent != NULL);

@@ -83,13 +83,11 @@ public:
 
 private:
   /// Private constructor: clients should use CalleeInstrumention::Build().
-  CallerInstrumentation(llvm::Function *Fn,
-                        llvm::Function *Call,
+  CallerInstrumentation(llvm::Function *Call,
                         llvm::Function *Return,
                         FunctionEvent::Direction Dir
                        );
 
-  llvm::Function *Fn;             ///< The function to instrument.
   FunctionEvent::Direction Dir;   ///< When to instrument (call or return).
 
   llvm::Function *CallEvent;      ///< Call when calling instrumented function.
