@@ -71,10 +71,6 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
-Type* tesla::RegisterType(Module& M) {
-  return DataLayout(&M).getIntPtrType(M.getContext());
-}
-
 StructType* KeyType(Module& M) {
   const char Name[] = "tesla_key";
   StructType *T = M.getTypeByName(Name);
@@ -112,6 +108,13 @@ const char* Format(Type *T) {
 
     assert(false && "Unhandled arg type");
     abort();
+}
+
+} /* namespace tesla */
+
+
+Type* tesla::RegisterType(Module& M) {
+    return DataLayout(&M).getIntPtrType(M.getContext());
 }
 
 BasicBlock* tesla::CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
@@ -393,6 +396,4 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 
   return Key;
 }
-
-} /* namespace tesla */
 

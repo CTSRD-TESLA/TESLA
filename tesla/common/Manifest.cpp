@@ -202,6 +202,9 @@ vector<Event> Manifest::Events() {
   return AllEvents;
 }
 
+} // namespace tesla
+
+
 bool tesla::operator == (const Location& x, const Location& y) {
   return (
     // Don't rely on operator==(string&,string&); it might produce unexpected
@@ -210,7 +213,5 @@ bool tesla::operator == (const Location& x, const Location& y) {
     && (x.line() == y.line())
     && (x.counter() == y.counter())
   );
-}
-
 }
 

@@ -39,8 +39,6 @@
 using llvm::Twine;
 
 
-namespace tesla {
-
 std::string tesla::ShortName(const Location& Loc) {
   return (Twine()
     + Loc.filename()
@@ -50,7 +48,3 @@ std::string tesla::ShortName(const Location& Loc) {
     + Twine(Loc.counter())
   ).str();
 }
-
-} // namespace tesla
-
-
