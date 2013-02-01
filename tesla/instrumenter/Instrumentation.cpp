@@ -281,6 +281,7 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
     Constant *NoError = ConstantInt::get(IntType, 0);
 
     auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
+    // TODO: provide notification of failure
     IRBuilder<>(Die).CreateRetVoid();
 
     vector<Value*> Args;
@@ -298,7 +299,11 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
 
     Value *Error = Builder.CreateCall(UpdateStateFn, Args);
     Error = Builder.CreateICmpNE(Error, NoError);
-    Builder.CreateRetVoid();
+
+    auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
+    IRBuilder<>(Exit).CreateRetVoid();
+
+    Builder.CreateCondBr(Error, Exit, Die);
   }
 
   return true;

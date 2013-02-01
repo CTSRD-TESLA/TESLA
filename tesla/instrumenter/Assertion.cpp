@@ -224,6 +224,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
   IRBuilder<> Builder(Block);
 
   auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
+  // TODO: provide notification of failure
   IRBuilder<>(Die).CreateRetVoid();
 
   std::vector<Value*> Args;
@@ -240,7 +241,11 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
 
   Value *Error = Builder.CreateCall(UpdateStateFn, Args);
   Error = Builder.CreateICmpNE(Error, Success);
-  Builder.CreateRetVoid();
+
+  auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
+  IRBuilder<>(Exit).CreateRetVoid();
+
+  Builder.CreateCondBr(Error, Exit, Die);
 
   return true;
 }
