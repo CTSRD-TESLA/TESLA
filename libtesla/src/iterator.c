@@ -80,8 +80,10 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 		    && tesla_key_matches(&i->ti_key, pattern)
 		    && !tesla_key_matches(pattern, &i->ti_key)) {
 
-			if (forked >= MAX_FORK_COUNT)
+			if (forked >= MAX_FORK_COUNT) {
+                tesla_iterator_free(iter);
 				return (TESLA_ERROR_ENOMEM);
+            }
 
 			to_fork[forked++] = i;
 		}
@@ -92,8 +94,10 @@ tesla_match(struct tesla_class *tclass, struct tesla_key *pattern,
 		struct tesla_instance *copy;
 
 		int err = tesla_instance_new(tclass, pattern, orig->ti_state, &copy);
-		if (err != TESLA_SUCCESS)
+		if (err != TESLA_SUCCESS) {
+            tesla_iterator_free(iter);
 			return (err);
+        }
 
 		copy->ti_state = orig->ti_state;
 	}
