@@ -81,6 +81,7 @@ public:
   static Automaton* Create(const Assertion*, unsigned int id,
                            Type T = NonDeterministic);
 
+  virtual ~Automaton() {}
   virtual bool IsRealisable() const;
 
   size_t ID() const { return id; }
