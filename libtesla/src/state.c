@@ -70,7 +70,7 @@ tesla_class_init(struct tesla_class *tclass, u_int context, u_int instances)
 }
 
 int
-tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k)
+tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)
 {
 	assert(pattern != NULL);
 	assert(k != NULL);
@@ -93,6 +93,38 @@ tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k)
 
 
 int
+tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
+	    struct tesla_instance **array, size_t *size)
+{
+	assert(tclass != NULL);
+	assert(pattern != NULL);
+	assert(array != NULL);
+	assert(size != NULL);
+
+	struct tesla_table *table = tclass->ts_table;
+
+	// Assume that any and every instance could match.
+	if (*size < table->tt_length) {
+		*size = table->tt_length;
+		return (TESLA_ERROR_ENOMEM);
+	}
+
+	// Copy matches into the array.
+	*size = 0;
+	for (size_t i = 0; i < table->tt_length; i++) {
+		struct tesla_instance *inst = table->tt_instances + i;
+		if (tesla_instance_active(inst)
+		    && tesla_key_matches(pattern, &inst->ti_key)) {
+			array[*size] = inst;
+			*size += 1;
+		}
+	}
+
+	return (TESLA_SUCCESS);
+}
+
+
+int
 tesla_instance_active(struct tesla_instance *i)
 {
 	assert(i != NULL);
@@ -102,7 +134,7 @@ tesla_instance_active(struct tesla_instance *i)
 
 
 int
-tesla_instance_new(struct tesla_class *tclass, struct tesla_key *name,
+tesla_instance_new(struct tesla_class *tclass, const struct tesla_key *name,
 	register_t state, struct tesla_instance **out)
 {
 	assert(tclass != NULL);
@@ -112,9 +144,6 @@ tesla_instance_new(struct tesla_class *tclass, struct tesla_key *name,
 	// A new instance must not look inactive.
 	if ((state == 0) && (name->tk_mask == 0))
 		return (TESLA_ERROR_EINVAL);
-
-	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_lock(tclass);
 
 	struct tesla_table *ttp = tclass->ts_table;
 	assert(ttp != NULL);
@@ -139,15 +168,18 @@ tesla_instance_new(struct tesla_class *tclass, struct tesla_key *name,
 
 	tesla_assert(*out != NULL, "no free instances but tt_free was > 0");
 
-	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL) {
-		tesla_class_global_unlock(tclass);
-	}
-
 	return (TESLA_SUCCESS);
 }
 
 int
-tesla_instance_find(struct tesla_class *tclass, struct tesla_key *pattern,
+tesla_clone(struct tesla_class *tclass, const struct tesla_instance *orig,
+	struct tesla_instance **copy)
+{
+	return tesla_instance_new(tclass, &orig->ti_key, orig->ti_state, copy);
+}
+
+int
+tesla_instance_find(struct tesla_class *tclass, const struct tesla_key *pattern,
 		   struct tesla_instance **out)
 {
 	assert(tclass != NULL);

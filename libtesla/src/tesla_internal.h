@@ -53,6 +53,37 @@
 #include <tesla/libtesla.h>
 
 
+/**
+ * Create a new @ref tesla_instance.
+ *
+ * The caller is responsible for locking the class if needed.
+ */
+int	tesla_instance_new(struct tesla_class *tclass,
+	    const struct tesla_key *name, register_t state,
+	    struct tesla_instance **out);
+
+/**
+ * Clone an existing @ref tesla_instance within a @ref tesla_class.
+ */
+int	tesla_clone(struct tesla_class*, const struct tesla_instance *orig,
+	    struct tesla_instance **copy);
+
+/**
+ * Find all automata instances in a class that match a particular key.
+ *
+ * The caller is responsible for locking the class if necessary.
+ *
+ * @param[in]     tclass   the class of automata to match
+ * @param[in]     key      must remain valid as long as the iterator is in use
+ * @param[out]    array    a caller-allocated array to store matches in
+ * @param[in,out] size     in: size of array. out: number of instances.
+ *
+ * @returns    a standard TESLA error code (e.g., TESLA_ERROR_ENOMEM)
+ */
+int	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
+	    struct tesla_instance **array, size_t *size);
+
+
 #ifndef NDEBUG
 
 // When not in debug mode, some values might not get checked.
@@ -200,9 +231,9 @@ void	tesla_class_global_unlock(struct tesla_class *tsp);
 void	assert_instanceof(struct tesla_instance *i, struct tesla_class *tclass);
 
 /** Print a @ref tesla_key to stderr. */
-void	print_key(struct tesla_key *key);
+void	print_key(const struct tesla_key *key);
 
 /** Print a @ref tesla_class to stderr. */
-void	print_class(struct tesla_class*);
+void	print_class(const struct tesla_class*);
 
 #endif /* TESLA_INTERNAL_H */

@@ -64,7 +64,7 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 }
 
 void
-print_class(struct tesla_class *c)
+print_class(const struct tesla_class *c)
 {
 	print("struct tesla_class @ 0x%tx {\n", (register_t) c);
 	print("  name:         '%s',\n", c->ts_name);
@@ -99,7 +99,7 @@ print_class(struct tesla_class *c)
 }
 
 void
-print_key(struct tesla_key *key)
+print_key(const struct tesla_key *key)
 {
 	print("0x%tx [ ", key->tk_mask);
 

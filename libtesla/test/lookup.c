@@ -6,6 +6,7 @@
  */
 
 #include <tesla/libtesla.h>
+#include "tesla_internal.h"
 
 #include <assert.h>
 #include <err.h>
@@ -126,20 +127,23 @@ create_instance(struct tesla_class *tclass, struct tesla_instance **instance,
 
 int
 search_for_pattern(struct tesla_class *tclass, struct tesla_key *pattern) {
-	struct tesla_iterator *iter;
+	size_t len = 20;
+	struct tesla_instance* matches[len];
+
 	int found = 0;
-	int err;
 
-	for (err = tesla_match(tclass, pattern, &iter); tesla_hasnext(iter);) {
-		assert(err == TESLA_SUCCESS);
+	int err = tesla_match(tclass, pattern, matches, &len);
+	assert(err == TESLA_SUCCESS);
+	assert(len >= 0);
 
-		struct tesla_instance *inst = tesla_next(iter);
+	for (size_t i = 0; i < len; i++) {
+		struct tesla_instance *inst = matches[i];
 		assert(inst != NULL);
+
 		for (size_t i = 0; i < INSTANCES; i++)
 			if (inst == instances[i])
 				found |= (1 << i);
 	}
-	tesla_iterator_free(iter);
 
 	return found;
 }

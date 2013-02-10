@@ -32,6 +32,7 @@
 
 #include "tesla_internal.h"
 
+#include <stdbool.h>
 #include <inttypes.h>
 
 #define	CHECK(fn, ...) do { \
@@ -43,7 +44,7 @@
 } while(0)
 
 int
-tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
+tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 	const char *name, const char *description,
 	register_t expected_state, register_t new_state)
 {
@@ -62,45 +63,86 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	struct tesla_store *store;
 	CHECK(tesla_store_get, tesla_context, 4, 4, &store);
 
-#ifndef NDEBUG
-	DEBUG_PRINT("store: 0x%tx\n", (register_t) store);
-	DEBUG_PRINT("----\n");
-#endif
-
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
 
+	if (class->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_class_global_lock(class);
+
+	struct tesla_table *table = class->ts_table;
+	struct tesla_instance *start = table->tt_instances;
+
 #ifndef NDEBUG
 	print_class(class);
-	DEBUG_PRINT("\n----\n");
+	DEBUG_PRINT("----\n");
 #endif
 
-	// If the expected current state is 0, we need to create a new automaton.
+	// If the expected current state is 0, create a new automaton.
 	if (expected_state == 0) {
 		struct tesla_instance *inst;
 		CHECK(tesla_instance_new, class, key, new_state, &inst);
 
-		DEBUG_PRINT("new instance @ 0x%tx: %tx -> %tx\n",
-		            (register_t) inst, expected_state, inst->ti_state);
+		DEBUG_PRINT("new instance %ld: %tx -> %tx\n",
+		            inst - start, expected_state, inst->ti_state);
 	} else {
-		struct tesla_iterator *iter;
-		CHECK(tesla_match, class, key, &iter);
+		bool success = false;
 
-		while (tesla_hasnext(iter)) {
-			struct tesla_instance *inst = tesla_next(iter);
+		// Update already-matching instances.
+		size_t len = table->tt_length;
+		struct tesla_instance* instances[len];
+		CHECK(tesla_match, class, key, instances, &len);
+
+		for (size_t i = 0; i < len; i++) {
+			struct tesla_instance *inst = instances[i];
 
 			if (inst->ti_state != expected_state) {
 				tesla_assert_fail(class, inst,
 						  expected_state, new_state);
 			} else {
-				DEBUG_PRINT("existing instance @ 0x%tx: %tx -> %tx\n",
+				success = true;
+				DEBUG_PRINT("0x%tx: %tx -> %tx\n",
 				            (register_t) inst,
 				            inst->ti_state, new_state);
 				inst->ti_state = new_state;
 			}
 		}
 
-		tesla_iterator_free(iter);
+		// Fork new instances if necessary.
+		for (size_t i = 0; i < table->tt_length; i++) {
+			struct tesla_instance *inst = start + i;
+
+			// Only fork if the new key is a more specific version
+			// of the existing one.
+			if (tesla_instance_active(inst)
+			    && (inst->ti_state == expected_state)
+			    && tesla_key_matches(&inst->ti_key, key)
+			    && !tesla_key_matches(key, &inst->ti_key)) {
+
+				success = true;
+
+				struct tesla_instance *copy;
+				CHECK(tesla_clone, class, inst, &copy);
+				DEBUG_PRINT("clone %ld -> %ld\n",
+				            inst - start, copy - start);
+
+				copy->ti_key = *key;
+				copy->ti_state = new_state;
+			}
+		}
+
+		// Make sure we updated something.
+		if (!success) {
+			for (size_t i = 0; i < table->tt_length; i++) {
+				struct tesla_instance *inst = start + i;
+
+				// Find an automata instance to blame.
+				if (tesla_instance_active(inst)
+				    && tesla_key_matches(&inst->ti_key, key)
+				    && !tesla_key_matches(key, &inst->ti_key))
+					tesla_assert_fail(class, inst,
+					    expected_state, new_state);
+			}
+		}
 	}
 
 #ifndef NDEBUG
@@ -108,6 +150,9 @@ tesla_update_state(int tesla_context, int class_id, struct tesla_key *key,
 	print_class(class);
 	DEBUG_PRINT("\n====\n\n");
 #endif
+
+	if (class->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_class_global_unlock(class);
 
 	return (TESLA_SUCCESS);
 }

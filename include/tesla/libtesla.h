@@ -35,8 +35,6 @@
 
 #include <sys/types.h>		/* register_t */
 
-#include "libtesla-iterator.h"
-
 /*
  * libtesla functions mostly return error values, and therefore return
  * pointers, etc, via call-by-reference arguments.  These errors are modeled
@@ -52,8 +50,8 @@
 struct tesla_key;
 
 /** Update all automata instances that match a given key to a new state. */
-int	tesla_update_state(int context, int class_id, struct tesla_key *key,
-	const char *name, const char *description,
+int	tesla_update_state(int context, int class_id,
+	const struct tesla_key *key, const char *name, const char *description,
 	register_t expected_state, register_t new_state);
 
 /*
@@ -139,7 +137,8 @@ struct tesla_key {
  *
  * @returns  1 if @ref #k matches @ref pattern, 0 otherwise
  */
-int	tesla_key_matches(struct tesla_key *pattern, struct tesla_key *k);
+int	tesla_key_matches(
+	    const struct tesla_key *pattern, const struct tesla_key *k);
 
 
 /** A single instance of an automaton: a name (@ref ti_key) and a state. */
@@ -182,29 +181,13 @@ void	tesla_class_setaction(struct tesla_class *tsp,
 int	tesla_instance_active(struct tesla_instance *i);
 
 
-/** Create a new @ref tesla_instance. */
-int	tesla_instance_new(struct tesla_class *tclass, struct tesla_key *name,
-	    register_t state, struct tesla_instance **out);
-
 /** Clone an existing instance into a new instance. */
 int	tesla_instance_clone(struct tesla_class *tclass,
 	    struct tesla_instance *original, struct tesla_instance **copy);
 
 /** Find an existing automata instance that matches a key. */
-int	tesla_instance_find(struct tesla_class *tclass, struct tesla_key *key,
-	    struct tesla_instance **instance);
-
-/**
- * Find all automata instances in a class that match a particular key.
- *
- * @param[in]  tclass   the class of automata to match
- * @param[in]  key      must remain valid as long as the iterator is in use
- * @param[out] iter     the return
- *
- * @returns    a standard TESLA error code (e.g., TESLA_ERROR_ENOMEM)
- */
-int	tesla_match(struct tesla_class *tclass, struct tesla_key *key,
-	    struct tesla_iterator **iter);
+int	tesla_instance_find(struct tesla_class *tclass,
+	    const struct tesla_key *key, struct tesla_instance **instance);
 
 /**
  * Once an instance has been queried, it must be "returned" to its

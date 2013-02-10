@@ -7,11 +7,14 @@ set(CMAKE_BUILD_TYPE Debug)
 # We use execinfo here for detailed failure information (e.g. backtraces).
 find_package(ExecInfo REQUIRED)
 
+# Provide access to internal headers.
+include_directories(../src)
+
 set(TESTS
-	fork
 	match
 	lookup
 	store
+	update
 )
 
 set(OBJ helpers)
