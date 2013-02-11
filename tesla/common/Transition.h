@@ -37,6 +37,8 @@
 #include <llvm/ADT/OwningPtr.h>
 #include <llvm/Support/Casting.h>
 
+#include <string>
+
 namespace tesla {
 
 // TESLA IR classes
