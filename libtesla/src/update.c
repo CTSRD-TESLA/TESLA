@@ -132,16 +132,22 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 
 		// Make sure we updated something.
 		if (!success) {
+			struct tesla_instance *blame = NULL;
 			for (size_t i = 0; i < table->tt_length; i++) {
 				struct tesla_instance *inst = start + i;
 
 				// Find an automata instance to blame.
 				if (tesla_instance_active(inst)
 				    && tesla_key_matches(&inst->ti_key, key)
-				    && !tesla_key_matches(key, &inst->ti_key))
-					tesla_assert_fail(class, inst,
-					    expected_state, new_state);
+				    && !tesla_key_matches(key, &inst->ti_key)) {
+					blame = inst;
+					break;
+				}
 			}
+
+			assert(blame != NULL);
+			tesla_assert_fail(class, blame,
+			    expected_state, new_state);
 		}
 	}
 
