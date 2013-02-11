@@ -74,7 +74,8 @@ tesla_store_get(int context, u_int classes, u_int instances,
 #ifdef _KERNEL
 			curthread->td_tesla = store;
 #else
-			assert(pthread_setspecific(key, store) == 0);
+			__debug int err = pthread_setspecific(key, store);
+			assert(err == 0);
 #endif
 		}
 		break;
