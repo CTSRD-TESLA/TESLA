@@ -287,7 +287,7 @@ DFA::DFA(size_t id, Assertion& A, StringRef Name, StringRef Desc,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
   : Automaton(id, A, Name, Desc, S, T)
 {
-  for (const Transition* T: T) {
+  for (__unused const Transition* T: T) {
     assert(T->IsRealisable());
   }
 }

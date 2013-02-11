@@ -76,7 +76,7 @@ bool ParseInlineAssertion(Assertion *A, CallExpr *E, ASTContext& Ctx) {
     ;
 
   // Make a note of unique and non-unique reference counts.
-  size_t RefCount = References.size();
+  __unused size_t RefCount = References.size();
   for (ValueDecl *D : References)
     if (Success)
       Success |= ParseArgument(A->add_argument(), D, References, Ctx);
