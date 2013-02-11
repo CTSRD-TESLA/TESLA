@@ -86,15 +86,15 @@ int	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
 
 #ifndef NDEBUG
 
-// When not in debug mode, some values might not get checked.
-#define __debug __unused
+#define __debug
 
 #include <stdio.h>
 #define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
 
 #else // NDEBUG
 
-#define __debug
+// When not in debug mode, some values might not get checked.
+#define __debug __unused
 #define DEBUG_PRINT(...)
 
 #endif
