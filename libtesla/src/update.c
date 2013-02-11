@@ -82,8 +82,7 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 		struct tesla_instance *inst;
 		CHECK(tesla_instance_new, class, key, new_state, &inst);
 
-		DEBUG_PRINT("new instance %ld: %tx -> %tx\n",
-		            inst - start, expected_state, inst->ti_state);
+		DEBUG_PRINT("new    %ld: %tx\n", inst - start, inst->ti_state);
 	} else {
 		bool success = false;
 
@@ -100,8 +99,8 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 						  expected_state, new_state);
 			} else {
 				success = true;
-				DEBUG_PRINT("0x%tx: %tx -> %tx\n",
-				            (register_t) inst,
+				DEBUG_PRINT("update %ld: %tx->%tx\n",
+				            inst - start,
 				            inst->ti_state, new_state);
 				inst->ti_state = new_state;
 			}
@@ -122,8 +121,9 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 
 				struct tesla_instance *copy;
 				CHECK(tesla_clone, class, inst, &copy);
-				DEBUG_PRINT("clone %ld -> %ld\n",
-				            inst - start, copy - start);
+				DEBUG_PRINT("clone  %ld:%tx -> %ld:%tx\n",
+				            inst - start, copy->ti_state,
+				            copy - start, new_state);
 
 				copy->ti_key = *key;
 				copy->ti_state = new_state;
