@@ -131,14 +131,25 @@ public:
 };
 
 int main(int argc, const char **argv) {
+  // Add a preprocessor definition to indicate we're doing TESLA parsing.
+  vector<const char*> args(argv, argv + argc);
+  args.push_back("-D");
+  args.push_back("__TESLA_ANALYSER__");
+
+  // Change argc and argv to refer to the vector's memory.
+  // The CompilationDatabase will modify these, so we shouldn't pass in
+  // args.data() directly.
+  argc = (int) args.size();
+  assert(argc == args.size());    // check for overflow
+
+  argv = args.data();
+
   llvm::OwningPtr<CompilationDatabase> Compilations(
     FixedCompilationDatabase::loadFromCommandLine(argc, argv));
 
   if (!Compilations)
     llvm::report_fatal_error(
-        "Need compilation options, e.g. "
-        "tesla input.c -- clang -D TESLA"
-    );
+        "Need compilation options, e.g. tesla-analyser foo.c -- -I ../include");
 
   cl::ParseCommandLineOptions(argc, argv);
 

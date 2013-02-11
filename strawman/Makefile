@@ -70,7 +70,7 @@ ${BIN}: ${OBJ}
 # Run the TESLA analyser over C code.
 .c.tesla: tesla
 	@echo "[TESLA]   $^ > $@"
-	${ANALYSER} $< -o $@ -- -fsyntax-only ${CFLAGS} -D TESLA_ANALYSIS
+	${ANALYSER} $< -o $@ -- ${CFLAGS}
 	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
 	            && cat $@ && echo "===== end of TESLA analysis =====" \
 	            || exit 0

@@ -57,7 +57,7 @@ void __tesla_inline_assertion(const char *filename, int line, int count,
 
 
 /* Only define the following things if doing TESLA analysis, not compiling. */
-#ifdef	TESLA_ANALYSIS
+#ifdef	__TESLA_ANALYSER__
 
 /**
  * TESLA events can be serialised either with respect to the current thread
@@ -117,7 +117,7 @@ void* __tesla_any();
 	)
 
 
-#else	/* !TESLA_ANALYSIS */
+#else	/* !__TESLA_ANALYSER__ */
 
 /*
  * We are not doing TESLA analysis, no we don't want a lot of artefacts left
@@ -135,7 +135,7 @@ void* __tesla_any();
 #define	__tesla_perthread	((struct __tesla_locality*) 0)
 
 
-#endif	/* TESLA_ANALYSIS */
+#endif	/* __TESLA_ANALYSER__ */
 
 #endif	/* TESLA_H */
 
