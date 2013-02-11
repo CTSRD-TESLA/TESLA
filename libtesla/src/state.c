@@ -232,6 +232,8 @@ void
 tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip,
 		  register_t expected_state, register_t next_state)
 {
+	assert(tsp != NULL);
+	assert(tip != NULL);
 
 	if (tsp->ts_handler != NULL) {
 		tsp->ts_handler(tip);

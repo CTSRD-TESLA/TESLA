@@ -81,6 +81,7 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 	if (expected_state == 0) {
 		struct tesla_instance *inst;
 		CHECK(tesla_instance_new, class, key, new_state, &inst);
+		assert(tesla_instance_active(inst));
 
 		DEBUG_PRINT("new    %ld: %tx\n", inst - start, inst->ti_state);
 	} else {
