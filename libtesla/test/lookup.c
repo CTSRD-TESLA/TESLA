@@ -122,7 +122,6 @@ create_instance(struct tesla_class *tclass, struct tesla_instance **instance,
 	check(tesla_instance_new(tclass, &key, 0, instance));
 
 	assert(instance != NULL);
-	tesla_instance_put(tclass, *instance);
 }
 
 int

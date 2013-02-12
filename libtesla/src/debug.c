@@ -58,9 +58,6 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 		("tesla_instance %tx not of class '%s'",
 		 (register_t) instance, tclass->ts_name)
 	       );
-
-	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_unlock(tclass);
 }
 
 void

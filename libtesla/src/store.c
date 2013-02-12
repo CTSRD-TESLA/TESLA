@@ -140,6 +140,9 @@ tesla_class_get(tesla_store *store, u_int id, tesla_class **tclassp,
 	if (tclass->ts_description == NULL)
 		tclass->ts_description = description;
 
+	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
+		tesla_class_global_lock(tclass);
+
 	*tclassp = tclass;
 	return (TESLA_SUCCESS);
 }

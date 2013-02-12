@@ -94,6 +94,9 @@ struct tesla_class;
 /**
  * Retrieve (or create) a @ref tesla_class from a @ref tesla_store.
  *
+ * Once the caller is done with the @ref tesla_class, @ref tesla_class_put
+ * must be called.
+ *
  * @param[in]   store    where the @ref tesla_class is expected to be stored
  * @param[in]   id       a client-generated handle (a small integer, used as
  *                       an index into an array)
@@ -189,20 +192,13 @@ int	tesla_instance_clone(struct tesla_class *tclass,
 int	tesla_instance_find(struct tesla_class *tclass,
 	    const struct tesla_key *key, struct tesla_instance **instance);
 
-/**
- * Once an instance has been queried, it must be "returned" to its
- * tesla_class, which will release synchronisation on the instance.
- */
-void	tesla_instance_put(struct tesla_class *tsp,
-	    struct tesla_instance *tip);
+/** Release resources (e.g., locks) associated with a @ref tesla_class. */
+void	tesla_class_put(struct tesla_class*);
 
 /**
  * This interface releases an instance for reuse; some types of automata will
  * prefer tesla_class_flush(), which clears all instances associated with a
  * particular tesla_class.
- *
- * An instance passed to tesla_instance_destroy() will not require a call to
- * tesla_instance_put().
  */
 void	tesla_instance_destroy(struct tesla_class *tsp,
 	    struct tesla_instance *tip);

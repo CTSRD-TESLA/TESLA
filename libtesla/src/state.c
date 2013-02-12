@@ -56,9 +56,6 @@ tesla_class_init(struct tesla_class *tclass, u_int context, u_int instances)
 #endif
 
 	tclass->ts_scope = context;
-	if (context == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_lock_init(tclass);
-
 	tclass->ts_table = tesla_malloc(
 		sizeof(struct tesla_table)
 		+ instances * sizeof(struct tesla_instance)
@@ -189,9 +186,6 @@ tesla_instance_find(struct tesla_class *tclass, const struct tesla_key *pattern,
 	struct tesla_instance *instance;
 	u_int i;
 
-	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_lock(tclass);
-
 	struct tesla_table *ttp = tclass->ts_table;
 	assert(ttp != NULL);
 	tesla_assert(ttp->tt_length != 0, "Uninitialized tesla_table");
@@ -207,9 +201,6 @@ tesla_instance_find(struct tesla_class *tclass, const struct tesla_key *pattern,
 		}
 	}
 
-	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_unlock(tclass);
-
 	if (*out == NULL)
 		return (TESLA_ERROR_ENOENT);
 
@@ -217,12 +208,8 @@ tesla_instance_find(struct tesla_class *tclass, const struct tesla_key *pattern,
 }
 
 void
-tesla_instance_put(struct tesla_class *tsp, struct tesla_instance *tip)
+tesla_class_put(struct tesla_class *tsp)
 {
-#ifdef DEBUG
-	assert_instanceof(tip, tsp);
-#endif
-
 	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
 		tesla_class_global_unlock(tsp);
 	/* No action required for TESLA_SCOPE_PERTHREAD. */

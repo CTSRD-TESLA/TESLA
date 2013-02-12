@@ -67,6 +67,7 @@ void
 tesla_class_global_lock(struct tesla_class *tsp)
 {
 
+	assert(tsp->ts_scope == TESLA_SCOPE_GLOBAL);
 	tesla_lock(&tsp->ts_lock);
 }
 
@@ -99,7 +100,6 @@ void
 tesla_class_global_flush(struct tesla_class *tsp)
 {
 
-	tesla_class_global_lock(tsp);
 	bzero(&tsp->ts_table->tt_instances,
 	    sizeof(struct tesla_instance) * tsp->ts_table->tt_length);
 	tsp->ts_table->tt_free = tsp->ts_table->tt_length;

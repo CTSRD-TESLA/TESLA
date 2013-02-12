@@ -66,9 +66,6 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
 
-	if (class->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_lock(class);
-
 	struct tesla_table *table = class->ts_table;
 	struct tesla_instance *start = table->tt_instances;
 
@@ -158,8 +155,7 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 	DEBUG_PRINT("\n====\n\n");
 #endif
 
-	if (class->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_unlock(class);
+	tesla_class_put(class);
 
 	return (TESLA_SUCCESS);
 }
