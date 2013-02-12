@@ -211,12 +211,17 @@ MALLOC_DECLARE(M_TESLA);
 #endif
 
 /*
- * Interfaces to global state management.
+ * Context-specific automata management:
  */
-void	tesla_class_global_lock_init(struct tesla_class *tsp);
-void	tesla_class_global_lock_destroy(struct tesla_class *tsp);
-void	tesla_class_global_lock(struct tesla_class *tsp);
-void	tesla_class_global_unlock(struct tesla_class *tsp);
+int	tesla_class_global_postinit(struct tesla_class*);
+void	tesla_class_global_acquire(struct tesla_class*);
+void	tesla_class_global_release(struct tesla_class*);
+void	tesla_class_global_destroy(struct tesla_class*);
+
+int	tesla_class_perthread_postinit(struct tesla_class*c);
+void	tesla_class_perthread_acquire(struct tesla_class*);
+void	tesla_class_perthread_release(struct tesla_class*);
+void	tesla_class_perthread_destroy(struct tesla_class*);
 
 /*
  * Debug helpers.

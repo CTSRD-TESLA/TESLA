@@ -32,6 +32,42 @@
 
 #include "tesla_internal.h"
 
+static void	tesla_class_global_lock_init(struct tesla_class *tsp);
+static void	tesla_class_global_lock_destroy(struct tesla_class *tsp);
+
+int
+tesla_class_global_postinit(struct tesla_class *tsp)
+{
+
+	assert(tsp->ts_scope == TESLA_SCOPE_GLOBAL);
+	tesla_class_global_lock_init(tsp);
+	return (TESLA_SUCCESS);
+}
+
+void
+tesla_class_global_acquire(struct tesla_class *tsp)
+{
+
+	assert(tsp->ts_scope == TESLA_SCOPE_GLOBAL);
+	tesla_lock(&tsp->ts_lock);
+}
+
+void
+tesla_class_global_release(struct tesla_class *tsp)
+{
+
+	assert(tsp->ts_scope == TESLA_SCOPE_GLOBAL);
+	tesla_unlock(&tsp->ts_lock);
+}
+
+void
+tesla_class_global_destroy(struct tesla_class *tsp)
+{
+
+	tesla_class_global_lock_destroy(tsp);
+}
+
+
 /*
  * Currently, this serialises all automata associated with a globally-scoped
  * assertion.  This is undesirable, and we should think about something more
@@ -61,47 +97,4 @@ tesla_class_global_lock_destroy(struct tesla_class *tsp)
 	__debug int error = pthread_mutex_destroy(&tsp->ts_lock);
 	assert(error == 0);
 #endif
-}
-
-void
-tesla_class_global_lock(struct tesla_class *tsp)
-{
-
-	assert(tsp->ts_scope == TESLA_SCOPE_GLOBAL);
-	tesla_lock(&tsp->ts_lock);
-}
-
-void
-tesla_class_global_unlock(struct tesla_class *tsp)
-{
-
-	assert(tsp->ts_scope == TESLA_SCOPE_GLOBAL);
-	tesla_unlock(&tsp->ts_lock);
-}
-
-int
-tesla_class_global_new(struct tesla_class *tsp)
-{
-
-	tesla_class_global_lock_init(tsp);
-	tsp->ts_table->tt_length = tsp->ts_limit;
-	tsp->ts_table->tt_free = tsp->ts_limit;
-	return (TESLA_SUCCESS);
-}
-
-void
-tesla_class_global_destroy(struct tesla_class *tsp)
-{
-
-	tesla_class_global_lock_destroy(tsp);
-}
-
-void
-tesla_class_global_flush(struct tesla_class *tsp)
-{
-
-	bzero(&tsp->ts_table->tt_instances,
-	    sizeof(struct tesla_instance) * tsp->ts_table->tt_length);
-	tsp->ts_table->tt_free = tsp->ts_table->tt_length;
-	tesla_class_global_unlock(tsp);
 }

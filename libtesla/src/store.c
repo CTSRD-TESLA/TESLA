@@ -44,6 +44,8 @@ struct tesla_store global_store = { .length = 0 };
 pthread_key_t	pthread_key();
 #endif
 
+static void	tesla_class_acquire(tesla_class*);
+
 static int	tesla_store_init(tesla_store*,
 		u_int context, u_int classes, u_int instances);
 
@@ -140,13 +142,25 @@ tesla_class_get(tesla_store *store, u_int id, tesla_class **tclassp,
 	if (tclass->ts_description == NULL)
 		tclass->ts_description = description;
 
-	if (tclass->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_lock(tclass);
+	tesla_class_acquire(tclass);
 
 	*tclassp = tclass;
 	return (TESLA_SUCCESS);
 }
 
+void
+tesla_class_acquire(tesla_class *class) {
+	switch (class->ts_scope) {
+	case TESLA_SCOPE_GLOBAL:
+		return tesla_class_global_acquire(class);
+
+	case TESLA_SCOPE_PERTHREAD:
+		return tesla_class_perthread_acquire(class);
+
+	default:
+		assert(0 && "unhandled TESLA context");
+	}
+}
 
 #ifndef _KERNEL
 pthread_key_t

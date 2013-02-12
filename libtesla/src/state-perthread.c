@@ -298,4 +298,27 @@ tesla_class_perthread_gettable(struct tesla_class *tsp,
 	return (TESLA_SUCCESS);
 }
 
+#else  /* !_KERNEL */
+
+int
+tesla_class_perthread_postinit(struct tesla_class *c)
+{
+	return 0;
+}
+
+void
+tesla_class_perthread_acquire(struct tesla_class *c)
+{
+}
+
+void
+tesla_class_perthread_release(struct tesla_class *c)
+{
+}
+
+void
+tesla_class_perthread_destroy(struct tesla_class *c)
+{
+}
+
 #endif /* _KERNEL */

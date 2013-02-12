@@ -63,7 +63,16 @@ tesla_class_init(struct tesla_class *tclass, u_int context, u_int instances)
 	tclass->ts_table->tt_length = instances;
 	tclass->ts_table->tt_free = instances;
 
-	return (TESLA_SUCCESS);
+	switch (context) {
+	case TESLA_SCOPE_GLOBAL:
+		return tesla_class_global_postinit(tclass);
+
+	case TESLA_SCOPE_PERTHREAD:
+		return tesla_class_perthread_postinit(tclass);
+
+	default:
+		assert(0 && "unhandled TESLA context");
+	}
 }
 
 int
@@ -210,9 +219,16 @@ tesla_instance_find(struct tesla_class *tclass, const struct tesla_key *pattern,
 void
 tesla_class_put(struct tesla_class *tsp)
 {
-	if (tsp->ts_scope == TESLA_SCOPE_GLOBAL)
-		tesla_class_global_unlock(tsp);
-	/* No action required for TESLA_SCOPE_PERTHREAD. */
+	switch (tsp->ts_scope) {
+	case TESLA_SCOPE_GLOBAL:
+		return tesla_class_global_release(tsp);
+
+	case TESLA_SCOPE_PERTHREAD:
+		return tesla_class_perthread_release(tsp);
+
+	default:
+		assert(0 && "unhandled TESLA context");
+	}
 }
 
 void
