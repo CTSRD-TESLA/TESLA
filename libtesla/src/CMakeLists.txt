@@ -1,3 +1,5 @@
+find_package(Threads REQUIRED)
+
 add_library(tesla SHARED
 	debug.c
 	state.c
@@ -8,10 +10,7 @@ add_library(tesla SHARED
 	util.c
 )
 
-find_library(Threads REQUIRED)
-if(CMAKE_USE_PTHREADS_INIT)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_THREAD_LIBS_INIT}")
-endif(CMAKE_USE_PTHREADS_INIT)
+target_link_libraries(tesla ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS tesla DESTINATION lib)
 
