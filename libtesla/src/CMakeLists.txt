@@ -8,5 +8,9 @@ add_library(tesla SHARED
 	util.c
 )
 
+if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
+
 install(TARGETS tesla DESTINATION lib)
 
