@@ -74,6 +74,7 @@ tesla_class_init(struct tesla_class *tclass, u_int context, u_int instances)
 
 	default:
 		assert(0 && "unhandled TESLA context");
+		return (TESLA_ERROR_UNKNOWN);
 	}
 }
 
