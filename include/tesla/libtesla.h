@@ -195,9 +195,12 @@ int	tesla_instance_find(struct tesla_class *tclass,
 /** Release resources (e.g., locks) associated with a @ref tesla_class. */
 void	tesla_class_put(struct tesla_class*);
 
+/** Reset a @ref tesla_class for re-use from a clean state. */
+void	tesla_class_reset(struct tesla_class*);
+
 /**
  * This interface releases an instance for reuse; some types of automata will
- * prefer tesla_class_flush(), which clears all instances associated with a
+ * prefer tesla_class_reset(), which clears all instances associated with a
  * particular tesla_class.
  */
 void	tesla_instance_destroy(struct tesla_class *tsp,

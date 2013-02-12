@@ -60,6 +60,8 @@ tesla_class_init(struct tesla_class *tclass, u_int context, u_int instances)
 		sizeof(struct tesla_table)
 		+ instances * sizeof(struct tesla_instance)
 	);
+
+	tclass->ts_limit = instances;
 	tclass->ts_table->tt_length = instances;
 	tclass->ts_table->tt_free = instances;
 
@@ -225,6 +227,26 @@ tesla_class_put(struct tesla_class *tsp)
 
 	case TESLA_SCOPE_PERTHREAD:
 		return tesla_class_perthread_release(tsp);
+
+	default:
+		assert(0 && "unhandled TESLA context");
+	}
+}
+
+void
+tesla_class_reset(struct tesla_class *c)
+{
+
+	struct tesla_table *t = c->ts_table;
+	bzero(&t->tt_instances, sizeof(struct tesla_instance) * t->tt_length);
+	t->tt_free = t->tt_length;
+
+	switch (c->ts_scope) {
+	case TESLA_SCOPE_GLOBAL:
+		return tesla_class_global_release(c);
+
+	case TESLA_SCOPE_PERTHREAD:
+		return tesla_class_perthread_release(c);
 
 	default:
 		assert(0 && "unhandled TESLA context");
