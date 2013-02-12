@@ -105,6 +105,9 @@ main(int argc, char **argv)
 	       == 0x3F
 	);
 
+	tesla_class_put(glob_automaton);
+	tesla_class_put(thr_automaton);
+
 	return 0;
 }
 

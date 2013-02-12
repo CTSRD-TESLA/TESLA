@@ -59,6 +59,8 @@ check_store(struct tesla_store *store)
 		assert(instance->ti_state == 2 * i + 42);
 		assert(instance->ti_key.tk_mask == 1);
 		assert(instance->ti_key.tk_keys[0] == 42 + i);
+
+		tesla_class_put(classes[i]);
 	}
 
 	void *JUNK = (void*) 0xF00BA5;
