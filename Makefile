@@ -1,6 +1,16 @@
 .PHONY: build clean cmake test
 .SILENT:
 
+# Variables that can be overriden with environment variables.
+BUILD_TYPE?=Debug
+
+CC?=clang
+CXX?=clang++
+
+CFLAGS?=-fcolor-diagnostics
+CXXFLAGS?=-fcolor-diagnostics
+
+
 all: build test
 	cd strawman && ${MAKE}
 
@@ -25,9 +35,9 @@ build/CMakeCache.txt: CMakeLists.txt
 	mkdir -p build
 	cd build && cmake \
 		-G Ninja \
-		-DCMAKE_C_FLAGS=-fcolor-diagnostics \
-		-DCMAKE_CXX_FLAGS=-fcolor-diagnostics \
-		-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
-		-DCMAKE_BUILD_TYPE=Debug \
+		-DCMAKE_C_FLAGS="${CFLAGS}" \
+		-DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
+		-DCMAKE_C_COMPILER=${CC} -DCMAKE_CXX_COMPILER=${CXX} \
+		-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 		..
 
