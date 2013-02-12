@@ -160,19 +160,19 @@ pthread_key()
 	if (key_initialised) return key;
 
 	int error __debug = pthread_mutex_lock(&lock);
-	assert(error == 0);
+	assert(error == 0 && "failed to lock pthread key mutex");
 
 	// Now that we're in the critical section, check again to make sure we
 	// initialise the key twice.
 	if (key_initialised) return key;
 
 	error = pthread_key_create(&key, NULL);
-	assert(error == 0);
+	assert(error == 0 && "failed to create pthread_key_t");
 
 	key_initialised = 1;
 
 	error = pthread_mutex_unlock(&lock);
-	assert(error == 0);
+	assert(error == 0 && "failed to unlock pthread key mutex");
 
 	return key;
 }
