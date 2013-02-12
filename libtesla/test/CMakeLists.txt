@@ -25,7 +25,7 @@ foreach(test ${TESTS})
 	target_link_libraries(${test} tesla)
 
 	if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
-		target_link_libraries(${test} execinfo)
+		target_link_libraries(${test} ${EXECINFO_LIBRARY})
 	endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 endforeach(test)
 
