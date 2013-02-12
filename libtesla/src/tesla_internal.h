@@ -129,8 +129,11 @@ int	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
 #define tesla_malloc(len) calloc(1, len)
 #define tesla_free(x) free(x)
 
-#define tesla_lock(l) assert(0 == pthread_mutex_lock(l))
-#define tesla_unlock(l) assert(0 == pthread_mutex_unlock(l))
+#define tesla_lock(l) \
+	do { __debug int err = pthread_mutex_lock(l); assert(err == 0); } while(0)
+
+#define tesla_unlock(l) \
+	do { __debug int err = pthread_mutex_unlock(l); assert(err == 0); } while(0)
 
 #endif
 
