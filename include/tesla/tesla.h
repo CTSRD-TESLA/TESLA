@@ -52,6 +52,9 @@ void __tesla_inline_assertion(const char *filename, int line, int count,
 		locality, predicate					\
 	)
 
+#define	TESLA_STRUCT_AUTOMATON(fn_name) \
+	void *__tesla_struct_annotation_##fn_name;
+
 #define	TESLA_GLOBAL(pred)	TESLA_ASSERT(__tesla_global, pred)
 #define	TESLA_PERTHREAD(pred)	TESLA_ASSERT(__tesla_perthread, pred)
 
@@ -127,6 +130,7 @@ void* __tesla_any();
  * we can translate into instrumentation calls.
  */
 
+#define	TESLA_STRUCT_AUTOMATON(fn_name)
 #define	TSEQUENCE(...)		true
 #define	since(...)		true
 #define	before(...)		true
