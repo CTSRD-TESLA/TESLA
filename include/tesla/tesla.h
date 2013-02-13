@@ -69,6 +69,11 @@ extern __tesla_locality *__tesla_perthread;
 #define	TESLA_STRUCT_AUTOMATON(fn_name) \
 	void *__tesla_struct_annotation_##fn_name;
 
+#define	automaton(name, ...) \
+	bool __tesla_automaton_description_##name(__VA_ARGS__)
+
+#define	done return true
+
 /** A sequence of TESLA events. Can be combined with && or ||. */
 bool __tesla_sequence(__tesla_event, ...);
 #define	TSEQUENCE(...)	__tesla_sequence(__tesla_ignore, __VA_ARGS__)

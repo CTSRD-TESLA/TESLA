@@ -180,8 +180,7 @@ bool	active_close(struct tcpcb*);
 bool	established(struct tcpcb*);
 bool	tcp_free(struct tcpcb*);
 
-bool
-active_close(struct tcpcb *tp)
+automaton(active_close, struct tcpcb *tp)
 {
 	tp->t_state = TCPS_FIN_WAIT_1;
 
@@ -198,11 +197,10 @@ active_close(struct tcpcb *tp)
 	tp->t_state = TCPS_CLOSED;
 	tcp_free(tp);
 
-	return true;
+	done;
 }
 
-bool
-established(struct tcpcb *tp)
+automaton(established, struct tcpcb *tp)
 {
 	tp->t_state = TCPS_ESTABLISHED;
 
@@ -216,11 +214,10 @@ established(struct tcpcb *tp)
 
 	tcp_free(tp);
 
-	return true;
+	done;
 }
 
-bool
-my_tcpcb_assertion(struct tcpcb *tp)
+automaton(my_tcpcb_assertion, struct tcpcb *tp)
 {
 	tp->t_state = TCPS_CLOSED;
 
@@ -244,7 +241,7 @@ my_tcpcb_assertion(struct tcpcb *tp)
 		tcp_free(tp)
 	);
 
-	return true;
+	done;
 }
 
 #endif
