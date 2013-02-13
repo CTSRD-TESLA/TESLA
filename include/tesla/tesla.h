@@ -96,6 +96,9 @@ __tesla_event __tesla_now;
 /** The result of a function call (e.g., foo(x) == y). */
 __tesla_event __tesla_call(bool);
 
+__tesla_event __tesla_optional(__tesla_event, ...);
+#define	optional(...)	__tesla_optional(__tesla_ignore, __VA_ARGS__)
+
 #define	ANY_REP	INT_MAX
 
 /** A repetition of events — this allows globby "?", "*", "+", etc. */
