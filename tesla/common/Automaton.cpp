@@ -227,9 +227,8 @@ State* NFA::Parse(const Event& Ev, State& Start,
   case Event::NOW:
     return Parse(Ev.now(), Start, States, Transitions);
 
-  case Event::FUNCTION: {
+  case Event::FUNCTION:
     return Parse(Ev.function(), Start, States, Transitions);
-  }
   }
 }
 
