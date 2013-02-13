@@ -1,4 +1,4 @@
-.PHONY: clean test
+.PHONY: build clean debug release test
 .SILENT:
 
 # Variables that can be overriden with environment variables.
@@ -14,8 +14,10 @@ CMAKE_FLAGS=-G Ninja \
 	-DCMAKE_C_COMPILER=${CC} -DCMAKE_CXX_COMPILER=${CXX}
 
 
-all: Debug Release test
+all: build test
 	cd strawman && ${MAKE}
+
+build: debug release
 
 clean:
 	(cd Debug && ninja -t clean) || rm -rf Debug
@@ -23,10 +25,10 @@ clean:
 	rm -rf doxygen
 	cd strawman && ${MAKE} clean
 
-Debug: Debug/CMakeCache.txt
+debug: Debug/CMakeCache.txt
 	cd Debug && ninja
 
-Release: Release/CMakeCache.txt
+release: Release/CMakeCache.txt
 	cd Release && ninja
 
 doc: Doxyfile
