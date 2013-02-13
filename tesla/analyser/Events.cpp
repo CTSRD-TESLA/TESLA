@@ -50,10 +50,22 @@ bool ParseEvent(Event *Ev, Expr *E, Assertion *A,
   E = E->IgnoreImplicit();
 
   if (auto Ref = dyn_cast<DeclRefExpr>(E)) {
-    // Is this a "now" event?
     auto D = Ref->getDecl();
     assert(D);
-    if (D->getName() != "__tesla_now") return false;
+
+    // The __tesla_ignore "event" helps TESLA assertions look like ISO C.
+    if (D->getName() == "__tesla_ignore") {
+      Ev->set_type(Event::IGNORE);
+      return true;
+    }
+
+    // The only other static __tesla_event is the "now" event.
+    if (D->getName() != "__tesla_now") {
+      Report("TESLA static reference must be __tesla_ignore or __tesla_now",
+             E->getLocStart(), Ctx)
+        << E->getSourceRange();
+      return false;
+    }
 
     Ev->set_type(Event::NOW);
     *Ev->mutable_now()->mutable_location() = A->location();

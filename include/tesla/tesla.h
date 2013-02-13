@@ -69,9 +69,12 @@ void __tesla_inline_assertion(const char *filename, int line, int count,
 extern __tesla_locality *__tesla_global;
 extern __tesla_locality *__tesla_perthread;
 
+#define	TESLA_STRUCT_AUTOMATON(fn_name) \
+	void *__tesla_struct_annotation_##fn_name;
+
 /** A sequence of TESLA events. Can be combined with && or ||. */
 bool __tesla_sequence(__tesla_event, ...);
-#define	TSEQUENCE(x, ...)	__tesla_sequence(x, __VA_ARGS__)
+#define	TSEQUENCE(...)	__tesla_sequence(__tesla_ignore, __VA_ARGS__)
 
 
 /* TESLA events: */
@@ -83,6 +86,9 @@ __tesla_event __tesla_entered(void*);
 __tesla_event __tesla_leaving(void*);
 #define	leaving(f)	__tesla_leaving(f)
 
+/** Nothing to see here, move along... */
+struct __tesla_event __tesla_ignore;
+
 /** Reaching the inline assertion. */
 __tesla_event __tesla_now;
 #define	TESLA_NOW &__tesla_now
@@ -93,7 +99,7 @@ __tesla_event __tesla_call(bool);
 #define	ANY_REP	INT_MAX
 
 /** A repetition of events — this allows globby "?", "*", "+", etc. */
-__tesla_event __tesla_repeat(__tesla_count, __tesla_count, __tesla_event, ...);
+__tesla_event __tesla_repeat(__tesla_count, __tesla_count, ...);
 #define	REPEAT(m, n, ...)	__tesla_repeat(m, n, __VA_ARGS__)
 #define	UPTO(n, ...)		__tesla_repeat(0, n, __VA_ARGS__)
 #define	ATLEAST(n, ...)		__tesla_repeat(n, ANY_REP, __VA_ARGS__)

@@ -96,7 +96,7 @@ message Sequence {
  * This is a union type.
  */
 message Event {
-  enum Type { REPETITION = 1; NOW = 2; FUNCTION = 3; }
+  enum Type { REPETITION = 1; NOW = 2; FUNCTION = 3; IGNORE = 4; }
   required Type type = 1;
 
   optional Repetition repetition = 2;
