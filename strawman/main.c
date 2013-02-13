@@ -29,9 +29,9 @@
  */
 
 #include "demo.h"
-#include "tesla.h"
 
 #include <stdio.h>
+#include <tesla.h>
 
 #ifndef REVISION
 #error Must -D REVISION=\"something\"

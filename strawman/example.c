@@ -29,7 +29,8 @@
  */
 
 #include "demo.h"
-#include "tesla.h"
+
+#include <tesla.h>
 
 #define previously_in_syscall(x)    since(entered(example_syscall), x)
 #define eventually_in_syscall(x)    before(leaving(example_syscall), x)
