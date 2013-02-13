@@ -1,43 +1,47 @@
-.PHONY: build clean cmake test
+.PHONY: clean test
 .SILENT:
 
 # Variables that can be overriden with environment variables.
-BUILD_TYPE?=Debug
-
 CC?=clang
 CXX?=clang++
 
 CFLAGS?=-fcolor-diagnostics
 CXXFLAGS?=-fcolor-diagnostics
 
+CMAKE_FLAGS=-G Ninja \
+	-DCMAKE_C_FLAGS="${CFLAGS}" \
+	-DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
+	-DCMAKE_C_COMPILER=${CC} -DCMAKE_CXX_COMPILER=${CXX}
 
-all: build test
+
+all: Debug Release test
 	cd strawman && ${MAKE}
 
-build: cmake
-	cd build && ninja
-
 clean:
-	(cd build && ninja -t clean) || rm -rf build
+	(cd Debug && ninja -t clean) || rm -rf Debug
+	(cd Release && ninja -t clean) || rm -rf Release
 	rm -rf doxygen
 	cd strawman && ${MAKE} clean
 
-cmake: build/CMakeCache.txt
+Debug: Debug/CMakeCache.txt
+	cd Debug && ninja
+
+Release: Release/CMakeCache.txt
+	cd Release && ninja
 
 doc: Doxyfile
 	mkdir -p doxygen
 	doxygen $?
 
-test: build
-	./run-tests
+test: Debug Release
+	BUILD_DIR=Debug ./run-tests
+	BUILD_DIR=Release ./run-tests
 
-build/CMakeCache.txt: CMakeLists.txt
-	mkdir -p build
-	cd build && cmake \
-		-G Ninja \
-		-DCMAKE_C_FLAGS="${CFLAGS}" \
-		-DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
-		-DCMAKE_C_COMPILER=${CC} -DCMAKE_CXX_COMPILER=${CXX} \
-		-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-		..
+Debug/CMakeCache.txt:
+	mkdir -p Debug
+	cd Debug && cmake ${CMAKE_FLAGS} -DCMAKE_BUILD_TYPE=Debug ..
+
+Release/CMakeCache.txt:
+	mkdir -p Release
+	cd Release && cmake ${CMAKE_FLAGS} -DCMAKE_BUILD_TYPE=Release ..
 
