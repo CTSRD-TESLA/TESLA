@@ -95,5 +95,5 @@ ${BIN}: ${OBJ}
 # Compile a GraphViz .dot file to PDF.
 .dot.pdf:
 	@echo "[DOT]     $^ > $@"
-	${DOT} -Tpdf -o $@ $<
+	${DOT} -Tpdf -O $<
 
