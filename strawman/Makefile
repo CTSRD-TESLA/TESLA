@@ -43,7 +43,8 @@ OBJ=$(patsubst %,%.o,${INSTR})
 all: tesla ${PDF} ${BIN}
 
 clean:
-	rm -f ${PDF} ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${DOTFILE} ${OBJ} *.tesla
+	rm -f ${PDF} ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} *.tesla \
+	${DOTFILE} *.pdf
 
 tesla:
 	cd .. && ${MAKE} build
