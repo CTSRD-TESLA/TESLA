@@ -4,8 +4,6 @@
 ; Writing raw IR like this allows us to construct pathological cases for
 ; testing purposes Clang doesn't always produce.
 
-target triple = "x86_64-apple-macosx10.8.0"
-
 define i32 @some_helper(i32 %op) {
   %1 = icmp slt i32 %op, 10
   br i1 %1, label %2, label %3
