@@ -154,7 +154,7 @@ State* NFA::Parse(const Expression& Expr, State& Start,
 
   switch (Expr.type()) {
   default:
-    assert(false && "unhandled Expression::Type");
+    llvm_unreachable("unhandled Expression::Type");
 
   case Expression::BOOLEAN_EXPR:
     return Parse(Expr.booleanexpr(), Start, States, Transitions);
@@ -162,8 +162,6 @@ State* NFA::Parse(const Expression& Expr, State& Start,
   case Expression::SEQUENCE:
     return Parse(Expr.sequence(), Start, States, Transitions);
   }
-
-  llvm_unreachable("fell through Expression::Type switch");
 }
 
 State* NFA::Parse(const BooleanExpr& Expr, State& Branch,
@@ -183,7 +181,7 @@ State* NFA::Parse(const BooleanExpr& Expr, State& Branch,
 
   switch (Expr.operation()) {
   default:
-    assert(false && "unhandled BooleanExpr::Operation");
+    llvm_unreachable("unhandled BooleanExpr::Operation");
 
   case BooleanExpr::BE_Or:
     Transition::Create(*LHSFinal, *Join, Transitions);
@@ -201,8 +199,6 @@ State* NFA::Parse(const BooleanExpr& Expr, State& Branch,
     // TODO: ???
 #endif
   }
-
-  llvm_unreachable("fell through BooleanExpr::Operation switch");
 }
 
 State* NFA::Parse(const Sequence& Seq, State& Start,
@@ -220,7 +216,7 @@ State* NFA::Parse(const Event& Ev, State& Start,
 
   switch (Ev.type()) {
   default:
-    assert(false && "unhandled Event::Type");
+    llvm_unreachable("unhandled Event::Type");
 
   case Event::IGNORE:
     return Ignore(Start, States, Transitions);
@@ -235,8 +231,6 @@ State* NFA::Parse(const Event& Ev, State& Start,
     return Parse(Ev.function(), Start, States, Transitions);
   }
   }
-
-  llvm_unreachable("fell through Event::Type switch");
 }
 
 State* NFA::Ignore(State& Start, StateVector& States,
