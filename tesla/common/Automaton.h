@@ -158,6 +158,9 @@ private:
   static State* Parse(const Event&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 
+  static State* Ignore(State& InitialState, StateVector& States,
+                      TransitionVector& Transitions);
+
   static State* Parse(const Repetition&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 

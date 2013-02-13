@@ -134,7 +134,10 @@ vector<FunctionEvent> Manifest::FunctionsToInstrument(const Event& Ev) {
   switch (Ev.type()) {
       default: assert(false && "Unhandled event type");
 
-      case Event::NOW:                break;    // not a function, do nothing
+      // not a function, do nothing:
+      case Event::IGNORE:             break;
+      case Event::NOW:                break;
+
       case Event::FUNCTION:
         FnEvents.push_back(Ev.function());
         break;

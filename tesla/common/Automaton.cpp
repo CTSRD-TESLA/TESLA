@@ -222,6 +222,9 @@ State* NFA::Parse(const Event& Ev, State& Start,
   default:
     assert(false && "unhandled Event::Type");
 
+  case Event::IGNORE:
+    return Ignore(Start, States, Transitions);
+
   case Event::REPETITION:
     return Parse(Ev.repetition(), Start, States, Transitions);
 
@@ -234,6 +237,14 @@ State* NFA::Parse(const Event& Ev, State& Start,
   }
 
   llvm_unreachable("fell through Event::Type switch");
+}
+
+State* NFA::Ignore(State& Start, StateVector& States,
+                   TransitionVector& Transitions) {
+
+  State *Final = State::Create(States);
+  Transition::Create(Start, *Final, Transitions);
+  return Final;
 }
 
 State* NFA::Parse(const Repetition& Rep, State& Start,
