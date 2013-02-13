@@ -29,6 +29,7 @@
  */
 
 #include "demo.h"
+#include "tcp.h"
 
 #include <tesla.h>
 
