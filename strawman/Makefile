@@ -13,9 +13,12 @@ TOOLS=${BUILD_DIR}/tesla/tools
 GRAPH=${TOOLS}/graph-manifest/graph-manifest
 LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 
+TRIPLE=$(shell ${TOOLS}/get-triple/get-triple)
+
 CC=clang
 DOT=dot
 LINK=clang
+LLC=llc -mtriple=${TRIPLE} -filetype=obj
 
 DIFF=$(shell which colordiff || echo "diff")
 VERBOSE?=false
@@ -90,7 +93,7 @@ ${BIN}: ${OBJ}
 # Compile IR to object code.
 .ll.o:
 	@echo "[LLC]     $^ > $@"
-	${CC} -c $< -o $@
+	${LLC} $< -o $@
 
 # Compile a GraphViz .dot file to PDF.
 .dot.pdf:
