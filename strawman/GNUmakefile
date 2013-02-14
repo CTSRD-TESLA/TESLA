@@ -49,7 +49,7 @@ clean:
 	${DOTFILE} *.pdf
 
 tesla:
-	cd .. && ${MAKE} Debug Release
+	cd .. && ${MAKE} debug release
 
 run-tesla: analyse instrument
 
