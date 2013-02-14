@@ -1,4 +1,4 @@
-.PHONY: build clean debug release test
+.PHONY: build debug release clean scrub test
 .SILENT:
 
 # Variables that can be overriden with environment variables.
@@ -25,6 +25,10 @@ clean:
 	(cd Debug && ninja -t clean) || rm -rf Debug
 	(cd Release && ninja -t clean) || rm -rf Release
 	rm -rf doxygen
+	cd strawman && ${MAKE} clean
+
+scrub:
+	rm -rf Debug Release doxygen
 	cd strawman && ${MAKE} clean
 
 debug: Debug/CMakeCache.txt
