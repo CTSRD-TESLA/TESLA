@@ -9,8 +9,8 @@
 BUILD_TYPE?=Debug
 
 BUILD_DIR=../${BUILD_TYPE}
-ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyse
-INSTRUMENTER= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
+ANALYSE=${BUILD_DIR}/tesla/analyser/tesla-analyse
+INSTRUMENT= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
 TOOLS=${BUILD_DIR}/tesla/tools
 GRAPH=${TOOLS}/graph/tesla-graph
 LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
@@ -76,7 +76,7 @@ ${BIN}: ${OBJ}
 # Run the TESLA analyser over C code.
 .c.tesla: tesla
 	@echo "[TESLA]   $^ > $@"
-	${ANALYSER} $< -o $@ -- ${CFLAGS} || rm -f $@
+	${ANALYSE} $< -o $@ -- ${CFLAGS} || rm -f $@
 	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
 	            && cat $@ && echo "===== end of TESLA analysis =====" \
 	            || exit 0
@@ -84,7 +84,7 @@ ${BIN}: ${OBJ}
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll .tesla
 	@echo "[TESLA]   $^ > $@"
-	${INSTRUMENTER} -tesla-manifest .tesla $< -o $@
+	${INSTRUMENT} -tesla-manifest .tesla $< -o $@
 	# We *expect* diff to produce an output!
 	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 
