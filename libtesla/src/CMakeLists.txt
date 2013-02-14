@@ -1,4 +1,5 @@
-find_package(Threads REQUIRED)
+set(CMAKE_THREAD_PREFER_PTHREAD)
+include(FindThreads)
 
 add_library(tesla SHARED
 	debug.c
@@ -11,6 +12,7 @@ add_library(tesla SHARED
 )
 
 target_link_libraries(tesla ${CMAKE_THREAD_LIBS_INIT})
+
 
 install(TARGETS tesla DESTINATION lib)
 

@@ -5,10 +5,25 @@ find_package(LLVM REQUIRED)
 
 include(AddLLVM)
 
+# Add the include paths for an uninstalled LLVM in the path.
+EXEC_PROGRAM(llvm-config
+		ARGS --src-root
+		OUTPUT_VARIABLE LLVM_SRC)
+EXEC_PROGRAM(llvm-config
+		ARGS --obj-root
+		OUTPUT_VARIABLE LLVM_OBJ)
+include_directories(
+	${LLVM_INCLUDE_DIRS}
+	"${LLVM_SRC}/include/"
+	"${LLVM_SRC}/tools/clang/include/"
+	"${LLVM_OBJ}/include/"
+	"${LLVM_OBJ}/tools/clang/include/")
+link_directories(${LLVM_LIBRARY_DIRS} "${LLVM_OBJ}/lib/")
+
+
+
 add_definitions(${LLVM_DEFINITIONS})
 add_definitions(-fvisibility-inlines-hidden)
-include_directories(${LLVM_INCLUDE_DIRS})
-link_directories(${LLVM_LIBRARY_DIRS})
 
 # The LLVM CMake files are a little bit broken; see:
 #   http://lists.cs.uiuc.edu/pipermail/llvmdev/2012-July/051545.html
