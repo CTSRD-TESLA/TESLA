@@ -15,7 +15,7 @@ TOOLS=${BUILD_DIR}/tesla/tools
 GRAPH=${TOOLS}/graph/tesla-graph
 LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 
-TRIPLE=$(shell ${TOOLS}/get-triple/get-triple)
+TRIPLE=$(shell ${TOOLS}/llvm-triple/llvm-triple)
 
 CC=clang
 DOT=dot
