@@ -1,5 +1,5 @@
 .PHONY: clean run-tesla tesla
-.SUFFIXES: .c .dot .ll .pdf .tesla
+.SUFFIXES: .c .dot .ll .tesla
 
 # Hold onto all LLVM IR files for manual inspection.
 .PRECIOUS: %.ll %.instr.ll
@@ -18,7 +18,6 @@ LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 TRIPLE=$(shell ${TOOLS}/llvm-triple/llvm-triple)
 
 CC=clang
-DOT=dot
 LINK=clang
 LLC=llc -mtriple=${TRIPLE} -filetype=obj
 
@@ -27,9 +26,8 @@ VERBOSE?=false
 
 CFLAGS=-I ../include/tesla -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
 
-PDF=tesla.pdf
 BIN=demo
-DOTFILE=$(PDF:.pdf=.dot)
+DOTFILE=tesla.dot
 EXAMPLE=example
 
 C=example support main
@@ -42,11 +40,10 @@ INSTRUMENTED_IR=$(patsubst %,%.ll,${INSTR})
 
 OBJ=$(patsubst %,%.o,${INSTR})
 
-all: tesla ${PDF} ${BIN}
+all: tesla tesla.dot ${BIN}
 
 clean:
-	rm -f ${PDF} ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} *.tesla \
-	${DOTFILE} *.pdf
+	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} ${DOTFILE} *.tesla
 
 tesla:
 	cd .. && ${MAKE} debug release
@@ -99,9 +96,4 @@ ${BIN}: ${OBJ}
 .ll.o:
 	@echo "[LLC]     $^ > $@"
 	${LLC} $< -o $@
-
-# Compile a GraphViz .dot file to PDF.
-.dot.pdf:
-	@echo "[DOT]     $^ > $@"
-	${DOT} -Tpdf -O $<
 
