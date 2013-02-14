@@ -62,6 +62,8 @@ instrument: tesla
 .tesla: ${TESLA}
 	@echo "[CAT]     $^ > $@"
 	cat $^ > $@
+	# temporary workaround for ClangTool irritant:
+	sed -i.backup "s@`pwd`/@@" .tesla && rm .tesla.backup
 
 # Graph the .tesla file.
 ${DOTFILE}: .tesla
