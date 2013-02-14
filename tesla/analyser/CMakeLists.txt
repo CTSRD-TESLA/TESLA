@@ -25,3 +25,5 @@ endforeach(i)
 # Instead, we need to pass in ${LLVM_LIBS} explicitly.
 target_link_libraries(tesla-analyse ${LLVM_LIBS})
 
+install(TARGETS tesla-analyse DESTINATION bin)
+

@@ -19,3 +19,5 @@ target_link_libraries(tesla-instrument
 	TeslaCommon
 )
 
+install(TARGETS tesla-instrument DESTINATION bin)
+
