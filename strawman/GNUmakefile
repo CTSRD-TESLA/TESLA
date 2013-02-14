@@ -9,7 +9,7 @@
 BUILD_TYPE?=Debug
 
 BUILD_DIR=../${BUILD_TYPE}
-ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyser
+ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyse
 INSTRUMENTER= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
 TOOLS=${BUILD_DIR}/tesla/tools
 GRAPH=${TOOLS}/graph/tesla-graph
