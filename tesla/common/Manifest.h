@@ -85,7 +85,7 @@ public:
   static llvm::StringRef defaultLocation();
 
 private:
-  Manifest(llvm::ArrayRef<Assertion*> Assertions);
+  Manifest(llvm::ArrayRef<Assertion*> Assertions, llvm::raw_ostream& Errors);
 
   //! Returns a copy of all events named in this manifest.
   std::vector<Event> Events();
@@ -93,6 +93,7 @@ private:
   //! Extract all @ref FunctionEvent instances from a single @ref Event.
   std::vector<FunctionEvent> FunctionsToInstrument(const Event& Ev);
 
+  llvm::raw_ostream& Errors;      //!< Where to complain about errors.
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
   //! Memory to store automata in.

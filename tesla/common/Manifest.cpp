@@ -65,12 +65,20 @@ const Automaton* Manifest::FindAutomaton(const Location& Loc,
                                          Automaton::Type T) const {
   size_t ID = 0;
   for (Assertion *A : Assertions) {
+    Errors << "Candidate: " << ShortName(A->location()) << "\n";
     if (A->location() == Loc)
       return Automaton::Create(A, ID, T);
 
     else
       ID++;
   }
+
+  Errors
+    << "Manifest contains no assertion from " + ShortName(Loc)
+    << "; candiates are:\n";
+
+  for (Assertion *A : Assertions)
+    Errors << " - " << ShortName(A->location()) << "\n";
 
   return NULL;
 }
@@ -79,8 +87,8 @@ const Automaton* Manifest::ParseAutomaton(size_t ID, Automaton::Type T) const{
   return Automaton::Create(Assertions[ID], ID, T);
 }
 
-Manifest::Manifest(ArrayRef<Assertion*> Assertions)
-  : Storage(new Assertion*[Assertions.size()]),
+Manifest::Manifest(ArrayRef<Assertion*> Assertions, raw_ostream& Errors)
+  : Errors(Errors), Storage(new Assertion*[Assertions.size()]),
     Assertions(Storage.get(), Assertions.size())
 {
   for (size_t i = 0; i < Assertions.size(); i++)
@@ -123,7 +131,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     Pos = End + SEP.length();
   }
 
-  return new Manifest(Assertions);
+  return new Manifest(Assertions, ErrorStream);
 }
 
 StringRef Manifest::defaultLocation() { return ManifestName; }
