@@ -5,8 +5,8 @@
 CC?=clang
 CXX?=clang++
 
-CFLAGS?=-fcolor-diagnostics
-CXXFLAGS?=-fcolor-diagnostics
+CFLAGS+=-fcolor-diagnostics
+CXXFLAGS+=-fcolor-diagnostics
 
 CMAKE_FLAGS=-G Ninja \
 	-DCMAKE_C_FLAGS="${CFLAGS}" \
