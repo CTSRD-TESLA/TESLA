@@ -79,14 +79,14 @@ main(int argc, char *argv[]) {
   switch (UserCommand) {
   case ListFunctions:
     for (auto& Fn : Manifest->FunctionsToInstrument()) {
-      out << "Fn: " << Fn.ShortDebugString() << "\n";
-      if (Fn.context() != FunctionEvent::Callee) continue;
-
       assert(Fn.has_function());
       auto Name = Fn.function().name();
 
-      assert(Fn.has_direction());
-      out << "Direction: " << Fn.direction() << "\n";
+      out
+        << "Function '" << Name << "':\n  "
+        << Fn.ShortDebugString()
+        << "\n\n"
+        ;
     }
     break;
   }
