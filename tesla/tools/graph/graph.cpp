@@ -1,5 +1,6 @@
+/** @file  graph.cpp    Tool for graphing TESLA manifests. */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -28,32 +29,43 @@
  * SUCH DAMAGE.
  */
 
+#include "Automaton.h"
 #include "Manifest.h"
+
 #include "tesla.pb.h"
 
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Pass.h"
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/CommandLine.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Pass.h>
+
 
 using namespace llvm;
 using namespace tesla;
 
 using std::string;
 
+cl::opt<string> ManifestName(cl::desc("<input file>"),
+                             cl::Positional, cl::Required);
+
+cl::opt<string> OutputFile("o", cl::desc("<output file>"), cl::init("-"));
 
 int
 main(int argc, char *argv[]) {
-  if (argc < 2) {
-    fprintf(stderr, "Usage:  %s MANIFEST-FILE\n", argv[0]);
-    return 1;
+  cl::ParseCommandLineOptions(argc, argv);
+
+  bool UseFile = (OutputFile != "-");
+  OwningPtr<raw_fd_ostream> outfile;
+
+  if (UseFile) {
+    string OutErrorInfo;
+    outfile.reset(new raw_fd_ostream(OutputFile.c_str(), OutErrorInfo));
   }
 
-  string ManifestName(argv[1]);
-
-  auto& out = llvm::outs();
+  raw_ostream& out = UseFile ? *outfile : llvm::outs();
   auto& err = llvm::errs();
 
   OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs(), ManifestName));
@@ -62,15 +74,23 @@ main(int argc, char *argv[]) {
     return false;
   }
 
-  for (auto& Fn : Manifest->FunctionsToInstrument()) {
-    out << "Fn: " << Fn.ShortDebugString() << "\n";
-    if (Fn.context() != FunctionEvent::Callee) continue;
+  for (size_t i = 0; i < Manifest->size(); i++) {
+    OwningPtr<const Automaton> Automaton(
+      Manifest->ParseAutomaton(i, Automaton::NonDeterministic));
 
-    assert(Fn.has_function());
-    auto Name = Fn.function().name();
+    if (!Automaton) {
+      err << "\n";
+      continue;
+    }
 
-    assert(Fn.has_direction());
-    out << "Direction: " << Fn.direction() << "\n";
+    out << Automaton->Dot() << "\n\n";
+    out.flush();
+
+    err
+      << Automaton->StateCount() << " states, "
+      << Automaton->TransitionCount() << " transitions"
+      << "\n"
+      ;
   }
 
   google::protobuf::ShutdownProtobufLibrary();

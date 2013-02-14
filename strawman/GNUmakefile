@@ -12,7 +12,7 @@ BUILD_DIR=../${BUILD_TYPE}
 ANALYSER=${BUILD_DIR}/tesla/analyser/tesla-analyser
 INSTRUMENTER= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
 TOOLS=${BUILD_DIR}/tesla/tools
-GRAPH=${TOOLS}/graph-manifest/graph-manifest
+GRAPH=${TOOLS}/graph/tesla-graph
 LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
 
 TRIPLE=$(shell ${TOOLS}/get-triple/get-triple)

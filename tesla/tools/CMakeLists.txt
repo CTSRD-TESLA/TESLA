@@ -1,4 +1,4 @@
-add_subdirectory(get-triple)
-add_subdirectory(graph-manifest)
-add_subdirectory(read-manifest)
+add_subdirectory(graph)
+add_subdirectory(llvm-triple)
+add_subdirectory(read)
 

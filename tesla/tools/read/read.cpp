@@ -1,5 +1,6 @@
+/** @file  read.cpp    Tool for reading TESLA manifests. */
 /*
- * Copyright (c) 2013 Jonathan Anderson
+ * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -28,12 +29,52 @@
  * SUCH DAMAGE.
  */
 
-#include <llvm/Support/Host.h>
-#include <llvm/Support/raw_ostream.h>
+#include "Manifest.h"
+#include "tesla.pb.h"
+
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Pass.h"
+
+using namespace llvm;
+using namespace tesla;
+
+using std::string;
+
 
 int
 main(int argc, char *argv[]) {
-  llvm::outs() << llvm::sys::getDefaultTargetTriple() << "\n";
+  if (argc < 2) {
+    fprintf(stderr, "Usage:  %s MANIFEST-FILE\n", argv[0]);
+    return 1;
+  }
+
+  string ManifestName(argv[1]);
+
+  auto& out = llvm::outs();
+  auto& err = llvm::errs();
+
+  OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs(), ManifestName));
+  if (!Manifest) {
+    err << "Unable to read manifest '" << ManifestName << "'\n";
+    return false;
+  }
+
+  for (auto& Fn : Manifest->FunctionsToInstrument()) {
+    out << "Fn: " << Fn.ShortDebugString() << "\n";
+    if (Fn.context() != FunctionEvent::Callee) continue;
+
+    assert(Fn.has_function());
+    auto Name = Fn.function().name();
+
+    assert(Fn.has_direction());
+    out << "Direction: " << Fn.direction() << "\n";
+  }
+
+  google::protobuf::ShutdownProtobufLibrary();
   return 0;
 }
 
