@@ -53,9 +53,6 @@ class Sequence;
 class State;
 class Transition;
 
-typedef llvm::SmallVector<State*,10> StateVector;
-typedef llvm::SmallVector<Transition*,10> TransitionVector;
-
 
 /**
  * An automata representation of a TESLA assertion.
@@ -72,6 +69,9 @@ public:
     Deterministic,
     NonDeterministic
   };
+
+  typedef llvm::SmallVector<State*,10> StateVector;
+  typedef llvm::SmallVector<Transition*,10> TransitionVector;
 
   /**
    * Convert an assertion into an @ref Automaton.
