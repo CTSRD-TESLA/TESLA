@@ -88,16 +88,15 @@ public:
 
   //! Information for LLVM's RTTI (isa<>, cast<>, etc.).
   enum TransitionKind { Null, Now, Fn };
-  TransitionKind getKind() const { return Kind; }
+  virtual TransitionKind getKind() const = 0;
 
 protected:
 
   static void Register(llvm::OwningPtr<Transition>&, State&,
                        TransitionVector&);
 
-  Transition(const TransitionKind Kind, const State& From, const State& To);
+  Transition(const State& From, const State& To);
 
-  const TransitionKind Kind;
   const State& From;
   const State& To;
 };
@@ -113,10 +112,11 @@ public:
   static bool classof(const Transition *T) {
     return T->getKind() == Null;
   }
+  virtual TransitionKind getKind() const { return Null; };
 
 private:
   NullTransition(const State& From, const State& To)
-    : Transition(Null, From, To) {}
+    : Transition(From, To) {}
 
   friend class Transition;
 };
@@ -132,6 +132,7 @@ public:
   static bool classof(const Transition *T) {
     return T->getKind() == Now;
   }
+  virtual TransitionKind getKind() const { return Now; };
 
 private:
   NowTransition(const State& From, const State& To, const NowEvent& Ev);
@@ -154,9 +155,11 @@ public:
     return T->getKind() == Fn;
   }
 
+  virtual TransitionKind getKind() const { return Fn; };
+
 private:
   FnTransition(const State& From, const State& To, const FunctionEvent& Ev)
-    : Transition(Fn, From, To), Ev(Ev) {}
+    : Transition(From, To), Ev(Ev) {}
 
   const FunctionEvent& Ev;
 
