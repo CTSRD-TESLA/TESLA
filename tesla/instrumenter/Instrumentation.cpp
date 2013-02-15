@@ -331,7 +331,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
                            FunctionEvent FnEvent) {
 
   bool HaveRetVal = FnEvent.has_expectedreturnvalue();
-  const int TotalArgs = FnEvent.argument_size() + (HaveRetVal ? 1 : 0);
+  const size_t TotalArgs = FnEvent.argument_size() + (HaveRetVal ? 1 : 0);
 
   if (InstrArgs.size() != TotalArgs)
     report_fatal_error(
@@ -342,7 +342,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 
   vector<Value*> Args(TotalArgs, NULL);
 
-  int i = 0;
+  size_t i = 0;
 
   for (auto& InstrArg : InstrArgs) {
     auto& Arg = (HaveRetVal && (i == (TotalArgs - 1)))
