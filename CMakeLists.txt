@@ -34,8 +34,6 @@ set_directory_properties(PROPERTIES COMPILE_DEFINITIONS_DEBUG DEBUG)
 
 include_directories("include")
 
-set(POSITION_INDEPENDENT_CODE OFF)
-
 add_subdirectory(libtesla)
 add_subdirectory(tesla)
 
