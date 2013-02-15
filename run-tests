@@ -1,8 +1,8 @@
 #!/bin/sh
 
-if [ "$BUILD_DIR" == "" ]; then BUILD_DIR=build; fi
+if [ "$BUILD_DIR" == "" ]; then BUILD_DIR=./build; fi
 
-TESTS="`find ./$BUILD_DIR/libtesla/test -type f | grep -iv cmake`"
+TESTS="`find $BUILD_DIR/libtesla/test -type f | grep -iv cmake`"
 
 TOTAL=0
 PASSED=0
