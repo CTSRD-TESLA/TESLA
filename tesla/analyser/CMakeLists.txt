@@ -1,6 +1,15 @@
 # Dependency tracking: protobuf_generate_cpp() only sort-of works across dirs.
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
 
+# Add Clang include directories.
+include_directories(
+	"${LLVM_SRC}/tools/clang/include"
+	"${LLVM_OBJ}/tools/clang/include")
+
+
+#
+# The TESLA analyser executable:
+#
 add_llvm_executable(tesla-analyse
 	Automata.cpp
 	Expressions.cpp
@@ -10,6 +19,12 @@ add_llvm_executable(tesla-analyse
 	Tool.cpp
 )
 target_link_libraries(tesla-analyse TeslaProto)
+install(TARGETS tesla-analyse DESTINATION bin)
+
+
+#
+# Link against Clang and LLVM libraries:
+#
 
 # Clang doesn't provide an equivalent to llvm_map_components_to_libraries().
 foreach(i
@@ -24,6 +39,4 @@ endforeach(i)
 #
 # Instead, we need to pass in ${LLVM_LIBS} explicitly.
 target_link_libraries(tesla-analyse ${LLVM_LIBS})
-
-install(TARGETS tesla-analyse DESTINATION bin)
 
