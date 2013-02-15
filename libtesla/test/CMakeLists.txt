@@ -5,8 +5,13 @@
 set(CMAKE_BUILD_TYPE Debug)
 
 # We use execinfo here for detailed failure information (e.g. backtraces).
-find_package(ExecInfo REQUIRED)
-include_directories(${EXECINFO_INCLUDE_DIRS})
+#
+# This is only required on FreeBSD, as both Mac OS X and Linux include
+# backtrace functions in libSystem / libc.
+if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
+	find_package(ExecInfo REQUIRED)
+	include_directories(${EXECINFO_INCLUDE_DIRS})
+endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 
 # Provide access to internal headers.
 include_directories(../src)
