@@ -6,9 +6,8 @@
 
 .SILENT:
 
-BUILD_TYPE?=Debug
+BUILD_DIR?=../build
 
-BUILD_DIR=../${BUILD_TYPE}
 ANALYSE=${BUILD_DIR}/tesla/analyser/tesla-analyse
 INSTRUMENT= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
 TOOLS=${BUILD_DIR}/tesla/tools
@@ -46,7 +45,7 @@ clean:
 	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} ${DOTFILE} *.tesla
 
 tesla:
-	cd .. && ${MAKE} debug release
+	cd ${BUILD_DIR} && ninja
 
 run-tesla: analyse instrument
 
