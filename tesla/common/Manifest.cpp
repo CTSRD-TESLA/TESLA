@@ -140,8 +140,6 @@ vector<FunctionEvent> Manifest::FunctionsToInstrument(const Event& Ev) {
   vector<FunctionEvent> FnEvents;
 
   switch (Ev.type()) {
-      default: llvm_unreachable("unhandled event type");
-
       // not a function, do nothing:
       case Event::IGNORE:             break;
       case Event::NOW:                break;

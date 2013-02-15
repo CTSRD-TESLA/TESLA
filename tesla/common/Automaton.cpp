@@ -153,9 +153,6 @@ State* NFA::Parse(const Expression& Expr, State& Start,
                   StateVector& States, TransitionVector& Transitions) {
 
   switch (Expr.type()) {
-  default:
-    llvm_unreachable("unhandled Expression::Type");
-
   case Expression::BOOLEAN_EXPR:
     return Parse(Expr.booleanexpr(), Start, States, Transitions);
 
@@ -215,9 +212,6 @@ State* NFA::Parse(const Event& Ev, State& Start,
                   StateVector& States, TransitionVector& Transitions) {
 
   switch (Ev.type()) {
-  default:
-    llvm_unreachable("unhandled Event::Type");
-
   case Event::IGNORE:
     return Ignore(Start, States, Transitions);
 

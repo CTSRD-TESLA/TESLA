@@ -320,11 +320,6 @@ Constant* tesla::TeslaContext(Assertion::Context Context, LLVMContext& Ctx) {
   static auto *PerThread = ConstantInt::get(IntType, TESLA_SCOPE_PERTHREAD);
 
   switch (Context) {
-  default:
-    // does not return
-    report_fatal_error(__FILE__ ":" + Twine(__LINE__) + ": no handler for "
-                        + "Assertion::" + Assertion::Context_Name(Context));
-
   case Assertion::Global: return Global;
   case Assertion::ThreadLocal: return PerThread;
   }
