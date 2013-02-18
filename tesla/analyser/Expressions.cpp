@@ -75,9 +75,10 @@ bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Assertion *A,
         << Bop->getSourceRange();
       return false;
 
-    case BO_LAnd: Expr->set_operation(BooleanExpr::BE_And); break;
+    // TODO: restore AND, decide if we want XOR
+    //case BO_LAnd: Expr->set_operation(BooleanExpr::BE_And); break;
     case BO_LOr:  Expr->set_operation(BooleanExpr::BE_Or);  break;
-    case BO_Xor:  Expr->set_operation(BooleanExpr::BE_Xor); break;
+    //case BO_Xor:  Expr->set_operation(BooleanExpr::BE_Xor); break;
   }
 
   return (
