@@ -65,7 +65,6 @@ const Automaton* Manifest::FindAutomaton(const Location& Loc,
                                          Automaton::Type T) const {
   size_t ID = 0;
   for (Assertion *A : Assertions) {
-    Errors << "Candidate: " << ShortName(A->location()) << "\n";
     if (A->location() == Loc)
       return Automaton::Create(A, ID, T);
 
