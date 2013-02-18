@@ -1,6 +1,6 @@
-/*! @file Parse.h  Code to parse Clang ASTs into TESLA descriptions. */
+/*! @file Parsers.h  Code to parse Clang ASTs into TESLA descriptions. */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -28,6 +28,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+#ifndef PARSERS_H
+#define PARSERS_H
 
 #include "tesla.pb.h"
 
@@ -125,4 +128,6 @@ std::string ParseStringLiteral(clang::Expr*, clang::ASTContext&);
 llvm::APInt ParseIntegerLiteral(clang::Expr*, clang::ASTContext&);
 
 }
+
+#endif  // PARSERS_H
 
