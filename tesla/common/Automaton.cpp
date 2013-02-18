@@ -108,15 +108,7 @@ string Automaton::Dot() const {
     ss << "\t" << S->Dot() << "\n";
 
   for (Transition *T : Transitions)
-    ss
-      << "\t"
-      << T->Source().ID()
-      << " -> "
-      << T->Destination().ID()
-      << " [ label = \""
-      << T->DotLabel()
-      << "\" ];\n"
-      ;
+    ss << T->Dot();
 
   ss << "}";
 
