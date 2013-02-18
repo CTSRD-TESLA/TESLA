@@ -10,22 +10,21 @@ set(CMAKE_MODULE_PATH
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
-find_library(LIBCXX c++)
-set(DEFAULT_LIBCXX true)
-if (NOT LIBCXX)
-	set(DEFAULT_LIBCXX false)
-endif ()
+# Default to libc++ if installed.
+find_package(LibCXX)
 
-set(USE_LIBCXX ${DEFAULT_LIBCXX} CACHE BOOL "Use libc++ when building TESLA")
+set(USE_LIBCXX ${LIBCXX_FOUND} CACHE BOOL "Use libc++ when building TESLA")
 if (USE_LIBCXX)
-	message(STATUS "Using libc++")
+  message(STATUS "Using libc++")
 else ()
-	message(STATUS "Using the default system STL implementation")
+  message(STATUS "Using the default system STL implementation")
 endif ()
 
 if (USE_LIBCXX)
-	set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+  set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+
+  include_directories(${LIBCXX_INCLUDE_DIRS})
 endif ()
 
 # Set -D DEBUG on debug builds, in addition to the CMake default of setting
