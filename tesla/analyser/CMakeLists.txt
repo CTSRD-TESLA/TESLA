@@ -17,6 +17,7 @@ add_llvm_executable(tesla-analyse
 	Helpers.cpp
 	References.cpp
 	Tool.cpp
+	Visitor.cpp
 )
 target_link_libraries(tesla-analyse TeslaProto)
 install(TARGETS tesla-analyse DESTINATION bin)

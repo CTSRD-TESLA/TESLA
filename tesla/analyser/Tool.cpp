@@ -29,6 +29,7 @@
  */
 
 #include "Parsers.h"
+#include "Visitor.h"
 
 #include "llvm/Support/CommandLine.h"
 
@@ -55,39 +56,6 @@ using std::vector;
 
 
 namespace tesla {
-
-class TeslaVisitor : public RecursiveASTVisitor<TeslaVisitor> {
-public:
-  explicit TeslaVisitor(ASTContext *Context, raw_ostream &Output)
-      : Context(Context), Diag(Context->getDiagnostics()), Out(Output) {}
-
-  bool VisitCallExpr(CallExpr *E) {
-    FunctionDecl *F = E->getDirectCallee();
-    if (!F) return true;
-    if (!F->getName().startswith("__tesla_inline_assertion")) return true;
-
-    Assertion Assert;
-    if (!ParseInlineAssertion(&Assert, E, *Context)) {
-      static int ParseFailure =
-        Diag.getCustomDiagID(DiagnosticsEngine::Error,
-          "Failed to parse TESLA inline assertion");
-
-      Diag.Report(E->getLocStart(), ParseFailure) << E->getSourceRange();
-      return false;
-    }
-
-    string Str;
-    google::protobuf::TextFormat::PrintToString(Assert, &Str);
-    Out << Str << "===\n";
-
-    return true;
-  }
-
-private:
-  ASTContext *Context;
-  DiagnosticsEngine& Diag;
-  raw_ostream &Out;
-};
 
 
 class TeslaConsumer : public clang::ASTConsumer {
