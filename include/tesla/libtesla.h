@@ -188,10 +188,6 @@ int	tesla_instance_active(struct tesla_instance *i);
 int	tesla_instance_clone(struct tesla_class *tclass,
 	    struct tesla_instance *original, struct tesla_instance **copy);
 
-/** Find an existing automata instance that matches a key. */
-int	tesla_instance_find(struct tesla_class *tclass,
-	    const struct tesla_key *key, struct tesla_instance **instance);
-
 /** Release resources (e.g., locks) associated with a @ref tesla_class. */
 void	tesla_class_put(struct tesla_class*);
 

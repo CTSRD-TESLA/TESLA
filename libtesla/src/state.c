@@ -187,38 +187,6 @@ tesla_clone(struct tesla_class *tclass, const struct tesla_instance *orig,
 	return tesla_instance_new(tclass, &orig->ti_key, orig->ti_state, copy);
 }
 
-int
-tesla_instance_find(struct tesla_class *tclass, const struct tesla_key *pattern,
-		   struct tesla_instance **out)
-{
-	assert(tclass != NULL);
-	assert(pattern != NULL);
-	assert(out != NULL);
-
-	struct tesla_instance *instance;
-	u_int i;
-
-	struct tesla_table *ttp = tclass->ts_table;
-	assert(ttp != NULL);
-	tesla_assert(ttp->tt_length != 0, "Uninitialized tesla_table");
-
-	for (i = 0; i < ttp->tt_length; i++) {
-		instance = &ttp->tt_instances[i];
-		assert(instance != NULL);
-
-		// If we found the droids we're looking for, go no further.
-		if (tesla_key_matches(pattern, &instance->ti_key)) {
-			*out = instance;
-			break;
-		}
-	}
-
-	if (*out == NULL)
-		return (TESLA_ERROR_ENOENT);
-
-	return (TESLA_SUCCESS);
-}
-
 void
 tesla_class_put(struct tesla_class *tsp)
 {
