@@ -71,10 +71,10 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 	struct tesla_table *table = class->ts_table;
 	struct tesla_instance *start = table->tt_instances;
 
-#ifndef NDEBUG
-	print_class(class);
-	DEBUG_PRINT("----\n");
-#endif
+	if (verbose_debug()) {
+		print_class(class);
+		DEBUG_PRINT("----\n");
+	}
 
 	// If the expected current state is 0, create a new automaton.
 	if (expected_state == 0) {
@@ -82,7 +82,8 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 		CHECK(tesla_instance_new, class, key, new_state, &inst);
 		assert(tesla_instance_active(inst));
 
-		DEBUG_PRINT("new    %ld: %tx\n", inst - start, inst->ti_state);
+		VERBOSE_PRINT("new    %ld: %tx\n",
+		              inst - start, inst->ti_state);
 	} else {
 		bool success = false;
 
@@ -99,9 +100,9 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 						  expected_state, new_state);
 			} else {
 				success = true;
-				DEBUG_PRINT("update %ld: %tx->%tx\n",
-				            inst - start,
-				            inst->ti_state, new_state);
+				VERBOSE_PRINT("update %ld: %tx->%tx\n",
+				              inst - start,
+				              inst->ti_state, new_state);
 				inst->ti_state = new_state;
 			}
 		}
@@ -121,9 +122,9 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 
 				struct tesla_instance *copy;
 				CHECK(tesla_clone, class, inst, &copy);
-				DEBUG_PRINT("clone  %ld:%tx -> %ld:%tx\n",
-				            inst - start, copy->ti_state,
-				            copy - start, new_state);
+				VERBOSE_PRINT("clone  %ld:%tx -> %ld:%tx\n",
+				              inst - start, copy->ti_state,
+				              copy - start, new_state);
 
 				copy->ti_key = *key;
 				copy->ti_state = new_state;
@@ -151,11 +152,11 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 		}
 	}
 
-#ifndef NDEBUG
-	DEBUG_PRINT("----\n");
-	print_class(class);
-	DEBUG_PRINT("\n====\n\n");
-#endif
+	if (verbose_debug()) {
+		DEBUG_PRINT("----\n");
+		print_class(class);
+		DEBUG_PRINT("\n====\n\n");
+	}
 
 	tesla_class_put(class);
 
