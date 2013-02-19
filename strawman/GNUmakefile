@@ -23,7 +23,9 @@ LLC=llc -mtriple=${TRIPLE} -filetype=obj
 DIFF=$(shell which colordiff || echo "diff")
 VERBOSE?=false
 
-CFLAGS=-I ../include/tesla -D TESLA -D REVISION="\"$(shell ./revision.sh)\""
+CFLAGS=-Wall -Werror \
+	-D REVISION="\"$(shell ./revision.sh)\"" \
+	-I ../include/tesla -D TESLA
 
 BIN=demo
 DOTFILE=tesla.dot
