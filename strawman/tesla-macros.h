@@ -55,8 +55,8 @@
 /** A strictly-ordered sequence of events. */
 #define	TSEQUENCE(...)	__tesla_sequence(__tesla_ignore, __VA_ARGS__)
 
-#define	entered(f)	__tesla_entered(f)
-#define	leaving(f)	__tesla_leaving(f)
+#define	entered(...)	__tesla_entered(__VA_ARGS__)
+#define	leaving(...)	__tesla_leaving(__VA_ARGS__)
 #define	TESLA_NOW &__tesla_now
 
 

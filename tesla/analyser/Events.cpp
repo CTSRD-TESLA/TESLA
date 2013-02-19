@@ -238,9 +238,10 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call,
   Event->set_context(FunctionEvent::Callee);
   Event->set_direction(FunctionEvent::Entry);
 
-  if ((Call->getNumArgs() != 1) || (Call->getArg(0) == NULL)) {
-    Report("__tesla_entered predicate should have one argument: the function",
-        Call->getLocStart(), Ctx)
+  // The arguments to __tesla_entered are the function itself and then,
+  // optionally, the arguments (any of which may be __tesla_any()).
+  if (Call->getNumArgs() < 1) {
+    Report("__tesla_entered has no function argument", Call->getLocStart(), Ctx)
       << Call->getSourceRange();
     return false;
   }
@@ -255,9 +256,30 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call,
   auto Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
   assert(Fn != NULL);
 
-  for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
-    if (!ParseArgument(Event->add_argument(), *I, References, Ctx, true))
-      return false;
+  // Parse the arguments to the event: either specified by the programmer in
+  // the assertion or else the definition of the function.
+  size_t ArgCount = Call->getNumArgs() - 1;  // first arg is the function
+
+  if (ArgCount > 0) {
+    // If an assertion specifies any arguments, it must specify all of them.
+    if (ArgCount != Fn->param_size()) {
+      Report("specify all arguments or none (__tesla_any() allowed)",
+             Call->getLocStart(), Ctx)
+        << Call->getSourceRange();
+    }
+
+    for (size_t i = 0; i < ArgCount; i++) {
+      if (!ParseArgument(Event->add_argument(), Call->getArg(i + 1),
+                         References, Ctx))
+        return false;
+    }
+  } else {
+    // The assertion doesn't specify any arguments; include information about
+    // arguments from the function definition, just for information.
+    for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
+      if (!ParseArgument(Event->add_argument(), *I, References, Ctx, true))
+        return false;
+    }
   }
 
   return ParseFunctionRef(Event->mutable_function(), Fn, Ctx);
