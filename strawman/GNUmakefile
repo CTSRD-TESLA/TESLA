@@ -1,5 +1,5 @@
 .PHONY: clean run-tesla tesla
-.SUFFIXES: .c .dot .ll .tesla
+.SUFFIXES: .c .dot .ll .pdf .tesla
 
 # Hold onto all LLVM IR files for manual inspection.
 .PRECIOUS: %.ll %.instr.ll
@@ -62,6 +62,11 @@ instrument: tesla
 	cat $^ > $@
 	# temporary workaround for ClangTool irritant:
 	sed -i.backup "s@`pwd`/@@" .tesla && rm .tesla.backup
+
+# Optional PDF-ification of the .dot file.
+.dot.pdf:
+	@echo "[DOT]     $^ > $@"
+	dot -Tpdf -o $@ $<
 
 # Graph the .tesla file.
 ${DOTFILE}: .tesla
