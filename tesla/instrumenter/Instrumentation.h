@@ -83,6 +83,9 @@ llvm::Constant* TeslaContext(InlineAssertion::Context Context,
 llvm::Function* FindStateUpdateFn(llvm::Module&,
                                   llvm::Type *IntType);
 
+/*! Find the libtesla function @ref tesla_die. */
+llvm::Function* FindDieFn(llvm::Module&);
+
 /**
  * Cast an integer-ish @ref Value to another type.
  *

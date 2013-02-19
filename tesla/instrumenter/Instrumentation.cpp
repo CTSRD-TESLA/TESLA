@@ -190,6 +190,27 @@ Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
 }
 
 
+Function* tesla::FindDieFn(Module& M) {
+
+  LLVMContext& Ctx = M.getContext();
+
+  Type *Char = IntegerType::get(Ctx, 8);
+  Type *CharStar = PointerType::getUnqual(Char);
+  Type *Void = Type::getVoidTy(Ctx);
+
+  // TODO: apply 'noreturn' attribute.
+  //
+  // Currently, if I supply an AttributeSet the Verifier says:
+  //   Some attributes in 'noreturn' only apply to functions!
+  //
+  // Which is odd, since I am only applying them to a function.
+  auto *Fn = M.getOrInsertFunction("tesla_die", Void, CharStar, NULL);
+
+  assert(isa<Function>(Fn));
+  return cast<Function>(Fn);
+}
+
+
 SmallVector<Function*,3>
   tesla::FindInstrumentation(const FunctionEvent& FnEvent, Module& M) {
 
@@ -281,11 +302,14 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
     auto CurrentState = ConstantInt::get(IntType, T.Source().ID());
     auto NextState = ConstantInt::get(IntType, T.Destination().ID());
 
-    Constant *NoError = ConstantInt::get(IntType, 0);
-
     auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
-    // TODO: provide notification of failure
-    IRBuilder<>(Die).CreateRetVoid();
+    IRBuilder<> ErrorHandler(Die);
+
+    auto *ErrMsg = ErrorHandler.CreateGlobalStringPtr(
+      "error in tesla_update_state() for automaton '" + A.Name() + "'");
+
+    ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
+    ErrorHandler.CreateRetVoid();
 
     vector<Value*> Args;
     Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
@@ -301,7 +325,8 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
     assert(Args.size() == UpdateStateFn->arg_size());
 
     Value *Error = Builder.CreateCall(UpdateStateFn, Args);
-    Error = Builder.CreateICmpNE(Error, NoError);
+    Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
+    Error = Builder.CreateICmpEQ(Error, NoError);
 
     auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
     IRBuilder<>(Exit).CreateRetVoid();
