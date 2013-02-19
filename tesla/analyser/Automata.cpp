@@ -72,7 +72,8 @@ bool ParseInlineAssertion(Assertion *A, CallExpr *E, ASTContext& Ctx) {
   bool Success =
     ParseLocation(A->mutable_location(), Filename, Line, Counter, Ctx)
     && ParseContext(A, Context, Ctx)
-    && ParseExpression(A->mutable_expression(), Expression, A, References, Ctx)
+    && ParseExpression(A->mutable_expression(), Expression, A->location(),
+                       References, Ctx)
     ;
 
   // Make a note of unique and non-unique reference counts.

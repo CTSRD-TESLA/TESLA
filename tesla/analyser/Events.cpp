@@ -44,7 +44,7 @@ using std::vector;
 
 namespace tesla {
 
-bool ParseEvent(Event *Ev, Expr *E, Assertion *A,
+bool ParseEvent(Event *Ev, Expr *E, const Location& L,
                 vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   E = E->IgnoreImplicit();
@@ -68,7 +68,7 @@ bool ParseEvent(Event *Ev, Expr *E, Assertion *A,
     }
 
     Ev->set_type(Event::NOW);
-    *Ev->mutable_now()->mutable_location() = A->location();
+    *Ev->mutable_now()->mutable_location() = L;
     return true;
   } else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
     // This is a call-and-return like "foo(x) == y".
@@ -93,7 +93,7 @@ bool ParseEvent(Event *Ev, Expr *E, Assertion *A,
 
   if (Callee->getName() == "__tesla_repeat") {
     Ev->set_type(Event::REPETITION);
-    return ParseRepetition(Ev->mutable_repetition(), Call, A, References, Ctx);
+    return ParseRepetition(Ev->mutable_repetition(), Call, L, References, Ctx);
   }
 
   typedef bool (*FnEventParser)(FunctionEvent*, CallExpr*, vector<ValueDecl*>&,
@@ -116,7 +116,7 @@ bool ParseEvent(Event *Ev, Expr *E, Assertion *A,
 }
 
 
-bool ParseRepetition(Repetition *Repetition, CallExpr *Call, Assertion *A,
+bool ParseRepetition(Repetition *Repetition, CallExpr *Call, const Location& L,
                      vector<ValueDecl*>& References,
                      ASTContext& Ctx) {
   unsigned Args = Call->getNumArgs();
@@ -135,7 +135,7 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call, Assertion *A,
 
   for (unsigned i = 2; i < Args; ++i) {
     auto Ev = Call->getArg(i);
-    if (!ParseEvent(Repetition->add_event(), Ev, A, References, Ctx)) {
+    if (!ParseEvent(Repetition->add_event(), Ev, L, References, Ctx)) {
       Report("Failed to parse repeated event", Ev->getLocStart(), Ctx)
         << Ev->getSourceRange();
       return false;

@@ -54,28 +54,28 @@ bool ParseLocation(Location*,
 
 
 //! Parse a (polymorphic-ish) TESLA expression.
-bool ParseExpression(Expression*, clang::Expr*, Assertion*,
+bool ParseExpression(Expression*, clang::Expr*, const Location&,
                      std::vector<clang::ValueDecl*>& References,
                      clang::ASTContext&);
 
 //! Parse a boolean expression over TESLA expressions.
-bool ParseBooleanExpr(BooleanExpr*, clang::BinaryOperator*, Assertion*,
+bool ParseBooleanExpr(BooleanExpr*, clang::BinaryOperator*, const Location&,
                       std::vector<clang::ValueDecl*>& References,
                       clang::ASTContext&);
 
 //! Parse a sequence of TESLA events.
-bool ParseSequence(Sequence*, clang::CallExpr*, Assertion*,
+bool ParseSequence(Sequence*, clang::CallExpr*, const Location&,
                    std::vector<clang::ValueDecl*>& References,
                    clang::ASTContext&);
 
 
 //! Parse a (polymorphic-ish) TESLA event.
-bool ParseEvent(Event*, clang::Expr *E, Assertion *A,
+bool ParseEvent(Event*, clang::Expr *E, const Location&,
                 std::vector<clang::ValueDecl*>& References,
                 clang::ASTContext& Ctx);
 
 //! Parse a sequence of repeated events (a la "aba"+).
-bool ParseRepetition(Repetition*, clang::CallExpr*, Assertion *A,
+bool ParseRepetition(Repetition*, clang::CallExpr*, const Location&,
                      std::vector<clang::ValueDecl*>& References,
                      clang::ASTContext&);
 

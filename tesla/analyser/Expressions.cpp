@@ -43,19 +43,19 @@ using std::vector;
 
 namespace tesla {
 
-bool ParseExpression(Expression *Exp, Expr *E, Assertion *A,
+bool ParseExpression(Expression *Exp, Expr *E, const Location& L,
                      vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   E = E->IgnoreImplicit();
 
   if (auto Call = dyn_cast<CallExpr>(E)) {
     Exp->set_type(Expression::SEQUENCE);
-    return ParseSequence(Exp->mutable_sequence(), Call, A, References, Ctx);
+    return ParseSequence(Exp->mutable_sequence(), Call, L, References, Ctx);
   }
 
   else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
     Exp->set_type(Expression::BOOLEAN_EXPR);
-    return ParseBooleanExpr(Exp->mutable_booleanexpr(), Bop, A, References,
+    return ParseBooleanExpr(Exp->mutable_booleanexpr(), Bop, L, References,
                             Ctx);
   }
 
@@ -65,7 +65,7 @@ bool ParseExpression(Expression *Exp, Expr *E, Assertion *A,
 }
 
 
-bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Assertion *A,
+bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, const Location& L,
                       vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   switch (Bop->getOpcode()) {
@@ -82,14 +82,14 @@ bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, Assertion *A,
   }
 
   return (
-    ParseExpression(Expr->add_expression(), Bop->getLHS(), A, References, Ctx)
-    && ParseExpression(Expr->add_expression(), Bop->getRHS(), A, References,
+    ParseExpression(Expr->add_expression(), Bop->getLHS(), L, References, Ctx)
+    && ParseExpression(Expr->add_expression(), Bop->getRHS(), L, References,
                        Ctx)
   );
 }
 
 
-bool ParseSequence(Sequence *Seq, CallExpr *Call, Assertion *A,
+bool ParseSequence(Sequence *Seq, CallExpr *Call, const Location& L,
                    vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   FunctionDecl *Fun = Call->getDirectCallee();
@@ -106,7 +106,7 @@ bool ParseSequence(Sequence *Seq, CallExpr *Call, Assertion *A,
   }
 
   for (auto Arg = Call->arg_begin(); Arg != Call->arg_end(); ++Arg)
-    if (!ParseEvent(Seq->add_event(), *Arg, A, References, Ctx))
+    if (!ParseEvent(Seq->add_event(), *Arg, L, References, Ctx))
       return false;
 
   return true;
