@@ -46,6 +46,8 @@ perform_operation(int op, struct object *o)
 
 	/* More simple assertions. */
 	TESLA_PERTHREAD(previously_in_syscall(called(hold, o)));
+	TESLA_PERTHREAD(previously_in_syscall(returned(hold, o)));
+	TESLA_PERTHREAD(eventually_in_syscall(called(release, o)));
 
 	/* An example of using high-level TESLA macros. */
 	TESLA_PERTHREAD(
