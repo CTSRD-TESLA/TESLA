@@ -36,21 +36,29 @@
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 
-#include <google/protobuf/text_format.h>
-
 
 using namespace clang;
 
 
 namespace tesla {
 
+TeslaVisitor::TeslaVisitor(ASTContext *Context)
+  : Context(Context), Diag(Context->getDiagnostics())
+{
+}
+
+TeslaVisitor::~TeslaVisitor() {
+  for (Assertion *A : Assertions)
+    delete A;
+}
+
 bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
   FunctionDecl *F = E->getDirectCallee();
   if (!F) return true;
   if (!F->getName().startswith("__tesla_inline_assertion")) return true;
 
-  Assertion Assert;
-  if (!ParseInlineAssertion(&Assert, E, *Context)) {
+  OwningPtr<Assertion> Assert(new Assertion);
+  if (!ParseInlineAssertion(Assert.get(), E, *Context)) {
     static int ParseFailure =
       Diag.getCustomDiagID(DiagnosticsEngine::Error,
         "Failed to parse TESLA inline assertion");
@@ -59,9 +67,7 @@ bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
     return false;
   }
 
-  std::string Str;
-  google::protobuf::TextFormat::PrintToString(Assert, &Str);
-  Out << Str << "===\n";
+  Assertions.push_back(Assert.take());
 
   return true;
 }

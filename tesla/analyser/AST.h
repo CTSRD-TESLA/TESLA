@@ -1,5 +1,6 @@
+/** @file AST.h    Declaration of @ref TeslaConsumer and @ref TeslaAction. */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -28,61 +29,59 @@
  * SUCH DAMAGE.
  */
 
-#include "AST.h"
+#ifndef AST_H
+#define AST_H
 
-#include "llvm/Support/CommandLine.h"
+#include "Visitor.h"
 
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/FrontendActions.h"
-#include "clang/Tooling/CompilationDatabase.h"
-#include "clang/Tooling/Tooling.h"
+#include <clang/AST/ASTConsumer.h>
+#include <clang/Frontend/FrontendAction.h>
+#include <clang/Tooling/Tooling.h>
 
-#include <google/protobuf/text_format.h>
-
-using namespace clang::tooling;
-using namespace llvm;
-using namespace tesla;
-
-using std::string;
+#include <llvm/ADT/StringRef.h>
 
 
-cl::opt<string> OutputFile(
-  "o",
-  cl::desc("<output file>"),
-  cl::Required);
-
-cl::list<string> SourcePaths(
-  cl::Positional,
-  cl::desc("<source0> [... <sourceN>]"),
-  cl::OneOrMore);
-
-
-int main(int argc, const char **argv) {
-  // Add a preprocessor definition to indicate we're doing TESLA parsing.
-  std::vector<const char*> args(argv, argv + argc);
-  args.push_back("-D");
-  args.push_back("__TESLA_ANALYSER__");
-
-  // Change argc and argv to refer to the vector's memory.
-  // The CompilationDatabase will modify these, so we shouldn't pass in
-  // args.data() directly.
-  argc = (int) args.size();
-  assert(argc == args.size());    // check for overflow
-
-  argv = args.data();
-
-  OwningPtr<CompilationDatabase> Compilations(
-    FixedCompilationDatabase::loadFromCommandLine(argc, argv));
-
-  if (!Compilations)
-    report_fatal_error(
-        "Need compilation options, e.g. tesla-analyser foo.c -- -I ../include");
-
-  cl::ParseCommandLineOptions(argc, argv);
-
-  OwningPtr<TeslaActionFactory> Factory(new TeslaActionFactory(OutputFile));
-
-  ClangTool Tool(*Compilations, SourcePaths);
-  return Tool.run(Factory.get());
+namespace clang {
+  class ASTContext;
+  class CompilerInstance;
 }
+
+
+namespace tesla {
+
+class TeslaConsumer : public clang::ASTConsumer {
+public:
+  TeslaConsumer(llvm::StringRef OutFilename);
+  void HandleTranslationUnit(clang::ASTContext &Context);
+
+private:
+  llvm::StringRef OutFile;
+};
+
+
+class TeslaAction : public clang::ASTFrontendAction {
+public:
+  TeslaAction(llvm::StringRef OutFilename) : OutFile(OutFilename) {}
+
+  clang::ASTConsumer* CreateASTConsumer(
+    clang::CompilerInstance &Compiler, llvm::StringRef InFile);
+
+private:
+  llvm::StringRef OutFile;
+};
+
+class TeslaActionFactory : public clang::tooling::FrontendActionFactory {
+public:
+  TeslaActionFactory(llvm::StringRef OutFilename) : OutFile(OutFilename) {}
+  ~TeslaActionFactory() {}
+
+  clang::FrontendAction* create();
+
+private:
+  llvm::StringRef OutFile;
+};
+
+}
+
+#endif  // AST_H
 

@@ -33,6 +33,7 @@
 #define VISITOR_H
 
 #include <clang/AST/RecursiveASTVisitor.h>
+#include <llvm/ADT/SmallVector.h>
 
 namespace clang {
   class ASTContext;
@@ -44,17 +45,22 @@ namespace llvm {
 
 namespace tesla {
 
+class Assertion;
+
 class TeslaVisitor : public clang::RecursiveASTVisitor<TeslaVisitor> {
 public:
-  explicit TeslaVisitor(clang::ASTContext *Context, llvm::raw_ostream &Output)
-      : Context(Context), Diag(Context->getDiagnostics()), Out(Output) {}
+  TeslaVisitor(clang::ASTContext *Context);
+  ~TeslaVisitor();
 
   bool VisitCallExpr(clang::CallExpr*);
+
+  const llvm::ArrayRef<Assertion*> GetAssertions() const { return Assertions; }
 
 private:
   clang::ASTContext *Context;
   clang::DiagnosticsEngine& Diag;
-  llvm::raw_ostream &Out;
+
+  llvm::SmallVector<Assertion*, 2> Assertions;
 };
 
 } // namespace tesla
