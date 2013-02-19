@@ -42,10 +42,11 @@
 namespace tesla {
 
 //! Parse a TESLA assertion embedded in C code.
-bool ParseInlineAssertion(Assertion*, clang::CallExpr*, clang::ASTContext&);
+bool ParseInlineAssertion(InlineAssertion*, clang::CallExpr*,
+                          clang::ASTContext&);
 
 //! Parse the context (global or per-thread) for an automaton.
-bool ParseContext(Assertion*, clang::Expr*, clang::ASTContext&);
+bool ParseContext(InlineAssertion*, clang::Expr*, clang::ASTContext&);
 
 //! Parse the location where an automaton is defined.
 bool ParseLocation(Location*,

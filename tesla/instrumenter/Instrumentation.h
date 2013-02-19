@@ -76,7 +76,7 @@ llvm::Type* RegisterType(llvm::Module&);
  * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD
  * or @ref TESLA_SCOPE_GLOBAL).
  */
-llvm::Constant* TeslaContext(Assertion::Context Context,
+llvm::Constant* TeslaContext(InlineAssertion::Context Context,
                              llvm::LLVMContext& Ctx);
 
 /*! Find the libtesla function @ref tesla_update_state. */

@@ -54,7 +54,8 @@ namespace tesla {
 
 
 // ---- Automaton implementation ----------------------------------------------
-Automaton* Automaton::Create(const Assertion *A, unsigned int id, Type Type) {
+Automaton* Automaton::Create(const InlineAssertion *A, unsigned int id,
+                             Type Type) {
   // First, do the easy thing: parse into an NFA.
   NFA *N = NFA::Parse(A, id);
   assert(N != NULL);
@@ -67,7 +68,7 @@ Automaton* Automaton::Create(const Assertion *A, unsigned int id, Type Type) {
 }
 
 
-Automaton::Automaton(size_t id, const Assertion& A,
+Automaton::Automaton(size_t id, const InlineAssertion& A,
                      StringRef Name, StringRef Desc,
                      ArrayRef<State*> S, ArrayRef<Transition*> T)
   : id(id), assertion(A), name(Name), description(Desc)
@@ -118,7 +119,7 @@ string Automaton::Dot() const {
 
 
 // ---- NFA implementation ----------------------------------------------------
-NFA* NFA::Parse(const Assertion *A, unsigned int id) {
+NFA* NFA::Parse(const InlineAssertion *A, unsigned int id) {
   assert(A != NULL);
 
   StateVector States;
@@ -257,7 +258,7 @@ State* NFA::Parse(const FunctionEvent& Ev, State& InitialState,
 }
 
 
-NFA::NFA(size_t id, const Assertion& A, StringRef Name, StringRef Desc,
+NFA::NFA(size_t id, const InlineAssertion& A, StringRef Name, StringRef Desc,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
   : Automaton(id, A, Name, Desc, S, T)
 {
@@ -273,7 +274,7 @@ DFA* DFA::Convert(const NFA* N) {
   return NULL;
 }
 
-DFA::DFA(size_t id, Assertion& A, StringRef Name, StringRef Desc,
+DFA::DFA(size_t id, InlineAssertion& A, StringRef Name, StringRef Desc,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
   : Automaton(id, A, Name, Desc, S, T)
 {

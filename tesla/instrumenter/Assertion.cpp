@@ -134,7 +134,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
       }
 
     // Find the arguments to the relevant 'now' instrumentation function.
-    const Assertion& AssertInfo = A->getAssertion();
+    const InlineAssertion& AssertInfo = A->getAssertion();
     size_t ArgCount = AssertInfo.argument_size();
     std::vector<Value*> Args(ArgCount, NULL);
 
@@ -295,7 +295,7 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
 Function* TeslaAssertionSiteInstrumenter::InstrumentationFn(
   const Automaton& A, Module& M) {
 
-  const Assertion& AssertInfo = A.getAssertion();
+  const InlineAssertion& AssertInfo = A.getAssertion();
   const size_t ArgCount = AssertInfo.argument_size();
 
   Type *Void = Type::getVoidTy(M.getContext());

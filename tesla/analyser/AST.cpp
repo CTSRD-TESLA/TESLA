@@ -66,7 +66,7 @@ void TeslaConsumer::HandleTranslationUnit(ASTContext &Context) {
     report_fatal_error("unable to open '" + OutFile + "': " + ErrorInfo);
 
   std::string ProtobufText;
-  for (const Assertion *A : Visitor.GetAssertions()) {
+  for (const InlineAssertion *A : Visitor.GetInlineAssertions()) {
     google::protobuf::TextFormat::PrintToString(*A, &ProtobufText);
     Out << ProtobufText << "===\n";
   }

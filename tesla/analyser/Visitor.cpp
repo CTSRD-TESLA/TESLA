@@ -45,7 +45,7 @@ TeslaVisitor::TeslaVisitor(llvm::StringRef Filename, ASTContext *Context)
 }
 
 TeslaVisitor::~TeslaVisitor() {
-  for (Assertion *A : Assertions)
+  for (InlineAssertion *A : InlineAssertions)
     delete A;
 }
 
@@ -54,7 +54,7 @@ bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
   if (!F) return true;
   if (!F->getName().startswith("__tesla_inline_assertion")) return true;
 
-  OwningPtr<Assertion> Assert(new Assertion);
+  OwningPtr<InlineAssertion> Assert(new InlineAssertion);
   if (!ParseInlineAssertion(Assert.get(), E, *Context)) {
     static int ParseFailure =
       Diag.getCustomDiagID(DiagnosticsEngine::Error,
@@ -64,7 +64,7 @@ bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
     return false;
   }
 
-  Assertions.push_back(Assert.take());
+  InlineAssertions.push_back(Assert.take());
 
   return true;
 }

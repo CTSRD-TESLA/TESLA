@@ -43,7 +43,7 @@ using std::vector;
 
 namespace tesla {
 
-bool ParseInlineAssertion(Assertion *A, CallExpr *E, ASTContext& Ctx) {
+bool ParseInlineAssertion(InlineAssertion *A, CallExpr *E, ASTContext& Ctx) {
   FunctionDecl *F = E->getDirectCallee();
   if (!F || !F->getName().startswith("__tesla_inline_assertion")) return false;
 
@@ -89,7 +89,7 @@ bool ParseInlineAssertion(Assertion *A, CallExpr *E, ASTContext& Ctx) {
 }
 
 
-bool ParseContext(Assertion *A, Expr *E, ASTContext& Ctx) {
+bool ParseContext(InlineAssertion *A, Expr *E, ASTContext& Ctx) {
   auto DRE = dyn_cast<DeclRefExpr>(E->IgnoreImplicit());
   if (!DRE) {
     Report("Invalid locality specifier (must be per-thread or global)",
@@ -100,8 +100,8 @@ bool ParseContext(Assertion *A, Expr *E, ASTContext& Ctx) {
 
   StringRef Name = DRE->getDecl()->getName();
 
-  if (Name == "__tesla_perthread") A->set_context(Assertion::ThreadLocal);
-  else if (Name == "__tesla_global") A->set_context(Assertion::Global);
+  if (Name == "__tesla_perthread") A->set_context(InlineAssertion::ThreadLocal);
+  else if (Name == "__tesla_global") A->set_context(InlineAssertion::Global);
   else {
     Report("Invalid locality specifier (must be per-thread or global)",
         E->getExprLoc(), Ctx)

@@ -64,7 +64,7 @@ const string Manifest::SEP = "===\n";
 const Automaton* Manifest::FindAutomaton(const Location& Loc,
                                          Automaton::Type T) const {
   size_t ID = 0;
-  for (Assertion *A : Assertions) {
+  for (InlineAssertion *A : Assertions) {
     if (A->location() == Loc)
       return Automaton::Create(A, ID, T);
 
@@ -76,7 +76,7 @@ const Automaton* Manifest::FindAutomaton(const Location& Loc,
     << "Manifest contains no assertion from " + ShortName(Loc)
     << "; candiates are:\n";
 
-  for (Assertion *A : Assertions)
+  for (InlineAssertion *A : Assertions)
     Errors << " - " << ShortName(A->location()) << "\n";
 
   return NULL;
@@ -86,8 +86,8 @@ const Automaton* Manifest::ParseAutomaton(size_t ID, Automaton::Type T) const{
   return Automaton::Create(Assertions[ID], ID, T);
 }
 
-Manifest::Manifest(ArrayRef<Assertion*> Assertions, raw_ostream& Errors)
-  : Errors(Errors), Storage(new Assertion*[Assertions.size()]),
+Manifest::Manifest(ArrayRef<InlineAssertion*> Assertions, raw_ostream& Errors)
+  : Errors(Errors), Storage(new InlineAssertion*[Assertions.size()]),
     Assertions(Storage.get(), Assertions.size())
 {
   for (size_t i = 0; i < Assertions.size(); i++)
@@ -110,7 +110,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     return NULL;
   }
 
-  SmallVector<Assertion*, 3> Assertions;
+  SmallVector<InlineAssertion*, 3> Assertions;
   const string& CompleteBuffer = Buffer->getBuffer().str();
 
   // The text file delineates individual automata with the string '==='.
@@ -118,7 +118,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     size_t End = CompleteBuffer.find(SEP, Pos + 1);
     const string& Substr = CompleteBuffer.substr(Pos, End - Pos);
 
-    OwningPtr<Assertion> Auto(new Assertion);
+    OwningPtr<InlineAssertion> Auto(new InlineAssertion);
     if (!::google::protobuf::TextFormat::ParseFromString(Substr, &(*Auto))) {
       ErrorStream << "Error parsing TESLA automaton in '" << Path << "'\n";
 

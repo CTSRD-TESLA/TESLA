@@ -39,10 +39,10 @@
 namespace tesla {
 
 // TESLA IR classes
-class Assertion;
 class BooleanExpr;
 class Event;
 class Expression;
+class InlineAssertion;
 class FunctionEvent;
 class Location;
 class NowEvent;
@@ -78,14 +78,14 @@ public:
    *
    * @param
    */
-  static Automaton* Create(const Assertion*, unsigned int id,
+  static Automaton* Create(const InlineAssertion*, unsigned int id,
                            Type T = NonDeterministic);
 
   virtual ~Automaton() {}
   virtual bool IsRealisable() const;
 
   size_t ID() const { return id; }
-  const Assertion& getAssertion() const { return assertion; }
+  const InlineAssertion& getAssertion() const { return assertion; }
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
 
@@ -103,12 +103,12 @@ public:
   TransitionVector::const_iterator end() const  { return Transitions.end(); }
 
 protected:
-  Automaton(size_t id, const Assertion&,
+  Automaton(size_t id, const InlineAssertion&,
             llvm::StringRef Name, llvm::StringRef Desc,
             llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 
   const size_t id;
-  const Assertion& assertion;
+  const InlineAssertion& assertion;
   const std::string name;
   const std::string description;
 
@@ -132,7 +132,7 @@ protected:
  */
 class NFA : public Automaton {
 public:
-  static NFA* Parse(const Assertion*, unsigned int id);
+  static NFA* Parse(const InlineAssertion*, unsigned int id);
 
 private:
   /**
@@ -170,7 +170,8 @@ private:
   static State* Parse(const FunctionEvent&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 
-  NFA(size_t id, const Assertion& A, llvm::StringRef Name, llvm::StringRef Desc,
+  NFA(size_t id, const InlineAssertion& A,
+      llvm::StringRef Name, llvm::StringRef Desc,
       llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 
@@ -186,7 +187,7 @@ public:
   bool IsRealisable() const { return true; }
 
 private:
-  DFA(size_t id, Assertion& A, llvm::StringRef Name, llvm::StringRef Desc,
+  DFA(size_t id, InlineAssertion& A, llvm::StringRef Name, llvm::StringRef Desc,
       llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 

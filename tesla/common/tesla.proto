@@ -32,9 +32,9 @@ package tesla;
 
 
 /**
- * A TESLA assertion describing the temporal behaviour of software.
+ * An inline assertion describing the temporal behaviour of software.
  */
-message Assertion {
+message InlineAssertion {
   /** Where the automaton is defined (an identifier). */
   required Location location = 1;
 

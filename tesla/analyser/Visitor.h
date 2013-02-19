@@ -45,7 +45,7 @@ namespace llvm {
 
 namespace tesla {
 
-class Assertion;
+class InlineAssertion;
 
 class TeslaVisitor : public clang::RecursiveASTVisitor<TeslaVisitor> {
 public:
@@ -54,14 +54,16 @@ public:
 
   bool VisitCallExpr(clang::CallExpr*);
 
-  const llvm::ArrayRef<Assertion*> GetAssertions() const { return Assertions; }
+  const llvm::ArrayRef<InlineAssertion*> GetInlineAssertions() const {
+    return InlineAssertions;
+  }
 
 private:
   llvm::StringRef Filename;
   clang::ASTContext *Context;
   clang::DiagnosticsEngine& Diag;
 
-  llvm::SmallVector<Assertion*, 2> Assertions;
+  llvm::SmallVector<InlineAssertion*, 2> InlineAssertions;
 };
 
 } // namespace tesla

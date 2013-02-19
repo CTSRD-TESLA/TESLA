@@ -43,16 +43,16 @@ namespace llvm {
 
 namespace tesla {
 
-class Assertion;
 class Event;
 class FunctionEvent;
+class InlineAssertion;
 
 /// A description of TESLA instrumentation to perform.
 class Manifest {
 public:
   size_t size() const { return Assertions.size(); }
 
-  llvm::ArrayRef<Assertion*> AllAssertions() { return Assertions; }
+  llvm::ArrayRef<InlineAssertion*> AllAssertions() { return Assertions; }
 
   /**
    * Find (and create) the @ref Automaton specified at a @ref Location.
@@ -85,7 +85,7 @@ public:
   static llvm::StringRef defaultLocation();
 
 private:
-  Manifest(llvm::ArrayRef<Assertion*> Assertions, llvm::raw_ostream& Errors);
+  Manifest(llvm::ArrayRef<InlineAssertion*> Assertions, llvm::raw_ostream& Err);
 
   //! Returns a copy of all events named in this manifest.
   std::vector<Event> Events();
@@ -97,10 +97,10 @@ private:
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
   //! Memory to store automata in.
-  const llvm::OwningArrayPtr<Assertion*> Storage;
+  const llvm::OwningArrayPtr<InlineAssertion*> Storage;
 
   //! Convenience wrapper that provides useful methods.
-  const llvm::ArrayRef<Assertion*> Assertions;
+  const llvm::ArrayRef<InlineAssertion*> Assertions;
 };
 
 bool operator == (const Location&, const Location&);
