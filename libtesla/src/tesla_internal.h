@@ -95,12 +95,19 @@ int	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
 
 #include <stdio.h>
 #define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
+#define VERBOSE_PRINT(...) if (verbose_debug()) DEBUG_PRINT(__VA_ARGS__)
+
+/** Are we in (verbose) debug mode? */
+int	verbose_debug();
 
 #else // NDEBUG
 
 // When not in debug mode, some values might not get checked.
 #define __debug __unused
 #define DEBUG_PRINT(...)
+#define VERBOSE_PRINT(...)
+
+int	verbose_debug() { return 0; }
 
 #endif
 

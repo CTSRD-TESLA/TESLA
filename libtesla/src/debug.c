@@ -31,11 +31,25 @@
  * $Id$
  */
 
+#include <stdlib.h>
+
 #ifndef NDEBUG
 
 #include "tesla_internal.h"
 
 #define print DEBUG_PRINT
+
+/* TODO: kernel version... probably just say no? */
+int
+verbose_debug()
+{
+	static int mode = -1;
+
+	if (mode == -1)
+		mode = (getenv("VERBOSE_DEBUG") != NULL);
+
+	return mode;
+}
 
 void
 assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)

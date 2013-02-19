@@ -48,17 +48,19 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 	const char *name, const char *description,
 	register_t expected_state, register_t new_state)
 {
-#ifndef NDEBUG
-	DEBUG_PRINT("\n====\n%s()\n", __func__);
-	DEBUG_PRINT("  context:  %s\n",
-	       (tesla_context == TESLA_SCOPE_GLOBAL ? "global" : "per-thread"));
-	DEBUG_PRINT("  class:    %d ('%s')\n", class_id, name);
-	DEBUG_PRINT("  state:    %" PRIu64 "->%" PRIu64"\n",
-               expected_state, new_state);
-	DEBUG_PRINT("  key:      ");
-	print_key(key);
-	DEBUG_PRINT("\n----\n");
-#endif
+	if (verbose_debug()) {
+		DEBUG_PRINT("\n====\n%s()\n", __func__);
+		DEBUG_PRINT("  context:  %s\n",
+		            (tesla_context == TESLA_SCOPE_GLOBAL
+			     ? "global"
+			     : "per-thread"));
+		DEBUG_PRINT("  class:    %d ('%s')\n", class_id, name);
+		DEBUG_PRINT("  state:    %" PRIu64 "->%" PRIu64"\n",
+		            expected_state, new_state);
+		DEBUG_PRINT("  key:      ");
+		print_key(key);
+		DEBUG_PRINT("\n----\n");
+	}
 
 	struct tesla_store *store;
 	CHECK(tesla_store_get, tesla_context, 4, 4, &store);
