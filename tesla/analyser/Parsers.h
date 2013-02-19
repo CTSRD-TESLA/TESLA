@@ -80,11 +80,6 @@ bool ParseRepetition(Repetition*, clang::CallExpr*, const Location&,
                      std::vector<clang::ValueDecl*>& References,
                      clang::ASTContext&);
 
-//! Parse a TESLA-wrapped function call: '__tesla_call(f(x) == y)'.
-bool ParseFunctionCall(FunctionEvent*, clang::CallExpr*,
-                       std::vector<clang::ValueDecl*>& References,
-                       clang::ASTContext&);
-
 //! Parse an unwrapped function call: 'f(x) == y'.
 bool ParseFunctionCall(FunctionEvent*, clang::BinaryOperator*,
                        std::vector<clang::ValueDecl*>& References,

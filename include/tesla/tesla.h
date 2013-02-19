@@ -73,9 +73,6 @@ struct __tesla_event __tesla_ignore;
 /** Reaching the inline assertion. */
 __tesla_event __tesla_now;
 
-/** The result of a function call (e.g., foo(x) == y). */
-__tesla_event __tesla_call(int);
-
 __tesla_event __tesla_optional(__tesla_event, ...);
 
 /** A repetition of events — this allows globby "?", "*", "+", etc. */

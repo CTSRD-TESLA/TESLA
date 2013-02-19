@@ -74,18 +74,18 @@
 #define	ANY	__tesla_any()
 
 /** A more programmer-friendly way to write assertions about the past. */
-#define since(bound, call)						\
+#define since(bound, x)						\
 	__tesla_sequence(						\
 		bound,							\
-		__tesla_call(call),					\
+		x,							\
 		__tesla_now						\
 	)
 
 /** A more programmer-friendly way to write assertions about the future. */
-#define before(bound, call)						\
+#define before(bound, x)						\
 	__tesla_sequence(						\
 		__tesla_now,						\
-		__tesla_call(call),					\
+		x,							\
 		bound							\
 	)
 

@@ -102,7 +102,6 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
   FnEventParser Parser = llvm::StringSwitch<FnEventParser>(Callee->getName())
     .Case("__tesla_entered", &ParseFunctionEntry)
     .Case("__tesla_leaving", &ParseFunctionExit)
-    .Case("__tesla_call",    &ParseFunctionCall)
     .Default(NULL);
 
   if (!Parser) {
@@ -143,34 +142,6 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call, const Location& L,
   }
 
   return true;
-}
-
-
-bool ParseFunctionCall(FunctionEvent *FnEvent, CallExpr *Call,
-                       vector<ValueDecl*>& References,
-                       ASTContext& Ctx) {
-#ifndef NDEBUG
-  auto Predicate = Call->getDirectCallee();
-  assert(Predicate != NULL);
-  assert(Predicate->getName() == "__tesla_call");
-#endif
-
-  if (Call->getNumArgs() != 1) {
-    Report("TESLA predicate should have one (boolean) argument",
-        Call->getLocStart(), Ctx)
-      << Call->getSourceRange();
-    return false;
-  }
-
-  auto Bop = dyn_cast<BinaryOperator>(Call->getArg(0)->IgnoreImplicit());
-  if (!Bop || (Bop->getOpcode() != BO_EQ)) {
-    Report("A TESLA predicate should be of the form foo(x) == y",
-        Call->getLocStart(), Ctx)
-      << Call->getSourceRange();
-    return false;
-  }
-
-  return ParseFunctionCall(FnEvent, Bop, References, Ctx);
 }
 
 
