@@ -32,6 +32,8 @@
 #include "tcp.h"
 #include "tesla-macros.h"
 
+#include <assert.h>
+
 #define previously_in_syscall(x)    since(entered(example_syscall), x)
 #define eventually_in_syscall(x)    before(leaving(example_syscall), x)
 
@@ -66,18 +68,21 @@ perform_operation(int op, struct object *o)
 	return 0;
 }
 
-struct object objects[10];
 
 int
 example_syscall(struct credential *cred, int index, int op)
 {
-	int error;
-	struct object *o = objects + index;
+	struct object *o;
+	int error = get_object(index, &o);
+	if (error != 0)
+		return (error);
 
 	if ((error = security_check(cred, o, op))) return error;
 	some_helper(op);
 	void_helper(o);
 	perform_operation(op, o);
+
+	release(o);
 
 	return 0;
 }

@@ -32,8 +32,20 @@
 #ifndef	DEMO_H
 #define	DEMO_H
 
-struct object {};
+#include <assert.h>
+
+struct object {
+	int	refcount;
+};
+
 struct credential {};
+
+/*
+ * Note: these examples aren't actually thread-safe!
+ */
+int get_object(int index, struct object **o);
+void hold(struct object *o);
+void release(struct object *o);
 
 int security_check(struct credential *subject, struct object *object, int op);
 int log_audit_record(struct object *object, int op);

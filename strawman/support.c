@@ -30,6 +30,19 @@
 
 #include "demo.h"
 
+#include <sys/types.h>
+#include <errno.h>
+
+struct object objects[] = {
+	{ .refcount = 0 },
+	{ .refcount = 0 },
+	{ .refcount = 0 },
+	{ .refcount = 0 }
+};
+
+static const size_t MAX = sizeof(objects) / sizeof(struct object);
+
+
 int
 security_check(struct credential *subject, struct object *object, int op)
 {
@@ -45,5 +58,31 @@ log_audit_record(struct object *object, int op)
 void
 void_helper(struct object *object)
 {
+}
+
+int
+get_object(int index, struct object **o)
+{
+	if ((index < 0) || (index >= MAX))
+		return (EINVAL);
+
+	struct object *obj = objects + index;
+	hold(obj);
+	*o = obj;
+
+	return (0);
+}
+
+void
+hold(struct object *o)
+{
+	o->refcount += 1;
+}
+
+void
+release(struct object *o)
+{
+	o->refcount -= 1;
+	assert(o->refcount >= 0);
 }
 
