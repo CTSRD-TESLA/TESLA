@@ -100,8 +100,8 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
                                 ASTContext&);
 
   FnEventParser Parser = llvm::StringSwitch<FnEventParser>(Callee->getName())
-    .Case("__tesla_entered", &ParseFunctionEntry)
-    .Case("__tesla_leaving", &ParseFunctionExit)
+    .Case("__tesla_call", &ParseFunctionCall)
+    .Case("__tesla_return", &ParseFunctionReturn)
     .Default(NULL);
 
   if (!Parser) {
@@ -199,9 +199,9 @@ bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
 }
 
 
-bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call,
-                        vector<ValueDecl*>& References,
-                        ASTContext& Ctx) {
+bool ParseFunctionCall(FunctionEvent *Event, CallExpr *Call,
+                       vector<ValueDecl*>& References, ASTContext& Ctx) {
+
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_entered");
 
@@ -213,9 +213,9 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call,
 }
 
 
-bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call,
-                       vector<ValueDecl*>& References,
-                       ASTContext& Ctx) {
+bool ParseFunctionReturn(FunctionEvent *Event, CallExpr *Call,
+                         vector<ValueDecl*>& References, ASTContext& Ctx) {
+
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_leaving");
 

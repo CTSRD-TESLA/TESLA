@@ -86,14 +86,14 @@ bool ParseFunctionCall(FunctionEvent*, clang::BinaryOperator*,
                        clang::ASTContext&);
 
 //! Parse a __tesla_entered() predicate.
-bool ParseFunctionEntry(FunctionEvent*, clang::CallExpr*,
-                        std::vector<clang::ValueDecl*>& References,
-                        clang::ASTContext&);
-
-//! Parse a __tesla_leaving() predicate.
-bool ParseFunctionExit(FunctionEvent*, clang::CallExpr*,
+bool ParseFunctionCall(FunctionEvent*, clang::CallExpr*,
                        std::vector<clang::ValueDecl*>& References,
                        clang::ASTContext&);
+
+//! Parse a __tesla_leaving() predicate.
+bool ParseFunctionReturn(FunctionEvent*, clang::CallExpr*,
+                         std::vector<clang::ValueDecl*>& References,
+                         clang::ASTContext&);
 
 //! Parse the common aspects of function entry/exit.
 bool ParseFunctionDetails(FunctionEvent *Event, clang::CallExpr *Call,

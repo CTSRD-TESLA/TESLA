@@ -44,7 +44,7 @@ const std::string BASE = "__tesla_instrumentation_";
 
 const std::string CALLEE_ENTER = BASE + "callee_enter_";
 const std::string CALLEE_LEAVE = BASE + "callee_return_";
-const std::string CALLER_ENTER = BASE + "caller_call_";
+const std::string CALLER_ENTER = BASE + "caller_enter_";
 const std::string CALLER_LEAVE = BASE + "caller_return_";
 
 const std::string ASSERTION_REACHED = BASE + "assertion_reached";

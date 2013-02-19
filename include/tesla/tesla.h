@@ -62,10 +62,10 @@ int __tesla_sequence(__tesla_event, ...);
 
 /* TESLA events: */
 /** Entering a function (with optionally-specified arguments). */
-__tesla_event __tesla_entered(void*, ...);
+__tesla_event __tesla_call(void*, ...);
 
 /** Exiting a function (with optionally-specified arguments). */
-__tesla_event __tesla_leaving(void*, ...);
+__tesla_event __tesla_return(void*, ...);
 
 /** Nothing to see here, move along... */
 struct __tesla_event __tesla_ignore;

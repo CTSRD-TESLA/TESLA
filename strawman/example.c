@@ -34,8 +34,8 @@
 
 #include <assert.h>
 
-#define previously_in_syscall(x)    since(entered(example_syscall), x)
-#define eventually_in_syscall(x)    before(leaving(example_syscall), x)
+#define previously_in_syscall(x)    since(called(example_syscall), x)
+#define eventually_in_syscall(x)    before(returned(example_syscall), x)
 
 int
 perform_operation(int op, struct object *o)
@@ -45,7 +45,7 @@ perform_operation(int op, struct object *o)
 	TESLA_PERTHREAD(previously_in_syscall(security_check(ANY, o, op) == 0));
 
 	/* More simple assertions. */
-	TESLA_PERTHREAD(previously_in_syscall(entered(hold, o)));
+	TESLA_PERTHREAD(previously_in_syscall(called(hold, o)));
 
 	/* An example of using high-level TESLA macros. */
 	TESLA_PERTHREAD(
@@ -57,11 +57,11 @@ perform_operation(int op, struct object *o)
 	/* An example of using the lower-level TESLA interface. */
 	TESLA_GLOBAL(
 		TSEQUENCE(
-			entered(example_syscall),
+			called(example_syscall),
 			some_helper(42) == 0,
-			UPTO(4, entered(void_helper), leaving(void_helper)),
-			ATLEAST(2, entered(example_syscall)),
-			leaving(example_syscall)
+			UPTO(4, called(void_helper), returned(void_helper)),
+			ATLEAST(2, called(example_syscall)),
+			returned(example_syscall)
 		)
 		||
 		eventually_in_syscall(log_audit_record(o, op) == 0)
