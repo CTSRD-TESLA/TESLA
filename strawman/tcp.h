@@ -179,6 +179,33 @@ int	active_close(struct tcpcb*);
 int	established(struct tcpcb*);
 int	tcp_free(struct tcpcb*);
 
+automaton(my_tcpcb_assertion, struct tcpcb *tp)
+{
+	tp->t_state = TCPS_CLOSED;
+
+	TSEQUENCE(
+		tp->t_state = TCPS_LISTEN,
+		optional(tp->t_state = TCPS_CLOSED),
+		tcp_free(tp)
+	)
+	||
+	TSEQUENCE(
+		optional(tp->t_state = TCPS_SYN_SENT),
+		TSEQUENCE(
+			tp->t_state = TCPS_SYN_RECEIVED,
+			established(tp) || active_close(tp)
+		)
+		||
+		established(tp)
+	)
+	||
+	TSEQUENCE(
+		tcp_free(tp)
+	);
+
+	done;
+}
+
 automaton(active_close, struct tcpcb *tp)
 {
 	tp->t_state = TCPS_FIN_WAIT_1;
@@ -212,33 +239,6 @@ automaton(established, struct tcpcb *tp)
 	);
 
 	tcp_free(tp);
-
-	done;
-}
-
-automaton(my_tcpcb_assertion, struct tcpcb *tp)
-{
-	tp->t_state = TCPS_CLOSED;
-
-	TSEQUENCE(
-		tp->t_state = TCPS_LISTEN,
-		optional(tp->t_state = TCPS_CLOSED),
-		tcp_free(tp)
-	)
-	||
-	TSEQUENCE(
-		optional(tp->t_state = TCPS_SYN_SENT),
-		TSEQUENCE(
-			tp->t_state = TCPS_SYN_RECEIVED,
-			established(tp) || active_close(tp)
-		)
-		||
-		established(tp)
-	)
-	||
-	TSEQUENCE(
-		tcp_free(tp)
-	);
 
 	done;
 }
