@@ -30,8 +30,7 @@
 
 #include "demo.h"
 #include "tcp.h"
-
-#include <tesla.h>
+#include "tesla-macros.h"
 
 #define previously_in_syscall(x)    since(entered(example_syscall), x)
 #define eventually_in_syscall(x)    before(leaving(example_syscall), x)

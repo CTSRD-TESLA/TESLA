@@ -32,9 +32,8 @@
 
 #include <sys/types.h>
 
-#include <tesla.h>
-
 #include "tcp_fsm.h"
+#include "tesla-macros.h"
 
 /*
  * Forward declarations of things that, in the kernel, would actually be
