@@ -176,9 +176,9 @@ struct tcpcb {
 };
 
 #ifdef __TESLA_ANALYSER__
-bool	active_close(struct tcpcb*);
-bool	established(struct tcpcb*);
-bool	tcp_free(struct tcpcb*);
+int	active_close(struct tcpcb*);
+int	established(struct tcpcb*);
+int	tcp_free(struct tcpcb*);
 
 automaton(active_close, struct tcpcb *tp)
 {

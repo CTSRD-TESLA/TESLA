@@ -31,8 +31,6 @@
 #ifndef	TESLA_H
 #define	TESLA_H
 
-#include <stdbool.h>
-
 /** Basic TESLA types (magic for the compiler to munge). */
 typedef	struct __tesla_event {}		__tesla_event;
 typedef	struct __tesla_locality {}	__tesla_locality;
@@ -42,7 +40,7 @@ typedef	int	__tesla_count;
 
 /** Magic "function" representing a TESLA assertion. */
 void __tesla_inline_assertion(const char *filename, int line, int count,
-		__tesla_locality*, bool);
+		__tesla_locality*, int expression);
 
 /** A more programmer-friendly version of __tesla_inline_assertion. */
 #define	TESLA_ASSERT(locality, predicate)				\
@@ -69,12 +67,12 @@ extern __tesla_locality *__tesla_perthread;
 	void *__tesla_struct_annotation_##fn_name;
 
 #define	automaton(name, ...) \
-	bool __tesla_automaton_description_##name(__VA_ARGS__)
+	int __tesla_automaton_description_##name(__VA_ARGS__)
 
 #define	done return true
 
 /** A sequence of TESLA events. Can be combined with && or ||. */
-bool __tesla_sequence(__tesla_event, ...);
+int __tesla_sequence(__tesla_event, ...);
 #define	TSEQUENCE(...)	__tesla_sequence(__tesla_ignore, __VA_ARGS__)
 
 
@@ -95,7 +93,7 @@ __tesla_event __tesla_now;
 #define	TESLA_NOW &__tesla_now
 
 /** The result of a function call (e.g., foo(x) == y). */
-__tesla_event __tesla_call(bool);
+__tesla_event __tesla_call(int);
 
 __tesla_event __tesla_optional(__tesla_event, ...);
 #define	optional(...)	__tesla_optional(__tesla_ignore, __VA_ARGS__)
