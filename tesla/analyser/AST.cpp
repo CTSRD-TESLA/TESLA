@@ -45,6 +45,7 @@
 
 using namespace clang;
 using namespace tesla;
+using std::string;
 
 
 namespace tesla {
@@ -60,12 +61,12 @@ void TeslaConsumer::HandleTranslationUnit(ASTContext &Context) {
   if (!Visitor.TraverseDecl(Context.getTranslationUnitDecl()))
     return;
 
-  std::string ErrorInfo;
+  string ErrorInfo;
   llvm::raw_fd_ostream Out(OutFile.str().c_str(), ErrorInfo);
   if (Out.has_error())
     report_fatal_error("unable to open '" + OutFile + "': " + ErrorInfo);
 
-  std::string ProtobufText;
+  string ProtobufText;
   for (const InlineAssertion *A : Visitor.GetInlineAssertions()) {
     google::protobuf::TextFormat::PrintToString(*A, &ProtobufText);
     Out << ProtobufText << "===\n";
