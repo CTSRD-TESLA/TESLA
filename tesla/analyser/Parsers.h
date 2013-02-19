@@ -95,6 +95,10 @@ bool ParseFunctionExit(FunctionEvent*, clang::CallExpr*,
                        std::vector<clang::ValueDecl*>& References,
                        clang::ASTContext&);
 
+//! Parse the common aspects of function entry/exit.
+bool ParseFunctionDetails(FunctionEvent *Event, clang::CallExpr *Call,
+                          std::vector<clang::ValueDecl*>& References,
+                          clang::ASTContext& Ctx);
 
 //! Parse a reference to a function that requires instrumentation.
 bool ParseFunctionRef(FunctionRef*, clang::FunctionDecl*, clang::ASTContext&);

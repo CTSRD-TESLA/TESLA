@@ -209,6 +209,27 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call,
   Event->set_context(FunctionEvent::Callee);
   Event->set_direction(FunctionEvent::Entry);
 
+  return ParseFunctionDetails(Event, Call, References, Ctx);
+}
+
+
+bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call,
+                       vector<ValueDecl*>& References,
+                       ASTContext& Ctx) {
+  assert(Call->getDirectCallee() != NULL);
+  assert(Call->getDirectCallee()->getName() == "__tesla_leaving");
+
+  // TODO: better distinguishing between callee and/or caller
+  Event->set_context(FunctionEvent::Callee);
+  Event->set_direction(FunctionEvent::Exit);
+
+  return ParseFunctionDetails(Event, Call, References, Ctx);
+}
+
+
+bool ParseFunctionDetails(FunctionEvent *Event, CallExpr *Call,
+                          vector<ValueDecl*>& References, ASTContext& Ctx) {
+
   // The arguments to __tesla_entered are the function itself and then,
   // optionally, the arguments (any of which may be __tesla_any()).
   if (Call->getNumArgs() < 1) {
@@ -251,42 +272,6 @@ bool ParseFunctionEntry(FunctionEvent *Event, CallExpr *Call,
       if (!ParseArgument(Event->add_argument(), *I, References, Ctx, true))
         return false;
     }
-  }
-
-  return ParseFunctionRef(Event->mutable_function(), Fn, Ctx);
-}
-
-
-bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call,
-                       vector<ValueDecl*>& References,
-                       ASTContext& Ctx) {
-  assert(Call->getDirectCallee() != NULL);
-  assert(Call->getDirectCallee()->getName() == "__tesla_leaving");
-
-  // TODO: better distinguishing between callee and/or caller
-  Event->set_context(FunctionEvent::Callee);
-  Event->set_direction(FunctionEvent::Exit);
-
-  if ((Call->getNumArgs() != 1) || (Call->getArg(0) == NULL)) {
-    Report("__tesla_leaving predicate should have one argument: the function",
-        Call->getLocStart(), Ctx)
-      << Call->getSourceRange();
-    return false;
-  }
-
-  auto FnRef = dyn_cast<DeclRefExpr>(Call->getArg(0)->IgnoreImplicit());
-  if (!FnRef) {
-    Report("Expected a function call", Call->getLocStart(), Ctx)
-      << Call->getSourceRange();
-    return false;
-  }
-
-  auto Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
-  assert(Fn != NULL);
-
-  for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
-    if (!ParseArgument(Event->add_argument(), *I, References, Ctx))
-      return false;
   }
 
   return ParseFunctionRef(Event->mutable_function(), Fn, Ctx);
