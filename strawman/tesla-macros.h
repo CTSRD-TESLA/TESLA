@@ -64,7 +64,7 @@
 
 #define automaton(name, ...)    __tesla_automaton(name, __VA_ARGS__)
 
-#define	done return (1)
+#define	done return (__tesla_automaton_done())
 
 #define	optional(...)	__tesla_optional(__tesla_ignore, __VA_ARGS__)
 #define	ANY_REP	INT_MAX
