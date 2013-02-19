@@ -223,12 +223,13 @@ bool ParseFunctionExit(FunctionEvent *Event, CallExpr *Call,
   Event->set_context(FunctionEvent::Callee);
   Event->set_direction(FunctionEvent::Exit);
 
-  return ParseFunctionDetails(Event, Call, References, Ctx);
+  return ParseFunctionDetails(Event, Call, References, Ctx, true);
 }
 
 
 bool ParseFunctionDetails(FunctionEvent *Event, CallExpr *Call,
-                          vector<ValueDecl*>& References, ASTContext& Ctx) {
+                          vector<ValueDecl*>& References, ASTContext& Ctx,
+                          bool ParseRetVal) {
 
   // The arguments to __tesla_entered are the function itself and then,
   // optionally, the arguments (any of which may be __tesla_any()).
@@ -247,14 +248,17 @@ bool ParseFunctionDetails(FunctionEvent *Event, CallExpr *Call,
 
   auto Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
   assert(Fn != NULL);
+  bool HaveRetVal = ParseRetVal && !Fn->getResultType()->isVoidType();
 
   // Parse the arguments to the event: either specified by the programmer in
   // the assertion or else the definition of the function.
   size_t ArgCount = Call->getNumArgs() - 1;  // first arg is the function
 
   if (ArgCount > 0) {
+    const size_t ExpectedSize = Fn->param_size() + (HaveRetVal ? 1 : 0);
+
     // If an assertion specifies any arguments, it must specify all of them.
-    if (ArgCount != Fn->param_size()) {
+    if (ArgCount != ExpectedSize) {
       Report("specify all arguments or none (__tesla_any() allowed)",
              Call->getLocStart(), Ctx)
         << Call->getSourceRange();
@@ -265,6 +269,12 @@ bool ParseFunctionDetails(FunctionEvent *Event, CallExpr *Call,
                          References, Ctx))
         return false;
     }
+
+    if (HaveRetVal)
+      if (!ParseArgument(Event->mutable_expectedreturnvalue(),
+                         Call->getArg(ArgCount), References, Ctx))
+        return false;
+
   } else {
     // The assertion doesn't specify any arguments; include information about
     // arguments from the function definition, just for information.
@@ -272,6 +282,9 @@ bool ParseFunctionDetails(FunctionEvent *Event, CallExpr *Call,
       if (!ParseArgument(Event->add_argument(), *I, References, Ctx, true))
         return false;
     }
+
+    if (HaveRetVal)
+      Event->mutable_expectedreturnvalue()->set_type(Argument::Any);
   }
 
   return ParseFunctionRef(Event->mutable_function(), Fn, Ctx);
