@@ -30,7 +30,16 @@
  * $Id$
  */
 
+#include "tesla_internal.h"
+
 #include <tesla/libtesla.h>
+
+
+void
+tesla_die(char *message)
+{
+	tesla_panic("tesla_die: '%s'\n", message);
+}
 
 const char *
 tesla_strerror(int error)

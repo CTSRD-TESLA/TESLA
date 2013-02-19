@@ -54,6 +54,11 @@
 
 
 /**
+ * Call this if things go catastrophically, unrecoverably wrong.
+ */
+void	tesla_die(char *message) __attribute__((noreturn));
+
+/**
  * Create a new @ref tesla_instance.
  *
  * The caller is responsible for locking the class if needed.
