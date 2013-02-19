@@ -1,3 +1,4 @@
+/** @file demo.h    Declarations of demo structs, functions. */
 /*
  * Copyright (c) 2012 Jonathan Anderson
  * All rights reserved.
