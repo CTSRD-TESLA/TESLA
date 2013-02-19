@@ -31,7 +31,6 @@
 #ifndef	TESLA_H
 #define	TESLA_H
 
-#include <limits.h>
 #include <stdbool.h>
 
 /** Basic TESLA types (magic for the compiler to munge). */

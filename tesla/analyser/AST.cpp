@@ -34,9 +34,7 @@
 #include "Parsers.h"
 #include "Visitor.h"
 
-#include <clang/AST/ASTConsumer.h>
 #include <clang/AST/ASTContext.h>
-#include <clang/Frontend/FrontendAction.h>
 #include <clang/Tooling/Tooling.h>
 
 #include <llvm/Support/raw_ostream.h>
