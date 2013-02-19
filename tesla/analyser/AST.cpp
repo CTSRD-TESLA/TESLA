@@ -49,13 +49,13 @@ using namespace tesla;
 
 namespace tesla {
 
-TeslaConsumer::TeslaConsumer(llvm::StringRef OutFilename)
-  : OutFile(OutFilename)
+TeslaConsumer::TeslaConsumer(llvm::StringRef In, llvm::StringRef Out)
+  : InFile(In), OutFile(Out)
 {
 }
 
 void TeslaConsumer::HandleTranslationUnit(ASTContext &Context) {
-  TeslaVisitor Visitor(&Context);
+  TeslaVisitor Visitor(InFile, &Context);
 
   if (!Visitor.TraverseDecl(Context.getTranslationUnitDecl()))
     return;
@@ -76,7 +76,7 @@ void TeslaConsumer::HandleTranslationUnit(ASTContext &Context) {
 ASTConsumer* TeslaAction::CreateASTConsumer(CompilerInstance &C,
                                             llvm::StringRef InFile)
 {
-  return new TeslaConsumer(OutFile);
+  return new TeslaConsumer(InFile, OutFile);
 }
 
 

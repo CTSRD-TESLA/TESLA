@@ -39,8 +39,8 @@ using namespace clang;
 
 namespace tesla {
 
-TeslaVisitor::TeslaVisitor(ASTContext *Context)
-  : Context(Context), Diag(Context->getDiagnostics())
+TeslaVisitor::TeslaVisitor(llvm::StringRef Filename, ASTContext *Context)
+  : Filename(Filename), Context(Context), Diag(Context->getDiagnostics())
 {
 }
 

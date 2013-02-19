@@ -49,7 +49,7 @@ class Assertion;
 
 class TeslaVisitor : public clang::RecursiveASTVisitor<TeslaVisitor> {
 public:
-  TeslaVisitor(clang::ASTContext *Context);
+  TeslaVisitor(llvm::StringRef Filename, clang::ASTContext *Context);
   ~TeslaVisitor();
 
   bool VisitCallExpr(clang::CallExpr*);
@@ -57,6 +57,7 @@ public:
   const llvm::ArrayRef<Assertion*> GetAssertions() const { return Assertions; }
 
 private:
+  llvm::StringRef Filename;
   clang::ASTContext *Context;
   clang::DiagnosticsEngine& Diag;
 
