@@ -389,18 +389,23 @@ class DFABuilder {
 
           State *Dest = stateForNFAStates(Destinations, Start);
           Transition::Copy(*DS, *Dest, T, Transitions);
+#ifndef NDEBUG
           fprintf(stderr, "Old: %s\n", T->String().c_str());
           fprintf(stderr, "New: %s\n", Transitions.back()->String().c_str());
+#endif
         }
       }
     }
     // FIXME: We can end up with a lot of accepting states, which could be
     // folded into a single one.
+    DFA *D = new DFA(N->ID(), const_cast<Assertion&>(N->getAssertion()),
+        N->Name(), N->Description(), States, Transitions);
+#ifndef NDEBUG
     fprintf(stderr, "NFA: %s\n", N->String().c_str());
     // Construct the DFA object
-    DFA *D = new DFA(N->ID(), const_cast<Assertion&>(N->getAssertion()), N->Name(), N->Description(), States, Transitions);
     fprintf(stderr, "DFA: %s\n", D->String().c_str());
     dumpStateMap();
+#endif
     return D;
   }
 };
