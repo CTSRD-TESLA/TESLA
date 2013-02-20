@@ -44,8 +44,17 @@
 
 #include <sstream>
 #include <set>
+#if __has_include(<unordered_map>)
 #include <unordered_map>
 #include <unordered_set>
+using std::unordered_map;
+using std::unordered_set;
+#else
+#include <tr1/unordered_map>
+#include <tr1/unordered_set>
+using std::tr1::unordered_map;
+using std::tr1::unordered_set;
+#endif
 
 using namespace llvm;
 
@@ -288,9 +297,9 @@ namespace internal {
 class DFABuilder {
   /// The NFA state sets that we've seen so far and their corresponding DFA
   /// states
-  std::unordered_map<NFAState, State*, NFAStateHash> DFAStates;
+  unordered_map<NFAState, State*, NFAStateHash> DFAStates;
   /// The NFA states that we've completely built.
-  std::unordered_set<unsigned> FinishedStates;
+  unordered_set<unsigned> FinishedStates;
   /// States that have been created, but not yet emitted
   llvm::SmallVector<std::pair<NFAState, bool>, 16> UnfinishedStates;
   StateVector States;
@@ -354,7 +363,7 @@ class DFABuilder {
       // Now we have a state, we need to handle its transitions.
       // If there is only one state in the current state set, then we can just
       // copy all of the transitions from it.
-      std::unordered_set<Transition*> FinishedTransitions;
+      unordered_set<Transition*> FinishedTransitions;
       // Loop over all of the NFA states and find their outgoing transitions
       for (auto SI=CurrentState.begin(), SE=CurrentState.end() ; SI!=SE ; ++SI) {
         unsigned I = *SI;
