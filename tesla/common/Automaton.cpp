@@ -398,7 +398,7 @@ class DFABuilder {
     }
     // FIXME: We can end up with a lot of accepting states, which could be
     // folded into a single one.
-    DFA *D = new DFA(N->ID(), const_cast<Assertion&>(N->getAssertion()),
+    DFA *D = new DFA(N->ID(), const_cast<InlineAssertion&>(N->getAssertion()),
         N->Name(), N->Description(), States, Transitions);
 #ifndef NDEBUG
     fprintf(stderr, "NFA: %s\n", N->String().c_str());
