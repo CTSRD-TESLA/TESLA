@@ -63,7 +63,7 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 	}
 
 	struct tesla_store *store;
-	CHECK(tesla_store_get, tesla_context, 4, 4, &store);
+	CHECK(tesla_store_get, tesla_context, 8, 8, &store);
 
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
