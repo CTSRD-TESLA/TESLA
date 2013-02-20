@@ -53,6 +53,14 @@ cl::opt<string> ManifestName(cl::desc("<input file>"),
 
 cl::opt<string> OutputFile("o", cl::desc("<output file>"), cl::init("-"));
 
+cl::opt<Automaton::Type> Determinism(cl::desc("automata determinism:"),
+      cl::values(
+        clEnumValN(Automaton::NonDeterministic, "n" ,
+                   "non-determinism allowed"),
+        clEnumValN(Automaton::Deterministic, "d" , "determinism required"),
+        clEnumValEnd),
+      cl::init(Automaton::NonDeterministic));
+
 int
 main(int argc, char *argv[]) {
   cl::ParseCommandLineOptions(argc, argv);
@@ -76,7 +84,7 @@ main(int argc, char *argv[]) {
 
   for (size_t i = 0; i < Manifest->size(); i++) {
     OwningPtr<const Automaton> Automaton(
-      Manifest->ParseAutomaton(i, Automaton::NonDeterministic));
+      Manifest->ParseAutomaton(i, Determinism));
 
     if (!Automaton) {
       err << "\n";

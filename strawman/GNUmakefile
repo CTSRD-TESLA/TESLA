@@ -71,7 +71,7 @@ instrument: tesla
 # Graph the .tesla file.
 ${DOTFILE}: .tesla
 	@echo "[GRAPH]   $^ > $@"
-	${GRAPH} -o $@ $<
+	${GRAPH} -d -o $@ $<
 
 # Build the demo application.
 ${BIN}: ${OBJ}
