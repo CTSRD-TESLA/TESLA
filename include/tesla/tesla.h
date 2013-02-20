@@ -49,6 +49,8 @@ int	__tesla_automaton_done();
 /* Only define the following things if doing TESLA analysis, not compiling. */
 #ifdef	__TESLA_ANALYSER__
 
+#include <sys/types.h>
+
 /**
  * TESLA events can be serialised either with respect to the current thread
  * or, using explicit synchronisation, the global execution context.
@@ -79,7 +81,13 @@ __tesla_event __tesla_optional(__tesla_event, ...);
 __tesla_event __tesla_repeat(__tesla_count, __tesla_count, ...);
 
 /** A value that could match a lot of function parameters. Maybe anything? */
-void* __tesla_any();
+void*		__tesla_any_ptr();
+int		__tesla_any_int();
+long		__tesla_any_long();
+long long	__tesla_any_longlong();
+register_t	__tesla_any_register_t();
+
+#define	__tesla_any(type)	__tesla_any_##type()
 
 
 /*

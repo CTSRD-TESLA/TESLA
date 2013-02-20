@@ -71,7 +71,7 @@
 #define	REPEAT(m, n, ...)	__tesla_repeat(m, n, __VA_ARGS__)
 #define	UPTO(n, ...)		__tesla_repeat(0, n, __VA_ARGS__)
 #define	ATLEAST(n, ...)		__tesla_repeat(n, ANY_REP, __VA_ARGS__)
-#define	ANY	__tesla_any()
+#define	ANY(int_type)		__tesla_any(int_type)
 
 /** A more programmer-friendly way to write assertions about the past. */
 #define since(bound, x)						\

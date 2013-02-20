@@ -105,8 +105,9 @@ bool ParseArgument(Argument *Arg, Expr *E, vector<ValueDecl*>& References,
       return false;
     }
 
-    if (Fn->getName() != "__tesla_any") {
-      Report("Invalid call; expected __tesla_any()", P->getLocStart(), Ctx)
+    static const std::string ANY = "__tesla_any";
+    if (Fn->getName().slice(0, ANY.length()) != ANY) {
+      Report("Invalid call; expected " + ANY + "*()", P->getLocStart(), Ctx)
         << P->getSourceRange();
       return false;
     }
