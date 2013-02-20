@@ -60,9 +60,11 @@ perform_operation(int op, struct object *o)
 	TESLA_GLOBAL(
 		TSEQUENCE(
 			called(example_syscall),
-			some_helper(42) == 0,
-			UPTO(4, called(void_helper), returned(void_helper)),
-			ATLEAST(2, called(example_syscall)),
+			get_object(ANY(int), ANY(ptr)) == 0,
+			security_check(ANY(ptr), o, op) == 0,
+			some_helper(op) == 0,
+			called(void_helper, o),
+			returned(release, o),
 			returned(example_syscall)
 		)
 		||
