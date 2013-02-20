@@ -63,6 +63,26 @@ void Transition::Create(State& From, const State& To, const FunctionEvent& Ev,
   OwningPtr<Transition> T(new FnTransition(From, To, Ev));
   Register(T, From, Transitions);
 }
+void Transition::Copy(State &From, const State& To, const Transition* Other,
+                   TransitionVector& Transitions) {
+  switch (Other->getKind()) {
+    case Null:
+      return;
+    case Now: {
+      OwningPtr<Transition> T(new NowTransition(From, To,
+            cast<NowTransition>(Other)->Loc));
+      Register(T, From, Transitions);
+      return;
+    }
+    case Fn: {
+      OwningPtr<Transition> T(new FnTransition(From, To,
+            cast<FnTransition>(Other)->Ev));
+      Register(T, From, Transitions);
+      return;
+    }
+  }
+  llvm_unreachable("Bad transition type");
+}
 
 void Transition::Register(OwningPtr<Transition>& T, State& From,
                           TransitionVector& Transitions) {
@@ -102,6 +122,10 @@ string Transition::Dot() const {
 NowTransition::NowTransition(const State& From, const State& To,
                              const NowEvent& Ev)
   : Transition(From, To), Loc(Ev.location()) {}
+
+NowTransition::NowTransition(const State& From, const State& To,
+                             const Location& L)
+  : Transition(From, To), Loc(L) {}
 
 
 string FnTransition::ShortLabel() const {

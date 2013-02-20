@@ -36,6 +36,7 @@
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
 
+
 namespace tesla {
 
 // TESLA IR classes
@@ -53,6 +54,10 @@ class Sequence;
 class State;
 class Transition;
 
+namespace internal {
+  class DFABuilder;
+}
+
 
 /**
  * An automata representation of a TESLA assertion.
@@ -64,6 +69,7 @@ class Transition;
  * ownership rests with the @ref State objects.
  */
 class Automaton {
+  friend class internal::DFABuilder;
 public:
   enum Type {
     Deterministic,
@@ -131,6 +137,7 @@ protected:
  * the type system makes no guarantees.
  */
 class NFA : public Automaton {
+	friend class DFA;
 public:
   static NFA* Parse(const InlineAssertion*, unsigned int id);
 
@@ -182,6 +189,7 @@ private:
  * Objects of this type are guaranteed to be realisable.
  */
 class DFA : public Automaton {
+  friend class internal::DFABuilder;
 public:
   static DFA* Convert(const NFA*);
   bool IsRealisable() const { return true; }

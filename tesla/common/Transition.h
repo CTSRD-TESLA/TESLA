@@ -39,6 +39,8 @@
 
 #include <string>
 
+#include "tesla.pb.h"
+
 namespace tesla {
 
 // TESLA IR classes
@@ -69,6 +71,12 @@ public:
   static void Create(State& From, const State& To, const NowEvent&,
                      TransitionVector&);
 
+  /// Creates a transition between the specified states, with the same
+  /// transition type as the copied transition.  This is used when constructing
+  /// DFA transitions from NFA transitions.
+  static void Copy(State &From, const State& To, const Transition* Other,
+                   TransitionVector &);
+
   virtual ~Transition() {}
 
   const State& Source() const { return From; }
@@ -89,6 +97,9 @@ public:
   //! Information for LLVM's RTTI (isa<>, cast<>, etc.).
   enum TransitionKind { Null, Now, Fn };
   virtual TransitionKind getKind() const = 0;
+  /// Is this transition one that will be triggered with the same events, but
+  //with a different target node.
+  virtual bool IsEquivalent(const Transition &T) const = 0;
 
 protected:
 
@@ -114,6 +125,10 @@ public:
   }
   virtual TransitionKind getKind() const { return Null; };
 
+  virtual bool IsEquivalent(const Transition &T) const {
+    return T.getKind() == Null;
+  }
+
 private:
   NullTransition(const State& From, const State& To)
     : Transition(From, To) {}
@@ -134,13 +149,48 @@ public:
   }
   virtual TransitionKind getKind() const { return Now; };
 
+  virtual bool IsEquivalent(const Transition &T) const {
+    return T.getKind() == Now;
+  }
+
 private:
   NowTransition(const State& From, const State& To, const NowEvent& Ev);
+  NowTransition(const State& From, const State& To, const Location &L);
 
   const Location& Loc;
 
   friend class Transition;
 };
+
+inline bool operator==(const Argument &A1, const Argument &A2) {
+  if (A1.type() != A2.type()) return false;
+  if (A1.has_index())
+    if (A2.has_index() && (A1.index() != A1.index())) return false;
+  if (A1.has_name())
+    if (A2.has_name() && (A1.name() != A1.name())) return false;
+  if (A1.has_value())
+    if (A2.has_value() && (A1.value() != A1.value())) return false;
+  return true;
+}
+inline bool operator!=(const Argument &A1, const Argument &A2) {
+  return !(A1 == A2);
+}
+inline bool operator==(const FunctionEvent &E1, const FunctionEvent &E2) {
+  if (E1.has_direction())
+    if (E2.has_direction() && (E1.direction() != E1.direction())) return false;
+  if (E1.has_context())
+    if (E2.has_context() && (E1.context() != E1.context())) return false;
+  if (E1.has_expectedreturnvalue())
+    if (E2.has_expectedreturnvalue() &&
+        (E1.expectedreturnvalue() != E1.expectedreturnvalue())) return false;
+  if (E1.has_expectedreturnvalue() && E2.has_expectedreturnvalue())
+    if (E1.expectedreturnvalue() != E1.expectedreturnvalue()) return false;
+  if (E1.argument_size() != E2.argument_size()) return false;
+  for (int i=0 ; i<E1.argument_size() ; i++)
+    if (E1.argument(i) != E2.argument(i)) return false;
+  return true;
+}
+
 
 /// A function-related transition.
 class FnTransition : public Transition {
@@ -156,6 +206,11 @@ public:
   }
 
   virtual TransitionKind getKind() const { return Fn; };
+
+  virtual bool IsEquivalent(const Transition &T) const {
+    return (T.getKind() == Fn) &&
+        (Ev == llvm::cast<FnTransition>(&T)->FnEvent());
+  }
 
 private:
   FnTransition(const State& From, const State& To, const FunctionEvent& Ev)

@@ -38,8 +38,13 @@
 
 namespace tesla {
 
+namespace internal {
+  class DFABuilder;
+}
+
 /// A state in a TESLA DFA.
 class State {
+  friend class internal::DFABuilder;
 public:
   static State* Create(StateVector&);
   static State* CreateStartState(StateVector&);
@@ -54,12 +59,15 @@ public:
 
   std::string String() const;
   std::string Dot() const;
+  Transition *const*begin() const { return Transitions.begin(); }
+  Transition *const*end() const { return Transitions.end(); }
 
 private:
   State(size_t id, bool start = false);
 
   const size_t id;
   const bool start;
+
 
   llvm::SmallVector<Transition*, 1> Transitions;
 };

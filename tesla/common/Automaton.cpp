@@ -43,6 +43,9 @@
 #include <google/protobuf/text_format.h>
 
 #include <sstream>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace llvm;
 
@@ -264,14 +267,127 @@ NFA::NFA(size_t id, const InlineAssertion& A, StringRef Name, StringRef Desc,
 {
 }
 
+namespace {
+typedef std::set<unsigned> NFAState;
+void dump(const NFAState &S) {
+  for (unsigned i : S) {
+    fprintf(stderr, "%d ", i);
+  }
+  fprintf(stderr, "\n");
+}
+struct NFAStateHash
+{
+  size_t operator()(const NFAState &S) const {
+    if (S.size() == 0) return 0;
+    return *S.begin();
+  }
+};
+}
 
+namespace internal {
+class DFABuilder {
+  /// The set of DFA states that correspond to the current location
+  NFAState CurrentState;
+  /// The NFA state sets that we've seen so far and their corresponding DFA
+  /// states
+  std::unordered_map<NFAState, State*, NFAStateHash> DFAStates;
+  /// The NFA states that we've completely built.
+  std::unordered_set<unsigned> FinishedStates;
+  StateVector States;
+  TransitionVector Transitions;
+  /// Collect the set of NFA states that correspond to a single DFA state (i.e.
+  /// all of the states that are reachable from the input state via epsilon
+  /// transitions)
+  void collectFrontier(NFAState& N, const State* S, bool& Start) {
+    N.insert(S->ID());
+    Start &= S->IsStartState();
+    for (Transition *T : *S)
+      if (T->getKind() == Transition::Null)
+        collectFrontier(N, &T->Destination());
+  }
+
+  void collectFrontier(NFAState& N, const State* S) {
+    bool B = true;
+    collectFrontier(N, S, B);
+  }
+
+  State *stateForNFAState(const State *S) {
+    NFAState NStates;
+    bool Start = false;
+    collectFrontier(NStates, S, Start);
+    auto Existing = DFAStates.find(NStates);
+    if (Existing != DFAStates.end()) 
+      return Existing->second;
+    State *DS = Start ? State::CreateStartState(States) : State::Create(States);
+    DFAStates.insert(std::make_pair(NStates, DS));
+    return DS;
+  }
+  void dumpStateMap() {
+    for (auto I : DFAStates) {
+      fprintf(stderr, "%d = ", (int)I.second->ID());
+      dump(I.first);
+    }
+  }
+
+  public:
+  /// Public interface to this class.  Constructs a DFA from the provided NFA.
+  DFA *ConstructDFA(const NFA *N) {
+    assert(N != NULL);
+    // We can't reuse these currently.  
+    assert(States.empty());
+
+    for (State *NS : N->States) {
+      CurrentState.clear();
+      // Find the NFA states that correspond to the current state.
+      collectFrontier(CurrentState, NS);
+      State *DS = stateForNFAState(NS);
+      if (FinishedStates.find(DS->ID()) != FinishedStates.end())
+        continue;
+      FinishedStates.insert(DS->ID());
+      // Now we have a state, we need to handle its transitions.
+      // If there is only one state in the current state set, then we can just
+      // copy all of the transitions from it.
+      if (CurrentState.size() == 1) {
+        for (Transition *T : NS->Transitions) {
+          if (T->getKind() == Transition::Null) continue;
+          assert(T->IsRealisable());
+          Transition::Copy(*DS, *stateForNFAState(&T->Destination()),
+              T, Transitions);
+          fprintf(stderr, "Old: %s\n", T->String().c_str());
+          fprintf(stderr, "New: %s\n", Transitions.back()->String().c_str());
+        }
+      } else {
+        fprintf(stderr, "Multiple current states\n");
+        // Loop over all of the NFA states and find their outgoing transitions
+        for (unsigned I : CurrentState)
+          for (Transition *T : *N->States[I]) {
+            if (T->getKind() == Transition::Null) continue;
+            assert(T->IsRealisable());
+            Transition::Copy(*N->States[I], *stateForNFAState(&T->Destination()),
+                T, Transitions);
+            fprintf(stderr, "Old: %s\n", T->String().c_str());
+            fprintf(stderr, "New: %s\n", Transitions.back()->String().c_str());
+          }
+      }
+    }
+    // FIXME: We can end up with a lot of accepting states, which could be
+    // folded into a single one.
+    fprintf(stderr, "NFA: %s\n", N->String().c_str());
+    // Construct the DFA object
+    DFA *D = new DFA(N->ID(), const_cast<Assertion&>(N->getAssertion()), N->Name(), N->Description(), States, Transitions);
+    fprintf(stderr, "DFA: %s\n", D->String().c_str());
+    dumpStateMap();
+    return D;
+  }
+};
+
+
+} // internal namespace
 
 // ---- DFA implementation ----------------------------------------------------
 DFA* DFA::Convert(const NFA* N) {
-  assert(N != NULL);
-
-  llvm::errs() << "WARNING: NFA->DFA conversion not implemented yet!\n";
-  return NULL;
+  internal::DFABuilder B;
+  return B.ConstructDFA(N);
 }
 
 DFA::DFA(size_t id, InlineAssertion& A, StringRef Name, StringRef Desc,
