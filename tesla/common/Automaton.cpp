@@ -286,13 +286,13 @@ struct NFAStateHash
 
 namespace internal {
 class DFABuilder {
-  /// The set of DFA states that correspond to the current location
-  NFAState CurrentState;
   /// The NFA state sets that we've seen so far and their corresponding DFA
   /// states
   std::unordered_map<NFAState, State*, NFAStateHash> DFAStates;
   /// The NFA states that we've completely built.
   std::unordered_set<unsigned> FinishedStates;
+  /// States that have been created, but not yet emitted
+  llvm::SmallVector<std::pair<NFAState, bool>, 16> UnfinishedStates;
   StateVector States;
   TransitionVector Transitions;
   /// Collect the set of NFA states that correspond to a single DFA state (i.e.
@@ -310,17 +310,21 @@ class DFABuilder {
     bool B = true;
     collectFrontier(N, S, B);
   }
-
-  State *stateForNFAState(const State *S) {
-    NFAState NStates;
-    bool Start = false;
-    collectFrontier(NStates, S, Start);
+  State *stateForNFAStates(NFAState& NStates, bool Start) {
     auto Existing = DFAStates.find(NStates);
     if (Existing != DFAStates.end()) 
       return Existing->second;
     State *DS = Start ? State::CreateStartState(States) : State::Create(States);
     DFAStates.insert(std::make_pair(NStates, DS));
+    UnfinishedStates.push_back(std::make_pair(NStates, Start));
     return DS;
+  }
+
+  State *stateForNFAState(const State *S) {
+    NFAState NStates;
+    bool Start = false;
+    collectFrontier(NStates, S, Start);
+    return stateForNFAStates(NStates, Start);
   }
   void dumpStateMap() {
     for (auto I : DFAStates) {
@@ -335,39 +339,59 @@ class DFABuilder {
     assert(N != NULL);
     // We can't reuse these currently.  
     assert(States.empty());
-
-    for (State *NS : N->States) {
-      CurrentState.clear();
+    // The set of DFA states that correspond to the current location
+    NFAState CurrentState;
+    stateForNFAState(N->States.front());
+    while (!UnfinishedStates.empty()) {
+      CurrentState = UnfinishedStates.back().first;
+      bool Start = UnfinishedStates.back().second;
+      UnfinishedStates.pop_back();
       // Find the NFA states that correspond to the current state.
-      collectFrontier(CurrentState, NS);
-      State *DS = stateForNFAState(NS);
+      State *DS = stateForNFAStates(CurrentState, Start);
       if (FinishedStates.find(DS->ID()) != FinishedStates.end())
         continue;
       FinishedStates.insert(DS->ID());
       // Now we have a state, we need to handle its transitions.
       // If there is only one state in the current state set, then we can just
       // copy all of the transitions from it.
-      if (CurrentState.size() == 1) {
-        for (Transition *T : NS->Transitions) {
+      std::unordered_set<Transition*> FinishedTransitions;
+      // Loop over all of the NFA states and find their outgoing transitions
+      for (auto SI=CurrentState.begin(), SE=CurrentState.end() ; SI!=SE ; ++SI) {
+        unsigned I = *SI;
+        State *NState = N->States[I];
+        Start = false;
+        for (auto TI=NState->begin(), TE=NState->end() ; TI!=TE ; ++TI) {
+          Transition *T = *TI;
           if (T->getKind() == Transition::Null) continue;
           assert(T->IsRealisable());
-          Transition::Copy(*DS, *stateForNFAState(&T->Destination()),
-              T, Transitions);
+          if (FinishedTransitions.count(T) != 0) continue;
+          NFAState Destinations;
+          collectFrontier(Destinations, &T->Destination(), Start);
+          FinishedTransitions.insert(T);
+          // Find the other transitions from this state that are equivalent to this one.
+          auto DTI = TI;
+          for (++DTI ; DTI!=TE ; ++DTI) {
+            if ((*DTI)->IsEquivalent(*T)) {
+              assert(FinishedTransitions.count(*DTI) == 0);
+              FinishedTransitions.insert(*DTI);
+              collectFrontier(Destinations, &(*DTI)->Destination(), Start);
+            }
+          }
+          auto DSI = SI;
+          for (++DSI ; DSI!=SE ; ++DSI)
+            for (Transition *DT : *N->States[*DSI]) {
+            if (DT->IsEquivalent(*T)) {
+              assert(FinishedTransitions.count(DT) == 0);
+              FinishedTransitions.insert(DT);
+              collectFrontier(Destinations, &DT->Destination(), Start);
+            }
+          }
+
+          State *Dest = stateForNFAStates(Destinations, Start);
+          Transition::Copy(*DS, *Dest, T, Transitions);
           fprintf(stderr, "Old: %s\n", T->String().c_str());
           fprintf(stderr, "New: %s\n", Transitions.back()->String().c_str());
         }
-      } else {
-        fprintf(stderr, "Multiple current states\n");
-        // Loop over all of the NFA states and find their outgoing transitions
-        for (unsigned I : CurrentState)
-          for (Transition *T : *N->States[I]) {
-            if (T->getKind() == Transition::Null) continue;
-            assert(T->IsRealisable());
-            Transition::Copy(*N->States[I], *stateForNFAState(&T->Destination()),
-                T, Transitions);
-            fprintf(stderr, "Old: %s\n", T->String().c_str());
-            fprintf(stderr, "New: %s\n", Transitions.back()->String().c_str());
-          }
       }
     }
     // FIXME: We can end up with a lot of accepting states, which could be
