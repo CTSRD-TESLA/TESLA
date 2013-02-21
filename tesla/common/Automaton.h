@@ -137,7 +137,7 @@ protected:
  * the type system makes no guarantees.
  */
 class NFA : public Automaton {
-	friend class DFA;
+  friend class DFA;
 public:
   static NFA* Parse(const InlineAssertion*, unsigned int id);
 
