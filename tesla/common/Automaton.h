@@ -138,6 +138,7 @@ protected:
  */
 class NFA : public Automaton {
   friend class DFA;
+
 public:
   static NFA* Parse(const InlineAssertion*, unsigned int id);
 
@@ -190,6 +191,7 @@ private:
  */
 class DFA : public Automaton {
   friend class internal::DFABuilder;
+
 public:
   static DFA* Convert(const NFA*);
   bool IsRealisable() const { return true; }
