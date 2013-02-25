@@ -123,7 +123,11 @@ string Automaton::Dot() const {
   for (Transition *T : Transitions)
     ss << T->Dot();
 
-  ss << "}";
+  ss
+    << "\tlabel = \"" << Name() << "\";\n"
+    << "\tlabelloc = top;\n"
+    << "\tlabeljust = left;\n"
+    << "}";
 
   return ss.str();
 }
