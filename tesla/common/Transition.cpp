@@ -63,6 +63,7 @@ void Transition::Create(State& From, const State& To, const FunctionEvent& Ev,
   OwningPtr<Transition> T(new FnTransition(From, To, Ev));
   Register(T, From, Transitions);
 }
+
 void Transition::Copy(State &From, const State& To, const Transition* Other,
                    TransitionVector& Transitions) {
   switch (Other->getKind()) {
