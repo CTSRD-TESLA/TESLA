@@ -184,20 +184,18 @@ State* NFA::Parse(const BooleanExpr& Expr, State& Branch,
     return NULL;
 
   State *Join = State::Create(States);
+  Transition::Create(*LHSFinal, *Join, Transitions);
+  Transition::Create(*RHSFinal, *Join, Transitions);
 
   switch (Expr.operation()) {
   default:
     llvm_unreachable("unhandled BooleanExpr::Operation");
 
   case BooleanExpr::BE_Or:
-    Transition::Create(*LHSFinal, *Join, Transitions);
-    Transition::Create(*RHSFinal, *Join, Transitions);
     return Join;
 
   case BooleanExpr::BE_And:
     // TODO: join two (sets of) final states together
-    Transition::Create(*LHSFinal, *Join, Transitions);
-    Transition::Create(*RHSFinal, *Join, Transitions);
     return Join;
 
 #if 0
