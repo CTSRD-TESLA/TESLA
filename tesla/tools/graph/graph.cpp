@@ -93,12 +93,6 @@ main(int argc, char *argv[]) {
 
     out << Automaton->Dot() << "\n\n";
     out.flush();
-
-    err
-      << Automaton->StateCount() << " states, "
-      << Automaton->TransitionCount() << " transitions"
-      << "\n"
-      ;
   }
 
   google::protobuf::ShutdownProtobufLibrary();
