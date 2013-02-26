@@ -75,6 +75,10 @@ bool ParseEvent(Event*, clang::Expr *E, const Location&,
                 std::vector<clang::ValueDecl*>& References,
                 clang::ASTContext& Ctx);
 
+//! Parse the TESLA 'now' event.
+bool ParseNow(Event*, clang::Expr*, clang::NamedDecl*, const Location&,
+              clang::ASTContext&);
+
 //! Parse a sequence of repeated events (a la "aba"+).
 bool ParseRepetition(Repetition*, clang::CallExpr*, const Location&,
                      std::vector<clang::ValueDecl*>& References,

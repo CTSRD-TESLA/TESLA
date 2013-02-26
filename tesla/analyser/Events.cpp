@@ -60,16 +60,8 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
     }
 
     // The only other static __tesla_event is the "now" event.
-    if (D->getName() != "__tesla_now") {
-      Report("TESLA static reference must be __tesla_ignore or __tesla_now",
-             E->getLocStart(), Ctx)
-        << E->getSourceRange();
-      return false;
-    }
+    return ParseNow(Ev, E, D, L, Ctx);
 
-    Ev->set_type(Event::NOW);
-    *Ev->mutable_now()->mutable_location() = L;
-    return true;
   } else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
     // This is a call-and-return like "foo(x) == y".
     Ev->set_type(Event::FUNCTION);
@@ -112,6 +104,23 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
 
   Ev->set_type(Event::FUNCTION);
   return Parser(Ev->mutable_function(), Call, References, Ctx);
+}
+
+
+bool ParseNow(Event *Ev, Expr *E, NamedDecl *D, const Location& L,
+              ASTContext& Ctx) {
+
+  if (D->getName() != "__tesla_now") {
+    Report("TESLA static reference must be __tesla_ignore or __tesla_now",
+           E->getLocStart(), Ctx)
+      << E->getSourceRange();
+    return false;
+  }
+
+  Ev->set_type(Event::NOW);
+  *Ev->mutable_now()->mutable_location() = L;
+
+  return true;
 }
 
 
