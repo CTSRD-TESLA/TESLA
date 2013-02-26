@@ -44,6 +44,7 @@
 namespace tesla {
 
 // TESLA IR classes
+class FieldAssignment;
 class FunctionEvent;
 class Location;
 class NowEvent;
@@ -66,6 +67,9 @@ public:
                      TransitionVector& Transitions);
 
   static void Create(State& From, const State& To, const FunctionEvent&,
+                     TransitionVector&);
+
+  static void Create(State& From, const State& To, const FieldAssignment&,
                      TransitionVector&);
 
   static void Create(State& From, const State& To, const NowEvent&,
@@ -95,7 +99,7 @@ public:
   virtual std::string Dot() const;
 
   //! Information for LLVM's RTTI (isa<>, cast<>, etc.).
-  enum TransitionKind { Null, Now, Fn };
+  enum TransitionKind { Null, Now, Fn, FieldAssign };
   virtual TransitionKind getKind() const = 0;
   /// Is this transition one that will be triggered with the same events, but
   //with a different target node.
@@ -217,6 +221,58 @@ private:
     : Transition(From, To), Ev(Ev) {}
 
   const FunctionEvent& Ev;
+
+  friend class Transition;
+};
+
+
+
+inline bool operator==(const FieldAssignment &X, const FieldAssignment &Y) {
+  if (X.type() != Y.type()) return false;
+  if (X.index() != Y.index()) return false;
+
+  if (X.has_name() != Y.has_name()) return false;
+  if (X.has_name() && (X.name() != Y.name())) return false;
+
+  if (X.operation() != Y.operation()) return false;
+  if (X.value() != Y.value()) return false;
+
+  return true;
+}
+
+inline bool operator!=(const FieldAssignment &X, const FieldAssignment &Y) {
+  return !(X == Y);
+}
+
+
+/// A field assignment transition.
+class FieldAssignTransition : public Transition {
+public:
+  bool IsRealisable() const { return true; }
+  std::string ShortLabel() const;
+  std::string DotLabel() const;
+
+  const FieldAssignment& Assignment() const { return Assign; }
+
+  static bool classof(const Transition *T) {
+    return T->getKind() == FieldAssign;
+  }
+
+  virtual TransitionKind getKind() const { return FieldAssign; };
+
+  virtual bool IsEquivalent(const Transition &T) const {
+    return (T.getKind() == FieldAssign) &&
+        (Assign == llvm::cast<FieldAssignTransition>(&T)->Assignment());
+  }
+
+private:
+  FieldAssignTransition(const State& From, const State& To,
+                        const FieldAssignment& A)
+    : Transition(From, To), Assign(A) {}
+
+  static const char *OpString(FieldAssignment::AssignType);
+
+  const FieldAssignment& Assign;
 
   friend class Transition;
 };

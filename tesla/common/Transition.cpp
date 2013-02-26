@@ -64,6 +64,12 @@ void Transition::Create(State& From, const State& To, const FunctionEvent& Ev,
   Register(T, From, Transitions);
 }
 
+void Transition::Create(State& From, const State& To, const FieldAssignment& A,
+                        TransitionVector& Transitions) {
+  OwningPtr<Transition> T(new FieldAssignTransition(From, To, A));
+  Register(T, From, Transitions);
+}
+
 void Transition::Copy(State &From, const State& To, const Transition* Other,
                    TransitionVector& Transitions) {
   switch (Other->getKind()) {
@@ -78,6 +84,12 @@ void Transition::Copy(State &From, const State& To, const Transition* Other,
     case Fn: {
       OwningPtr<Transition> T(new FnTransition(From, To,
             cast<FnTransition>(Other)->Ev));
+      Register(T, From, Transitions);
+      return;
+    }
+    case FieldAssign: {
+      OwningPtr<Transition> T(new FieldAssignTransition(From, To,
+            cast<FieldAssignTransition>(Other)->Assign));
       Register(T, From, Transitions);
       return;
     }
@@ -140,6 +152,31 @@ string FnTransition::DotLabel() const {
     + FunctionEvent::Direction_Name(Ev.direction())
     + ")"
   ).str();
+}
+
+
+string FieldAssignTransition::ShortLabel() const {
+  return (Twine()
+    + Assign.type()
+    + "."
+    + Assign.name()
+    + " "
+    + OpString(Assign.operation())
+    + " "
+    + Assign.value().value()
+  ).str();
+}
+
+string FieldAssignTransition::DotLabel() const {
+  return ShortLabel();
+}
+
+const char* FieldAssignTransition::OpString(FieldAssignment::AssignType T) {
+  switch (T) {
+  case FieldAssignment::SimpleAssign:  return "=";
+  case FieldAssignment::PlusEqual:     return "+=";
+  case FieldAssignment::MinusEqual:    return "-=";
+  }
 }
 
 } // namespace tesla

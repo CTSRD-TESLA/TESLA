@@ -230,6 +230,9 @@ State* NFA::Parse(const Event& Ev, State& Start,
 
   case Event::FUNCTION:
     return Parse(Ev.function(), Start, States, Transitions);
+
+  case Event::FIELD_ASSIGN:
+    return Parse(Ev.fieldassign(), Start, States, Transitions);
   }
 }
 
@@ -268,6 +271,14 @@ State* NFA::Parse(const FunctionEvent& Ev, State& InitialState,
 
   State *Final = State::Create(States);
   Transition::Create(InitialState, *Final, Ev, Trans);
+  return Final;
+}
+
+State* NFA::Parse(const FieldAssignment& Assign, State& InitialState,
+                  StateVector& States, TransitionVector& Trans) {
+
+  State *Final = State::Create(States);
+  Transition::Create(InitialState, *Final, Assign, Trans);
   return Final;
 }
 

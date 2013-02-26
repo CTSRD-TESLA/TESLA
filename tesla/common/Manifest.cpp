@@ -142,6 +142,7 @@ vector<FunctionEvent> Manifest::FunctionsToInstrument(const Event& Ev) {
       // not a function, do nothing:
       case Event::IGNORE:             break;
       case Event::NOW:                break;
+      case Event::FIELD_ASSIGN:       break;
 
       case Event::FUNCTION:
         FnEvents.push_back(Ev.function());

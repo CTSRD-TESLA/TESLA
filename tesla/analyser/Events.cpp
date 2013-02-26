@@ -62,10 +62,27 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
     // The only other static __tesla_event is the "now" event.
     return ParseNow(Ev, E, D, L, Ctx);
 
+  } else if (auto Assign = dyn_cast<CompoundAssignOperator>(E)) {
+    Ev->set_type(Event::FIELD_ASSIGN);
+    return ParseFieldAssign(Ev->mutable_fieldassign(), Assign, References, Ctx);
+
   } else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
-    // This is a call-and-return like "foo(x) == y".
-    Ev->set_type(Event::FUNCTION);
-    return ParseFunctionCall(Ev->mutable_function(), Bop, References, Ctx);
+    switch (Bop->getOpcode()) {
+    default:
+      Report("Unsupported BinaryOperator opcode", Bop->getOperatorLoc(), Ctx)
+        << Bop->getSourceRange();
+      return false;
+
+    case BO_Assign:
+      Ev->set_type(Event::FIELD_ASSIGN);
+      return ParseFieldAssign(Ev->mutable_fieldassign(), Assign,
+                              References, Ctx);
+
+    case BO_EQ:
+      // This is a call-and-return like "foo(x) == y".
+      Ev->set_type(Event::FUNCTION);
+      return ParseFunctionCall(Ev->mutable_function(), Bop, References, Ctx);
+    }
   }
 
   // Otherwise, it's a call to a TESLA "function" like __tesla_predicate().
@@ -297,6 +314,60 @@ bool ParseFunctionDetails(FunctionEvent *Event, CallExpr *Call,
   }
 
   return ParseFunctionRef(Event->mutable_function(), Fn, Ctx);
+}
+
+
+bool ParseFieldAssign(FieldAssignment *Assign, BinaryOperator *O,
+                      vector<ValueDecl*>& References, ASTContext& Ctx) {
+
+  switch (O->getOpcode()) {
+  default:
+    Report("unhandled compound assignment type", O->getOperatorLoc(), Ctx)
+      << O->getSourceRange();
+    return false;
+
+  case BO_Assign:
+    Assign->set_operation(FieldAssignment::SimpleAssign);
+    break;
+
+  case BO_AddAssign:
+    Assign->set_operation(FieldAssignment::PlusEqual);
+    break;
+
+  case BO_SubAssign:
+    Assign->set_operation(FieldAssignment::MinusEqual);
+    break;
+  }
+
+  auto *LHS = dyn_cast<MemberExpr>(O->getLHS());
+  if (!LHS) {
+    Report("LHS of assignment should be a struct member", O->getLocStart(), Ctx)
+      << O->getLHS()->getSourceRange();
+    return false;
+  }
+
+  auto *DRE = dyn_cast<DeclRefExpr>(LHS->getBase()->IgnoreImpCasts());
+  auto *BasePtrType = dyn_cast<PointerType>(DRE->getDecl()->getType());
+  auto *BaseType = BasePtrType->getPointeeType()->getAsStructureType();
+  if (!BaseType) {
+    Report("base of assignment LHS not a struct type", DRE->getLocStart(), Ctx)
+      << DRE->getSourceRange();
+    return false;
+  }
+
+  Assign->set_type(BaseType->getDecl()->getName());
+
+  auto *Member = dyn_cast<FieldDecl>(LHS->getMemberDecl());
+  if (!Member) {
+    Report("struct member is not a FieldDecl", LHS->getMemberLoc(), Ctx)
+      << LHS->getSourceRange();
+    return false;
+  }
+
+  Assign->set_index(Member->getFieldIndex());
+  Assign->set_name(Member->getName());
+
+  return ParseArgument(Assign->mutable_value(), O->getRHS(), References, Ctx);
 }
 
 }

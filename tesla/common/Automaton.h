@@ -43,6 +43,7 @@ namespace tesla {
 class BooleanExpr;
 class Event;
 class Expression;
+class FieldAssignment;
 class InlineAssertion;
 class FunctionEvent;
 class Location;
@@ -176,6 +177,9 @@ private:
                       StateVector& States, TransitionVector& Trans);
 
   static State* Parse(const FunctionEvent&, State& InitialState,
+                      StateVector& States, TransitionVector& Trans);
+
+  static State* Parse(const FieldAssignment&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 
   NFA(size_t id, const InlineAssertion& A,

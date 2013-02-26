@@ -96,12 +96,15 @@ message Sequence {
  * This is a union type.
  */
 message Event {
-  enum Type { REPETITION = 1; NOW = 2; FUNCTION = 3; IGNORE = 4; }
+  enum Type {
+    REPETITION = 1; NOW = 2; FUNCTION = 3; IGNORE = 4; FIELD_ASSIGN = 5;
+  }
   required Type type = 1;
 
   optional Repetition repetition = 2;
   optional NowEvent now = 3;
   optional FunctionEvent function = 4;
+  optional FieldAssignment fieldAssign = 5;
 }
 
 /** A series of events, repeated some number of times. */
@@ -156,6 +159,27 @@ message FunctionRef {
    *       object files.
    */
   required string name = 1;
+}
+
+/** Assignment to a field in a structure. */
+message FieldAssignment {
+  /** Types of assignment: simple or compound. */
+  enum AssignType { SimpleAssign = 1; PlusEqual = 2; MinusEqual = 3; };
+
+  /** The name of the structure. */
+  required string type = 1;
+
+  /** The index of the field within the struct. */
+  required int32 index = 2;
+
+  /** The name of the field within the structure. */
+  optional string name = 3;
+
+  /** The kind of assignment (e.g. '+='). */
+  required AssignType operation = 4;
+
+  /** The value being assigned. */
+  required Argument value = 5;
 }
 
 /** An argument to a function. */

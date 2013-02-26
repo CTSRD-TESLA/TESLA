@@ -104,6 +104,11 @@ bool ParseFunctionDetails(FunctionEvent *Event, clang::CallExpr *Call,
                           std::vector<clang::ValueDecl*>& References,
                           clang::ASTContext& Ctx, bool ParseRetVal = false);
 
+//! Parse an assignment to a struct field. May be compound (e.g. '+=').
+bool ParseFieldAssign(FieldAssignment *Assign, clang::BinaryOperator*,
+                      std::vector<clang::ValueDecl*>& References,
+                      clang::ASTContext&);
+
 //! Parse a reference to a function that requires instrumentation.
 bool ParseFunctionRef(FunctionRef*, clang::FunctionDecl*, clang::ASTContext&);
 
