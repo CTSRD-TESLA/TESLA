@@ -54,7 +54,7 @@ DiagnosticBuilder Report(StringRef Message, SourceLocation Loc,
     ASTContext& Ctx, DiagnosticsEngine::Level Level) {
 
   DiagnosticsEngine& Diag = Ctx.getDiagnostics();
-  int DiagID = Diag.getCustomDiagID(Level, Message);
+  int DiagID = Diag.getCustomDiagID(Level, ("TESLA: " + Message).str());
   return Diag.Report(Loc, DiagID);
 }
 
