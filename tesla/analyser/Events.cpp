@@ -75,7 +75,7 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
 
     case BO_Assign:
       Ev->set_type(Event::FIELD_ASSIGN);
-      return ParseFieldAssign(Ev->mutable_fieldassign(), Assign,
+      return ParseFieldAssign(Ev->mutable_fieldassign(), Bop,
                               References, Ctx);
 
     case BO_EQ:
