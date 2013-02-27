@@ -1,4 +1,4 @@
-.PHONY: clean run-tesla tesla
+.PHONY: clean tesla
 .SUFFIXES: .c .dot .ll .pdf .tesla
 
 # Hold onto all LLVM IR files for manual inspection.
@@ -19,9 +19,6 @@ TRIPLE=$(shell ${TOOLS}/llvm-triple/llvm-triple)
 CC=clang
 LINK=clang
 LLC=llc -mtriple=${TRIPLE} -filetype=obj
-
-DIFF=$(shell which colordiff || echo "diff")
-VERBOSE?=false
 
 CFLAGS=-Wall -Werror \
 	-D REVISION="\"$(shell ./revision.sh)\"" \
@@ -49,14 +46,6 @@ clean:
 tesla:
 	cd ${BUILD_DIR} && ninja
 
-run-tesla: analyse instrument
-
-analyse: tesla
-	${MAKE} VERBOSE=true example.tesla
-
-instrument: tesla
-	${MAKE} VERBOSE=true ${INSTRUMENTED_IR}
-
 .tesla: ${TESLA}
 	@echo "[CAT]     $^ > $@"
 	cat $^ > $@
@@ -82,16 +71,11 @@ ${BIN}: ${OBJ}
 .c.tesla: tesla
 	@echo "[TESLA]   $^ > $@"
 	${ANALYSE} $< -o $@ -- ${CFLAGS} || rm -f $@
-	${VERBOSE} && echo && echo "===== TESLA analysis of $<: =====" \
-	            && cat $@ && echo "===== end of TESLA analysis =====" \
-	            || exit 0
 
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll .tesla
 	@echo "[TESLA]   $^ > $@"
 	${INSTRUMENT} -tesla-manifest .tesla $< -o $@
-	# We *expect* diff to produce an output!
-	${VERBOSE} && ${DIFF} -u $< $@ || exit 0
 
 # Compile C code to LLVM IR.
 .c.ll:
