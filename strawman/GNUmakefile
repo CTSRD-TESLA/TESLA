@@ -1,89 +1,74 @@
 .PHONY: clean tesla
 .SUFFIXES: .c .dot .ll .pdf .tesla
 
-# Hold onto all LLVM IR files for manual inspection.
-.PRECIOUS: %.ll %.instr.ll
-
-.SILENT:
-
+# The location of TESLA outputs (binaries, libraries, etc.).
+# Only needed when we don't install TESLA to /usr/local.
 BUILD_DIR?=../build
 
-ANALYSE=${BUILD_DIR}/tesla/analyser/tesla-analyse
-INSTRUMENT= ${BUILD_DIR}/tesla/instrumenter/tesla-instrument -S -verify-each
-TOOLS=${BUILD_DIR}/tesla/tools
-GRAPH=${TOOLS}/graph/tesla-graph
-LIBS=-L ${BUILD_DIR}/libtesla/src -l tesla
-
-TRIPLE=$(shell ${TOOLS}/llvm-triple/llvm-triple)
-
-CC=clang
-LINK=clang
+# For our demo handcoded LLVM IR, we need to assign an arch-vendor-OS triple.
+# Normal consumers don't need to do this.
+TRIPLE:=	$(shell ${BUILD_DIR}/tesla/tools/llvm-triple/llvm-triple)
 LLC=llc -mtriple=${TRIPLE} -filetype=obj
 
-CFLAGS=-Wall -Werror \
-	-D REVISION="\"$(shell ./revision.sh)\"" \
-	-I ../include/tesla -D TESLA
+CC=		clang
+LINK=		clang
 
-BIN=demo
-DOTFILE=tesla.dot
-EXAMPLE=example
+REVISION:=	$(shell ./revision.sh)
+CFLAGS+=	-Wall -Werror -D TESLA -D REVISION="\"${REVISION}\""
+LIBS+=		-l tesla
 
-C=example support main
-TESLA=$(patsubst %,%.tesla,$C)
+BIN=		demo
 
-IR=handcoded
+# tesla.mk will create OBJS for instrumented .o files from SRCS and IR.
+SRCS=	example.c support.c main.c
+IR=	handcoded.ll
 
-INSTR=$(patsubst %,%.instr,$C ${IR})
-INSTRUMENTED_IR=$(patsubst %,%.ll,${INSTR})
-
-OBJ=$(patsubst %,%.o,${INSTR})
 
 all: tesla tesla.dot ${BIN}
 
 clean:
-	rm -f ${BIN} $(patsubst %,%.ll,$C ${INSTR}) ${OBJ} ${DOTFILE} *.tesla
+	rm -f ${BIN} ${SRCS:.c=.ll} ${OBJS} ${TESLA_ALLFILES}
 
 tesla:
 	cd ${BUILD_DIR} && ninja
 
-.tesla: ${TESLA}
-	@echo "[CAT]     $^ > $@"
-	cat $^ > $@
-	# temporary workaround for ClangTool irritant:
-	sed -i.backup "s@`pwd`/@@" .tesla && rm .tesla.backup
 
-# Optional PDF-ification of the .dot file.
-.dot.pdf:
-	@echo "[DOT]     $^ > $@"
-	dot -Tpdf -o $@ $<
+#
+# Include TESLA build rules from tesla.mk (with some preparation):
+#
 
-# Graph the .tesla file.
-${DOTFILE}: .tesla
-	@echo "[GRAPH]   $^ > $@"
-	${GRAPH} -d -o $@ $<
+# Just in case TESLA isn't installed to /usr/local:
+CFLAGS+=	-I ../include/tesla
+LIBS+=		-L ${BUILD_DIR}/libtesla/src
 
-# Build the demo application.
-${BIN}: ${OBJ}
-	@echo "[LINK]    $^ > $@"
-	${LINK} $^ ${LIBS} -o $@
+# For some reason, setting PATH interoperates poorly with the Bourne shell (sh):
+# if we set it to ../build/foo:../build:bar:${PATH}, tesla.mk can only run
+# tools in ../build/foo.
+#
+# Again, none of this is necessary when TESLA is installed in /usr/local.
+SHELL:=bash
+PATH:=	${BUILD_DIR}/tesla/analyser:${BUILD_DIR}/tesla/instrumenter:${BUILD_DIR}/tesla/tools/graph:${PATH}
 
-# Run the TESLA analyser over C code.
-.c.tesla: tesla
-	@echo "[TESLA]   $^ > $@"
-	${ANALYSE} $< -o $@ -- ${CFLAGS} || rm -f $@
+include tesla.mk
 
-# Instrument LLVM IR using TESLA.
-%.instr.ll: %.ll .tesla
-	@echo "[TESLA]   $^ > $@"
-	${INSTRUMENT} -tesla-manifest .tesla $< -o $@
+# Hold onto all LLVM IR files for manual inspection.
+# Just for TESLA development: real consumers don't need to do this.
+.PRECIOUS: ${TESLA_IR}
+
+
+#
+# Finally, normal suffix rules:
+#
 
 # Compile C code to LLVM IR.
 .c.ll:
-	@echo "[CC]      $^ > $@"
 	${CC} ${CFLAGS} -S -emit-llvm $< -o $@
 
 # Compile IR to object code.
 .ll.o:
-	@echo "[LLC]     $^ > $@"
 	${LLC} $< -o $@
+
+# Build the demo application.
+${BIN}: ${OBJS}
+	${LINK} -o $@ ${OBJS} ${LIBS}
 
