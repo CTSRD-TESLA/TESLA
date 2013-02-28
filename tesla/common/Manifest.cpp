@@ -61,6 +61,9 @@ cl::opt<string> ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
 
 const string Manifest::SEP = "===\n";
 
+//! Extract events from an @ref Expression.
+static vector<Event> ExprEvents(const Expression&);
+
 const Automaton* Manifest::FindAutomaton(const Location& Loc,
                                          Automaton::Type T) const {
   size_t ID = 0;
@@ -170,6 +173,21 @@ vector<FunctionEvent> Manifest::FunctionsToInstrument() {
   return FnEvents;
 }
 
+vector<Event> Manifest::Events() {
+  vector<Event> AllEvents;
+
+  for (auto *A : Assertions) {
+    auto Expr = ExprEvents(A->expression());
+#ifndef NDEBUG
+    for (auto& Ev : Expr) assert(Event::Type_IsValid(Ev.type()));
+#endif
+    AllEvents.insert(AllEvents.end(), Expr.begin(), Expr.end());
+  }
+
+  return AllEvents;
+}
+
+
 vector<Event> ExprEvents(const Expression& E) {
   assert(Expression::Type_IsValid(E.type()));
 
@@ -195,20 +213,6 @@ vector<Event> ExprEvents(const Expression& E) {
   }
 
   return Events;
-}
-
-vector<Event> Manifest::Events() {
-  vector<Event> AllEvents;
-
-  for (auto *A : Assertions) {
-    auto Expr = ExprEvents(A->expression());
-#ifndef NDEBUG
-    for (auto& Ev : Expr) assert(Event::Type_IsValid(Ev.type()));
-#endif
-    AllEvents.insert(AllEvents.end(), Expr.begin(), Expr.end());
-  }
-
-  return AllEvents;
 }
 
 } // namespace tesla
