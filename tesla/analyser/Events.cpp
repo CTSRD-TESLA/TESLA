@@ -1,4 +1,4 @@
-/*! @file events.cpp  Parsers for TESLA events. */
+/*! @file Events.cpp  Parsers for TESLA events. */
 /*
  * Copyright (c) 2012 Jonathan Anderson
  * All rights reserved.
