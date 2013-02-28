@@ -124,8 +124,6 @@ bool ParseArgument(Argument *Arg, Expr *E, vector<ValueDecl*>& References,
     Arg->set_type(Argument::Constant);
     *Arg->mutable_value() = "0x" + ConstValue.toString(16);
   } else {
-    P->dump();
-
     Report("Invalid argument to function within TESLA assertion",
         P->getLocStart(), Ctx) << P->getSourceRange();
     return false;
