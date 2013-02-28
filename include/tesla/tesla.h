@@ -91,8 +91,10 @@ register_t	__tesla_any_register_t();
  * Structure-related automata descriptions:
  */
 
+struct __tesla_automaton_description;
+
 /** In an explicit automata description, return this to say "we're done". */
-int	__tesla_automaton_done();
+struct __tesla_automaton_description*	__tesla_automaton_done();
 
 
 /** Declare an automaton that describes behaviour of this struct. */
@@ -105,7 +107,7 @@ int	__tesla_automaton_done();
  * This should take the relevant structure as an argument.
  */
 #define	__tesla_automaton(name, ...) \
-	int __tesla_automaton_description_##name(__VA_ARGS__)
+	struct __tesla_automaton_description* name(__VA_ARGS__)
 
 #else	/* !__TESLA_ANALYSER__ */
 
