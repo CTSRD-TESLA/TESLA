@@ -35,17 +35,11 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <llvm/ADT/SmallVector.h>
 
-namespace clang {
-  class ASTContext;
-}
-
-namespace llvm {
-  class raw_ostream;
-}
 
 namespace tesla {
 
 class InlineAssertion;
+
 
 class TeslaVisitor : public clang::RecursiveASTVisitor<TeslaVisitor> {
 public:
@@ -61,7 +55,6 @@ public:
 private:
   llvm::StringRef Filename;
   clang::ASTContext *Context;
-  clang::DiagnosticsEngine& Diag;
 
   llvm::SmallVector<InlineAssertion*, 2> InlineAssertions;
 };

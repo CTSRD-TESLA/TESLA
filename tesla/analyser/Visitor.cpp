@@ -33,15 +33,13 @@
 #include "Parser.h"
 #include "Visitor.h"
 
-
-
 using namespace clang;
 
 
 namespace tesla {
 
 TeslaVisitor::TeslaVisitor(llvm::StringRef Filename, ASTContext *Context)
-  : Filename(Filename), Context(Context), Diag(Context->getDiagnostics())
+  : Filename(Filename), Context(Context)
 {
 }
 
