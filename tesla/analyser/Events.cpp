@@ -77,7 +77,7 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
 
     case BO_EQ:
       // This is a call-and-return like "foo(x) == y".
-      return ParseFunctionCall(Ev, Bop, References, Ctx);
+      return ParseFunctionCall(Ev, Bop, L, References, Ctx);
     }
   }
 
@@ -99,12 +99,10 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
   if (Callee->getName() == "__tesla_repeat") {
     Ev->set_type(Event::REPETITION);
     return ParseRepetition(Ev->mutable_repetition(), Call, L, References, Ctx);
+
   }
 
-  typedef bool (*EventParser)(Event*, CallExpr*, vector<ValueDecl*>&,
-                                ASTContext&);
-
-  EventParser Parser = llvm::StringSwitch<EventParser>(Callee->getName())
+  auto Parser = llvm::StringSwitch<PredicateParser>(Callee->getName())
     .Case("__tesla_call", &ParseFunctionCall)
     .Case("__tesla_return", &ParseFunctionReturn)
     .Default(NULL);
@@ -115,7 +113,7 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
     return false;
   }
 
-  return Parser(Ev, Call, References, Ctx);
+  return Parser(Ev, Call, L, References, Ctx);
 }
 
 
@@ -166,7 +164,7 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call, const Location& L,
 }
 
 
-bool ParseFunctionCall(Event *Event, BinaryOperator *Bop,
+bool ParseFunctionCall(Event *Event, BinaryOperator *Bop, const Location&,
                        vector<ValueDecl*>& References,
                        ASTContext& Ctx) {
 
@@ -223,7 +221,7 @@ bool ParseFunctionCall(Event *Event, BinaryOperator *Bop,
 }
 
 
-bool ParseFunctionCall(Event *Event, CallExpr *Call,
+bool ParseFunctionCall(Event *Event, CallExpr *Call, const Location&,
                        vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   assert(Call->getDirectCallee() != NULL);
@@ -240,7 +238,7 @@ bool ParseFunctionCall(Event *Event, CallExpr *Call,
 }
 
 
-bool ParseFunctionReturn(Event *Ev, CallExpr *Call,
+bool ParseFunctionReturn(Event *Ev, CallExpr *Call, const Location&,
                          vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   Ev->set_type(Event::FUNCTION);

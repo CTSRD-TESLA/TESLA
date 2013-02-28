@@ -41,6 +41,12 @@
 
 namespace tesla {
 
+//! All predicate parsers have this signature.
+typedef bool (*PredicateParser)(Event*, clang::CallExpr*, const Location&,
+                                std::vector<clang::ValueDecl*>&,
+                                clang::ASTContext&);
+
+
 //! Parse a TESLA assertion embedded in C code.
 bool ParseInlineAssertion(InlineAssertion*, clang::CallExpr*,
                           clang::ASTContext&);
@@ -84,17 +90,17 @@ bool ParseRepetition(Repetition*, clang::CallExpr*, const Location&,
                      clang::ASTContext&);
 
 //! Parse an unwrapped function call: 'f(x) == y'.
-bool ParseFunctionCall(Event*, clang::BinaryOperator*,
+bool ParseFunctionCall(Event*, clang::BinaryOperator*, const Location&,
                        std::vector<clang::ValueDecl*>& References,
                        clang::ASTContext&);
 
 //! Parse a __tesla_entered() predicate.
-bool ParseFunctionCall(Event*, clang::CallExpr*,
+bool ParseFunctionCall(Event*, clang::CallExpr*, const Location&,
                        std::vector<clang::ValueDecl*>& References,
                        clang::ASTContext&);
 
 //! Parse a __tesla_leaving() predicate.
-bool ParseFunctionReturn(Event*, clang::CallExpr*,
+bool ParseFunctionReturn(Event*, clang::CallExpr*, const Location&,
                          std::vector<clang::ValueDecl*>& References,
                          clang::ASTContext&);
 
