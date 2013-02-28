@@ -22,7 +22,7 @@ OBJS=		${TESLA_OBJS}
 
 # Run the TESLA analyser over C code.
 .c.tesla: tesla
-	${ANALYSE} $< -o $@ -- ${CFLAGS} || rm -f $@
+	${ANALYSE} $< -o $@ -- ${CFLAGS}
 
 # Instrument LLVM IR using TESLA.
 %.instr.ll: %.ll .tesla
