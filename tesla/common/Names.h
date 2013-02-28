@@ -38,9 +38,17 @@ namespace tesla {
 
 class Location;
 
-const std::string ASSERTION_FN_NAME = "__tesla_inline_assertion";
+const std::string TESLA = "__tesla_";
 
-const std::string BASE = "__tesla_instrumentation_";
+const std::string EVENT = TESLA + "event";
+const std::string OPTIONAL = TESLA + "optional";
+
+const std::string ASSERTION_FN_NAME = TESLA + "inline_assertion";
+
+const std::string BASE = TESLA + "instrumentation_";
+
+const std::string CALL = BASE + "call";
+const std::string RETURN = BASE + "return";
 
 const std::string CALLEE_ENTER = BASE + "callee_enter_";
 const std::string CALLEE_LEAVE = BASE + "callee_return_";
