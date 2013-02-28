@@ -361,9 +361,11 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 
   if (InstrArgs.size() != TotalArgs)
     report_fatal_error(
-      "Instrumentation takes " + Twine(InstrArgs.size())
-      + " but description in manifest has " + Twine(FnEvent.argument_size())
-      + " arguments" + (HaveRetVal ? " and a return value" : "")
+      "instrumentation function takes "
+      + Twine(InstrArgs.size())
+      + " arguments but description in manifest provides "
+      + Twine(FnEvent.argument_size())
+      + (HaveRetVal ? " and a return value" : "")
     );
 
   vector<Value*> Args(TotalArgs, NULL);
