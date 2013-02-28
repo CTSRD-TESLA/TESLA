@@ -56,26 +56,26 @@ extern __tesla_locality *__tesla_global;
 extern __tesla_locality *__tesla_perthread;
 
 /** A sequence of TESLA events. Can be combined with && or ||. */
-int __tesla_sequence(__tesla_event, ...);
+int __tesla_sequence(__tesla_event*, ...);
 
 
 /* TESLA events: */
 /** Entering a function (with optionally-specified arguments). */
-__tesla_event __tesla_call(void*, ...);
+struct __tesla_event* __tesla_call(void*, ...);
 
 /** Exiting a function (with optionally-specified arguments). */
-__tesla_event __tesla_return(void*, ...);
+struct __tesla_event* __tesla_return(void*, ...);
 
 /** Nothing to see here, move along... */
-struct __tesla_event __tesla_ignore;
+struct __tesla_event* __tesla_ignore;
 
 /** Reaching the inline assertion. */
-__tesla_event __tesla_now;
+struct __tesla_event* __tesla_now;
 
-__tesla_event __tesla_optional(__tesla_event, ...);
+struct __tesla_event* __tesla_optional(__tesla_event*, ...);
 
 /** A repetition of events — this allows globby "?", "*", "+", etc. */
-__tesla_event __tesla_repeat(__tesla_count, __tesla_count, ...);
+struct __tesla_event* __tesla_repeat(__tesla_count, __tesla_count, ...);
 
 /** A value that could match a lot of function parameters. Maybe anything? */
 void*		__tesla_any_ptr();
