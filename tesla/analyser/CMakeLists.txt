@@ -17,6 +17,7 @@ add_llvm_executable(tesla-analyse
 	Events.cpp
 	Helpers.cpp
 	References.cpp
+	Struct.cpp
 	Tool.cpp
 	Visitor.cpp
 )
