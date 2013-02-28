@@ -211,6 +211,9 @@ vector<Event> ExprEvents(const Expression& E) {
       Events.insert(Events.begin(), Seq.begin(), Seq.end());
       break;
     }
+
+    case Expression::NULL_EXPR:
+      break;
   }
 
   return Events;

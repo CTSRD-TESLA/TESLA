@@ -167,6 +167,9 @@ State* NFA::Parse(const Expression& Expr, State& Start,
 
   case Expression::SEQUENCE:
     return Parse(Expr.sequence(), Start, States, Transitions);
+
+  case Expression::NULL_EXPR:
+    return &Start;
   }
 }
 
