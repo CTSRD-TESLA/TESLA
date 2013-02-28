@@ -56,6 +56,10 @@ include tesla.mk
 .PRECIOUS: ${TESLA_IR}
 
 
+# Poor man's dependency tracking.
+example.tesla: example.c tcp.h
+
+
 #
 # Finally, normal suffix rules:
 #
