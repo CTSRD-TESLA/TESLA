@@ -63,8 +63,7 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
     return ParseNow(Ev, E, D, L, Ctx);
 
   } else if (auto Assign = dyn_cast<CompoundAssignOperator>(E)) {
-    Ev->set_type(Event::FIELD_ASSIGN);
-    return ParseFieldAssign(Ev->mutable_fieldassign(), Assign, References, Ctx);
+    return ParseFieldAssign(Ev, Assign, References, Ctx);
 
   } else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
     switch (Bop->getOpcode()) {
@@ -74,14 +73,11 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
       return false;
 
     case BO_Assign:
-      Ev->set_type(Event::FIELD_ASSIGN);
-      return ParseFieldAssign(Ev->mutable_fieldassign(), Bop,
-                              References, Ctx);
+      return ParseFieldAssign(Ev, Bop, References, Ctx);
 
     case BO_EQ:
       // This is a call-and-return like "foo(x) == y".
-      Ev->set_type(Event::FUNCTION);
-      return ParseFunctionCall(Ev->mutable_function(), Bop, References, Ctx);
+      return ParseFunctionCall(Ev, Bop, References, Ctx);
     }
   }
 
@@ -105,10 +101,10 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
     return ParseRepetition(Ev->mutable_repetition(), Call, L, References, Ctx);
   }
 
-  typedef bool (*FnEventParser)(FunctionEvent*, CallExpr*, vector<ValueDecl*>&,
+  typedef bool (*EventParser)(Event*, CallExpr*, vector<ValueDecl*>&,
                                 ASTContext&);
 
-  FnEventParser Parser = llvm::StringSwitch<FnEventParser>(Callee->getName())
+  EventParser Parser = llvm::StringSwitch<EventParser>(Callee->getName())
     .Case("__tesla_call", &ParseFunctionCall)
     .Case("__tesla_return", &ParseFunctionReturn)
     .Default(NULL);
@@ -119,8 +115,7 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
     return false;
   }
 
-  Ev->set_type(Event::FUNCTION);
-  return Parser(Ev->mutable_function(), Call, References, Ctx);
+  return Parser(Ev, Call, References, Ctx);
 }
 
 
@@ -171,16 +166,19 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call, const Location& L,
 }
 
 
-bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
+bool ParseFunctionCall(Event *Event, BinaryOperator *Bop,
                        vector<ValueDecl*>& References,
                        ASTContext& Ctx) {
 
+  Event->set_type(Event::FUNCTION);
+  FunctionEvent *FnEvent = Event->mutable_function();
+
   // TODO: better distinguishing between callee and/or caller
-  Event->set_context(FunctionEvent::Callee);
+  FnEvent->set_context(FunctionEvent::Callee);
 
   // Since we might care about the return value, we must instrument exiting
   // the function rather than entering it.
-  Event->set_direction(FunctionEvent::Exit);
+  FnEvent->set_direction(FunctionEvent::Exit);
 
   Expr *LHS = Bop->getLHS();
   bool LHSisICE = LHS->isIntegerConstantExpr(Ctx);
@@ -195,7 +193,7 @@ bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
 
   Expr *RetVal = (LHSisICE ? LHS : RHS);
   Expr *FnCall = (LHSisICE ? RHS : LHS);
-  if (!ParseArgument(Event->mutable_expectedreturnvalue(), RetVal, References,
+  if (!ParseArgument(FnEvent->mutable_expectedreturnvalue(), RetVal, References,
                      Ctx))
     return false;
 
@@ -213,10 +211,10 @@ bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
     return false;
   }
 
-  if (!ParseFunctionRef(Event->mutable_function(), Fn, Ctx)) return false;
+  if (!ParseFunctionRef(FnEvent->mutable_function(), Fn, Ctx)) return false;
 
   for (auto I = FnCallExpr->arg_begin(); I != FnCallExpr->arg_end(); ++I) {
-    if (!ParseArgument(Event->add_argument(), I->IgnoreImplicit(), References,
+    if (!ParseArgument(FnEvent->add_argument(), I->IgnoreImplicit(), References,
                        Ctx))
       return false;
   }
@@ -225,31 +223,37 @@ bool ParseFunctionCall(FunctionEvent *Event, BinaryOperator *Bop,
 }
 
 
-bool ParseFunctionCall(FunctionEvent *Event, CallExpr *Call,
+bool ParseFunctionCall(Event *Event, CallExpr *Call,
                        vector<ValueDecl*>& References, ASTContext& Ctx) {
 
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_entered");
 
-  // TODO: better distinguishing between callee and/or caller
-  Event->set_context(FunctionEvent::Callee);
-  Event->set_direction(FunctionEvent::Entry);
+  Event->set_type(Event::FUNCTION);
+  FunctionEvent *FnEvent = Event->mutable_function();
 
-  return ParseFunctionDetails(Event, Call, References, Ctx);
+  // TODO: better distinguishing between callee and/or caller
+  FnEvent->set_context(FunctionEvent::Callee);
+  FnEvent->set_direction(FunctionEvent::Entry);
+
+  return ParseFunctionDetails(FnEvent, Call, References, Ctx);
 }
 
 
-bool ParseFunctionReturn(FunctionEvent *Event, CallExpr *Call,
+bool ParseFunctionReturn(Event *Ev, CallExpr *Call,
                          vector<ValueDecl*>& References, ASTContext& Ctx) {
+
+  Ev->set_type(Event::FUNCTION);
+  FunctionEvent *FnEvent = Ev->mutable_function();
 
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_leaving");
 
   // TODO: better distinguishing between callee and/or caller
-  Event->set_context(FunctionEvent::Callee);
-  Event->set_direction(FunctionEvent::Exit);
+  FnEvent->set_context(FunctionEvent::Callee);
+  FnEvent->set_direction(FunctionEvent::Exit);
 
-  return ParseFunctionDetails(Event, Call, References, Ctx, true);
+  return ParseFunctionDetails(FnEvent, Call, References, Ctx, true);
 }
 
 

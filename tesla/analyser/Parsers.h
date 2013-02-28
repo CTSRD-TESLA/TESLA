@@ -53,7 +53,6 @@ bool ParseLocation(Location*,
                    clang::Expr *Filename, clang::Expr *Line, clang::Expr *Count,
                    clang::ASTContext&);
 
-
 //! Parse a (polymorphic-ish) TESLA expression.
 bool ParseExpression(Expression*, clang::Expr*, const Location&,
                      std::vector<clang::ValueDecl*>& References,
@@ -85,17 +84,17 @@ bool ParseRepetition(Repetition*, clang::CallExpr*, const Location&,
                      clang::ASTContext&);
 
 //! Parse an unwrapped function call: 'f(x) == y'.
-bool ParseFunctionCall(FunctionEvent*, clang::BinaryOperator*,
+bool ParseFunctionCall(Event*, clang::BinaryOperator*,
                        std::vector<clang::ValueDecl*>& References,
                        clang::ASTContext&);
 
 //! Parse a __tesla_entered() predicate.
-bool ParseFunctionCall(FunctionEvent*, clang::CallExpr*,
+bool ParseFunctionCall(Event*, clang::CallExpr*,
                        std::vector<clang::ValueDecl*>& References,
                        clang::ASTContext&);
 
 //! Parse a __tesla_leaving() predicate.
-bool ParseFunctionReturn(FunctionEvent*, clang::CallExpr*,
+bool ParseFunctionReturn(Event*, clang::CallExpr*,
                          std::vector<clang::ValueDecl*>& References,
                          clang::ASTContext&);
 
@@ -105,7 +104,7 @@ bool ParseFunctionDetails(FunctionEvent *Event, clang::CallExpr *Call,
                           clang::ASTContext& Ctx, bool ParseRetVal = false);
 
 //! Parse an assignment to a struct field. May be compound (e.g. '+=').
-bool ParseFieldAssign(FieldAssignment *Assign, clang::BinaryOperator*,
+bool ParseFieldAssign(Event *Ev, clang::BinaryOperator*,
                       std::vector<clang::ValueDecl*>& References,
                       clang::ASTContext&);
 

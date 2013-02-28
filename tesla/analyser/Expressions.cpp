@@ -64,7 +64,6 @@ bool ParseExpression(Expression *Exp, Expr *E, const Location& L,
   return false;
 }
 
-
 bool ParseBooleanExpr(BooleanExpr *Expr, BinaryOperator *Bop, const Location& L,
                       vector<ValueDecl*>& References, ASTContext& Ctx) {
 
