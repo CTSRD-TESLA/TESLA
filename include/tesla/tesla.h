@@ -42,9 +42,6 @@ typedef	int	__tesla_count;
 void __tesla_inline_assertion(const char *filename, int line, int count,
 		__tesla_locality*, int expression);
 
-/** In an explicit automata description, return this to say "we're done". */
-int	__tesla_automaton_done();
-
 
 /* Only define the following things if doing TESLA analysis, not compiling. */
 #ifdef	__TESLA_ANALYSER__
@@ -93,6 +90,10 @@ register_t	__tesla_any_register_t();
 /*
  * Structure-related automata descriptions:
  */
+
+/** In an explicit automata description, return this to say "we're done". */
+int	__tesla_automaton_done();
+
 
 /** Declare an automaton that describes behaviour of this struct. */
 #define	__tesla_struct_automaton(fn_name) \
