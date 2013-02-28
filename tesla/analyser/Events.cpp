@@ -68,7 +68,7 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
   } else if (auto Bop = dyn_cast<BinaryOperator>(E)) {
     switch (Bop->getOpcode()) {
     default:
-      Report("Unsupported BinaryOperator opcode", Bop->getOperatorLoc(), Ctx)
+      Report("unsupported binary operator for TESLA event", Bop->getOperatorLoc(), Ctx)
         << Bop->getSourceRange();
       return false;
 
