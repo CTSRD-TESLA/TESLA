@@ -38,7 +38,7 @@ using std::vector;
 
 namespace tesla {
 
-bool ParseFunctionRef(FunctionRef *FnRef, FunctionDecl *Fn, ASTContext& Ctx) {
+bool ParseFunctionRef(FunctionRef *FnRef, const FunctionDecl *Fn, ASTContext& Ctx) {
   assert(Fn && "Cannot parse a NULL function declaration");
 
   FnRef->set_name(Fn->getName());
@@ -51,7 +51,7 @@ bool ParseFunctionRef(FunctionRef *FnRef, FunctionDecl *Fn, ASTContext& Ctx) {
   return true;
 }
 
-static int ReferenceIndex(ValueDecl* D, vector<ValueDecl*>& References) {
+static int ReferenceIndex(const ValueDecl* D, vector<const ValueDecl*>& References) {
   size_t Pos = 0;
 
   for (auto I = References.begin(); I != References.end(); I++)
@@ -65,8 +65,8 @@ static int ReferenceIndex(ValueDecl* D, vector<ValueDecl*>& References) {
   return Pos;
 }
 
-bool ParseArgument(Argument *Arg, ValueDecl *D,
-                   vector<ValueDecl*>& References,
+bool ParseArgument(Argument *Arg, const ValueDecl *D,
+                   vector<const ValueDecl*>& References,
                    ASTContext& Ctx, bool AllowAny) {
 
   assert(Arg != NULL);
@@ -84,7 +84,7 @@ bool ParseArgument(Argument *Arg, ValueDecl *D,
   return true;
 }
 
-bool ParseArgument(Argument *Arg, Expr *E, vector<ValueDecl*>& References,
+bool ParseArgument(Argument *Arg, const Expr *E, vector<const ValueDecl*>& References,
                    ASTContext& Ctx) {
 
   assert(Arg != NULL);
@@ -115,7 +115,7 @@ bool ParseArgument(Argument *Arg, Expr *E, vector<ValueDecl*>& References,
     Arg->set_type(Argument::Any);
   } else if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
     Arg->set_type(Argument::Variable);
-    ValueDecl *D = DRE->getDecl();
+    const ValueDecl *D = DRE->getDecl();
 
     *Arg->mutable_name() = DRE->getDecl()->getName();
     Arg->set_index(ReferenceIndex(D, References));

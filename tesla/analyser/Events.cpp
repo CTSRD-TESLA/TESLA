@@ -44,8 +44,8 @@ using std::vector;
 
 namespace tesla {
 
-bool ParseEvent(Event *Ev, Expr *E, const Location& L,
-                vector<ValueDecl*>& References, ASTContext& Ctx) {
+bool ParseEvent(Event *Ev, const Expr *E, const Location& L,
+                vector<const ValueDecl*>& References, ASTContext& Ctx) {
 
   E = E->IgnoreImplicit();
 
@@ -102,22 +102,22 @@ bool ParseEvent(Event *Ev, Expr *E, const Location& L,
 
   }
 
-  auto Parser = llvm::StringSwitch<PredicateParser>(Callee->getName())
+  auto Parse = llvm::StringSwitch<PredicateParser>(Callee->getName())
     .Case("__tesla_call", &ParseFunctionCall)
     .Case("__tesla_return", &ParseFunctionReturn)
     .Default(NULL);
 
-  if (!Parser) {
+  if (!Parse) {
     Report("Unknown TESLA event", E->getLocStart(), Ctx)
       << E->getSourceRange();
     return false;
   }
 
-  return Parser(Ev, Call, L, References, Ctx);
+  return Parse(Ev, Call, L, References, Ctx);
 }
 
 
-bool ParseNow(Event *Ev, Expr *E, NamedDecl *D, const Location& L,
+bool ParseNow(Event *Ev, const Expr *E, const NamedDecl *D, const Location& L,
               ASTContext& Ctx) {
 
   if (D->getName() != "__tesla_now") {
@@ -134,8 +134,8 @@ bool ParseNow(Event *Ev, Expr *E, NamedDecl *D, const Location& L,
 }
 
 
-bool ParseRepetition(Repetition *Repetition, CallExpr *Call, const Location& L,
-                     vector<ValueDecl*>& References,
+bool ParseRepetition(Repetition *Repetition, const CallExpr *Call, const Location& L,
+                     vector<const ValueDecl*>& References,
                      ASTContext& Ctx) {
   unsigned Args = Call->getNumArgs();
   if (Args < 3) {
@@ -164,8 +164,8 @@ bool ParseRepetition(Repetition *Repetition, CallExpr *Call, const Location& L,
 }
 
 
-bool ParseFunctionCall(Event *Event, BinaryOperator *Bop, const Location&,
-                       vector<ValueDecl*>& References,
+bool ParseFunctionCall(Event *Event, const BinaryOperator *Bop, const Location&,
+                       vector<const ValueDecl*>& References,
                        ASTContext& Ctx) {
 
   Event->set_type(Event::FUNCTION);
@@ -221,8 +221,8 @@ bool ParseFunctionCall(Event *Event, BinaryOperator *Bop, const Location&,
 }
 
 
-bool ParseFunctionCall(Event *Event, CallExpr *Call, const Location&,
-                       vector<ValueDecl*>& References, ASTContext& Ctx) {
+bool ParseFunctionCall(Event *Event, const CallExpr *Call, const Location&,
+                       vector<const ValueDecl*>& References, ASTContext& Ctx) {
 
   assert(Call->getDirectCallee() != NULL);
   assert(Call->getDirectCallee()->getName() == "__tesla_entered");
@@ -238,8 +238,8 @@ bool ParseFunctionCall(Event *Event, CallExpr *Call, const Location&,
 }
 
 
-bool ParseFunctionReturn(Event *Ev, CallExpr *Call, const Location&,
-                         vector<ValueDecl*>& References, ASTContext& Ctx) {
+bool ParseFunctionReturn(Event *Ev, const CallExpr *Call, const Location&,
+                         vector<const ValueDecl*>& References, ASTContext& Ctx) {
 
   Ev->set_type(Event::FUNCTION);
   FunctionEvent *FnEvent = Ev->mutable_function();
@@ -255,8 +255,8 @@ bool ParseFunctionReturn(Event *Ev, CallExpr *Call, const Location&,
 }
 
 
-bool ParseFunctionDetails(FunctionEvent *Event, CallExpr *Call,
-                          vector<ValueDecl*>& References, ASTContext& Ctx,
+bool ParseFunctionDetails(FunctionEvent *Event, const CallExpr *Call,
+                          vector<const ValueDecl*>& References, ASTContext& Ctx,
                           bool ParseRetVal) {
 
   // The arguments to __tesla_entered are the function itself and then,

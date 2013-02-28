@@ -11,11 +11,10 @@ include_directories(
 # The TESLA analyser executable:
 #
 add_llvm_executable(tesla-analyse
-	Automata.cpp
 	AST.cpp
-	Expressions.cpp
 	Events.cpp
 	Helpers.cpp
+	Parser.cpp
 	References.cpp
 	Struct.cpp
 	Tool.cpp

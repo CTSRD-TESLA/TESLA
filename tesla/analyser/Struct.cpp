@@ -44,8 +44,8 @@ using std::vector;
 
 namespace tesla {
 
-bool ParseFieldAssign(Event *Ev, BinaryOperator *O,
-                      vector<ValueDecl*>& References, ASTContext& Ctx) {
+bool ParseFieldAssign(Event *Ev, const BinaryOperator *O,
+                      vector<const ValueDecl*>& References, ASTContext& Ctx) {
 
   Ev->set_type(Event::FIELD_ASSIGN);
   FieldAssignment *Assign = Ev->mutable_fieldassign();

@@ -59,19 +59,7 @@ DiagnosticBuilder Report(StringRef Message, SourceLocation Loc,
 }
 
 
-string ParseStringLiteral(Expr* E, ASTContext& Ctx) {
-  auto LiteralValue = dyn_cast<StringLiteral>(E->IgnoreImplicit());
-  if (!LiteralValue) {
-    Report("Not a valid TESLA string literal", E->getExprLoc(), Ctx)
-      << E->getSourceRange();
-    return "";
-  }
-
-  return LiteralValue->getString();
-}
-
-
-APInt ParseIntegerLiteral(Expr* E, ASTContext& Ctx) {
+APInt ParseIntegerLiteral(const Expr* E, ASTContext& Ctx) {
   auto LiteralValue = dyn_cast<IntegerLiteral>(E->IgnoreImplicit());
   if (!LiteralValue) {
     Report("Not a valid TESLA integer literal", E->getExprLoc(), Ctx)

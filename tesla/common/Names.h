@@ -40,6 +40,10 @@ class Location;
 
 const std::string TESLA = "__tesla_";
 
+const std::string GLOBAL = TESLA + "global";
+const std::string PERTHREAD = TESLA + "perthread";
+
+const std::string ANY = TESLA + "any";
 const std::string EVENT = TESLA + "event";
 const std::string OPTIONAL = TESLA + "optional";
 

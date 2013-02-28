@@ -42,90 +42,62 @@
 namespace tesla {
 
 //! All predicate parsers have this signature.
-typedef bool (*PredicateParser)(Event*, clang::CallExpr*, const Location&,
-                                std::vector<clang::ValueDecl*>&,
+typedef bool (*PredicateParser)(Event*, const clang::CallExpr*, const Location&,
+                                std::vector<const clang::ValueDecl*>&,
                                 clang::ASTContext&);
 
 
-//! Parse a TESLA assertion embedded in C code.
-bool ParseInlineAssertion(InlineAssertion*, clang::CallExpr*,
-                          clang::ASTContext&);
-
-//! Parse the context (global or per-thread) for an automaton.
-bool ParseContext(InlineAssertion*, clang::Expr*, clang::ASTContext&);
-
-//! Parse the location where an automaton is defined.
-bool ParseLocation(Location*,
-                   clang::Expr *Filename, clang::Expr *Line, clang::Expr *Count,
-                   clang::ASTContext&);
-
-//! Parse a (polymorphic-ish) TESLA expression.
-bool ParseExpression(Expression*, clang::Expr*, const Location&,
-                     std::vector<clang::ValueDecl*>& References,
-                     clang::ASTContext&);
-
-//! Parse a boolean expression over TESLA expressions.
-bool ParseBooleanExpr(BooleanExpr*, clang::BinaryOperator*, const Location&,
-                      std::vector<clang::ValueDecl*>& References,
-                      clang::ASTContext&);
-
-//! Parse a sequence of TESLA events.
-bool ParseSequence(Sequence*, clang::CallExpr*, const Location&,
-                   std::vector<clang::ValueDecl*>& References,
-                   clang::ASTContext&);
-
-
 //! Parse a (polymorphic-ish) TESLA event.
-bool ParseEvent(Event*, clang::Expr *E, const Location&,
-                std::vector<clang::ValueDecl*>& References,
+bool ParseEvent(Event*, const clang::Expr *E, const Location&,
+                std::vector<const clang::ValueDecl*>& References,
                 clang::ASTContext& Ctx);
 
 //! Parse the TESLA 'now' event.
-bool ParseNow(Event*, clang::Expr*, clang::NamedDecl*, const Location&,
+bool ParseNow(Event*, const clang::Expr*, const clang::NamedDecl*, const Location&,
               clang::ASTContext&);
 
 //! Parse a sequence of repeated events (a la "aba"+).
-bool ParseRepetition(Repetition*, clang::CallExpr*, const Location&,
-                     std::vector<clang::ValueDecl*>& References,
+bool ParseRepetition(Repetition*, const clang::CallExpr*, const Location&,
+                     std::vector<const clang::ValueDecl*>& References,
                      clang::ASTContext&);
 
 //! Parse an unwrapped function call: 'f(x) == y'.
-bool ParseFunctionCall(Event*, clang::BinaryOperator*, const Location&,
-                       std::vector<clang::ValueDecl*>& References,
+bool ParseFunctionCall(Event*, const clang::BinaryOperator*, const Location&,
+                       std::vector<const clang::ValueDecl*>& References,
                        clang::ASTContext&);
 
 //! Parse a __tesla_entered() predicate.
-bool ParseFunctionCall(Event*, clang::CallExpr*, const Location&,
-                       std::vector<clang::ValueDecl*>& References,
+bool ParseFunctionCall(Event*, const clang::CallExpr*, const Location&,
+                       std::vector<const clang::ValueDecl*>& References,
                        clang::ASTContext&);
 
 //! Parse a __tesla_leaving() predicate.
-bool ParseFunctionReturn(Event*, clang::CallExpr*, const Location&,
-                         std::vector<clang::ValueDecl*>& References,
+bool ParseFunctionReturn(Event*, const clang::CallExpr*, const Location&,
+                         std::vector<const clang::ValueDecl*>& References,
                          clang::ASTContext&);
 
 //! Parse the common aspects of function entry/exit.
-bool ParseFunctionDetails(FunctionEvent *Event, clang::CallExpr *Call,
-                          std::vector<clang::ValueDecl*>& References,
+bool ParseFunctionDetails(FunctionEvent *Event, const clang::CallExpr *Call,
+                          std::vector<const clang::ValueDecl*>& References,
                           clang::ASTContext& Ctx, bool ParseRetVal = false);
 
 //! Parse an assignment to a struct field. May be compound (e.g. '+=').
-bool ParseFieldAssign(Event *Ev, clang::BinaryOperator*,
-                      std::vector<clang::ValueDecl*>& References,
+bool ParseFieldAssign(Event *Ev, const clang::BinaryOperator*,
+                      std::vector<const clang::ValueDecl*>& References,
                       clang::ASTContext&);
 
 //! Parse a reference to a function that requires instrumentation.
-bool ParseFunctionRef(FunctionRef*, clang::FunctionDecl*, clang::ASTContext&);
+bool ParseFunctionRef(FunctionRef*, const clang::FunctionDecl*, clang::ASTContext&);
 
 //! Parse a parameter to a function that requires instrumentation.
-bool ParseArgument(Argument*, clang::ValueDecl*,
-                   std::vector<clang::ValueDecl*>& References,
+bool ParseArgument(Argument*, const clang::ValueDecl*,
+                   std::vector<const clang::ValueDecl*>& References,
                    clang::ASTContext&,
                    bool AllowAny = false);
 
 //! Parse an argument to a function that requires instrumentation.
-bool ParseArgument(Argument*, clang::Expr*,
-                   std::vector<clang::ValueDecl*>& References,
+bool ParseArgument(Argument*, const clang::Expr*,
+                   std::vector<const clang::ValueDecl*>& References,
                    clang::ASTContext&);
 
 
@@ -135,11 +107,8 @@ clang::DiagnosticBuilder Report(llvm::StringRef Message, clang::SourceLocation,
     clang::ASTContext&,
     clang::DiagnosticsEngine::Level Level = clang::DiagnosticsEngine::Error);
 
-//! Parse a literal C string embedded in code.
-std::string ParseStringLiteral(clang::Expr*, clang::ASTContext&);
-
 //! Parse an Integer Constant Expression (ICE).
-llvm::APInt ParseIntegerLiteral(clang::Expr*, clang::ASTContext&);
+llvm::APInt ParseIntegerLiteral(const clang::Expr*, clang::ASTContext&);
 
 }
 

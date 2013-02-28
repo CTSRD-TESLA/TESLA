@@ -29,7 +29,8 @@
  * SUCH DAMAGE.
  */
 
-#include "Parsers.h"
+#include "Names.h"
+#include "Parser.h"
 #include "Visitor.h"
 
 
@@ -52,19 +53,10 @@ TeslaVisitor::~TeslaVisitor() {
 bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
   FunctionDecl *F = E->getDirectCallee();
   if (!F) return true;
-  if (!F->getName().startswith("__tesla_inline_assertion")) return true;
+  if (F->getName().compare(ASSERTION_FN_NAME) != 0) return true;
 
-  OwningPtr<InlineAssertion> Assert(new InlineAssertion);
-  if (!ParseInlineAssertion(Assert.get(), E, *Context)) {
-    static int ParseFailure =
-      Diag.getCustomDiagID(DiagnosticsEngine::Error,
-        "Failed to parse TESLA inline assertion");
-
-    Diag.Report(E->getLocStart(), ParseFailure) << E->getSourceRange();
-    return false;
-  }
-
-  InlineAssertions.push_back(Assert.take());
+  OwningPtr<Parser> P(Parser::Create(E, *Context));
+  InlineAssertions.push_back(P->Parse());
 
   return true;
 }
