@@ -205,11 +205,12 @@ vector<Event> ExprEvents(const Expression& E) {
       }
       break;
 
-    case Expression::SEQUENCE:
+    case Expression::SEQUENCE: {
       assert(E.has_sequence());
       auto Seq = E.sequence().event();
       Events.insert(Events.begin(), Seq.begin(), Seq.end());
       break;
+    }
   }
 
   return Events;
