@@ -177,7 +177,8 @@ struct tcpcb {
 #ifdef __TESLA_ANALYSER__
 automaton(active_close, struct tcpcb*);
 automaton(established, struct tcpcb*);
-int	tcp_free(struct tcpcb*);
+
+void	tcp_free(struct tcpcb*);
 
 automaton(my_tcpcb_assertion, struct tcpcb *tp)
 {
@@ -186,7 +187,7 @@ automaton(my_tcpcb_assertion, struct tcpcb *tp)
 	TSEQUENCE(
 		tp->t_state = TCPS_LISTEN,
 		optional(tp->t_state = TCPS_CLOSED),
-		tcp_free(tp)
+		called(tcp_free, tp)
 	)
 	||
 	TSEQUENCE(
@@ -200,7 +201,7 @@ automaton(my_tcpcb_assertion, struct tcpcb *tp)
 	)
 	||
 	TSEQUENCE(
-		tcp_free(tp)
+		called(tcp_free, tp)
 	);
 
 	done;
@@ -221,7 +222,7 @@ automaton(active_close, struct tcpcb *tp)
 	);
 
 	tp->t_state = TCPS_CLOSED;
-	tcp_free(tp);
+	called(tcp_free, tp);
 
 	done;
 }
@@ -238,7 +239,7 @@ automaton(established, struct tcpcb *tp)
 		optional(tp->t_state = TCPS_CLOSED)
 	);
 
-	tcp_free(tp);
+	called(tcp_free, tp);
 
 	done;
 }
