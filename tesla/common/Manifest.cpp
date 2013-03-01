@@ -51,6 +51,7 @@
 
 using namespace llvm;
 
+using std::map;
 using std::string;
 using std::vector;
 
@@ -61,37 +62,29 @@ cl::opt<string> ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
 
 const string Manifest::SEP = "===\n";
 
+
+const Automaton* Manifest::FindAutomaton(const Identifier& ID,
+                                         Automaton::Type T) const {
+
+  auto i = Automata.find(ID);
+  if (i == Automata.end())
+    return NULL;
+
+  NFA *A = i->second;
+  if (T == Automaton::NonDeterministic)
+    return A;
+
+  else
+    return DFA::Convert(A);
+}
+
 const Automaton* Manifest::FindAutomaton(const Location& Loc,
                                          Automaton::Type T) const {
-  size_t ID = 0;
-  for (InlineAssertion *A : Assertions) {
-    if (A->location() == Loc)
-      return Automaton::Create(A, ID, T);
 
-    else
-      ID++;
-  }
+  Identifier ID;
+  *ID.mutable_location() = Loc;
 
-  Errors
-    << "Manifest contains no assertion from " + ShortName(Loc)
-    << "; candiates are:\n";
-
-  for (InlineAssertion *A : Assertions)
-    Errors << " - " << ShortName(A->location()) << "\n";
-
-  return NULL;
-}
-
-const Automaton* Manifest::ParseAutomaton(size_t ID, Automaton::Type T) const{
-  return Automaton::Create(Assertions[ID], ID, T);
-}
-
-Manifest::Manifest(ArrayRef<InlineAssertion*> Assertions, raw_ostream& Errors)
-  : Errors(Errors), Storage(new InlineAssertion*[Assertions.size()]),
-    Assertions(Storage.get(), Assertions.size())
-{
-  for (size_t i = 0; i < Assertions.size(); i++)
-    Storage[i] = Assertions[i];
+  return FindAutomaton(ID, T);
 }
 
 
@@ -110,7 +103,9 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     return NULL;
   }
 
-  SmallVector<InlineAssertion*, 3> Assertions;
+  map<Identifier,AutomatonDescription*> Descriptions;
+  map<Identifier,NFA*> Automata;
+
   const string& CompleteBuffer = Buffer->getBuffer().str();
 
   // The text file delineates individual automata with the string '==='.
@@ -118,19 +113,34 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     size_t End = CompleteBuffer.find(SEP, Pos + 1);
     const string& Substr = CompleteBuffer.substr(Pos, End - Pos);
 
-    OwningPtr<InlineAssertion> Auto(new InlineAssertion);
-    if (!::google::protobuf::TextFormat::ParseFromString(Substr, &(*Auto))) {
+    OwningPtr<AutomatonDescription> A(new AutomatonDescription);
+    if (!::google::protobuf::TextFormat::ParseFromString(Substr, &(*A))) {
       ErrorStream << "Error parsing TESLA automaton in '" << Path << "'\n";
 
-      for (auto A : Assertions) delete A;
+      for (auto i : Descriptions) delete i.second;
       return NULL;
     }
 
-    Assertions.push_back(Auto.take());
+    Identifier ID = A->identifier();
+    Descriptions[ID] = A.take();
     Pos = End + SEP.length();
   }
 
-  return new Manifest(Assertions, ErrorStream);
+  int id = 0;
+  for (auto i : Descriptions) {
+    const AutomatonDescription *Descrip = i.second;
+
+    OwningPtr<NFA> A(NFA::Parse(Descrip, id++));
+    if (!A) {
+      for (auto i : Automata) delete i.second;
+      for (auto i : Descriptions) delete i.second;
+      return NULL;
+    }
+
+    Automata[i.first] = A.take();
+  }
+
+  return new Manifest(Descriptions, Automata);
 }
 
 StringRef Manifest::defaultLocation() { return ManifestName; }
@@ -139,8 +149,8 @@ StringRef Manifest::defaultLocation() { return ManifestName; }
 vector<FunctionEvent> Manifest::FunctionsToInstrument() {
   vector<FunctionEvent> FnEvents;
 
-  for (auto &A : Assertions) {
-    auto SubEvents = FunctionsToInstrument(A->expression());
+  for (auto i : Descriptions) {
+    auto SubEvents = FunctionsToInstrument(i.second->expression());
     FnEvents.insert(FnEvents.end(), SubEvents.begin(), SubEvents.end());
   }
 

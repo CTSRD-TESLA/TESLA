@@ -35,6 +35,7 @@
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
 
+#include <map>
 #include <vector>
 
 namespace llvm {
@@ -45,28 +46,24 @@ namespace tesla {
 
 class AutomatonDescription;
 class FunctionEvent;
+class Identifier;
+class Location;
 
 /// A description of TESLA instrumentation to perform.
 class Manifest {
 public:
-  size_t size() const { return Assertions.size(); }
+  size_t size() const { return Automata.size(); }
 
-  llvm::ArrayRef<InlineAssertion*> AllAssertions() { return Assertions; }
+  const std::map<Identifier,AutomatonDescription*>& AllAutomata() const {
+    return Descriptions;
+  }
 
-  /**
-   * Find (and create) the @ref Automaton specified at a @ref Location.
-   *
-   * Memory ownership is passed to the caller.
-   */
-  const Automaton* FindAutomaton(const Location&,
+  //! Find the @ref Automaton named by an @ref Identifier.
+  const Automaton* FindAutomaton(const Identifier&,
       Automaton::Type = Automaton::Deterministic) const;
 
-  /**
-   * Parse (and create) an automaton from this @ref Manifest.
-   *
-   * Memory ownership is passed to the caller.
-   */
-  const Automaton* ParseAutomaton(size_t ID,
+  //! Find the @ref Automaton defined at a @ref Location.
+  const Automaton* FindAutomaton(const Location&,
       Automaton::Type = Automaton::Deterministic) const;
 
   //! Returns a copy of all function events named in this manifest.
@@ -84,19 +81,24 @@ public:
   static llvm::StringRef defaultLocation();
 
 private:
-  Manifest(llvm::ArrayRef<InlineAssertion*> Assertions, llvm::raw_ostream& Err);
+  Manifest(const std::map<Identifier,AutomatonDescription*>& Descriptions,
+           const std::map<Identifier,NFA*>& Automata)
+    : Descriptions(Descriptions), Automata(Automata)
+  {
+  }
+
+  const Automaton* FindAutomaton(llvm::StringRef Name, Automaton::Type) const;
 
   //! Extract all @ref FunctionEvent instances from an @ref Expression.
   std::vector<FunctionEvent> FunctionsToInstrument(const Expression& Ev);
 
-  llvm::raw_ostream& Errors;      //!< Where to complain about errors.
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
-  //! Memory to store automata in.
-  const llvm::OwningArrayPtr<InlineAssertion*> Storage;
+  //! The abstract descriptions.
+  std::map<Identifier,AutomatonDescription*> Descriptions;
 
-  //! Convenience wrapper that provides useful methods.
-  const llvm::ArrayRef<InlineAssertion*> Assertions;
+  //! The automata.
+  std::map<Identifier,NFA*> Automata;
 };
 
 }

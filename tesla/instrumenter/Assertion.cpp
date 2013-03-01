@@ -151,8 +151,9 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Manifest& Man,
                                                         Module& M) {
   bool ModifiedIR = false;
 
-  for (size_t i = 0; i < Man.size(); i++) {
-    OwningPtr<const Automaton> A(Man.ParseAutomaton(i));
+  for (auto i : Man.AllAutomata()) {
+    const Identifier& ID = i.second->identifier();
+    OwningPtr<const Automaton> A(Man.FindAutomaton(ID));
 
     assert(A != NULL && "mismatch between descriptions, automata in Manifest");
 

@@ -82,11 +82,12 @@ main(int argc, char *argv[]) {
     return false;
   }
 
-  for (size_t i = 0; i < Manifest->size(); i++) {
-    OwningPtr<const Automaton> Automaton(
-      Manifest->ParseAutomaton(i, Determinism));
+  for (auto i : Manifest->AllAutomata()) {
+    Identifier ID = i.second->identifier();
+    OwningPtr<const Automaton> A(Manifest->FindAutomaton(i.second->identifier(), Determinism));
+    assert(A);
 
-    out << Automaton->Dot() << "\n\n";
+    out << A->Dot() << "\n\n";
     out.flush();
   }
 
