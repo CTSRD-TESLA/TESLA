@@ -338,7 +338,7 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
 }
 
 
-Constant* tesla::TeslaContext(InlineAssertion::Context Context,
+Constant* tesla::TeslaContext(AutomatonDescription::Context Context,
                               LLVMContext& Ctx) {
   static Type *IntType = IntegerType::get(Ctx, 64);
 
@@ -346,8 +346,8 @@ Constant* tesla::TeslaContext(InlineAssertion::Context Context,
   static auto *PerThread = ConstantInt::get(IntType, TESLA_SCOPE_PERTHREAD);
 
   switch (Context) {
-  case InlineAssertion::Global: return Global;
-  case InlineAssertion::ThreadLocal: return PerThread;
+  case AutomatonDescription::Global: return Global;
+  case AutomatonDescription::ThreadLocal: return PerThread;
   }
 }
 

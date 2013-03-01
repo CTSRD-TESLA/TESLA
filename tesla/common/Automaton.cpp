@@ -65,7 +65,7 @@ namespace tesla {
 
 
 // ---- Automaton implementation ----------------------------------------------
-Automaton* Automaton::Create(const InlineAssertion *A, unsigned int id,
+Automaton* Automaton::Create(const AutomatonDescription *A, unsigned int id,
                              Type Type) {
   // First, do the easy thing: parse into an NFA.
   NFA *N = NFA::Parse(A, id);
@@ -79,7 +79,7 @@ Automaton* Automaton::Create(const InlineAssertion *A, unsigned int id,
 }
 
 
-Automaton::Automaton(size_t id, const InlineAssertion& A,
+Automaton::Automaton(size_t id, const AutomatonDescription& A,
                      StringRef Name, StringRef Desc,
                      ArrayRef<State*> S, ArrayRef<Transition*> T)
   : id(id), assertion(A), name(Name), description(Desc)
@@ -134,7 +134,7 @@ string Automaton::Dot() const {
 
 
 // ---- NFA implementation ----------------------------------------------------
-NFA* NFA::Parse(const InlineAssertion *A, unsigned int id) {
+NFA* NFA::Parse(const AutomatonDescription *A, unsigned int id) {
   assert(A != NULL);
 
   StateVector States;
@@ -259,7 +259,7 @@ State* NFA::Parse(const FieldAssignment& Assign, State& InitialState,
 }
 
 
-NFA::NFA(size_t id, const InlineAssertion& A, StringRef Name, StringRef Desc,
+NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name, StringRef Desc,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
   : Automaton(id, A, Name, Desc, S, T)
 {
@@ -396,7 +396,7 @@ class DFABuilder {
     }
     // FIXME: We can end up with a lot of accepting states, which could be
     // folded into a single one.
-    DFA *D = new DFA(N->ID(), const_cast<InlineAssertion&>(N->getAssertion()),
+    DFA *D = new DFA(N->ID(), const_cast<AutomatonDescription&>(N->getAssertion()),
         N->Name(), N->Description(), States, Transitions);
 #ifndef NDEBUG
     fprintf(stderr, "NFA: %s\n", N->String().c_str());
@@ -417,7 +417,7 @@ DFA* DFA::Convert(const NFA* N) {
   return B.ConstructDFA(N);
 }
 
-DFA::DFA(size_t id, InlineAssertion& A, StringRef Name, StringRef Desc,
+DFA::DFA(size_t id, AutomatonDescription& A, StringRef Name, StringRef Desc,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
   : Automaton(id, A, Name, Desc, S, T)
 {

@@ -121,11 +121,11 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
       }
 
     // Find the arguments to the relevant 'now' instrumentation function.
-    const InlineAssertion& AssertInfo = A->getAssertion();
-    size_t ArgCount = AssertInfo.argument_size();
+    const AutomatonDescription& Descrip = A->getAssertion();
+    size_t ArgCount = Descrip.argument_size();
     std::vector<Value*> Args(ArgCount, NULL);
 
-    for (const Argument& Arg : AssertInfo.argument()) {
+    for (const Argument& Arg : Descrip.argument()) {
       Value *V = ValuesInScope[Arg.name()];
       if (V == NULL)
         report_fatal_error("failed to find assertion arg '" + Arg.name() + "'");
@@ -278,8 +278,8 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
 Function* TeslaAssertionSiteInstrumenter::InstrumentationFn(
   const Automaton& A, Module& M) {
 
-  const InlineAssertion& AssertInfo = A.getAssertion();
-  const size_t ArgCount = AssertInfo.argument_size();
+  const AutomatonDescription& Descrip = A.getAssertion();
+  const size_t ArgCount = Descrip.argument_size();
 
   Type *Void = Type::getVoidTy(M.getContext());
   Type *RegisterT = RegisterType(M);

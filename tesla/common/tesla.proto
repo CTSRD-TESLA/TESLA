@@ -34,7 +34,7 @@ package tesla;
 /**
  * An inline assertion describing the temporal behaviour of software.
  */
-message InlineAssertion {
+message AutomatonDescription {
   required Identifier identifier = 1;
 
   /**
@@ -47,7 +47,7 @@ message InlineAssertion {
   /** The temporal expression. */
   required Expression expression = 3;
 
-  /** Argument values that will be passed to 'now' event instrumentation. */
+  /** Program variables referenced by the automaton. */
   repeated Argument argument = 5;
 }
 

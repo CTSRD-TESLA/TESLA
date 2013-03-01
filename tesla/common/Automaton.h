@@ -40,10 +40,10 @@
 namespace tesla {
 
 // TESLA IR classes
+class AutomatonDescription;
 class BooleanExpr;
 class Expression;
 class FieldAssignment;
-class InlineAssertion;
 class FunctionEvent;
 class Location;
 class NowEvent;
@@ -83,14 +83,14 @@ public:
    *
    * @param
    */
-  static Automaton* Create(const InlineAssertion*, unsigned int id,
+  static Automaton* Create(const AutomatonDescription*, unsigned int id,
                            Type T = NonDeterministic);
 
   virtual ~Automaton() {}
   virtual bool IsRealisable() const;
 
   size_t ID() const { return id; }
-  const InlineAssertion& getAssertion() const { return assertion; }
+  const AutomatonDescription& getAssertion() const { return assertion; }
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
 
@@ -108,12 +108,12 @@ public:
   TransitionVector::const_iterator end() const  { return Transitions.end(); }
 
 protected:
-  Automaton(size_t id, const InlineAssertion&,
+  Automaton(size_t id, const AutomatonDescription&,
             llvm::StringRef Name, llvm::StringRef Desc,
             llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 
   const size_t id;
-  const InlineAssertion& assertion;
+  const AutomatonDescription& assertion;
   const std::string name;
   const std::string description;
 
@@ -139,7 +139,7 @@ class NFA : public Automaton {
   friend class DFA;
 
 public:
-  static NFA* Parse(const InlineAssertion*, unsigned int id);
+  static NFA* Parse(const AutomatonDescription*, unsigned int id);
 
 private:
   /**
@@ -174,7 +174,7 @@ private:
   static State* Parse(const FieldAssignment&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
 
-  NFA(size_t id, const InlineAssertion& A,
+  NFA(size_t id, const AutomatonDescription& A,
       llvm::StringRef Name, llvm::StringRef Desc,
       llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
@@ -193,7 +193,8 @@ public:
   bool IsRealisable() const { return true; }
 
 private:
-  DFA(size_t id, InlineAssertion& A, llvm::StringRef Name, llvm::StringRef Desc,
+  DFA(size_t id, AutomatonDescription& A,
+      llvm::StringRef Name, llvm::StringRef Desc,
       llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 

@@ -43,8 +43,8 @@ namespace llvm {
 
 namespace tesla {
 
+class AutomatonDescription;
 class FunctionEvent;
-class InlineAssertion;
 
 /// A description of TESLA instrumentation to perform.
 class Manifest {

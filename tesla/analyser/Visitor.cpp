@@ -44,7 +44,7 @@ TeslaVisitor::TeslaVisitor(llvm::StringRef Filename, ASTContext *Context)
 }
 
 TeslaVisitor::~TeslaVisitor() {
-  for (InlineAssertion *A : InlineAssertions)
+  for (AutomatonDescription *A : Automata)
     delete A;
 }
 
@@ -54,12 +54,12 @@ bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
   if (F->getName().compare(INLINE_ASSERTION) != 0) return true;
 
   OwningPtr<Parser> P(Parser::Create(E, *Context));
-  OwningPtr<InlineAssertion> A(P->Parse());
+  OwningPtr<AutomatonDescription> A(P->Parse());
 
   if (!A)
     return false;
 
-  InlineAssertions.push_back(P->Parse());
+  Automata.push_back(P->Parse());
   return true;
 }
 
