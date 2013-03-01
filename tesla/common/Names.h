@@ -36,6 +36,7 @@
 
 namespace tesla {
 
+class Identifier;
 class Location;
 
 const std::string TESLA_BASE = "__tesla_";
@@ -69,6 +70,12 @@ std::string ShortName(const Identifier&);
 
 //! Convert an @ref Location into a short, human-readable name.
 std::string ShortName(const Location&);
+
+bool operator == (const Location&, const Location&);
+bool operator < (const Location&, const Location&);
+
+bool operator == (const Identifier&, const Identifier&);
+bool operator < (const Identifier&, const Identifier&);
 
 } /* namespace tesla */
 

@@ -55,3 +55,43 @@ std::string tesla::ShortName(const Location& Loc) {
     + Twine(Loc.counter())
   ).str();
 }
+
+
+bool tesla::operator == (const Location& x, const Location& y) {
+  return (
+    // Don't rely on operator==(string&,string&); it might produce unexpected
+    // results depending on the presence of NULL terminators.
+    (strcmp(x.filename().c_str(), y.filename().c_str()) == 0)
+    && (x.line() == y.line())
+    && (x.counter() == y.counter())
+  );
+}
+
+
+bool tesla::operator < (const Location& x, const Location& y) {
+  // Again, don't trust operator<(string&,string&) because of NULL funniness.
+  return ((strcmp(x.filename().c_str(), y.filename().c_str()) < 0)
+          || (x.line() < y.line())
+          || (x.counter() < y.counter()));
+}
+
+
+bool tesla::operator == (const Identifier& x, const Identifier& y) {
+  if (x.has_name())
+    return (x.name() == y.name());
+
+  return (x.location() == y.location());
+}
+
+
+bool tesla::operator < (const Identifier& x, const Identifier& y) {
+  if (x.has_name()) {
+    if (!y.has_name())
+      return true;
+
+    return (x.name() < y.name());
+  }
+
+  return (x.location() < y.location());
+}
+

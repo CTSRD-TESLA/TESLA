@@ -99,7 +99,5 @@ private:
   const llvm::ArrayRef<InlineAssertion*> Assertions;
 };
 
-bool operator == (const Location&, const Location&);
-
 }
 

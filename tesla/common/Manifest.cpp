@@ -181,14 +181,3 @@ vector<FunctionEvent> Manifest::FunctionsToInstrument(const Expression& Ex) {
 
 } // namespace tesla
 
-
-bool tesla::operator == (const Location& x, const Location& y) {
-  return (
-    // Don't rely on operator==(string&,string&); it might produce unexpected
-    // results depending on the presence of NULL terminators.
-    (strcmp(x.filename().c_str(), y.filename().c_str()) == 0)
-    && (x.line() == y.line())
-    && (x.counter() == y.counter())
-  );
-}
-
