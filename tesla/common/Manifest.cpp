@@ -32,6 +32,7 @@
 #include "tesla.pb.h"
 
 #include "Manifest.h"
+#include "Names.h"
 
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
@@ -44,7 +45,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/system_error.h"
 
-#include "Names.h"
 #include <google/protobuf/text_format.h>
 
 using namespace llvm;
