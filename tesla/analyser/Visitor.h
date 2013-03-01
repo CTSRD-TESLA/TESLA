@@ -53,7 +53,7 @@ public:
   }
 
 private:
-  llvm::StringRef Filename;
+  const llvm::StringRef Filename;
   clang::ASTContext *Context;
 
   llvm::SmallVector<AutomatonDescription*, 2> Automata;
