@@ -6,6 +6,7 @@ GRAPH=		tesla-graph
 
 CFLAGS+=	-D TESLA
 LIBS+=		-l tesla
+GRAPH_FLAGS?=	-d
 
 TESLA_ALLFILES=	.tesla ${TESLA_FILES} ${TESLA_IR} ${TESLA_OBJS}
 TESLA_FILES=	${SRCS:.c=.tesla}
@@ -30,7 +31,7 @@ OBJS=		${TESLA_OBJS}
 
 # Graph the .tesla file.
 tesla.dot: .tesla
-	${GRAPH} -d -o $@ $<
+	${GRAPH} -o $@ ${GRAPH_FLAGS} $<
 
 # Optional PDF-ification of the .dot file.
 .dot.pdf:
