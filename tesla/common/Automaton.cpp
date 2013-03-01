@@ -229,14 +229,6 @@ State* NFA::Parse(const Sequence& Seq, State& Start,
   return Current;
 }
 
-State* NFA::Ignore(State& Start, StateVector& States,
-                   TransitionVector& Transitions) {
-
-  State *Final = State::Create(States);
-  Transition::Create(Start, *Final, Transitions);
-  return Final;
-}
-
 State* NFA::Parse(const NowEvent& now, State& InitialState,
                   StateVector& States, TransitionVector& Trans) {
 
