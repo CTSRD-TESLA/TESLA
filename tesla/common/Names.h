@@ -38,28 +38,31 @@ namespace tesla {
 
 class Location;
 
-const std::string TESLA = "__tesla_";
+const std::string TESLA_BASE = "__tesla_";
 
-const std::string GLOBAL = TESLA + "global";
-const std::string PERTHREAD = TESLA + "perthread";
+const std::string GLOBAL            = TESLA_BASE + "global";
+const std::string PERTHREAD         = TESLA_BASE + "perthread";
 
-const std::string ANY = TESLA + "any";
-const std::string EVENT = TESLA + "event";
-const std::string OPTIONAL = TESLA + "optional";
+const std::string ANY               = TESLA_BASE + "any";
+const std::string EVENT             = TESLA_BASE + "event";
+const std::string IGNORE            = TESLA_BASE + "ignore";
+const std::string NOW               = TESLA_BASE + "now";
+const std::string OPTIONAL          = TESLA_BASE + "optional";
+const std::string SEQUENCE          = TESLA_BASE + "sequence";
 
-const std::string ASSERTION_FN_NAME = TESLA + "inline_assertion";
+const std::string INLINE_ASSERTION  = TESLA_BASE + "inline_assertion";
 
-const std::string BASE = TESLA + "instrumentation_";
+const std::string INSTR_BASE        = TESLA_BASE + "instrumentation_";
 
-const std::string CALL = BASE + "call";
-const std::string RETURN = BASE + "return";
+const std::string CALL              = INSTR_BASE + "call";
+const std::string RETURN            = INSTR_BASE + "return";
 
-const std::string CALLEE_ENTER = BASE + "callee_enter_";
-const std::string CALLEE_LEAVE = BASE + "callee_return_";
-const std::string CALLER_ENTER = BASE + "caller_enter_";
-const std::string CALLER_LEAVE = BASE + "caller_return_";
+const std::string CALLEE_ENTER      = INSTR_BASE + "callee_enter_";
+const std::string CALLEE_LEAVE      = INSTR_BASE + "callee_return_";
+const std::string CALLER_ENTER      = INSTR_BASE + "caller_enter_";
+const std::string CALLER_LEAVE      = INSTR_BASE + "caller_return_";
 
-const std::string ASSERTION_REACHED = BASE + "assertion_reached";
+const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 
 //! Convert a @ref Location into a short, human-readable name.
 std::string ShortName(const Location&);

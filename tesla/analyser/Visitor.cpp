@@ -51,11 +51,15 @@ TeslaVisitor::~TeslaVisitor() {
 bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
   FunctionDecl *F = E->getDirectCallee();
   if (!F) return true;
-  if (F->getName().compare(ASSERTION_FN_NAME) != 0) return true;
+  if (F->getName().compare(INLINE_ASSERTION) != 0) return true;
 
   OwningPtr<Parser> P(Parser::Create(E, *Context));
-  InlineAssertions.push_back(P->Parse());
+  OwningPtr<InlineAssertion> A(P->Parse());
 
+  if (!A)
+    return false;
+
+  InlineAssertions.push_back(P->Parse());
   return true;
 }
 

@@ -41,14 +41,12 @@ namespace tesla {
 
 // TESLA IR classes
 class BooleanExpr;
-class Event;
 class Expression;
 class FieldAssignment;
 class InlineAssertion;
 class FunctionEvent;
 class Location;
 class NowEvent;
-class Repetition;
 class Sequence;
 
 // Automata classes
@@ -164,14 +162,8 @@ private:
   static State* Parse(const Sequence&, State& InitialState,
                       StateVector&, TransitionVector&);
 
-  static State* Parse(const Event&, State& InitialState,
-                      StateVector& States, TransitionVector& Trans);
-
   static State* Ignore(State& InitialState, StateVector& States,
                       TransitionVector& Transitions);
-
-  static State* Parse(const Repetition&, State& InitialState,
-                      StateVector& States, TransitionVector& Trans);
 
   static State* Parse(const NowEvent&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);

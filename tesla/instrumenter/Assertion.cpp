@@ -64,7 +64,7 @@ TeslaAssertionSiteInstrumenter::~TeslaAssertionSiteInstrumenter() {
 
 bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   // If this module doesn't declare any assertions, just carry on.
-  AssertFn = M.getFunction(ASSERTION_FN_NAME);
+  AssertFn = M.getFunction(INLINE_ASSERTION);
   if (!AssertFn)
     return false;
 

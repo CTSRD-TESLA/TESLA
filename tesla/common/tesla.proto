@@ -66,11 +66,17 @@ message Location {
  * This is a union type.
  */
 message Expression {
-  enum Type { BOOLEAN_EXPR = 1; SEQUENCE = 2; NULL_EXPR = 3; };
+  enum Type {
+    BOOLEAN_EXPR = 1; SEQUENCE = 2; NULL_EXPR = 3;
+    NOW = 4; FUNCTION = 5; FIELD_ASSIGN = 6;
+  };
   required Type type = 1;
 
   optional BooleanExpr booleanExpr = 2;
   optional Sequence sequence = 3;
+  optional NowEvent now = 4;
+  optional FunctionEvent function = 5;
+  optional FieldAssignment fieldAssign = 6;
 }
 
 /** A boolean combination of expressions (with equal precedence). */
@@ -83,40 +89,7 @@ message BooleanExpr {
 
 /** A sequence of temporal events. */
 message Sequence {
-  repeated Event event = 1;
-}
-
-
-/**
- * A temporal event.
- *
- * An event can be instrumented. An event can occur any number of times
- * in a real execution.
- *
- * This is a union type.
- */
-message Event {
-  enum Type {
-    REPETITION = 1; NOW = 2; FUNCTION = 3; IGNORE = 4; FIELD_ASSIGN = 5;
-  }
-  required Type type = 1;
-
-  optional Repetition repetition = 2;
-  optional NowEvent now = 3;
-  optional FunctionEvent function = 4;
-  optional FieldAssignment fieldAssign = 5;
-}
-
-/** A series of events, repeated some number of times. */
-message Repetition {
-  /** The events to repeat. The order of these events matters. */
-  repeated Event event = 1;
-
-  /** If set, the repetition must occur at least 'min' times. */
-  optional int32 min = 2;
-
-  /** If set, the repetition may occur no more than 'max' times. */
-  optional int32 max = 3;
+  repeated Expression expression = 1;
 }
 
 /**

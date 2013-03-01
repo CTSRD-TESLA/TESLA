@@ -12,11 +12,7 @@ include_directories(
 #
 add_llvm_executable(tesla-analyse
 	AST.cpp
-	Events.cpp
-	Helpers.cpp
 	Parser.cpp
-	References.cpp
-	Struct.cpp
 	Tool.cpp
 	Visitor.cpp
 )

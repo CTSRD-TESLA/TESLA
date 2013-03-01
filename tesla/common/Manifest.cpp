@@ -61,9 +61,6 @@ cl::opt<string> ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
 
 const string Manifest::SEP = "===\n";
 
-//! Extract events from an @ref Expression.
-static vector<Event> ExprEvents(const Expression&);
-
 const Automaton* Manifest::FindAutomaton(const Location& Loc,
                                          Automaton::Type T) const {
   size_t ID = 0;
@@ -138,82 +135,45 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
 
 StringRef Manifest::defaultLocation() { return ManifestName; }
 
-vector<FunctionEvent> Manifest::FunctionsToInstrument(const Event& Ev) {
-  vector<FunctionEvent> FnEvents;
-
-  switch (Ev.type()) {
-      // not a function, do nothing:
-      case Event::IGNORE:             break;
-      case Event::NOW:                break;
-      case Event::FIELD_ASSIGN:       break;
-
-      case Event::FUNCTION:
-        FnEvents.push_back(Ev.function());
-        break;
-
-      case Event::REPETITION:
-        for (auto Ev : Ev.repetition().event()) {
-          auto SubEvents = FunctionsToInstrument(Ev);
-          FnEvents.insert(FnEvents.end(), SubEvents.begin(), SubEvents.end());
-        }
-        break;
-    }
-
-  return FnEvents;
-}
 
 vector<FunctionEvent> Manifest::FunctionsToInstrument() {
   vector<FunctionEvent> FnEvents;
 
-  for (auto& Ev : Events()) {
-    auto SubEvents = FunctionsToInstrument(Ev);
+  for (auto &A : Assertions) {
+    auto SubEvents = FunctionsToInstrument(A->expression());
     FnEvents.insert(FnEvents.end(), SubEvents.begin(), SubEvents.end());
   }
 
   return FnEvents;
 }
 
-vector<Event> Manifest::Events() {
-  vector<Event> AllEvents;
 
-  for (auto *A : Assertions) {
-    auto Expr = ExprEvents(A->expression());
-#ifndef NDEBUG
-    for (auto& Ev : Expr) assert(Event::Type_IsValid(Ev.type()));
-#endif
-    AllEvents.insert(AllEvents.end(), Expr.begin(), Expr.end());
-  }
+vector<FunctionEvent> Manifest::FunctionsToInstrument(const Expression& Ex) {
+  vector<FunctionEvent> Events;
 
-  return AllEvents;
-}
+  switch (Ex.type()) {
+  case Expression::NULL_EXPR:     // fallthrough
+  case Expression::NOW:           // fallthrough
+  case Expression::FIELD_ASSIGN:
+    break;
 
+  case Expression::FUNCTION:
+    Events.push_back(Ex.function());
+    break;
 
-vector<Event> ExprEvents(const Expression& E) {
-  assert(Expression::Type_IsValid(E.type()));
-
-  vector<Event> Events;
-
-  switch (E.type()) {
-    case Expression::BOOLEAN_EXPR:
-      assert(E.has_booleanexpr());
-      for (auto& Expr : E.booleanexpr().expression()) {
-        auto Sub = ExprEvents(Expr);
-#ifndef NDEBUG
-        for (auto& Ev : Sub) assert(Event::Type_IsValid(Ev.type()));
-#endif
-        Events.insert(Events.end(), Sub.begin(), Sub.end());
-      }
-      break;
-
-    case Expression::SEQUENCE: {
-      assert(E.has_sequence());
-      auto Seq = E.sequence().event();
-      Events.insert(Events.begin(), Seq.begin(), Seq.end());
-      break;
+  case Expression::BOOLEAN_EXPR:
+    for (auto& E : Ex.booleanexpr().expression()) {
+      auto Sub = FunctionsToInstrument(E);
+      Events.insert(Events.end(), Sub.begin(), Sub.end());
     }
+    break;
 
-    case Expression::NULL_EXPR:
-      break;
+  case Expression::SEQUENCE:
+    for (auto& E : Ex.sequence().expression()) {
+      auto Sub = FunctionsToInstrument(E);
+      Events.insert(Events.end(), Sub.begin(), Sub.end());
+    }
+    break;
   }
 
   return Events;

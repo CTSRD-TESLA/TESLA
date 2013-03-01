@@ -170,6 +170,15 @@ State* NFA::Parse(const Expression& Expr, State& Start,
 
   case Expression::NULL_EXPR:
     return &Start;
+
+  case Expression::NOW:
+    return Parse(Expr.now(), Start, States, Transitions);
+
+  case Expression::FUNCTION:
+    return Parse(Expr.function(), Start, States, Transitions);
+
+  case Expression::FIELD_ASSIGN:
+    return Parse(Expr.fieldassign(), Start, States, Transitions);
   }
 }
 
@@ -212,31 +221,10 @@ State* NFA::Parse(const Sequence& Seq, State& Start,
                   StateVector& States, TransitionVector& Transitions) {
 
   State *Current = &Start;
-  for (const Event& Ev : Seq.event())
-    Current = Parse(Ev, *Current, States, Transitions);
+  for (const Expression& E : Seq.expression())
+    Current = Parse(E, *Current, States, Transitions);
 
   return Current;
-}
-
-State* NFA::Parse(const Event& Ev, State& Start,
-                  StateVector& States, TransitionVector& Transitions) {
-
-  switch (Ev.type()) {
-  case Event::IGNORE:
-    return Ignore(Start, States, Transitions);
-
-  case Event::REPETITION:
-    return Parse(Ev.repetition(), Start, States, Transitions);
-
-  case Event::NOW:
-    return Parse(Ev.now(), Start, States, Transitions);
-
-  case Event::FUNCTION:
-    return Parse(Ev.function(), Start, States, Transitions);
-
-  case Event::FIELD_ASSIGN:
-    return Parse(Ev.fieldassign(), Start, States, Transitions);
-  }
 }
 
 State* NFA::Ignore(State& Start, StateVector& States,
@@ -245,20 +233,6 @@ State* NFA::Ignore(State& Start, StateVector& States,
   State *Final = State::Create(States);
   Transition::Create(Start, *Final, Transitions);
   return Final;
-}
-
-State* NFA::Parse(const Repetition& Rep, State& Start,
-                  StateVector& States, TransitionVector& Transitions) {
-
-  State *Current = &Start;
-  for (const Event& Ev : Rep.event()) {
-    Current = Parse(Ev, *Current, States, Transitions);
-  }
-
-  // TODO: handle min, max values!
-  Transition::Create(*Current, Start, Transitions);
-
-  return Current;
 }
 
 State* NFA::Parse(const NowEvent& now, State& InitialState,

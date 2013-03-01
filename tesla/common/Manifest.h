@@ -43,7 +43,6 @@ namespace llvm {
 
 namespace tesla {
 
-class Event;
 class FunctionEvent;
 class InlineAssertion;
 
@@ -87,11 +86,8 @@ public:
 private:
   Manifest(llvm::ArrayRef<InlineAssertion*> Assertions, llvm::raw_ostream& Err);
 
-  //! Returns a copy of all events named in this manifest.
-  std::vector<Event> Events();
-
-  //! Extract all @ref FunctionEvent instances from a single @ref Event.
-  std::vector<FunctionEvent> FunctionsToInstrument(const Event& Ev);
+  //! Extract all @ref FunctionEvent instances from an @ref Expression.
+  std::vector<FunctionEvent> FunctionsToInstrument(const Expression& Ev);
 
   llvm::raw_ostream& Errors;      //!< Where to complain about errors.
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
