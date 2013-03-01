@@ -65,7 +65,7 @@ perform_operation(int op, struct object *o)
 			called(example_syscall),
 			get_object(ANY(int), ANY(ptr)) == 0,
 			security_check(ANY(ptr), o, op) == 0,
-			some_helper(op) == 0,
+			some_helper(op) == 0 || called(never_actually_called),
 			called(void_helper, o),
 			returned(release, o),
 			returned(example_syscall)

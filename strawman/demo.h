@@ -54,5 +54,11 @@ int example_syscall(struct credential *cred, int index, int op);
 int some_helper(int op);
 void void_helper(struct object *object);
 
+/**
+ * Assists in testing '||':
+ * previously(foo) -> previously(foo || called(never_actually_called)).
+ */
+void never_actually_called(void);
+
 #endif	/* !DEMO_H */
 
