@@ -40,7 +40,7 @@ typedef	int	__tesla_count;
 
 /** Magic "function" representing a TESLA assertion. */
 void __tesla_inline_assertion(const char *filename, int line, int count,
-		__tesla_locality*, int expression);
+		__tesla_locality*, ...);
 
 
 /* Only define the following things if doing TESLA analysis, not compiling. */
@@ -56,7 +56,7 @@ extern __tesla_locality *__tesla_global;
 extern __tesla_locality *__tesla_perthread;
 
 /** A sequence of TESLA events. Can be combined with && or ||. */
-int __tesla_sequence(__tesla_event*, ...);
+struct __tesla_event* __tesla_sequence(__tesla_event*, ...);
 
 
 /* TESLA events: */
