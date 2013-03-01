@@ -86,11 +86,6 @@ main(int argc, char *argv[]) {
     OwningPtr<const Automaton> Automaton(
       Manifest->ParseAutomaton(i, Determinism));
 
-    if (!Automaton) {
-      err << "\n";
-      continue;
-    }
-
     out << Automaton->Dot() << "\n\n";
     out.flush();
   }

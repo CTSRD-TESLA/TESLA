@@ -186,10 +186,6 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
     OwningPtr<const Automaton> A(
       Manifest->ParseAutomaton(i, Automaton::Deterministic));
 
-    if (!A)
-      // TODO: remove once DFA::Convert(NFA) works
-      continue;
-
     assert(A && "failed to parse (deterministic) assertion");
 
     const Automaton& Automaton = *A;

@@ -102,20 +102,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     ParseAssertionLocation(&Loc, Assert);
 
     OwningPtr<const Automaton> A(Manifest.FindAutomaton(Loc));
-    if (!A) {
-      // TODO: remove once DFA::Convert(NFA) works
-      llvm::errs()
-        << "WARNING: no (realisable) automaton for '"
-        << ShortName(Loc)
-        << "'!\n";
-
-      Assert->removeFromParent();
-      delete Assert;
-      continue;
-
-      report_fatal_error(
-        "no automaton '" + ShortName(Loc) + "' in TESLA manifest");
-    }
+    assert(A);
 
     // Record named values that might be passed to instrumentation, such as
     // function parameters and StoreInst results in the current BasicBlock.
@@ -167,11 +154,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Manifest& Man,
   for (size_t i = 0; i < Man.size(); i++) {
     OwningPtr<const Automaton> A(Man.ParseAutomaton(i));
 
-    if (!A) {
-      // TODO: remove when NFA->DFA works
-      continue;
-      report_fatal_error("unable to parse (realisable) automaton");
-    }
+    assert(A != NULL && "mismatch between descriptions, automata in Manifest");
 
     ModifiedIR |= AddInstrumentation(*A, M);
   }

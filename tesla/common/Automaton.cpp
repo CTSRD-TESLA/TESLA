@@ -38,7 +38,6 @@
 
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Twine.h>
-#include <llvm/Support/raw_ostream.h>  // TODO: remove once DFA::Convert(NFA) works
 
 #include <google/protobuf/text_format.h>
 
