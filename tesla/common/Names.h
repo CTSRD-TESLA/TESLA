@@ -41,6 +41,8 @@ class Location;
 
 const std::string TESLA_BASE = "__tesla_";
 
+const std::string AUTOMATON         = TESLA_BASE + "automaton_";
+
 const std::string GLOBAL            = TESLA_BASE + "global";
 const std::string PERTHREAD         = TESLA_BASE + "perthread";
 

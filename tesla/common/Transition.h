@@ -32,6 +32,7 @@
 #ifndef TRANSITION_H
 #define TRANSITION_H
 
+#include "Names.h"
 #include "Types.h"
 
 #include <llvm/ADT/OwningPtr.h>
@@ -46,6 +47,7 @@ namespace tesla {
 // TESLA IR classes
 class FieldAssignment;
 class FunctionEvent;
+class Identifier;
 class Location;
 class NowEvent;
 
@@ -75,6 +77,9 @@ public:
   static void Create(State& From, const State& To, const NowEvent&,
                      TransitionVector&);
 
+  static void CreateSubAutomaton(State& From, const State& To,
+                                 const Identifier&, TransitionVector&);
+
   /// Creates a transition between the specified states, with the same
   /// transition type as the copied transition.  This is used when constructing
   /// DFA transitions from NFA transitions.
@@ -99,7 +104,7 @@ public:
   virtual std::string Dot() const;
 
   //! Information for LLVM's RTTI (isa<>, cast<>, etc.).
-  enum TransitionKind { Null, Now, Fn, FieldAssign };
+  enum TransitionKind { Null, Now, Fn, FieldAssign, SubAutomaton };
   virtual TransitionKind getKind() const = 0;
   /// Is this transition one that will be triggered with the same events, but
   //with a different target node.
@@ -276,6 +281,38 @@ private:
 
   friend class Transition;
 };
+
+
+/// A sub-automaton.
+class SubAutomatonTransition : public Transition {
+public:
+  bool IsRealisable() const { return true; }
+  std::string ShortLabel() const { return ShortName(ID); }
+  std::string DotLabel() const { return ShortName(ID); }
+
+  const Identifier& GetID() const { return ID; }
+
+  static bool classof(const Transition *T) {
+    return T->getKind() == FieldAssign;
+  }
+
+  virtual TransitionKind getKind() const { return SubAutomaton; };
+
+  virtual bool IsEquivalent(const Transition &T) const {
+    return (T.getKind() == SubAutomaton) &&
+        (ID == llvm::cast<SubAutomatonTransition>(&T)->ID);
+  }
+
+private:
+  SubAutomatonTransition(const State& From, const State& To,
+                         const Identifier& ID)
+    : Transition(From, To), ID(ID) {}
+
+  const Identifier& ID;
+
+  friend class Transition;
+};
+
 
 } // namespace tesla
 

@@ -174,6 +174,18 @@ vector<FunctionEvent> Manifest::FunctionsToInstrument(const Expression& Ex) {
       Events.insert(Events.end(), Sub.begin(), Sub.end());
     }
     break;
+
+  case Expression::SUB_AUTOMATON: {
+    auto i = Descriptions.find(Ex.subautomaton());
+    if (i == Descriptions.end())
+      report_fatal_error(
+        "can't find automaton '" + ShortName(Ex.subautomaton()) + "'");
+
+    auto Sub = FunctionsToInstrument(i->second->expression());
+    Events.insert(Events.end(), Sub.begin(), Sub.end());
+    break;
+  }
+
   }
 
   return Events;

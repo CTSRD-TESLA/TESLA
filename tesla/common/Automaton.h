@@ -45,7 +45,7 @@ class BooleanExpr;
 class Expression;
 class FieldAssignment;
 class FunctionEvent;
-class Location;
+class Identifier;
 class NowEvent;
 class Sequence;
 
@@ -173,6 +173,10 @@ private:
 
   static State* Parse(const FieldAssignment&, State& InitialState,
                       StateVector& States, TransitionVector& Trans);
+
+  //! Parse a sub-automaton expression.
+  static State* SubAutomaton(const Identifier&, State& InitialState,
+                             StateVector& States, TransitionVector& Trans);
 
   NFA(size_t id, const AutomatonDescription& A,
       llvm::StringRef Name, llvm::StringRef Desc,

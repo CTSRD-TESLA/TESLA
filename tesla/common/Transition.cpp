@@ -70,6 +70,13 @@ void Transition::Create(State& From, const State& To, const FieldAssignment& A,
   Register(T, From, Transitions);
 }
 
+void Transition::CreateSubAutomaton(State& From, const State& To,
+                                    const Identifier& ID,
+                                    TransitionVector& Transitions) {
+  OwningPtr<Transition> T(new SubAutomatonTransition(From, To, ID));
+  Register(T, From, Transitions);
+}
+
 void Transition::Copy(State &From, const State& To, const Transition* Other,
                    TransitionVector& Transitions) {
   switch (Other->getKind()) {
@@ -90,6 +97,12 @@ void Transition::Copy(State &From, const State& To, const Transition* Other,
     case FieldAssign: {
       OwningPtr<Transition> T(new FieldAssignTransition(From, To,
             cast<FieldAssignTransition>(Other)->Assign));
+      Register(T, From, Transitions);
+      return;
+    }
+    case SubAutomaton: {
+      OwningPtr<Transition> T(new SubAutomatonTransition(From, To,
+            cast<SubAutomatonTransition>(Other)->ID));
       Register(T, From, Transitions);
       return;
     }

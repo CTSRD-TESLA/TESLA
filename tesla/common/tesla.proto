@@ -78,6 +78,7 @@ message Expression {
   enum Type {
     BOOLEAN_EXPR = 1; SEQUENCE = 2; NULL_EXPR = 3;
     NOW = 4; FUNCTION = 5; FIELD_ASSIGN = 6;
+    SUB_AUTOMATON = 7;
   };
   required Type type = 1;
 
@@ -86,6 +87,7 @@ message Expression {
   optional NowEvent now = 4;
   optional FunctionEvent function = 5;
   optional FieldAssignment fieldAssign = 6;
+  optional Identifier subAutomaton = 7;
 }
 
 /** A boolean combination of expressions (with equal precedence). */

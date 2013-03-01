@@ -154,7 +154,7 @@ NFA* NFA::Parse(const AutomatonDescription *A, unsigned int id) {
   string Description;
   ::google::protobuf::TextFormat::PrintToString(*A, &Description);
 
-  return new NFA(id, *A, ShortName(Loc), Description, States, Transitions);
+  return new NFA(id, *A, ShortName(ID), Description, States, Transitions);
 }
 
 State* NFA::Parse(const Expression& Expr, State& Start,
@@ -178,6 +178,9 @@ State* NFA::Parse(const Expression& Expr, State& Start,
 
   case Expression::FIELD_ASSIGN:
     return Parse(Expr.fieldassign(), Start, States, Transitions);
+
+  case Expression::SUB_AUTOMATON:
+    return SubAutomaton(Expr.subautomaton(), Start, States, Transitions);
   }
 }
 
@@ -255,6 +258,14 @@ State* NFA::Parse(const FieldAssignment& Assign, State& InitialState,
 
   State *Final = State::Create(States);
   Transition::Create(InitialState, *Final, Assign, Trans);
+  return Final;
+}
+
+State* NFA::SubAutomaton(const Identifier& ID, State& InitialState,
+                         StateVector& States, TransitionVector& Trans) {
+
+  State *Final = State::Create(States);
+  Transition::CreateSubAutomaton(InitialState, *Final, ID, Trans);
   return Final;
 }
 
