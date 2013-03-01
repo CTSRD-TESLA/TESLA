@@ -79,35 +79,34 @@ void Transition::CreateSubAutomaton(State& From, const State& To,
 
 void Transition::Copy(State &From, const State& To, const Transition* Other,
                    TransitionVector& Transitions) {
+
+  OwningPtr<Transition> New;
+
   switch (Other->getKind()) {
-    case Null:
-      return;
-    case Now: {
-      OwningPtr<Transition> T(new NowTransition(From, To,
-            cast<NowTransition>(Other)->Loc));
-      Register(T, From, Transitions);
-      return;
-    }
-    case Fn: {
-      OwningPtr<Transition> T(new FnTransition(From, To,
-            cast<FnTransition>(Other)->Ev));
-      Register(T, From, Transitions);
-      return;
-    }
-    case FieldAssign: {
-      OwningPtr<Transition> T(new FieldAssignTransition(From, To,
-            cast<FieldAssignTransition>(Other)->Assign));
-      Register(T, From, Transitions);
-      return;
-    }
-    case SubAutomaton: {
-      OwningPtr<Transition> T(new SubAutomatonTransition(From, To,
-            cast<SubAutomatonTransition>(Other)->ID));
-      Register(T, From, Transitions);
-      return;
-    }
+  case Null:
+    return;
+
+  case Now:
+    New.reset(new NowTransition(From, To, cast<NowTransition>(Other)->Loc));
+    break;
+
+  case Fn:
+    New.reset(new FnTransition(From, To, cast<FnTransition>(Other)->Ev));
+    break;
+
+  case FieldAssign:
+    New.reset(new FieldAssignTransition(From, To,
+                  cast<FieldAssignTransition>(Other)->Assign));
+    break;
+
+  case SubAutomaton:
+    New.reset(new SubAutomatonTransition(From, To,
+                  cast<SubAutomatonTransition>(Other)->ID));
+    break;
   }
-  llvm_unreachable("Bad transition type");
+
+  assert(New);
+  Register(New, From, Transitions);
 }
 
 void Transition::Register(OwningPtr<Transition>& T, State& From,
