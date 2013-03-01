@@ -35,8 +35,7 @@ package tesla;
  * An inline assertion describing the temporal behaviour of software.
  */
 message InlineAssertion {
-  /** Where the automaton is defined (an identifier). */
-  required Location location = 1;
+  required Identifier identifier = 1;
 
   /**
    * An automaton's context (e.g. thread-local) has implications for its
@@ -50,6 +49,16 @@ message InlineAssertion {
 
   /** Argument values that will be passed to 'now' event instrumentation. */
   repeated Argument argument = 5;
+}
+
+
+/** Something that uniquely identifies an automaton. */
+message Identifier {
+  /** Programmer-assigned name. */
+  optional string name = 1;
+
+  /** If there is no assigned name, the location the automaton is defined. */
+  optional Location location = 2;
 }
 
 /** An identifier for an automaton based on where it was defined. */

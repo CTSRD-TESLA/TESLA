@@ -39,6 +39,13 @@
 using llvm::Twine;
 
 
+std::string tesla::ShortName(const Identifier& ID) {
+  if (ID.has_name())
+    return ID.name();
+
+  return ShortName(ID.location());
+}
+
 std::string tesla::ShortName(const Location& Loc) {
   return (Twine()
     + Loc.filename()

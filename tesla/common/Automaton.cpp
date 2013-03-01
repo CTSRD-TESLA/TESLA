@@ -150,7 +150,7 @@ NFA* NFA::Parse(const InlineAssertion *A, unsigned int id) {
     return NULL;
   }
 
-  const Location &Loc = A->location();
+  const Identifier &ID = A->identifier();
 
   string Description;
   ::google::protobuf::TextFormat::PrintToString(*A, &Description);

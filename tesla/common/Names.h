@@ -64,7 +64,10 @@ const std::string CALLER_LEAVE      = INSTR_BASE + "caller_return_";
 
 const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 
-//! Convert a @ref Location into a short, human-readable name.
+//! Convert an @ref Identifier into a short, human-readable name.
+std::string ShortName(const Identifier&);
+
+//! Convert an @ref Location into a short, human-readable name.
 std::string ShortName(const Location&);
 
 } /* namespace tesla */
