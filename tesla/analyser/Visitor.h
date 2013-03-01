@@ -48,6 +48,9 @@ public:
 
   bool VisitCallExpr(clang::CallExpr*);
 
+  //! Visit a function declaration, looking for TESLA automata descriptions.
+  bool VisitFunctionDecl(clang::FunctionDecl*);
+
   const llvm::ArrayRef<AutomatonDescription*> GetAutomata() const {
     return Automata;
   }

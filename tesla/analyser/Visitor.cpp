@@ -34,6 +34,7 @@
 #include "Visitor.h"
 
 using namespace clang;
+using std::string;
 
 
 namespace tesla {
@@ -53,9 +54,40 @@ bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
   if (!F) return true;
   if (F->getName().compare(INLINE_ASSERTION) != 0) return true;
 
-  OwningPtr<Parser> P(Parser::Create(E, *Context));
+  OwningPtr<Parser> P(Parser::AssertionParser(E, *Context));
   OwningPtr<AutomatonDescription> A(P->Parse());
 
+  if (!A)
+    return false;
+
+  Automata.push_back(P->Parse());
+  return true;
+}
+
+
+bool TeslaVisitor::VisitFunctionDecl(FunctionDecl *F) {
+  // Only analyse non-deleted definitions (i.e. definitions with bodies).
+  if (!F->doesThisDeclarationHaveABody())
+    return true;
+
+
+  // We only parse functions that return __tesla_automaton_description*.
+  const Type *RetTy = F->getResultType().getTypePtr();
+  if (!RetTy->isPointerType())
+    return true;
+
+  QualType Pointee = cast<PointerType>(RetTy)->getPointeeType();
+  string RetTypeName = Pointee.getBaseTypeIdentifier()->getName();
+
+  // Only inspect TESLA automata descriptions.
+  if (RetTypeName.compare(0, AUTOMATON.size(), AUTOMATON))
+    return true;
+
+  OwningPtr<Parser> P(Parser::AutomatonParser(F, *Context));
+  if (!P)
+    return false;
+
+  OwningPtr<AutomatonDescription> A(P->Parse());
   if (!A)
     return false;
 
