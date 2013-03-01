@@ -44,8 +44,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/system_error.h"
 
-#include "llvm/Pass.h"
-
 #include "Names.h"
 #include <google/protobuf/text_format.h>
 
