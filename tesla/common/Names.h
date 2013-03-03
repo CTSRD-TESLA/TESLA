@@ -36,6 +36,7 @@
 
 namespace tesla {
 
+class Argument;
 class Identifier;
 class Location;
 
@@ -66,6 +67,12 @@ const std::string CALLER_ENTER      = INSTR_BASE + "caller_enter_";
 const std::string CALLER_LEAVE      = INSTR_BASE + "caller_return_";
 
 const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
+
+//! Convert an @ref Argument into something human-readable.
+std::string ArgString(const Argument&);
+
+//! Convert an @ref Argument into a very short, human-readable name.
+std::string ShortName(const Argument&);
 
 //! Convert an @ref Identifier into a short, human-readable name.
 std::string ShortName(const Identifier&);

@@ -39,6 +39,38 @@
 using llvm::Twine;
 
 
+std::string tesla::ArgString(const Argument& A) {
+  switch (A.type()) {
+  case Argument::Constant:
+    return A.value();
+
+  case Argument::Variable:
+    return (Twine()
+      + Twine(A.index())
+      + "('"
+      + A.name()
+      + "'):"
+      + A.value()
+    ).str();
+
+  case Argument::Any:
+    return "<anything>";
+  }
+}
+
+std::string tesla::ShortName(const Argument& A) {
+  switch (A.type()) {
+  case Argument::Constant:
+    return A.value();
+
+  case Argument::Variable:
+    return A.name();
+
+  case Argument::Any:
+    return "X";
+  }
+}
+
 std::string tesla::ShortName(const Identifier& ID) {
   if (ID.has_name())
     return ID.name();
