@@ -272,12 +272,14 @@ public:
 
 private:
   FieldAssignTransition(const State& From, const State& To,
-                        const FieldAssignment& A)
-    : Transition(From, To), Assign(A) {}
+                        const FieldAssignment& A);
 
   static const char *OpString(FieldAssignment::AssignType);
 
   const FieldAssignment& Assign;
+
+  llvm::OwningArrayPtr<const Argument*> ReferencedVariables;
+  llvm::ArrayRef<const Argument*> Refs;
 
   friend class Transition;
 };

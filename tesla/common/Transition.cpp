@@ -167,11 +167,21 @@ string FnTransition::DotLabel() const {
 }
 
 
+FieldAssignTransition::FieldAssignTransition(const State& From, const State& To,
+                                             const FieldAssignment& A)
+  : Transition(From, To), Assign(A),
+    ReferencedVariables(new const Argument*[2]),
+    Refs(ReferencedVariables.get(), 2)
+{
+  ReferencedVariables[0] = &Assign.base();
+  ReferencedVariables[1] = &Assign.value();
+}
+
 string FieldAssignTransition::ShortLabel() const {
   return (Twine()
     + Assign.type()
     + "."
-    + Assign.name()
+    + ShortName(Assign.base())
     + " "
     + OpString(Assign.operation())
     + " "
