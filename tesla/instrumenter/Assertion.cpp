@@ -155,7 +155,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Manifest& Man,
     const Identifier& ID = i.second->identifier();
     OwningPtr<const Automaton> A(Man.FindAutomaton(ID));
 
-    assert(A != NULL && "mismatch between descriptions, automata in Manifest");
+    assert(A && "mismatch between descriptions, automata in Manifest");
 
     ModifiedIR |= AddInstrumentation(*A, M);
   }
@@ -238,7 +238,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
 void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
   Location *Loc, CallInst *Call) {
 
-  assert(Call->getCalledFunction()->getName() == ASSERTION_FN_NAME);
+  assert(Call->getCalledFunction()->getName() == INLINE_ASSERTION);
 
   if (Call->getNumArgOperands() < 3)
     report_fatal_error("TESLA assertion must have at least 3 arguments");

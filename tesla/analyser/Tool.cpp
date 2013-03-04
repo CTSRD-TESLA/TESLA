@@ -67,7 +67,7 @@ int main(int argc, const char **argv) {
   // The CompilationDatabase will modify these, so we shouldn't pass in
   // args.data() directly.
   argc = (int) args.size();
-  assert(argc == args.size());    // check for overflow
+  assert(((size_t) argc) == args.size());    // check for overflow
 
   argv = args.data();
 

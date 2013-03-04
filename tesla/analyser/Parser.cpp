@@ -46,7 +46,7 @@ using namespace tesla;
 
 
 Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
-  assert(Call->getDirectCallee()->getName().compare(ASSERTION_FN_NAME) == 0);
+  assert(Call->getDirectCallee()->getName().compare(INLINE_ASSERTION) == 0);
 
   OwningPtr<Parser> Bootstrap(new Parser(Ctx));
 
