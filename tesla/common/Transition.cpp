@@ -157,11 +157,11 @@ const ArrayRef<const Argument*> NowTransition::Arguments() const {
 }
 
 
-const ArrayRef<const Argument*> FnTransition::Arguments() const {
+const ReferenceVector FnTransition::Arguments() const {
   const Argument* const *Args = Ev.argument().data();
   size_t Len = Ev.argument_size();
 
-  return ArrayRef<const Argument*>(Args, Len);
+  return ReferenceVector(Args, Len);
 }
 
 string FnTransition::ShortLabel() const {
@@ -213,9 +213,9 @@ const char* FieldAssignTransition::OpString(FieldAssignment::AssignType T) {
 }
 
 
-const ArrayRef<const Argument*> SubAutomatonTransition::Arguments() const {
+const ReferenceVector SubAutomatonTransition::Arguments() const {
   // TODO: actually find sub-automaton!
-  return ArrayRef<const Argument*>();
+  return ReferenceVector();
 }
 
 } // namespace tesla
