@@ -55,6 +55,7 @@ class Transition;
 
 namespace internal {
   class DFABuilder;
+  class NFAParser;
 }
 
 
@@ -142,42 +143,11 @@ public:
   static NFA* Parse(const AutomatonDescription*, unsigned int id);
 
 private:
-  /**
-   * Parse an @ref Expression that follows from an initial state.
-   *
-   * @param[out]  States   All created states are registered here.
-   *                       Memory ownership is returned to the caller.
-   * @param[out]  Trans    All created transitions are registered here.
-   *                       Memory ownership of out-transitions rests with the
-   *                       originating @ref State.
-   *
-   * @returns  Transition out of the sub-automata described by the expression.
-   */
-  static State* Parse(const Expression&, State& InitialState,
-                      StateVector& States, TransitionVector& Trans);
-
-  static State* Parse(const BooleanExpr&, State& InitialState,
-                      StateVector&, TransitionVector&);
-
-  static State* Parse(const Sequence&, State& InitialState,
-                      StateVector&, TransitionVector&);
-
-  static State* Parse(const NowEvent&, State& InitialState,
-                      StateVector& States, TransitionVector& Trans);
-
-  static State* Parse(const FunctionEvent&, State& InitialState,
-                      StateVector& States, TransitionVector& Trans);
-
-  static State* Parse(const FieldAssignment&, State& InitialState,
-                      StateVector& States, TransitionVector& Trans);
-
-  //! Parse a sub-automaton expression.
-  static State* SubAutomaton(const Identifier&, State& InitialState,
-                             StateVector& States, TransitionVector& Trans);
-
   NFA(size_t id, const AutomatonDescription& A,
       llvm::StringRef Name, llvm::StringRef Desc,
       llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+
+  friend class internal::NFAParser;
 };
 
 

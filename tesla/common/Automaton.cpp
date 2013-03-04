@@ -67,19 +67,49 @@ using std::vector;
 
 namespace tesla {
 
+namespace internal {
+
+class NFAParser {
+public:
+  NFAParser(const AutomatonDescription& A) : Automaton(A) {}
+
+  /**
+   * Parse the NFA, assign it @ref #id and put it in @ref #Out.
+   *
+   * @param[out]  Out    where to store the NFA
+   * @param[in]   id     an integer ID for the resulting NFA
+   */
+  void Parse(OwningPtr<NFA>& Out, unsigned int id);
+
+private:
+  State* Parse(const Expression&, State& InitialState);
+  State* Parse(const BooleanExpr&, State& InitialState);
+  State* Parse(const Sequence&, State& InitialState);
+  State* Parse(const NowEvent&, State& InitialState);
+  State* Parse(const FunctionEvent&, State& InitialState);
+  State* Parse(const FieldAssignment&, State& InitialState);
+  State* SubAutomaton(const Identifier&, State& InitialState);
+
+  const AutomatonDescription& Automaton;
+  StateVector States;
+  TransitionVector Transitions;
+};
+
+}
+
 
 // ---- Automaton implementation ----------------------------------------------
 Automaton* Automaton::Create(const AutomatonDescription *A, unsigned int id,
                              Type Type) {
   // First, do the easy thing: parse into an NFA.
-  NFA *N = NFA::Parse(A, id);
-  assert(N != NULL);
+  OwningPtr<NFA> N(NFA::Parse(A, id));
+  assert(N);
 
   // Only convert to DFA if we have to.
   if ((Type == Deterministic) && !N->IsRealisable())
-    return DFA::Convert(N);
+    return DFA::Convert(N.get());
 
-  return N;
+  return N.take();
 }
 
 
@@ -139,64 +169,84 @@ string Automaton::Dot() const {
 
 // ---- NFA implementation ----------------------------------------------------
 NFA* NFA::Parse(const AutomatonDescription *A, unsigned int id) {
-  assert(A != NULL);
+  OwningPtr<NFA> N;
+  internal::NFAParser(*A).Parse(N, id);
+  assert(N);
 
-  StateVector States;
-  TransitionVector Transitions;
-
-  State *Start = State::CreateStartState(States);
-
-  if (Parse(A->expression(), *Start, States, Transitions) == NULL) {
-    for (State *S : States)
-      delete S;
-
-    return NULL;
-  }
-
-  const Identifier &ID = A->identifier();
-
-  string Description;
-  ::google::protobuf::TextFormat::PrintToString(*A, &Description);
-
-  return new NFA(id, *A, ShortName(ID), Description, States, Transitions);
+  return N.take();
 }
 
-State* NFA::Parse(const Expression& Expr, State& Start,
-                  StateVector& States, TransitionVector& Transitions) {
+NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name, StringRef Desc,
+         ArrayRef<State*> S, ArrayRef<Transition*> T)
+  : Automaton(id, A, Name, Desc, S, T)
+{
+}
 
+namespace {
+typedef std::set<unsigned> NFAState;
+void dump(const NFAState &S) {
+  for (unsigned i : S) {
+    fprintf(stderr, "%d ", i);
+  }
+  fprintf(stderr, "\n");
+}
+struct NFAStateHash
+{
+  size_t operator()(const NFAState &S) const {
+    if (S.size() == 0) return 0;
+    return *S.begin();
+  }
+};
+}
+
+namespace internal {
+void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
+  State *Start = State::CreateStartState(States);
+
+  if (Parse(Automaton.expression(), *Start) == NULL)
+    return;
+
+  const Identifier &ID = Automaton.identifier();
+
+  string Description;
+  ::google::protobuf::TextFormat::PrintToString(Automaton, &Description);
+
+  Out.reset(new NFA(id, Automaton, ShortName(ID), Description,
+                    States, Transitions));
+}
+
+State* NFAParser::Parse(const Expression& Expr, State& Start) {
   switch (Expr.type()) {
   case Expression::BOOLEAN_EXPR:
-    return Parse(Expr.booleanexpr(), Start, States, Transitions);
+    return Parse(Expr.booleanexpr(), Start);
 
   case Expression::SEQUENCE:
-    return Parse(Expr.sequence(), Start, States, Transitions);
+    return Parse(Expr.sequence(), Start);
 
   case Expression::NULL_EXPR:
     return &Start;
 
   case Expression::NOW:
-    return Parse(Expr.now(), Start, States, Transitions);
+    return Parse(Expr.now(), Start);
 
   case Expression::FUNCTION:
-    return Parse(Expr.function(), Start, States, Transitions);
+    return Parse(Expr.function(), Start);
 
   case Expression::FIELD_ASSIGN:
-    return Parse(Expr.fieldassign(), Start, States, Transitions);
+    return Parse(Expr.fieldassign(), Start);
 
   case Expression::SUB_AUTOMATON:
-    return SubAutomaton(Expr.subautomaton(), Start, States, Transitions);
+    return SubAutomaton(Expr.subautomaton(), Start);
   }
 }
 
-State* NFA::Parse(const BooleanExpr& Expr, State& Branch,
-                  StateVector& States, TransitionVector& Transitions) {
-
+State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
   assert(Expr.expression_size() == 2);
   const Expression& LHS = Expr.expression(0);
   const Expression& RHS = Expr.expression(1);
 
-  State *LHSFinal = Parse(LHS, Branch, States, Transitions);
-  State *RHSFinal = Parse(RHS, Branch, States, Transitions);
+  State *LHSFinal = Parse(LHS, Branch);
+  State *RHSFinal = Parse(RHS, Branch);
 
   if (!LHSFinal || !RHSFinal)
     return NULL;
@@ -223,73 +273,39 @@ State* NFA::Parse(const BooleanExpr& Expr, State& Branch,
   }
 }
 
-State* NFA::Parse(const Sequence& Seq, State& Start,
-                  StateVector& States, TransitionVector& Transitions) {
-
+State* NFAParser::Parse(const Sequence& Seq, State& Start) {
   State *Current = &Start;
   for (const Expression& E : Seq.expression())
-    Current = Parse(E, *Current, States, Transitions);
+    Current = Parse(E, *Current);
 
   return Current;
 }
 
-State* NFA::Parse(const NowEvent& now, State& InitialState,
-                  StateVector& States, TransitionVector& Trans) {
-
+State* NFAParser::Parse(const NowEvent& now, State& InitialState) {
   State *Final = State::Create(States);
-  Transition::Create(InitialState, *Final, now, Trans);
+  Transition::Create(InitialState, *Final, now, Transitions);
   return Final;
 }
 
-State* NFA::Parse(const FunctionEvent& Ev, State& InitialState,
-                  StateVector& States, TransitionVector& Trans) {
-
+State* NFAParser::Parse(const FunctionEvent& Ev, State& InitialState) {
   State *Final = State::Create(States);
-  Transition::Create(InitialState, *Final, Ev, Trans);
+  Transition::Create(InitialState, *Final, Ev, Transitions);
   return Final;
 }
 
-State* NFA::Parse(const FieldAssignment& Assign, State& InitialState,
-                  StateVector& States, TransitionVector& Trans) {
-
+State* NFAParser::Parse(const FieldAssignment& Assign, State& InitialState) {
   State *Final = State::Create(States);
-  Transition::Create(InitialState, *Final, Assign, Trans);
+  Transition::Create(InitialState, *Final, Assign, Transitions);
   return Final;
 }
 
-State* NFA::SubAutomaton(const Identifier& ID, State& InitialState,
-                         StateVector& States, TransitionVector& Trans) {
-
+State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState) {
   State *Final = State::Create(States);
-  Transition::CreateSubAutomaton(InitialState, *Final, ID, Trans);
+  Transition::CreateSubAutomaton(InitialState, *Final, ID, Transitions);
   return Final;
 }
 
 
-NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name, StringRef Desc,
-         ArrayRef<State*> S, ArrayRef<Transition*> T)
-  : Automaton(id, A, Name, Desc, S, T)
-{
-}
-
-namespace {
-typedef std::set<unsigned> NFAState;
-void dump(const NFAState &S) {
-  for (unsigned i : S) {
-    fprintf(stderr, "%d ", i);
-  }
-  fprintf(stderr, "\n");
-}
-struct NFAStateHash
-{
-  size_t operator()(const NFAState &S) const {
-    if (S.size() == 0) return 0;
-    return *S.begin();
-  }
-};
-}
-
-namespace internal {
 class DFABuilder {
   /// The NFA state sets that we've seen so far and their corresponding DFA
   /// states
