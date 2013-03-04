@@ -535,8 +535,10 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O) {
     return false;
   }
 
-  auto *Base = dyn_cast<DeclRefExpr>(LHS->getBase()->IgnoreImpCasts());
-  auto *BasePtrType = dyn_cast<PointerType>(Base->getDecl()->getType());
+  auto *Base =
+    dyn_cast<DeclRefExpr>(LHS->getBase()->IgnoreImpCasts())->getDecl();
+
+  auto *BasePtrType = dyn_cast<PointerType>(Base->getType());
 
   auto *BaseType = BasePtrType->getPointeeType()->getAsStructureType();
   if (!BaseType) {
@@ -554,7 +556,7 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O) {
 
   A->set_index(Member->getFieldIndex());
 
-  return Parse(A->mutable_base(), Member, false)
+  return Parse(A->mutable_base(), Base, false)
       && Parse(A->mutable_value(), O->getRHS());
 }
 
