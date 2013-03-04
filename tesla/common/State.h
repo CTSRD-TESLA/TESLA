@@ -32,11 +32,15 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include "Transition.h"
 #include "Types.h"
 
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/OwningPtr.h>
 
 namespace tesla {
+
+class Argument;
 
 namespace internal {
   class DFABuilder;
@@ -46,8 +50,16 @@ namespace internal {
 class State {
   friend class internal::DFABuilder;
 public:
+  /**
+   * Create an initial @ref State for an @ref Automaton.
+   *
+   * @param[out]  States    where to put the resulting State
+   * @param[in]   RefSize   the number of variables this automaton references
+   */
+  static State* CreateStartState(StateVector& States, unsigned int RefSize);
+
+  //! Create a non-initial @ref State.
   static State* Create(StateVector&);
-  static State* CreateStartState(StateVector&);
 
   ~State();
 
@@ -57,17 +69,23 @@ public:
   bool IsStartState() const { return start; }
   bool IsAcceptingState() const { return (Transitions.size() == 0); }
 
+  void UpdateReferences(llvm::ArrayRef<const Argument*>);
+  const ReferenceVector References() const { return Refs; }
+
   std::string String() const;
   std::string Dot() const;
   Transition *const*begin() const { return Transitions.begin(); }
   Transition *const*end() const { return Transitions.end(); }
 
 private:
-  State(size_t id, bool start = false);
+  State(size_t id, bool start = false) : id(id), start(start) {}
 
   const size_t id;
   const bool start;
 
+  //! What variables this state references (how an instance is named).
+  llvm::OwningArrayPtr<const Argument*> VariableReferences;
+  MutableReferenceVector Refs;
 
   llvm::SmallVector<Transition*, 1> Transitions;
 };

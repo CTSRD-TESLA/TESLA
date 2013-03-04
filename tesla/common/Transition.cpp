@@ -43,41 +43,45 @@ using std::string;
 namespace tesla {
 
 
-void Transition::Create(State& From, const State& To,
+void Transition::Create(State& From, State& To,
                         TransitionVector& Transitions) {
 
   OwningPtr<Transition> T(new NullTransition(From, To));
-  Register(T, From, Transitions);
+  Register(T, From, To, Transitions);
 }
 
-void Transition::Create(State& From, const State& To, const NowEvent& Ev,
+void Transition::Create(State& From, State& To, const NowEvent& Ev,
+                        const AutomatonDescription& Automaton,
                         TransitionVector& Transitions) {
 
-  OwningPtr<Transition> T(new NowTransition(From, To, Ev));
-  Register(T, From, Transitions);
+  ReferenceVector Refs(Automaton.argument().data(),
+                                 Automaton.argument_size());
+
+  OwningPtr<Transition> T(new NowTransition(From, To, Ev, Refs));
+  Register(T, From, To, Transitions);
 }
 
-void Transition::Create(State& From, const State& To, const FunctionEvent& Ev,
+void Transition::Create(State& From, State& To, const FunctionEvent& Ev,
                         TransitionVector& Transitions) {
 
   OwningPtr<Transition> T(new FnTransition(From, To, Ev));
-  Register(T, From, Transitions);
+  Register(T, From, To, Transitions);
 }
 
-void Transition::Create(State& From, const State& To, const FieldAssignment& A,
+void Transition::Create(State& From, State& To, const FieldAssignment& A,
                         TransitionVector& Transitions) {
   OwningPtr<Transition> T(new FieldAssignTransition(From, To, A));
-  Register(T, From, Transitions);
+  Register(T, From, To, Transitions);
 }
 
-void Transition::CreateSubAutomaton(State& From, const State& To,
+void Transition::CreateSubAutomaton(State& From, State& To,
                                     const Identifier& ID,
                                     TransitionVector& Transitions) {
   OwningPtr<Transition> T(new SubAutomatonTransition(From, To, ID));
-  Register(T, From, Transitions);
+  Register(T, From, To, Transitions);
 }
 
-void Transition::Copy(State &From, const State& To, const Transition* Other,
+void Transition::Copy(State &From, State& To, const Transition* Other,
                    TransitionVector& Transitions) {
 
   OwningPtr<Transition> New;
@@ -86,9 +90,11 @@ void Transition::Copy(State &From, const State& To, const Transition* Other,
   case Null:
     return;
 
-  case Now:
-    New.reset(new NowTransition(From, To, cast<NowTransition>(Other)->Loc));
+  case Now: {
+    auto O = cast<NowTransition>(Other);
+    New.reset(new NowTransition(From, To, O->Ev, O->Refs));
     break;
+  }
 
   case Fn:
     New.reset(new FnTransition(From, To, cast<FnTransition>(Other)->Ev));
@@ -106,14 +112,63 @@ void Transition::Copy(State &From, const State& To, const Transition* Other,
   }
 
   assert(New);
-  Register(New, From, Transitions);
+  Register(New, From, To, Transitions);
 }
 
-void Transition::Register(OwningPtr<Transition>& T, State& From,
+void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
                           TransitionVector& Transitions) {
 
   Transitions.push_back(T.get());
+
+  // Update the state we're pointing to with the references it should
+  // know about thus far in the execution of the automaton.
+  OwningArrayPtr<const Argument*> Args;
+  ReferenceVector Ref;
+  T->ReferencesThusFar(Args, Ref);
+  To.UpdateReferences(Ref);
+
   From.AddTransition(T);
+}
+
+
+void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
+                                   ReferenceVector& Ref) const {
+
+  SmallVector<const Argument*, 4> FromRefs;
+  for (size_t i = 0; i < From.References().size(); i++) {
+    if (FromRefs.size() <= i)
+      FromRefs.resize(i + 1);
+
+    FromRefs[i] = From.References()[i];
+  }
+
+  SmallVector<const Argument*, 4> MyRefs;
+  for (auto Arg : this->Arguments())
+    if (Arg && Arg->type() == Argument::Variable) {
+      size_t i = Arg->index();
+
+      if (MyRefs.size() <= i)
+        MyRefs.resize(i + 1);
+
+      MyRefs[i] = Arg;
+    }
+
+  const size_t Size = MAX(FromRefs.size(), MyRefs.size());
+
+  auto Arguments = new const Argument*[Size];
+  for (size_t i = 0; i < Size; i++) {
+    if ((MyRefs.size() > i) && MyRefs[i])
+      Arguments[i] = MyRefs[i];
+
+    else if ((FromRefs.size() > i) && FromRefs[i])
+      Arguments[i] = FromRefs[i];
+
+    else
+      Arguments[i] = NULL;
+  }
+
+  Args.reset(Arguments);
+  Ref = ReferenceVector(Arguments, Size);
 }
 
 
@@ -145,16 +200,9 @@ string Transition::Dot() const {
 
 
 NowTransition::NowTransition(const State& From, const State& To,
-                             const NowEvent& Ev)
-  : Transition(From, To), Loc(Ev.location()) {}
-
-NowTransition::NowTransition(const State& From, const State& To,
-                             const Location& L)
-  : Transition(From, To), Loc(L) {}
-
-const ArrayRef<const Argument*> NowTransition::Arguments() const {
-  return llvm::ArrayRef<const Argument*>();//From.References();
-}
+                             const NowEvent& Ev,
+                             const ReferenceVector& Refs)
+  : Transition(From, To), Ev(Ev), Refs(Refs) {}
 
 
 const ReferenceVector FnTransition::Arguments() const {

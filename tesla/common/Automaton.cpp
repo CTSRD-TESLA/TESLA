@@ -201,7 +201,12 @@ struct NFAStateHash
 
 namespace internal {
 void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
-  State *Start = State::CreateStartState(States);
+  size_t VariableRefs = 0;
+  for (auto A : Automaton.argument())
+    if (A.type() == Argument::Variable)
+      VariableRefs++;
+
+  State *Start = State::CreateStartState(States, VariableRefs);
 
   if (Parse(Automaton.expression(), *Start) == NULL)
     return;
@@ -283,7 +288,7 @@ State* NFAParser::Parse(const Sequence& Seq, State& Start) {
 
 State* NFAParser::Parse(const NowEvent& now, State& InitialState) {
   State *Final = State::Create(States);
-  Transition::Create(InitialState, *Final, now, Transitions);
+  Transition::Create(InitialState, *Final, now, Automaton, Transitions);
   return Final;
 }
 
@@ -335,13 +340,20 @@ class DFABuilder {
     auto Existing = DFAStates.find(NStates);
     if (Existing != DFAStates.end()) 
       return Existing->second;
-    State *DS = Start ? State::CreateStartState(States) : State::Create(States);
+
+    State *DS = Start
+      ? State::CreateStartState(States, RefCount)
+      : State::Create(States);
+
     DFAStates.insert(std::make_pair(NStates, DS));
     UnfinishedStates.push_back(std::make_pair(NStates, Start));
     return DS;
   }
 
   State *stateForNFAState(const State *S) {
+    if (RefCount == 0)
+      RefCount = S->References().size();
+
     NFAState NStates;
     bool Start = false;
     collectFrontier(NStates, S, Start);
@@ -433,6 +445,9 @@ class DFABuilder {
 #endif
     return D;
   }
+
+private:
+  size_t RefCount = 0;
 };
 
 

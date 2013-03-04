@@ -53,6 +53,7 @@ class Location;
 class NowEvent;
 
 typedef llvm::ArrayRef<const Argument*> ReferenceVector;
+typedef llvm::MutableArrayRef<const Argument*> MutableReferenceVector;
 
 /// A transition from one TESLA state to another.
 class Transition {
@@ -68,25 +69,24 @@ public:
    * @param[in]       To           The state to transition to.
    * @param[out]      Transitions  A place to record the new transition.
    */
-  static void Create(State& From, const State& To,
-                     TransitionVector& Transitions);
+  static void Create(State& From, State& To, TransitionVector& Transitions);
 
-  static void Create(State& From, const State& To, const FunctionEvent&,
+  static void Create(State& From, State& To, const FunctionEvent&,
                      TransitionVector&);
 
-  static void Create(State& From, const State& To, const FieldAssignment&,
+  static void Create(State& From, State& To, const FieldAssignment&,
                      TransitionVector&);
 
-  static void Create(State& From, const State& To, const NowEvent&,
-                     TransitionVector&);
+  static void Create(State& From, State& To, const NowEvent&,
+                     const AutomatonDescription&, TransitionVector&);
 
-  static void CreateSubAutomaton(State& From, const State& To,
+  static void CreateSubAutomaton(State& From, State& To,
                                  const Identifier&, TransitionVector&);
 
   /// Creates a transition between the specified states, with the same
   /// transition type as the copied transition.  This is used when constructing
   /// DFA transitions from NFA transitions.
-  static void Copy(State &From, const State& To, const Transition* Other,
+  static void Copy(State &From, State& To, const Transition* Other,
                    TransitionVector &);
 
   virtual ~Transition() {}
@@ -96,6 +96,15 @@ public:
 
   //! Arguments referenced by this transition.
   virtual const ReferenceVector Arguments() const = 0;
+
+  /**
+   * The references known at the point this transition occurs.
+   *
+   * @param[out] Args    where to store the resulting array of arguments
+   * @param[out] Ref     a reference to the created arguments; includes length
+   */
+  void ReferencesThusFar(llvm::OwningArrayPtr<const Argument*>& Args,
+                         ReferenceVector& Ref) const;
 
   //! Can this transition be captured by real instrumentation code?
   virtual bool IsRealisable() const = 0;
@@ -118,7 +127,7 @@ public:
 
 protected:
 
-  static void Register(llvm::OwningPtr<Transition>&, State&,
+  static void Register(llvm::OwningPtr<Transition>&, State& From, State& To,
                        TransitionVector&);
 
   Transition(const State& From, const State& To);
@@ -175,10 +184,11 @@ public:
   }
 
 private:
-  NowTransition(const State& From, const State& To, const NowEvent& Ev);
-  NowTransition(const State& From, const State& To, const Location &L);
+  NowTransition(const State& From, const State& To, const NowEvent& Ev,
+                const ReferenceVector& Refs);
 
-  const Location& Loc;
+  const NowEvent& Ev;
+  const ReferenceVector Refs;
 
   friend class Transition;
 };

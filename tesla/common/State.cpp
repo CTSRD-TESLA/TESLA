@@ -47,13 +47,17 @@ State* State::Create(StateVector& States) {
   return New;
 }
 
-State* State::CreateStartState(StateVector& States) {
+State* State::CreateStartState(StateVector& States, unsigned int RefSize) {
   State *New = new State(States.size(), true);
   States.push_back(New);
+
+  OwningArrayPtr<const Argument*> NullStore(new const Argument*[RefSize]);
+  bzero(NullStore.get(), RefSize * sizeof(NullStore[0]));
+  New->UpdateReferences(ReferenceVector(NullStore.get(), RefSize));
+
   return New;
 }
 
-State::State(size_t id, bool start) : id(id), start(start) {}
 State::~State() {
   for (Transition *T : Transitions) delete T;
 }
@@ -61,6 +65,51 @@ State::~State() {
 void State::AddTransition(OwningPtr<Transition>& T)
 {
   Transitions.push_back(T.take());
+}
+
+void State::UpdateReferences(ReferenceVector NewRefs)
+{
+  const size_t Len = MAX(Refs.size(), NewRefs.size());
+
+  if (!VariableReferences) {
+    // If we don't currently know about variable references, copy these.
+    VariableReferences.reset(new const Argument*[Len]);
+    memcpy(VariableReferences.get(), NewRefs.data(), Len * sizeof(Refs[0]));
+
+    Refs = MutableReferenceVector(VariableReferences.get(), Len);
+    return;
+  }
+
+  // We already have some notion of variable references; update with
+  // the new information.
+  if (Refs.size() < Len) {
+    OwningArrayPtr<const Argument*> NewCopy(new const Argument*[Len]);
+    memcpy(NewCopy.get(), VariableReferences.get(),
+           Refs.size() * sizeof(Refs[0]));
+
+    VariableReferences.swap(NewCopy);
+    Refs = MutableReferenceVector(VariableReferences.get(), Len);
+  }
+
+  for (auto *Arg : NewRefs) {
+    assert(Arg != NULL);
+    assert(Arg->type() == Argument::Variable);
+    assert(((size_t) Arg->index()) <= Len);
+    Refs[Arg->index()] = Arg;
+  }
+
+  for (size_t i = 0; i < NewRefs.size(); i++) {
+    assert(Refs[i] != NULL);
+
+    const Argument **Space = VariableReferences.get() + i;
+    const Argument *Old = *Space;
+    const Argument *New = NewRefs[i];
+
+    // Sanity check: we shouldn't be losing information.
+    if ((Old->type() != Argument::Any) && (New->type() == Argument::Any))
+      report_fatal_error(
+        "replacing concrete Argument '" + ShortName(*New) + " with ANY");
+  }
 }
 
 string State::String() const {
@@ -76,10 +125,24 @@ string State::String() const {
 }
 
 string State::Dot() const {
+  std::stringstream InstanceName;
+
+  for (auto i = Refs.begin(); i != Refs.end(); ) {
+    InstanceName << (*i ? ShortName(**i) : "X");
+
+    if (++i != Refs.end())
+      InstanceName << ",";
+  }
+
   return (
     Twine(ID())
-    + (IsAcceptingState() ? " [ shape = doublecircle ]" : "")
-    + ";"
+    + " [ label = \""
+    + "state " + Twine(ID())
+    + "\\n("
+    + InstanceName.str()
+    + ")\""
+    + (IsAcceptingState() ? ", shape = doublecircle" : "")
+    + " ];"
   ).str();
 }
 
