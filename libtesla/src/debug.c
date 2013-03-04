@@ -31,11 +31,32 @@
  * $Id$
  */
 
+#include "tesla_internal.h"
 #include <stdlib.h>
 
-#ifndef NDEBUG
+char*
+transition_matrix(const struct tesla_transitions *trans)
+{
+	static const char EACH[] = "(%tx:0x%tx -> %tx%s) ";
 
-#include "tesla_internal.h"
+	size_t needed = trans->length * (sizeof(EACH) + 4) + 4;
+	char *buffer = tesla_malloc(needed);
+	char *c = buffer;
+
+	c += sprintf(c, "[ ");
+
+	for (size_t i = 0; i < trans->length; i++) {
+		const tesla_transition *t = trans->transitions + i;
+		c += sprintf(c, EACH, t->from, t->mask, t->to,
+			     t->fork ? " <fork>" : "");
+	}
+
+	c += sprintf(c, "]");
+
+	return buffer;
+}
+
+#ifndef NDEBUG
 
 #define print DEBUG_PRINT
 

@@ -50,6 +50,39 @@
 
 struct tesla_key;
 
+/** A single allowable transition in a TESLA automaton. */
+struct tesla_transition {
+	/** The state we are moving from. */
+	uint32_t	from;
+
+	/** The mask of the state we're moving from. */
+	uint32_t	mask;
+
+	/** The state we are moving to. */
+	uint32_t	to;
+
+	/**
+	 * Explicit declaration that libtesla should fork on this transition.
+	 *
+	 * This is useful for e.g. TELSA "or" expressions, when we need to
+	 * allow either or both paths to be followed.
+	 */
+	int		fork;
+};
+
+/**
+ * A set of permissible state transitions for an automata instance.
+ *
+ * An automaton must take exactly one of these transitions.
+ */
+struct tesla_transitions {
+	/** The number of possible transitions in @ref #transitions. */
+	size_t			 length;
+
+	/** Possible transitions: exactly one must be taken. */
+	struct tesla_transition	*transitions;
+};
+
 /** Update all automata instances that match a given key to a new state. */
 int32_t	tesla_update_state(uint32_t context, uint32_t class_id,
 	const struct tesla_key *key, const char *name, const char *description,

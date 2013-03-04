@@ -188,11 +188,13 @@ struct tesla_class {
 	struct tesla_table	*ts_table;	/* Table of instances. */
 };
 
-typedef struct tesla_class	tesla_class;
-typedef struct tesla_instance	tesla_instance;
-typedef struct tesla_key	tesla_key;
-typedef struct tesla_store	tesla_store;
-typedef struct tesla_table	tesla_table;
+typedef struct tesla_class		tesla_class;
+typedef struct tesla_instance		tesla_instance;
+typedef struct tesla_key		tesla_key;
+typedef struct tesla_store		tesla_store;
+typedef struct tesla_table		tesla_table;
+typedef struct tesla_transition		tesla_transition;
+typedef struct tesla_transitions	tesla_transitions;
 
 
 /**
@@ -261,5 +263,8 @@ void	print_key(const struct tesla_key *key);
 
 /** Print a @ref tesla_class to stderr. */
 void	print_class(const struct tesla_class*);
+
+/** Provide a human-readable rendition of a transition matrix. */
+char*	transition_matrix(const struct tesla_transitions*);
 
 #endif /* TESLA_INTERNAL_H */
