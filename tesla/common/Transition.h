@@ -320,7 +320,7 @@ public:
   const Identifier& GetID() const { return ID; }
 
   static bool classof(const Transition *T) {
-    return T->getKind() == FieldAssign;
+    return T->getKind() == SubAutomaton;
   }
 
   virtual TransitionKind getKind() const { return SubAutomaton; };
