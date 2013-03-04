@@ -59,6 +59,8 @@ std::string tesla::ArgString(const Argument& A) {
 }
 
 std::string tesla::ShortName(const Argument& A) {
+  assert(&A != NULL);
+
   switch (A.type()) {
   case Argument::Constant:
     return A.value();
