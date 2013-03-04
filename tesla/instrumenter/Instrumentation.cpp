@@ -381,7 +381,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
     if (Arg.type() != Argument::Variable)
       continue;
 
-    int Index = Arg.index();
+    size_t Index = Arg.index();
 
     assert(Index < TotalArgs);
     Args[Index] = &InstrArg;
