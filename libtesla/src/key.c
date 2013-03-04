@@ -37,7 +37,6 @@
 
 
 #define	IS_SET(mask, index) (mask & (1 << index))
-#define	SUBSET(x,y) ((x & y) == x)
 
 int
 tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)

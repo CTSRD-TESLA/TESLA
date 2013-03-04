@@ -52,6 +52,8 @@
 
 #include <tesla/libtesla.h>
 
+//! Is @ref x a subset of @ref y?
+#define	SUBSET(x,y) ((x & y) == x)
 
 /**
  * Call this if things go catastrophically, unrecoverably wrong.

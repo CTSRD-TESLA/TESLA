@@ -118,6 +118,40 @@ Type* tesla::IntPtrType(Module& M) {
     return DataLayout(&M).getIntPtrType(M.getContext());
 }
 
+StructType* tesla::TransitionType(Module& M) {
+  const char Name[] = "tesla_transition";
+  StructType *T = M.getTypeByName(Name);
+  if (T)
+    return T;
+
+  // We don't already have it; go find it!
+  LLVMContext& Ctx = M.getContext();
+  Type *IntType = Type::getInt32Ty(Ctx);
+
+  return StructType::create(Name,
+                            IntType,  // from state
+                            IntType,  // mask on from's name
+                            IntType,  // to state
+                            IntType,  // explicit instruction to fork
+                            NULL);
+}
+
+StructType* tesla::TransitionSetType(Module& M) {
+  const char Name[] = "tesla_transitions";
+  StructType *T = M.getTypeByName(Name);
+  if (T)
+    return T;
+
+  // We don't already have it; go find it!
+  Type *IntTy = IntegerType::get(M.getContext(), 32);
+  Type *TransStar = PointerType::getUnqual(TransitionType(M));
+
+  return StructType::create(Name,
+                            IntTy,      // number of possible transitions
+                            TransStar,  // transition array
+                            NULL);
+}
+
 BasicBlock* tesla::CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
                               BasicBlock *InsertBefore) {
   string FormatStr(Prefix.str());
@@ -171,7 +205,7 @@ Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
 
   Type *Char = IntegerType::get(Ctx, 8);
   Type *CharStar = PointerType::getUnqual(Char);
-  Type *IntTy = Type::getInt32Ty(Ctx);
+  Type *TransStar = PointerType::getUnqual(TransitionSetType(M));
   Type *KeyStar = PointerType::getUnqual(KeyType(M));
 
   Constant *Fn = M.getOrInsertFunction("tesla_update_state",
@@ -181,8 +215,7 @@ Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
       KeyStar,    // key
       CharStar,   // name
       CharStar,   // description
-      IntTy,      // expected_state
-      IntTy,      // new_state
+      TransStar,  // transitions data
       NULL
     );
 
@@ -301,9 +334,6 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
 
     IRBuilder<> Builder(Block);
 
-    auto CurrentState = ConstantInt::get(IntType, T.Source().ID());
-    auto NextState = ConstantInt::get(IntType, T.Destination().ID());
-
     auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
     IRBuilder<> ErrorHandler(Die);
 
@@ -313,15 +343,23 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
     ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
     ErrorHandler.CreateRetVoid();
 
+    Constant* TransArray[] = {
+      ConstructTransition(Builder, M,
+                          T.Source().ID(), T.Source().Mask(),
+                          T.Destination().ID())
+    };
+    ArrayRef<Constant*> TransRef(TransArray,
+                                 sizeof(TransArray) / sizeof(Constant*));
+
     vector<Value*> Args;
     Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
     Args.push_back(ConstantInt::get(IntType, A.ID()));
     Args.push_back(ConstructKey(Builder, M,
-                     InstrFn->getArgumentList(), T.FnEvent()));
+                                InstrFn->getArgumentList(),
+                                T.FnEvent()));
     Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
     Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-    Args.push_back(CurrentState);
-    Args.push_back(NextState);
+    Args.push_back(ConstructTransitions(Builder, M, TransRef));
 
     Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
     assert(Args.size() == UpdateStateFn->arg_size());
@@ -421,5 +459,46 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   Builder.CreateStore(ConstantInt::get(IntTy, KeyMask), Mask);
 
   return Key;
+}
+
+Constant* tesla::ConstructTransition(IRBuilder<>& Builder,
+                                     llvm::Module& M,
+                                     uint32_t From, uint32_t Mask,
+                                     uint32_t To, bool AlwaysFork) {
+
+  assert(From != To);
+
+  uint32_t Values[] = { From, Mask, To, AlwaysFork };
+  Type *IntType = Type::getInt32Ty(M.getContext());
+
+  vector<Constant*> Elements;
+  for (size_t i = 0; i < 4; i++)
+    Elements.push_back(ConstantInt::get(IntType, Values[i]));
+
+  return ConstantStruct::get(TransitionType(M), Elements);
+}
+
+Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
+                                      ArrayRef<Constant*> Transitions) {
+
+  static StructType *T = TransitionSetType(M);
+
+  Type *IntType = Type::getInt32Ty(M.getContext());
+  Constant *Zero = ConstantInt::get(IntType, 0);
+  Constant *Zeroes[] = { Zero, Zero };
+
+  Constant *Count = ConstantInt::get(IntType, Transitions.size());
+
+  ArrayType *ArrayT = ArrayType::get(TransitionType(M), Transitions.size());
+  auto *Array = new GlobalVariable(M, ArrayT, true, GlobalValue::PrivateLinkage,
+                                   ConstantArray::get(ArrayT, Transitions),
+                                   "transition_array");
+
+  Constant *ArrayPtr = ConstantExpr::getInBoundsGetElementPtr(Array, Zeroes);
+
+  Constant *TransitionsInit = ConstantStruct::get(T, Count, ArrayPtr, NULL);
+
+  return new GlobalVariable(M, T, true, GlobalValue::PrivateLinkage,
+                            TransitionsInit, "transitions");
 }
 

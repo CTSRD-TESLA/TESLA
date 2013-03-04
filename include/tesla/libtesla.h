@@ -77,7 +77,7 @@ struct tesla_transition {
  */
 struct tesla_transitions {
 	/** The number of possible transitions in @ref #transitions. */
-	size_t			 length;
+	uint32_t		 length;
 
 	/** Possible transitions: exactly one must be taken. */
 	struct tesla_transition	*transitions;
@@ -86,7 +86,7 @@ struct tesla_transitions {
 /** Update all automata instances that match a given key to a new state. */
 int32_t	tesla_update_state(uint32_t context, uint32_t class_id,
 	const struct tesla_key *key, const char *name, const char *description,
-	uint32_t expected_state, uint32_t new_state);
+	const struct tesla_transitions*);
 
 /*
  * Provide string versions of TESLA errors.
@@ -203,7 +203,7 @@ struct tesla_instance {
  * Set the action to take when a TESLA assertion fails; implemented via a
  * callback from the TESLA runtime.
  */
-typedef void	(*tesla_assert_fail_callback)(struct tesla_instance *tip);
+typedef void	(*tesla_assert_fail_callback)(const struct tesla_instance *tip);
 void	tesla_class_setaction(struct tesla_class *tsp,
 	    tesla_assert_fail_callback handler);
 
@@ -245,7 +245,6 @@ void	tesla_instance_destroy(struct tesla_class *tsp,
  * per failure.
  */
 void	tesla_assert_fail(struct tesla_class *tsp,
-		struct tesla_instance *tip, uint32_t expected_state,
-		uint32_t actual_state);
+		struct tesla_instance *tip, const struct tesla_transitions*);
 
 #endif /* _TESLA_STATE */

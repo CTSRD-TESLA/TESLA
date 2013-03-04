@@ -203,7 +203,7 @@ tesla_class_reset(struct tesla_class *c)
 
 void
 tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip,
-                  uint32_t expected_state, uint32_t next_state)
+                  const struct tesla_transitions *trans)
 {
 	assert(tsp != NULL);
 	assert(tip != NULL);
@@ -217,9 +217,10 @@ tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip,
 	case TESLA_ACTION_FAILSTOP:
 		tesla_panic(
 			"tesla_assert_failed: "
-			"unable to move '%s' %d->%d: currently in state %d",
-			tsp->ts_name, expected_state, next_state,
-			tip->ti_state);
+			"unable to move '%s' from state %d"
+			" according to transition matrix %s",
+			tsp->ts_name, tip->ti_state,
+			transition_matrix(trans));
 		break;		/* A bit gratuitous. */
 #ifdef NOTYET
 	case TESLA_ACTION_DTRACE:

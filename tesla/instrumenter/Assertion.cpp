@@ -187,8 +187,6 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
   LLVMContext& Ctx = InstrFn->getContext();
 
   Type *IntType = Type::getInt32Ty(Ctx);
-  Constant *CurrentState = ConstantInt::get(IntType, T.Source().ID());
-  Constant *NextState = ConstantInt::get(IntType, T.Destination().ID());
   Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);
 
   // The arguments to the function should be passed straight through to
@@ -216,14 +214,21 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
   ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
   ErrorHandler.CreateRetVoid();
 
+  Constant* TransArray[] = {
+    ConstructTransition(Builder, M,
+                        T.Source().ID(), T.Source().Mask(),
+                        T.Destination().ID())
+  };
+  ArrayRef<Constant*> TransRef(TransArray,
+                               sizeof(TransArray) / sizeof(Constant*));
+
   std::vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
   Args.push_back(ConstantInt::get(IntType, A.ID()));
   Args.push_back(ConstructKey(Builder, M, InstrArgs));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
   Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-  Args.push_back(CurrentState);
-  Args.push_back(NextState);
+  Args.push_back(ConstructTransitions(Builder, M, TransRef));
 
   Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
   assert(Args.size() == UpdateStateFn->arg_size());

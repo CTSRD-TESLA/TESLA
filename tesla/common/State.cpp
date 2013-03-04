@@ -114,6 +114,19 @@ void State::UpdateReferences(ReferenceVector NewRefs)
   }
 }
 
+uint32_t State::Mask() const {
+  uint32_t Mask = 0;
+  ReferenceVector Refs = References();
+
+  for (size_t i = 0; i < Refs.size(); i++) {
+    if (Refs[i] && Refs[i]->type() == Argument::Variable)
+      Mask |= (1 << i);
+  }
+
+
+  return Mask;
+}
+
 string State::String() const {
   std::stringstream ss;
   ss << "state " << id << ":";

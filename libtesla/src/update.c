@@ -46,7 +46,7 @@
 int32_t
 tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	const struct tesla_key *key, const char *name, const char *description,
-	uint32_t expected_state, uint32_t new_state)
+	const struct tesla_transitions *trans)
 {
 	if (verbose_debug()) {
 		DEBUG_PRINT("\n====\n%s()\n", __func__);
@@ -54,8 +54,13 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		            (tesla_context == TESLA_SCOPE_GLOBAL
 			     ? "global"
 			     : "per-thread"));
-		DEBUG_PRINT("  class:    %d ('%s')\n", class_id, name);
-		DEBUG_PRINT("  state:    %d->%d\n", expected_state, new_state);
+		DEBUG_PRINT("  class:        %d ('%s')\n", class_id, name);
+
+		char *matrix = transition_matrix(trans);
+		DEBUG_PRINT("  transitions:  %s", matrix);
+		tesla_free(matrix);
+
+		DEBUG_PRINT("\n");
 		DEBUG_PRINT("  key:      ");
 		print_key(key);
 		DEBUG_PRINT("\n----\n");
@@ -69,88 +74,82 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
 
-	struct tesla_table *table = class->ts_table;
-	struct tesla_instance *start = table->tt_instances;
-
 	if (verbose_debug()) {
 		print_class(class);
 		DEBUG_PRINT("----\n");
 	}
 
-	// If the expected current state is 0, create a new automaton.
-	if (expected_state == 0) {
+	tesla_table *table = class->ts_table;
+	tesla_instance *start = table->tt_instances;
+
+	assert(table->tt_length <= 32);
+
+	// Update existing instances, forking/specialising if necessary.
+	for (uint32_t i = 0; i < table->tt_length; i++) {
+		tesla_instance *inst = table->tt_instances + i;
+		if (!tesla_instance_active(inst))
+			continue;
+
+		bool failure = false;
+		for (uint32_t j = 0; j < trans->length; j++) {
+			tesla_transition *t = trans->transitions + j;
+
+			// Check whether or not the instance matches the
+			// provided key, masked by what the transition says to
+			// expect from its 'previous' state.
+			tesla_key pattern = *key;
+			pattern.tk_mask &= t->mask;
+
+			if (!tesla_key_matches(&pattern, &inst->ti_key))
+				continue;
+
+			if (inst->ti_state != t->from) {
+				failure = true;
+				continue;
+			}
+
+			// If the keys just match (and we haven't been explictly
+			// instructed to fork), just update the state.
+			if (!t->fork
+			    && SUBSET(pattern.tk_mask, inst->ti_key.tk_mask)) {
+				VERBOSE_PRINT("update %ld: %tx->%tx\n",
+				              inst - start, t->from, t->to);
+
+				inst->ti_state = t->to;
+				failure = false;
+				break;
+			}
+
+			// If the keys weren't an exact match, we need to fork
+			// a new (more specific) automaton instance.
+			struct tesla_instance *copy;
+			CHECK(tesla_clone, class, inst, &copy);
+			VERBOSE_PRINT("clone  %ld:%tx -> %ld:%tx\n",
+			              inst - start, inst->ti_state,
+			              copy - start, copy->ti_state);
+
+			CHECK(tesla_key_union, &copy->ti_key, key);
+			copy->ti_state = inst->ti_state;
+			failure = false;
+			break;
+		}
+
+		if (failure)
+			tesla_assert_fail(class, inst, trans);
+	}
+
+	// If there is a (0 -> anything) transition, create a new instance.
+	for (int i = 0; i < trans->length; i++) {
+		const tesla_transition *t = trans->transitions + i;
+		if (t->from != 0)
+			continue;
+
 		struct tesla_instance *inst;
-		CHECK(tesla_instance_new, class, key, new_state, &inst);
+		CHECK(tesla_instance_new, class, key, t->to, &inst);
 		assert(tesla_instance_active(inst));
 
 		VERBOSE_PRINT("new    %ld: %tx\n",
 		              inst - start, inst->ti_state);
-	} else {
-		bool success = false;
-
-		// Update already-matching instances.
-		uint32_t len = table->tt_length;
-		struct tesla_instance* instances[len];
-		CHECK(tesla_match, class, key, instances, &len);
-
-		for (uint32_t i = 0; i < len; i++) {
-			struct tesla_instance *inst = instances[i];
-
-			if (inst->ti_state != expected_state) {
-				tesla_assert_fail(class, inst,
-						  expected_state, new_state);
-			} else {
-				success = true;
-				VERBOSE_PRINT("update %ld: %tx->%tx\n",
-				              inst - start,
-				              inst->ti_state, new_state);
-				inst->ti_state = new_state;
-			}
-		}
-
-		// Fork new instances if necessary.
-		for (uint32_t i = 0; i < table->tt_length; i++) {
-			struct tesla_instance *inst = start + i;
-
-			// Only fork if the new key is a more specific version
-			// of the existing one.
-			if (tesla_instance_active(inst)
-			    && (inst->ti_state == expected_state)
-			    && tesla_key_matches(&inst->ti_key, key)
-			    && !tesla_key_matches(key, &inst->ti_key)) {
-
-				success = true;
-
-				struct tesla_instance *copy;
-				CHECK(tesla_clone, class, inst, &copy);
-				VERBOSE_PRINT("clone  %ld:%tx -> %ld:%tx\n",
-				              inst - start, copy->ti_state,
-				              copy - start, new_state);
-
-				copy->ti_key = *key;
-				copy->ti_state = new_state;
-			}
-		}
-
-		// Make sure we updated something.
-		if (!success) {
-			struct tesla_instance *blame = NULL;
-			for (uint32_t i = 0; i < table->tt_length; i++) {
-				struct tesla_instance *inst = start + i;
-
-				// Find an automata instance to blame.
-				if (tesla_instance_active(inst)
-				    && tesla_key_matches(&inst->ti_key, key)
-				    && !tesla_key_matches(key, &inst->ti_key)) {
-					blame = inst;
-					break;
-				}
-			}
-
-			assert(blame != NULL);
-			tesla_assert_fail(class, blame,
-			    expected_state, new_state);
-		}
 	}
 
 	if (verbose_debug()) {

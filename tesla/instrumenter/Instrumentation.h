@@ -72,6 +72,12 @@ typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 /// Extract the @ref register_t type from a @ref Module.
 llvm::Type* IntPtrType(llvm::Module&);
 
+/// Extract the @ref tesla_transition type from a @ref Module.
+llvm::StructType* TransitionType(llvm::Module&);
+
+/// Extract the @ref tesla_transitions type from a @ref Module.
+llvm::StructType* TransitionSetType(llvm::Module&);
+
 /**
  * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD
  * or @ref TESLA_SCOPE_GLOBAL).
@@ -110,6 +116,15 @@ llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
 //! Map a set of values into a @ref tesla_key.
 llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
                           llvm::ArrayRef<llvm::Value*> Args);
+
+//! Construct a single @ref tesla_transition.
+llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
+                                    uint32_t From, uint32_t Mask,
+                                    uint32_t To, bool AlwaysFork = false);
+
+//! Construct a @ref tesla_transitions (a set of @ref tesla_transition objects).
+llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
+                                     llvm::ArrayRef<llvm::Constant*>);
 
 /**
  * Convert a TESLA function state transition into instrumentation code.

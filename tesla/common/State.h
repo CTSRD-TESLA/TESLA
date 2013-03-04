@@ -71,6 +71,7 @@ public:
 
   void UpdateReferences(llvm::ArrayRef<const Argument*>);
   const ReferenceVector References() const { return Refs; }
+  uint32_t Mask() const;
 
   std::string String() const;
   std::string Dot() const;
