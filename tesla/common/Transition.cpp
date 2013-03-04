@@ -133,14 +133,13 @@ void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
 void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
                                    ReferenceVector& Ref) const {
 
-  SmallVector<const Argument*, 4> FromRefs;
-  for (size_t i = 0; i < From.References().size(); i++) {
-    if (FromRefs.size() <= i)
-      FromRefs.resize(i + 1);
+  // All states should have the same number of references, even if those
+  // references are currently unknown (or NULL). If this transition references
+  // variables but the previous state doesn't know about references, something
+  // has gone wrong (e.g. a start state wasn't properly initialised).
+  assert(!From.References().empty() || this->Arguments().empty());
 
-    FromRefs[i] = From.References()[i];
-  }
-
+  // Put this transition's *variable* references in var-index order.
   SmallVector<const Argument*, 4> MyRefs;
   for (auto Arg : this->Arguments())
     if (Arg && Arg->type() == Argument::Variable) {
@@ -152,7 +151,9 @@ void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
       MyRefs[i] = Arg;
     }
 
-  const size_t Size = MAX(FromRefs.size(), MyRefs.size());
+  auto& FromRefs = From.References();
+  const size_t Size = FromRefs.size();
+  assert(MyRefs.size() <= Size);
 
   auto Arguments = new const Argument*[Size];
   for (size_t i = 0; i < Size; i++) {

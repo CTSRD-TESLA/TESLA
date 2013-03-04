@@ -69,7 +69,9 @@ void State::AddTransition(OwningPtr<Transition>& T)
 
 void State::UpdateReferences(ReferenceVector NewRefs)
 {
-  const size_t Len = MAX(Refs.size(), NewRefs.size());
+  assert(NewRefs.size() > 0);
+  assert(!VariableReferences || (Refs.size() == NewRefs.size()));
+  const size_t Len = NewRefs.size();
 
   if (!VariableReferences) {
     // If we don't currently know about variable references, copy these.
