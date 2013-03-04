@@ -37,7 +37,6 @@
 #include <llvm/ADT/Twine.h>
 
 using namespace llvm;
-
 using std::string;
 
 namespace tesla {
