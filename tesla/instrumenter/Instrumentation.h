@@ -70,7 +70,7 @@ typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
 typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 
 /// Extract the @ref register_t type from a @ref Module.
-llvm::Type* RegisterType(llvm::Module&);
+llvm::Type* IntPtrType(llvm::Module&);
 
 /**
  * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD

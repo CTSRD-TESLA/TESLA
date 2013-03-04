@@ -33,7 +33,7 @@
 #ifndef _TESLA_STATE
 #define	_TESLA_STATE
 
-#include <sys/types.h>		/* register_t */
+#include <stdint.h>		/* int32_t, uint32_t */
 
 /*
  * libtesla functions mostly return error values, and therefore return
@@ -50,14 +50,14 @@
 struct tesla_key;
 
 /** Update all automata instances that match a given key to a new state. */
-int	tesla_update_state(int context, int class_id,
+int32_t	tesla_update_state(uint32_t context, uint32_t class_id,
 	const struct tesla_key *key, const char *name, const char *description,
-	register_t expected_state, register_t new_state);
+	uint32_t expected_state, uint32_t new_state);
 
 /*
  * Provide string versions of TESLA errors.
  */
-const char	*tesla_strerror(int error);
+const char	*tesla_strerror(int32_t error);
 
 /**
  * A storage container for one or more @ref tesla_class objects.
@@ -77,11 +77,11 @@ struct tesla_store;
  * @param[in]  instances   @ref tesla_instance count per @ref tesla_class
  * @param[out] store       return parameter for @ref tesla_store pointer
  */
-int	tesla_store_get(int context, u_int classes, u_int instances,
+int32_t	tesla_store_get(uint32_t context, uint32_t classes, uint32_t instances,
 	                struct tesla_store* *store);
 
 /** Reset all automata in a store to the inactive state. */
-int	tesla_store_reset(struct tesla_store *store);
+int32_t	tesla_store_reset(struct tesla_store *store);
 
 
 
@@ -107,8 +107,8 @@ struct tesla_class;
  *
  * @returns a TESLA error code (TESLA_SUCCESS, TESLA_ERROR_EINVAL, etc.)
  */
-int	tesla_class_get(struct tesla_store *store,
-	                u_int id,
+int32_t	tesla_class_get(struct tesla_store *store,
+	                uint32_t id,
 	                struct tesla_class **tclass,
 	                const char *name,
 	                const char *description);
@@ -125,14 +125,14 @@ int	tesla_class_get(struct tesla_store *store,
  * Clients can use @ref tesla_key to look up sets of automata instances, using
  * the bitmask to specify don't-care parameters.
  *
- * Keys are register-sized so that they can hold arbitrary data/pointers.
+ * Keys can hold arbitrary integers/pointers.
  */
 struct tesla_key {
 	/** The keys / event parameters that name this automata instance. */
-	register_t	tk_keys[TESLA_KEY_SIZE];
+	uintptr_t	tk_keys[TESLA_KEY_SIZE];
 
 	/** A bitmask of the keys that are actually set. */
-	register_t	tk_mask;
+	uint32_t	tk_mask;
 };
 
 /**
@@ -140,14 +140,14 @@ struct tesla_key {
  *
  * @returns  1 if @ref #k matches @ref pattern, 0 otherwise
  */
-int	tesla_key_matches(
+int32_t	tesla_key_matches(
 	    const struct tesla_key *pattern, const struct tesla_key *k);
 
 
 /** A single instance of an automaton: a name (@ref ti_key) and a state. */
 struct tesla_instance {
 	struct tesla_key	ti_key;
-	register_t		ti_state;
+	uint32_t		ti_state;
 };
 
 /**
@@ -181,11 +181,11 @@ void	tesla_class_setaction(struct tesla_class *tsp,
  *
  * @returns     1 if active, 0 if inactive
  */
-int	tesla_instance_active(struct tesla_instance *i);
+int32_t	tesla_instance_active(struct tesla_instance *i);
 
 
 /** Clone an existing instance into a new instance. */
-int	tesla_instance_clone(struct tesla_class *tclass,
+int32_t	tesla_instance_clone(struct tesla_class *tclass,
 	    struct tesla_instance *original, struct tesla_instance **copy);
 
 /** Release resources (e.g., locks) associated with a @ref tesla_class. */
@@ -211,7 +211,7 @@ void	tesla_instance_destroy(struct tesla_class *tsp,
  * per failure.
  */
 void	tesla_assert_fail(struct tesla_class *tsp,
-		struct tesla_instance *tip, register_t expected_state,
-		register_t actual_state);
+		struct tesla_instance *tip, uint32_t expected_state,
+		uint32_t actual_state);
 
 #endif /* _TESLA_STATE */

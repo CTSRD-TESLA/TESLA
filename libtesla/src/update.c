@@ -43,10 +43,10 @@
 	} \
 } while(0)
 
-int
-tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
-	const char *name, const char *description,
-	register_t expected_state, register_t new_state)
+int32_t
+tesla_update_state(uint32_t tesla_context, uint32_t class_id,
+	const struct tesla_key *key, const char *name, const char *description,
+	uint32_t expected_state, uint32_t new_state)
 {
 	if (verbose_debug()) {
 		DEBUG_PRINT("\n====\n%s()\n", __func__);
@@ -55,8 +55,7 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 			     ? "global"
 			     : "per-thread"));
 		DEBUG_PRINT("  class:    %d ('%s')\n", class_id, name);
-		DEBUG_PRINT("  state:    %" PRIu64 "->%" PRIu64"\n",
-		            expected_state, new_state);
+		DEBUG_PRINT("  state:    %d->%d\n", expected_state, new_state);
 		DEBUG_PRINT("  key:      ");
 		print_key(key);
 		DEBUG_PRINT("\n----\n");
@@ -90,11 +89,11 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 		bool success = false;
 
 		// Update already-matching instances.
-		size_t len = table->tt_length;
+		uint32_t len = table->tt_length;
 		struct tesla_instance* instances[len];
 		CHECK(tesla_match, class, key, instances, &len);
 
-		for (size_t i = 0; i < len; i++) {
+		for (uint32_t i = 0; i < len; i++) {
 			struct tesla_instance *inst = instances[i];
 
 			if (inst->ti_state != expected_state) {
@@ -110,7 +109,7 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 		}
 
 		// Fork new instances if necessary.
-		for (size_t i = 0; i < table->tt_length; i++) {
+		for (uint32_t i = 0; i < table->tt_length; i++) {
 			struct tesla_instance *inst = start + i;
 
 			// Only fork if the new key is a more specific version
@@ -136,7 +135,7 @@ tesla_update_state(int tesla_context, int class_id, const struct tesla_key *key,
 		// Make sure we updated something.
 		if (!success) {
 			struct tesla_instance *blame = NULL;
-			for (size_t i = 0; i < table->tt_length; i++) {
+			for (uint32_t i = 0; i < table->tt_length; i++) {
 				struct tesla_instance *inst = start + i;
 
 				// Find an automata instance to blame.

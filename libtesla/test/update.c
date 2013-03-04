@@ -32,8 +32,8 @@ main(int argc, char **argv)
 {
 	install_default_signal_handler();
 
-	const int scope = TESLA_SCOPE_GLOBAL;
-	const int instances_in_class = 10;
+	const int32_t scope = TESLA_SCOPE_GLOBAL;
+	const int32_t instances_in_class = 10;
 
 	struct tesla_store *store;
 	check(tesla_store_get(scope, 1, instances_in_class, &store));
@@ -139,7 +139,7 @@ main(int argc, char **argv)
 int
 count(struct tesla_store *store, const struct tesla_key *key)
 {
-	size_t len = 20;
+	uint32_t len = 20;
 	struct tesla_instance* matches[len];
 	struct tesla_class *class;
 

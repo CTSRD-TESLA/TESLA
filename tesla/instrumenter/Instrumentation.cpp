@@ -77,7 +77,8 @@ StructType* KeyType(Module& M) {
 
   if (T == NULL) {
     // A struct tesla_key is just a mask and a set of keys.
-    vector<Type*> KeyElements(TESLA_KEY_SIZE + 1, RegisterType(M));
+    vector<Type*> KeyElements(TESLA_KEY_SIZE, IntPtrType(M));
+    KeyElements.push_back(Type::getInt32Ty(M.getContext()));
     T = StructType::create(KeyElements, Name);
   }
 
@@ -113,7 +114,7 @@ const char* Format(Type *T) {
 } /* namespace tesla */
 
 
-Type* tesla::RegisterType(Module& M) {
+Type* tesla::IntPtrType(Module& M) {
     return DataLayout(&M).getIntPtrType(M.getContext());
 }
 
@@ -170,7 +171,7 @@ Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
 
   Type *Char = IntegerType::get(Ctx, 8);
   Type *CharStar = PointerType::getUnqual(Char);
-  Type *RegType = RegisterType(M);
+  Type *IntTy = Type::getInt32Ty(Ctx);
   Type *KeyStar = PointerType::getUnqual(KeyType(M));
 
   Constant *Fn = M.getOrInsertFunction("tesla_update_state",
@@ -180,8 +181,8 @@ Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
       KeyStar,    // key
       CharStar,   // name
       CharStar,   // description
-      RegType,    // expected_state
-      RegType,    // new_state
+      IntTy,      // expected_state
+      IntTy,      // new_state
       NULL
     );
 
@@ -283,6 +284,8 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
   if (!F || (F->getBasicBlockList().empty()))
     return false;
 
+  Type* IntType = Type::getInt32Ty(M.getContext());
+
   for (Function *InstrFn : FindInstrumentation(FnEvent, M)) {
     assert(InstrFn != NULL);
     LLVMContext& Ctx = InstrFn->getContext();
@@ -297,7 +300,6 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
     IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
 
     IRBuilder<> Builder(Block);
-    Type* IntType = RegisterType(M);
 
     auto CurrentState = ConstantInt::get(IntType, T.Source().ID());
     auto NextState = ConstantInt::get(IntType, T.Destination().ID());
@@ -340,7 +342,7 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
 
 Constant* tesla::TeslaContext(AutomatonDescription::Context Context,
                               LLVMContext& Ctx) {
-  static Type *IntType = IntegerType::get(Ctx, 64);
+  static Type *IntType = Type::getInt32Ty(Ctx);
 
   static auto *Global = ConstantInt::get(IntType, TESLA_SCOPE_GLOBAL);
   static auto *PerThread = ConstantInt::get(IntType, TESLA_SCOPE_PERTHREAD);
@@ -396,16 +398,17 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   assert(Args.size() <= TESLA_KEY_SIZE);
 
   Value *Key = Builder.CreateAlloca(KeyType(M), 0, "key");
-  Type *RegType = RegisterType(M);
+  Type *IntPtrTy = IntPtrType(M);
+  Type *IntTy = Type::getInt32Ty(M.getContext());
 
-  static Constant *Null = ConstantInt::get(RegType, 0);
+  static Constant *Null = ConstantInt::get(IntPtrTy, 0);
 
   int i = 0;
   int KeyMask = 0;
 
   for (Value* Arg : Args) {
     Builder.CreateStore(
-      (Arg == NULL) ? Null : Cast(Arg, Twine(i - 1).str(), RegType, Builder),
+      (Arg == NULL) ? Null : Cast(Arg, Twine(i - 1).str(), IntPtrTy, Builder),
       Builder.CreateStructGEP(Key, i));
 
     if (Arg != NULL)
@@ -415,7 +418,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   }
 
   Value *Mask = Builder.CreateStructGEP(Key, TESLA_KEY_SIZE);
-  Builder.CreateStore(ConstantInt::get(RegType, KeyMask), Mask);
+  Builder.CreateStore(ConstantInt::get(IntTy, KeyMask), Mask);
 
   return Key;
 }

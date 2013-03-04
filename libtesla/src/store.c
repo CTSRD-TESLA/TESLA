@@ -47,10 +47,10 @@ pthread_key_t	pthread_key();
 static void	tesla_class_acquire(tesla_class*);
 
 static int	tesla_store_init(tesla_store*,
-		u_int context, u_int classes, u_int instances);
+		uint32_t context, uint32_t classes, uint32_t instances);
 
-int
-tesla_store_get(int context, u_int classes, u_int instances,
+int32_t
+tesla_store_get(uint32_t context, uint32_t classes, uint32_t instances,
                 tesla_store* *storep)
 {
 	assert(storep);
@@ -88,7 +88,9 @@ tesla_store_get(int context, u_int classes, u_int instances,
 	}
 
 	if (store->length == 0) {
-		int error = tesla_store_init(store, context, classes, instances);
+		int32_t error =
+			tesla_store_init(store, context, classes, instances);
+
 		if (error != TESLA_SUCCESS) return (error);
 
 		assert(store->classes != NULL);
@@ -99,9 +101,9 @@ tesla_store_get(int context, u_int classes, u_int instances,
 }
 
 
-static int
-tesla_store_init(tesla_store *store, u_int context,
-                 u_int classes, u_int instances)
+static int32_t
+tesla_store_init(tesla_store *store, uint32_t context,
+                 uint32_t classes, uint32_t instances)
 {
 	store->length = classes;
 	store->classes = tesla_malloc(classes * sizeof(tesla_class));
@@ -109,13 +111,13 @@ tesla_store_init(tesla_store *store, u_int context,
 		return (TESLA_ERROR_ENOMEM);
 
 	int error = TESLA_SUCCESS;
-	for (u_int i = 0; i < classes; i++) {
+	for (uint32_t i = 0; i < classes; i++) {
 		error = tesla_class_init(store->classes + i, context, instances);
 		if (error != TESLA_SUCCESS) break;
 		assert(store->classes[i].ts_table != NULL);
 	}
 
-	for (u_int i = 0; i < classes; i++) {
+	for (uint32_t i = 0; i < classes; i++) {
 		assert(store->classes[i].ts_table != NULL);
 		assert(store->classes[i].ts_table->tt_length > 0);
 	}
@@ -124,8 +126,8 @@ tesla_store_init(tesla_store *store, u_int context,
 }
 
 
-int
-tesla_class_get(tesla_store *store, u_int id, tesla_class **tclassp,
+int32_t
+tesla_class_get(tesla_store *store, uint32_t id, tesla_class **tclassp,
                 const char *name, const char *description)
 {
 	assert(store != NULL);

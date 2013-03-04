@@ -40,10 +40,10 @@
 #define print DEBUG_PRINT
 
 /* TODO: kernel version... probably just say no? */
-int
+int32_t
 verbose_debug()
 {
-	static int mode = -1;
+	static int32_t mode = -1;
 
 	if (mode == -1)
 		mode = (getenv("VERBOSE_DEBUG") != NULL);
@@ -60,8 +60,8 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 	struct tesla_table *ttp = tclass->ts_table;
 	assert(ttp != NULL);
 
-	int instance_belongs_to_class = 0;
-	for (size_t i = 0; i < ttp->tt_length; i++) {
+	int32_t instance_belongs_to_class = 0;
+	for (uint32_t i = 0; i < ttp->tt_length; i++) {
 		if (instance == &ttp->tt_instances[i]) {
 			instance_belongs_to_class = 1;
 			break;
@@ -69,8 +69,8 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 	}
 
 	tesla_assert(instance_belongs_to_class,
-		("tesla_instance %tx not of class '%s'",
-		 (register_t) instance, tclass->ts_name)
+		("tesla_instance %x not of class '%s'",
+		 instance, tclass->ts_name)
 	       );
 }
 
@@ -97,12 +97,12 @@ print_class(const struct tesla_class *c)
 
 	struct tesla_table *t = c->ts_table;
 	print("  %d/%d instances\n", t->tt_length - t->tt_free, t->tt_length);
-	for (size_t i = 0; i < t->tt_length; i++) {
+	for (uint32_t i = 0; i < t->tt_length; i++) {
 		struct tesla_instance *inst = &t->tt_instances[i];
 		if (!tesla_instance_active(inst))
 			continue;
 
-		print("    %2lu: state %d, ", i, (int) inst->ti_state);
+		print("    %2u: state %d, ", i, inst->ti_state);
 		print_key(&inst->ti_key);
 		print("\n");
 	}
@@ -114,7 +114,7 @@ print_key(const struct tesla_key *key)
 {
 	print("0x%tx [ ", key->tk_mask);
 
-	for (int i = 0; i < TESLA_KEY_SIZE; i++) {
+	for (int32_t i = 0; i < TESLA_KEY_SIZE; i++) {
 		if (key->tk_mask & (1 << i)) {
 			print("%tx ", key->tk_keys[i]);
 		} else {

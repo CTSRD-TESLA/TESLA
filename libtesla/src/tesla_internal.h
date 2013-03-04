@@ -63,14 +63,14 @@ void	tesla_die(char *message) __attribute__((noreturn));
  *
  * The caller is responsible for locking the class if needed.
  */
-int	tesla_instance_new(struct tesla_class *tclass,
-	    const struct tesla_key *name, register_t state,
+int32_t	tesla_instance_new(struct tesla_class *tclass,
+	    const struct tesla_key *name, uint32_t state,
 	    struct tesla_instance **out);
 
 /**
  * Clone an existing @ref tesla_instance within a @ref tesla_class.
  */
-int	tesla_clone(struct tesla_class*, const struct tesla_instance *orig,
+int32_t	tesla_clone(struct tesla_class*, const struct tesla_instance *orig,
 	    struct tesla_instance **copy);
 
 /**
@@ -85,8 +85,8 @@ int	tesla_clone(struct tesla_class*, const struct tesla_instance *orig,
  *
  * @returns    a standard TESLA error code (e.g., TESLA_ERROR_ENOMEM)
  */
-int	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
-	    struct tesla_instance **array, size_t *size);
+int32_t	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
+	    struct tesla_instance **array, uint32_t *size);
 
 
 #ifndef NDEBUG
@@ -98,7 +98,7 @@ int	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
 #define VERBOSE_PRINT(...) if (verbose_debug()) DEBUG_PRINT(__VA_ARGS__)
 
 /** Are we in (verbose) debug mode? */
-int	verbose_debug();
+int32_t	verbose_debug();
 
 #else // NDEBUG
 
@@ -107,7 +107,7 @@ int	verbose_debug();
 #define DEBUG_PRINT(...)
 #define VERBOSE_PRINT(...)
 
-int	verbose_debug() { return 0; }
+int32_t	verbose_debug() { return 0; }
 
 #endif
 
@@ -155,8 +155,8 @@ int	verbose_debug() { return 0; }
  * more refined data structure might eventually be used here.
  */
 struct tesla_table {
-	u_int			tt_length;
-	u_int			tt_free;
+	uint32_t		tt_length;
+	uint32_t		tt_free;
 	struct tesla_instance	tt_instances[];
 };
 
@@ -167,10 +167,10 @@ struct tesla_table {
 struct tesla_class {
 	const char	*ts_name;	/* Name of the assertion. */
 	const char	*ts_description;/* Description of the assertion. */
-	u_int		 ts_scope;	/* Per-thread or global. */
-	u_int		 ts_limit;	/* Simultaneous automata limit. */
+	uint32_t	 ts_scope;	/* Per-thread or global. */
+	uint32_t	 ts_limit;	/* Simultaneous automata limit. */
 	tesla_assert_fail_callback	ts_handler;	/* Run on failure. */
-	u_int		 ts_action;	/* What to do on failure. */
+	uint32_t	 ts_action;	/* What to do on failure. */
 
 	/*
 	 * State fields if global.  Table must be last field as it uses a
@@ -197,7 +197,7 @@ typedef struct tesla_instance tesla_instance;
  * or in a thread-local context.
  */
 struct tesla_store {
-	u_int			length;
+	uint32_t		length;
 	struct tesla_class	*classes;
 };
 
@@ -205,7 +205,8 @@ struct tesla_store {
  * Initialize @ref tesla_class internals.
  * Locking is the responsibility of the caller.
  */
-int	tesla_class_init(struct tesla_class*, u_int context, u_int instances);
+int	tesla_class_init(struct tesla_class*, uint32_t context,
+		uint32_t instances);
 
 
 /*
@@ -225,12 +226,12 @@ MALLOC_DECLARE(M_TESLA);
 /*
  * Context-specific automata management:
  */
-int	tesla_class_global_postinit(struct tesla_class*);
+int32_t	tesla_class_global_postinit(struct tesla_class*);
 void	tesla_class_global_acquire(struct tesla_class*);
 void	tesla_class_global_release(struct tesla_class*);
 void	tesla_class_global_destroy(struct tesla_class*);
 
-int	tesla_class_perthread_postinit(struct tesla_class*c);
+int32_t	tesla_class_perthread_postinit(struct tesla_class*c);
 void	tesla_class_perthread_acquire(struct tesla_class*);
 void	tesla_class_perthread_release(struct tesla_class*);
 void	tesla_class_perthread_destroy(struct tesla_class*);

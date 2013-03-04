@@ -17,11 +17,11 @@
 
 /** Some automata instances to look up (of more than one class). */
 struct tesla_instance *instances[6];
-const size_t INSTANCES = sizeof(instances) / sizeof(instances[0]);
+const int32_t INSTANCES = sizeof(instances) / sizeof(instances[0]);
 
 /** Create an instance of an automata class using three key values. */
 void	create_instance(struct tesla_class*, struct tesla_instance**,
-	                register_t key0, register_t key1, register_t key2);
+	                int32_t key0, int32_t key1, int32_t key2);
 
 /**
  * Search through @ref instances using a pattern @ref tesla_key, returning a
@@ -55,8 +55,8 @@ main(int argc, char **argv)
 	create_instance(thr_automaton, &instances[5], 42, 1, -1);
 
 	// Make sure they are all unique; this is n^2, but n is small.
-	for (size_t i = 0; i < INSTANCES; i++) {
-		for (size_t j = 0; j < INSTANCES; j++) {
+	for (int32_t i = 0; i < INSTANCES; i++) {
+		for (int32_t j = 0; j < INSTANCES; j++) {
 			if (i == j) continue;
 			assert(instances[i] != instances[j]);
 		}
@@ -114,7 +114,7 @@ main(int argc, char **argv)
 
 void
 create_instance(struct tesla_class *tclass, struct tesla_instance **instance,
-                register_t key0, register_t key1, register_t key2)
+                int32_t key0, int32_t key1, int32_t key2)
 {
 	struct tesla_key key;
 	key.tk_mask = 0x07;
@@ -129,20 +129,20 @@ create_instance(struct tesla_class *tclass, struct tesla_instance **instance,
 
 int
 search_for_pattern(struct tesla_class *tclass, struct tesla_key *pattern) {
-	size_t len = 20;
+	uint32_t len = 20;
 	struct tesla_instance* matches[len];
 
 	int found = 0;
 
-	int err = tesla_match(tclass, pattern, matches, &len);
+	int32_t err = tesla_match(tclass, pattern, matches, &len);
 	assert(err == TESLA_SUCCESS);
 	assert(len >= 0);
 
-	for (size_t i = 0; i < len; i++) {
+	for (uint32_t i = 0; i < len; i++) {
 		struct tesla_instance *inst = matches[i];
 		assert(inst != NULL);
 
-		for (size_t i = 0; i < INSTANCES; i++)
+		for (uint32_t i = 0; i < INSTANCES; i++)
 			if (inst == instances[i])
 				found |= (1 << i);
 	}

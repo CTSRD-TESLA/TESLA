@@ -42,7 +42,8 @@ MALLOC_DEFINE(M_TESLA, "tesla", "TESLA internal state");
 
 
 int
-tesla_class_init(struct tesla_class *tclass, u_int context, u_int instances)
+tesla_class_init(struct tesla_class *tclass,
+                 uint32_t context, uint32_t instances)
 {
 	assert(tclass != NULL);
 	// TODO: write a TESLA assertion about locking here.
@@ -88,9 +89,9 @@ tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)
 	// 42 but not the other way around).
 	if ((pattern->tk_mask & k->tk_mask) != pattern->tk_mask) return (0);
 
-	for (size_t i = 0; i < TESLA_KEY_SIZE; i++) {
+	for (uint32_t i = 0; i < TESLA_KEY_SIZE; i++) {
 		// Only check keys specified by the bitmasks.
-		register_t mask = (1 << i);
+		uint32_t mask = (1 << i);
 		if ((pattern->tk_mask & mask) != mask) continue;
 
 		// A non-match of any sub-key implies a non-match of the key.
@@ -103,7 +104,7 @@ tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)
 
 int
 tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
-	    struct tesla_instance **array, size_t *size)
+	    struct tesla_instance **array, uint32_t *size)
 {
 	assert(tclass != NULL);
 	assert(pattern != NULL);
@@ -120,7 +121,7 @@ tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
 
 	// Copy matches into the array.
 	*size = 0;
-	for (size_t i = 0; i < table->tt_length; i++) {
+	for (uint32_t i = 0; i < table->tt_length; i++) {
 		struct tesla_instance *inst = table->tt_instances + i;
 		if (tesla_instance_active(inst)
 		    && tesla_key_matches(pattern, &inst->ti_key)) {
@@ -142,9 +143,9 @@ tesla_instance_active(struct tesla_instance *i)
 }
 
 
-int
+int32_t
 tesla_instance_new(struct tesla_class *tclass, const struct tesla_key *name,
-	register_t state, struct tesla_instance **out)
+	uint32_t state, struct tesla_instance **out)
 {
 	assert(tclass != NULL);
 	assert(name != NULL);
@@ -161,7 +162,7 @@ tesla_instance_new(struct tesla_class *tclass, const struct tesla_key *name,
 	if (ttp->tt_free == 0)
 		return (TESLA_ERROR_ENOMEM);
 
-	for (size_t i = 0; i < ttp->tt_length; i++) {
+	for (uint32_t i = 0; i < ttp->tt_length; i++) {
 		struct tesla_instance *inst = &ttp->tt_instances[i];
 		if (tesla_instance_active(inst))
 			continue;
@@ -224,7 +225,7 @@ tesla_class_reset(struct tesla_class *c)
 
 void
 tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip,
-		  register_t expected_state, register_t next_state)
+                  uint32_t expected_state, uint32_t next_state)
 {
 	assert(tsp != NULL);
 	assert(tip != NULL);
@@ -238,8 +239,7 @@ tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip,
 	case TESLA_ACTION_FAILSTOP:
 		tesla_panic(
 			"tesla_assert_failed: "
-			"unable to move '%s' %" PRIx64 "->%" PRIx64
-			": current state is %" PRIx64,
+			"unable to move '%s' %d->%d: currently in state %d",
 			tsp->ts_name, expected_state, next_state,
 			tip->ti_state);
 		break;		/* A bit gratuitous. */

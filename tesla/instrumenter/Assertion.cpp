@@ -91,7 +91,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     set<CallInst*>& AssertCalls, Manifest& Manifest, Module& M) {
 
   // Things we'll need later, common to all assertions.
-  Type *RegisterT = RegisterType(M);
+  Type *IntPtrTy = IntPtrType(M);
 
   // Convert each assertion into appropriate instrumentation.
   for (auto *Assert : AssertCalls) {
@@ -130,7 +130,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
       if (V == NULL)
         report_fatal_error("failed to find assertion arg '" + Arg.name() + "'");
 
-      Args[Arg.index()] = Cast(V, Arg.name(), RegisterT, Builder);
+      Args[Arg.index()] = Cast(V, Arg.name(), IntPtrTy, Builder);
     }
 
     Builder.CreateCall(InstrumentationFn(*A, M), Args);
@@ -186,7 +186,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
   Function *InstrFn = InstrumentationFn(A, M);
   LLVMContext& Ctx = InstrFn->getContext();
 
-  Type *IntType = RegisterType(M);
+  Type *IntType = Type::getInt32Ty(Ctx);
   Constant *CurrentState = ConstantInt::get(IntType, T.Source().ID());
   Constant *NextState = ConstantInt::get(IntType, T.Destination().ID());
   Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);
@@ -283,10 +283,10 @@ Function* TeslaAssertionSiteInstrumenter::InstrumentationFn(
   const size_t ArgCount = Descrip.argument_size();
 
   Type *Void = Type::getVoidTy(M.getContext());
-  Type *RegisterT = RegisterType(M);
+  Type *IntPtrTy = IntPtrType(M);
 
   // NOW events only take arguments of type register_t.
-  std::vector<Type*> ArgTypes(ArgCount, RegisterT);
+  std::vector<Type*> ArgTypes(ArgCount, IntPtrTy);
 
   FunctionType *FnType = FunctionType::get(Void, ArgTypes, false);
   string Name = (ASSERTION_REACHED + "_" + Twine(A.ID())).str();
