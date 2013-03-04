@@ -152,6 +152,17 @@ NowTransition::NowTransition(const State& From, const State& To,
                              const Location& L)
   : Transition(From, To), Loc(L) {}
 
+const ArrayRef<const Argument*> NowTransition::Arguments() const {
+  return llvm::ArrayRef<const Argument*>();//From.References();
+}
+
+
+const ArrayRef<const Argument*> FnTransition::Arguments() const {
+  const Argument* const *Args = Ev.argument().data();
+  size_t Len = Ev.argument_size();
+
+  return ArrayRef<const Argument*>(Args, Len);
+}
 
 string FnTransition::ShortLabel() const {
   return Ev.function().name();
@@ -199,6 +210,12 @@ const char* FieldAssignTransition::OpString(FieldAssignment::AssignType T) {
   case FieldAssignment::PlusEqual:     return "+=";
   case FieldAssignment::MinusEqual:    return "-=";
   }
+}
+
+
+const ArrayRef<const Argument*> SubAutomatonTransition::Arguments() const {
+  // TODO: actually find sub-automaton!
+  return ArrayRef<const Argument*>();
 }
 
 } // namespace tesla

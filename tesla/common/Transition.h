@@ -35,6 +35,7 @@
 #include "Names.h"
 #include "Types.h"
 
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/OwningPtr.h>
 #include <llvm/Support/Casting.h>
 
@@ -91,6 +92,9 @@ public:
   const State& Source() const { return From; }
   const State& Destination() const { return To; }
 
+  //! Arguments referenced by this transition.
+  virtual const llvm::ArrayRef<const Argument*> Arguments() const = 0;
+
   //! Can this transition be captured by real instrumentation code?
   virtual bool IsRealisable() const = 0;
 
@@ -129,6 +133,10 @@ public:
   std::string ShortLabel() const { return "ε"; }
   std::string DotLabel() const { return "&#949;"; }    // epsilon
 
+  const llvm::ArrayRef<const Argument*> Arguments() const {
+    return llvm::ArrayRef<const Argument*>();
+  }
+
   static bool classof(const Transition *T) {
     return T->getKind() == Null;
   }
@@ -152,6 +160,8 @@ public:
   bool IsRealisable() const { return true; }
   std::string ShortLabel() const { return "NOW"; }
   std::string DotLabel() const { return "NOW"; }
+
+  const llvm::ArrayRef<const Argument*> Arguments() const;
 
   static bool classof(const Transition *T) {
     return T->getKind() == Now;
@@ -209,6 +219,7 @@ public:
   std::string DotLabel() const;
 
   const FunctionEvent& FnEvent() const { return Ev; }
+  const llvm::ArrayRef<const Argument*> Arguments() const;
 
   static bool classof(const Transition *T) {
     return T->getKind() == Fn;
@@ -257,6 +268,7 @@ public:
   std::string ShortLabel() const;
   std::string DotLabel() const;
 
+  const llvm::ArrayRef<const Argument*> Arguments() const { return Refs; }
   const FieldAssignment& Assignment() const { return Assign; }
 
   static bool classof(const Transition *T) {
@@ -292,6 +304,7 @@ public:
   std::string ShortLabel() const { return ShortName(ID); }
   std::string DotLabel() const { return ShortName(ID); }
 
+  const llvm::ArrayRef<const Argument*> Arguments() const;
   const Identifier& GetID() const { return ID; }
 
   static bool classof(const Transition *T) {
