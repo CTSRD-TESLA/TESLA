@@ -30,6 +30,7 @@
  */
 
 #include "Automaton.h"
+#include "Names.h"
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/OwningPtr.h"
