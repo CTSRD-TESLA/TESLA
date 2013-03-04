@@ -43,7 +43,7 @@ main(int argc, char **argv)
 	// (X,X,X,X): 0->1       new    (X,X,X,X):1
 	// (1,X,X,X): 1->2       fork   (X,X,X,X):1 -> (1,X,X,X):2
 	// (1,2,X,X): 2->3       fork   (1,X,X,X):2 -> (1,2,X,X):3
-	// (1,2,X,X): 3->4       update (1,X,X,X):4 -> (1,2,X,X):4
+	// (1,2,X,X): 3->4       update (1,2,X,X):3 -> (1,2,X,X):4
 	// (2,X,X,X): 1->5       fork   (X,X,X,X):1 -> (2,X,X,X):5
 	// (2,X,X,3): 5->6       fork   (2,X,X,X):5 -> (2,X,X,3):6
 	// (2,X,X,4): 1->7       fork   (X,X,X,X):1 -> (2,X,X,4):7
