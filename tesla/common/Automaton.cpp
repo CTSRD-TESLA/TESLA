@@ -140,7 +140,7 @@ NFA* NFA::Parse(const AutomatonDescription *A, unsigned int id) {
   StateVector States;
   TransitionVector Transitions;
 
-  State *Start = State::Create(States);
+  State *Start = State::CreateStartState(States);
 
   if (Parse(A->expression(), *Start, States, Transitions) == NULL) {
     for (State *S : States)
