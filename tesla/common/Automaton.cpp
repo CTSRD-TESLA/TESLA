@@ -55,6 +55,10 @@ using std::tr1::unordered_map;
 using std::tr1::unordered_set;
 #endif
 
+#ifndef NDEBUG
+#include <stdlib.h>
+#endif
+
 using namespace llvm;
 
 using std::string;
@@ -391,8 +395,10 @@ class DFABuilder {
           State *Dest = stateForNFAStates(Destinations, Start);
           Transition::Copy(*DS, *Dest, T, Transitions);
 #ifndef NDEBUG
-          fprintf(stderr, "Old: %s\n", T->String().c_str());
-          fprintf(stderr, "New: %s\n", Transitions.back()->String().c_str());
+          if (getenv("VERBOSE_DEBUG")) {
+            fprintf(stderr, "Old: %s\n", T->String().c_str());
+            fprintf(stderr, "New: %s\n", Transitions.back()->String().c_str());
+          }
 #endif
         }
       }
@@ -402,10 +408,12 @@ class DFABuilder {
     DFA *D = new DFA(N->ID(), const_cast<AutomatonDescription&>(N->getAssertion()),
         N->Name(), N->Description(), States, Transitions);
 #ifndef NDEBUG
-    fprintf(stderr, "NFA: %s\n", N->String().c_str());
-    // Construct the DFA object
-    fprintf(stderr, "DFA: %s\n", D->String().c_str());
-    dumpStateMap();
+    if (getenv("VERBOSE_DEBUG")) {
+      fprintf(stderr, "NFA: %s\n", N->String().c_str());
+      // Construct the DFA object
+      fprintf(stderr, "DFA: %s\n", D->String().c_str());
+      dumpStateMap();
+    }
 #endif
     return D;
   }
