@@ -63,7 +63,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 	struct tesla_store *store;
 	CHECK(tesla_store_get, tesla_context, 12, 8, &store);
-	VERBOSE_PRINT("store: 0x%tx", (register_t) store);
+	VERBOSE_PRINT("store: 0x%tx", (intptr_t) store);
 	VERBOSE_PRINT("\n----\n");
 
 	struct tesla_class *class;
