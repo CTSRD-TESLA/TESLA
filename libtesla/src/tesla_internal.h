@@ -177,9 +177,9 @@ struct tesla_class {
 	 * zero-length array.
 	 */
 #ifdef _KERNEL
-	struct mtx	ts_lock;	/* Synchronise ts_table. */
+	struct mtx		ts_lock;	/* Synchronise ts_table. */
 #else
-	pthread_mutex_t	 ts_lock;	/* Synchronise ts_table. */
+	pthread_mutex_t		 ts_lock;	/* Synchronise ts_table. */
 #endif
 
 	struct tesla_table	*ts_table;	/* Table of instances. */
