@@ -236,8 +236,8 @@ inline bool operator==(const FieldAssignment &X, const FieldAssignment &Y) {
   if (X.type() != Y.type()) return false;
   if (X.index() != Y.index()) return false;
 
-  if (X.has_name() != Y.has_name()) return false;
-  if (X.has_name() && (X.name() != Y.name())) return false;
+  if (X.has_base() != Y.has_base()) return false;
+  if (X.has_base() && (X.base() != Y.base())) return false;
 
   if (X.operation() != Y.operation()) return false;
   if (X.value() != Y.value()) return false;
