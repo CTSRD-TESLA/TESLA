@@ -326,7 +326,7 @@ class DFABuilder {
   /// transitions)
   void collectFrontier(NFAState& N, const State* S, bool& Start) {
     N.insert(S->ID());
-    Start &= S->IsStartState();
+    Start |= S->IsStartState();
     for (Transition *T : *S)
       if (T->getKind() == Transition::Null)
         collectFrontier(N, &T->Destination());
