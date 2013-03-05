@@ -79,28 +79,6 @@ tesla_class_init(struct tesla_class *tclass,
 	}
 }
 
-int
-tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)
-{
-	assert(pattern != NULL);
-	assert(k != NULL);
-
-	// The pattern's mask must be a subset of the target's (ANY matches
-	// 42 but not the other way around).
-	if ((pattern->tk_mask & k->tk_mask) != pattern->tk_mask) return (0);
-
-	for (uint32_t i = 0; i < TESLA_KEY_SIZE; i++) {
-		// Only check keys specified by the bitmasks.
-		uint32_t mask = (1 << i);
-		if ((pattern->tk_mask & mask) != mask) continue;
-
-		// A non-match of any sub-key implies a non-match of the key.
-		if (pattern->tk_keys[i] != k->tk_keys[i]) return (0);
-	}
-
-	return (1);
-}
-
 
 int
 tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
