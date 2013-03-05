@@ -181,22 +181,6 @@ NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name,
 {
 }
 
-namespace {
-typedef std::set<unsigned> NFAState;
-void dump(const NFAState &S) {
-  for (unsigned i : S) {
-    fprintf(stderr, "%d ", i);
-  }
-  fprintf(stderr, "\n");
-}
-struct NFAStateHash
-{
-  size_t operator()(const NFAState &S) const {
-    if (S.size() == 0) return 0;
-    return *S.begin();
-  }
-};
-}
 
 namespace internal {
 void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
@@ -308,6 +292,21 @@ State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState) {
   return Final;
 }
 
+
+typedef std::set<unsigned> NFAState;
+void dump(const NFAState &S) {
+  for (unsigned i : S) {
+    fprintf(stderr, "%d ", i);
+  }
+  fprintf(stderr, "\n");
+}
+struct NFAStateHash
+{
+  size_t operator()(const NFAState &S) const {
+    if (S.size() == 0) return 0;
+    return *S.begin();
+  }
+};
 
 class DFABuilder {
   /// The NFA state sets that we've seen so far and their corresponding DFA
