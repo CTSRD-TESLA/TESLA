@@ -50,7 +50,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 {
 	if (verbose_debug()) {
 		DEBUG_PRINT("\n====\n%s()\n", __func__);
-		DEBUG_PRINT("  context:  %s\n",
+		DEBUG_PRINT("  context:      %s\n",
 		            (tesla_context == TESLA_SCOPE_GLOBAL
 			     ? "global"
 			     : "per-thread"));
@@ -61,7 +61,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		tesla_free(matrix);
 
 		DEBUG_PRINT("\n");
-		DEBUG_PRINT("  key:      ");
+		DEBUG_PRINT("  key:          ");
 		print_key(key);
 		DEBUG_PRINT("\n----\n");
 	}
