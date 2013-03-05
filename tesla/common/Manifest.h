@@ -53,8 +53,6 @@ class Location;
 /// A description of TESLA instrumentation to perform.
 class Manifest {
 public:
-  size_t size() const { return Automata.size(); }
-
   const std::map<Identifier,AutomatonDescription*>& AllAutomata() const {
     return Descriptions;
   }
