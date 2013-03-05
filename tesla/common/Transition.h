@@ -312,7 +312,7 @@ private:
 /// A sub-automaton.
 class SubAutomatonTransition : public Transition {
 public:
-  bool IsRealisable() const { return true; }
+  bool IsRealisable() const { return false; }
   std::string ShortLabel() const { return ShortName(ID); }
   std::string DotLabel() const { return ShortName(ID); }
 
