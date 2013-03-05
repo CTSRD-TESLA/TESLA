@@ -185,9 +185,11 @@ struct tesla_class {
 	struct tesla_table	*ts_table;	/* Table of instances. */
 };
 
-typedef struct tesla_store tesla_store;
-typedef struct tesla_class tesla_class;
-typedef struct tesla_instance tesla_instance;
+typedef struct tesla_class	tesla_class;
+typedef struct tesla_instance	tesla_instance;
+typedef struct tesla_key	tesla_key;
+typedef struct tesla_store	tesla_store;
+typedef struct tesla_table	tesla_table;
 
 
 /**
