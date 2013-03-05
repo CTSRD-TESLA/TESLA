@@ -286,7 +286,7 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
 
 
 Function* TeslaAssertionSiteInstrumenter::InstrumentationFn(
-  const Automaton& A, Module& M) {
+    const Automaton& A, Module& M) {
 
   const AutomatonDescription& Descrip = A.getAssertion();
   const size_t ArgCount = Descrip.argument_size();
