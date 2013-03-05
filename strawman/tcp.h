@@ -200,9 +200,7 @@ automaton(my_tcpcb_assertion, struct tcpcb *tp)
 		established(tp)
 	)
 	||
-	TSEQUENCE(
-		called(tcp_free, tp)
-	);
+	called(tcp_free, tp);
 
 	done;
 }
