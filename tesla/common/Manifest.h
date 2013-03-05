@@ -53,6 +53,9 @@ class Location;
 /// A description of TESLA instrumentation to perform.
 class Manifest {
 public:
+  Manifest(const Manifest&) LLVM_DELETED_FUNCTION;
+  ~Manifest();
+
   const std::map<Identifier,AutomatonDescription*>& AllAutomata() const {
     return Descriptions;
   }
@@ -80,8 +83,24 @@ public:
   static llvm::StringRef defaultLocation();
 
 private:
+  class AutomataVersions {
+  public:
+    AutomataVersions() : Unlinked(NULL), Linked(NULL), Deterministic(NULL) {}
+    AutomataVersions(NFA *U, NFA *L, DFA *D)
+      : Unlinked(U), Linked(L), Deterministic(D)
+    {
+      assert(U != NULL);
+      assert(L != NULL);
+      assert(D != NULL);
+    }
+
+    NFA *Unlinked;
+    NFA *Linked;
+    DFA *Deterministic;
+  };
+
   Manifest(const std::map<Identifier,AutomatonDescription*>& Descriptions,
-           const std::map<Identifier,NFA*>& Automata)
+           const std::map<Identifier,AutomataVersions>& Automata)
     : Descriptions(Descriptions), Automata(Automata)
   {
   }
@@ -97,7 +116,7 @@ private:
   std::map<Identifier,AutomatonDescription*> Descriptions;
 
   //! The automata.
-  std::map<Identifier,NFA*> Automata;
+  std::map<Identifier,AutomataVersions> Automata;
 };
 
 }

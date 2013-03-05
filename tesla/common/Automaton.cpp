@@ -61,6 +61,7 @@ using std::tr1::unordered_set;
 
 using namespace llvm;
 
+using std::map;
 using std::string;
 using std::stringstream;
 using std::vector;
@@ -71,7 +72,13 @@ namespace internal {
 
 class NFAParser {
 public:
-  NFAParser(const AutomatonDescription& A) : Automaton(A) {}
+  NFAParser(const AutomatonDescription& A,
+            const map<Identifier,AutomatonDescription*>* Descriptions = NULL)
+    : Automaton(A), Descriptions(Descriptions), SubAutomataAllowed(true)
+  {
+  }
+
+  NFAParser& AllowSubAutomata(bool Allow);
 
   /**
    * Parse the NFA, assign it @ref #id and put it in @ref #Out.
@@ -91,6 +98,9 @@ private:
   State* SubAutomaton(const Identifier&, State& InitialState);
 
   const AutomatonDescription& Automaton;
+  const map<Identifier,AutomatonDescription*>* Descriptions;
+
+  bool SubAutomataAllowed;
   StateVector States;
   TransitionVector Transitions;
 };
@@ -99,20 +109,6 @@ private:
 
 
 // ---- Automaton implementation ----------------------------------------------
-Automaton* Automaton::Create(const AutomatonDescription *A, unsigned int id,
-                             Type Type) {
-  // First, do the easy thing: parse into an NFA.
-  OwningPtr<NFA> N(NFA::Parse(A, id));
-  assert(N);
-
-  // Only convert to DFA if we have to.
-  if ((Type == Deterministic) && !N->IsRealisable())
-    return DFA::Convert(N.get());
-
-  return N.take();
-}
-
-
 Automaton::Automaton(size_t id, const AutomatonDescription& A, StringRef Name,
                      ArrayRef<State*> S, ArrayRef<Transition*> T)
   : id(id), assertion(A), name(Name)
@@ -175,6 +171,18 @@ NFA* NFA::Parse(const AutomatonDescription *A, unsigned int id) {
   return N.take();
 }
 
+NFA* NFA::Link(const map<Identifier,AutomatonDescription*>& Descriptions) {
+  assert(id < 1000);
+
+  OwningPtr<NFA> N;
+  internal::NFAParser(assertion, &Descriptions)
+    .AllowSubAutomata(false)
+    .Parse(N, id);
+  assert(N);
+
+  return N.take();
+}
+
 NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
   : Automaton(id, A, Name, S, T)
@@ -183,6 +191,13 @@ NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name,
 
 
 namespace internal {
+NFAParser& NFAParser::AllowSubAutomata(bool Allow) {
+  assert(Allow || Descriptions != NULL && "need a source of subautomata");
+  SubAutomataAllowed = Allow;
+
+  return *this;
+}
+
 void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   size_t VariableRefs = 0;
   for (auto A : Automaton.argument())
@@ -223,7 +238,19 @@ State* NFAParser::Parse(const Expression& Expr, State& Start) {
     return Parse(Expr.fieldassign(), Start);
 
   case Expression::SUB_AUTOMATON:
-    return SubAutomaton(Expr.subautomaton(), Start);
+    if (SubAutomataAllowed)
+      return SubAutomaton(Expr.subautomaton(), Start);
+
+    else {
+      // If sub-automata are not allowed, find and parse the sub's definition.
+      assert(Descriptions != NULL);
+      const Identifier& ID = Expr.subautomaton();
+      auto i = Descriptions->find(ID);
+      if (i == Descriptions->end())
+        report_fatal_error("subautomaton '" + ShortName(ID) + "' not defined");
+
+      return Parse(i->second->expression(), Start);
+    }
   }
 }
 

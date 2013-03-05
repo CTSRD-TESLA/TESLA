@@ -61,6 +61,14 @@ cl::opt<string> ManifestName("tesla-manifest", cl::init(".tesla"), cl::Hidden,
 const string Manifest::SEP = "===\n";
 
 
+Manifest::~Manifest() {
+  for (auto i : Automata) {
+    delete i.second.Unlinked;
+    delete i.second.Linked;
+    delete i.second.Deterministic;
+  }
+}
+
 const Automaton* Manifest::FindAutomaton(const Identifier& ID,
                                          Automaton::Type T) const {
 
@@ -68,12 +76,13 @@ const Automaton* Manifest::FindAutomaton(const Identifier& ID,
   if (i == Automata.end())
     return NULL;
 
-  NFA *A = i->second;
-  if (T == Automaton::NonDeterministic)
-    return A;
+  auto& Versions = i->second;
 
-  else
-    return DFA::Convert(A);
+  switch (T) {
+  case Automaton::Unlinked:       return Versions.Unlinked;
+  case Automaton::Linked:         return Versions.Linked;
+  case Automaton::Deterministic:  return Versions.Deterministic;
+  }
 }
 
 const Automaton* Manifest::FindAutomaton(const Location& Loc,
@@ -102,7 +111,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
   }
 
   map<Identifier,AutomatonDescription*> Descriptions;
-  map<Identifier,NFA*> Automata;
+  map<Identifier,AutomataVersions> Automata;
 
   const string& CompleteBuffer = Buffer->getBuffer().str();
 
@@ -130,12 +139,19 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
 
     OwningPtr<NFA> A(NFA::Parse(Descrip, id++));
     if (!A) {
-      for (auto i : Automata) delete i.second;
+      for (auto i : Automata) {
+        auto& Versions = i.second;
+        delete Versions.Unlinked;
+        delete Versions.Linked;
+        delete Versions.Deterministic;
+      }
       for (auto i : Descriptions) delete i.second;
       return NULL;
     }
 
-    Automata[i.first] = A.take();
+    NFA *Linked = A->Link(Descriptions);
+    DFA *Deterministic = DFA::Convert(Linked);
+    Automata[i.first] = AutomataVersions(A.take(), Linked, Deterministic);
   }
 
   return new Manifest(Descriptions, Automata);

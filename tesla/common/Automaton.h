@@ -36,6 +36,8 @@
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
 
+#include <map>
+
 
 namespace tesla {
 
@@ -71,21 +73,23 @@ namespace internal {
 class Automaton {
   friend class internal::DFABuilder;
 public:
+  //! Automata representations, in increasing order of realisability.
   enum Type {
+    /**
+     * An NFA representation that includes sub-automata pseudo-transitions, e.g.
+     * "transition from state 2 to state 8 via sub-automaton 'active_close'".
+     */
+    Unlinked,
+
+    //! An NFA with realisable transitions.
+    Linked,
+
+    //! A DFA that can actually be implemented as instrumentation.
     Deterministic,
-    NonDeterministic
   };
 
   typedef llvm::SmallVector<State*,10> StateVector;
   typedef llvm::SmallVector<Transition*,10> TransitionVector;
-
-  /**
-   * Convert an assertion into an @ref Automaton.
-   *
-   * @param
-   */
-  static Automaton* Create(const AutomatonDescription*, unsigned int id,
-                           Type T = NonDeterministic);
 
   virtual ~Automaton() {}
   virtual bool IsRealisable() const;
@@ -134,6 +138,14 @@ class NFA : public Automaton {
 
 public:
   static NFA* Parse(const AutomatonDescription*, unsigned int id);
+
+  /**
+   * Construct a version of this @ref Automaton with all sub-automata
+   * transitions replaced by real NFA elements (states and transitions).
+   *
+   * @param  Desc        where to find definitions of sub-automata
+   */
+  NFA* Link(const std::map<Identifier,AutomatonDescription*>& Desc);
 
 private:
   NFA(size_t id, const AutomatonDescription& A, llvm::StringRef Name,

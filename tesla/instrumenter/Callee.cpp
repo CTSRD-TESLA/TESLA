@@ -184,8 +184,7 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
   // Create code to receive events and translate them to the automata language.
   for (auto i : Manifest->AllAutomata()) {
     const Identifier& ID = i.second->identifier();
-    OwningPtr<const Automaton> A(
-      Manifest->FindAutomaton(ID, Automaton::Deterministic));
+    auto *A = Manifest->FindAutomaton(ID, Automaton::Deterministic);
 
     assert(A && "failed to parse (deterministic) assertion");
 

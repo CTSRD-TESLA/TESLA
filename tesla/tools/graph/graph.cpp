@@ -55,11 +55,11 @@ cl::opt<string> OutputFile("o", cl::desc("<output file>"), cl::init("-"));
 
 cl::opt<Automaton::Type> Determinism(cl::desc("automata determinism:"),
       cl::values(
-        clEnumValN(Automaton::NonDeterministic, "n" ,
-                   "non-determinism allowed"),
-        clEnumValN(Automaton::Deterministic, "d" , "determinism required"),
+        clEnumValN(Automaton::Unlinked,      "u", "unlinked NFA"),
+        clEnumValN(Automaton::Linked,        "l", "linked NFA"),
+        clEnumValN(Automaton::Deterministic, "d", "DFA"),
         clEnumValEnd),
-      cl::init(Automaton::NonDeterministic));
+      cl::init(Automaton::Unlinked));
 
 int
 main(int argc, char *argv[]) {
@@ -84,7 +84,7 @@ main(int argc, char *argv[]) {
 
   for (auto i : Manifest->AllAutomata()) {
     Identifier ID = i.second->identifier();
-    OwningPtr<const Automaton> A(Manifest->FindAutomaton(i.second->identifier(), Determinism));
+    auto *A = Manifest->FindAutomaton(i.second->identifier(), Determinism);
     assert(A);
 
     out << A->Dot() << "\n\n";

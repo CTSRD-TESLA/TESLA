@@ -101,7 +101,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     Location Loc;
     ParseAssertionLocation(&Loc, Assert);
 
-    OwningPtr<const Automaton> A(Manifest.FindAutomaton(Loc));
+    auto *A = Manifest.FindAutomaton(Loc);
     assert(A);
 
     // Record named values that might be passed to instrumentation, such as
@@ -153,8 +153,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Manifest& Man,
 
   for (auto i : Man.AllAutomata()) {
     const Identifier& ID = i.second->identifier();
-    OwningPtr<const Automaton> A(Man.FindAutomaton(ID));
-
+    auto *A = Man.FindAutomaton(ID);
     assert(A && "mismatch between descriptions, automata in Manifest");
 
     ModifiedIR |= AddInstrumentation(*A, M);
@@ -295,7 +294,7 @@ Function* TeslaAssertionSiteInstrumenter::InstrumentationFn(
   Type *Void = Type::getVoidTy(M.getContext());
   Type *IntPtrTy = IntPtrType(M);
 
-  // NOW events only take arguments of type register_t.
+  // NOW events only take arguments of type intptr_t.
   std::vector<Type*> ArgTypes(ArgCount, IntPtrTy);
 
   FunctionType *FnType = FunctionType::get(Void, ArgTypes, false);
