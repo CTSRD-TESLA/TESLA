@@ -44,6 +44,9 @@ perform_operation(int op, struct object *o)
 	/* A very simple TESLA assertion. */
 	TESLA_PERTHREAD(previously_in_syscall(security_check(ANY(ptr), o, op) == 0));
 
+	/* An even simpler assertion! */
+	TESLA_PERTHREAD(previously_in_syscall(called(security_check)));
+
 	/* More simple assertions. */
 	TESLA_PERTHREAD(previously_in_syscall(called(hold, o)));
 	TESLA_PERTHREAD(previously_in_syscall(returned(hold, o)));
