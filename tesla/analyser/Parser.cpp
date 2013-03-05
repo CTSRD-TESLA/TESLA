@@ -596,7 +596,7 @@ bool Parser::Parse(Argument *Arg, const Expr *E) {
   } else if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Arg->set_type(Argument::Constant);
     *Arg->mutable_value() = "0x" + ConstValue.toString(16);
-
+    Arg->set_int_value(ConstValue.getSExtValue());
   } else {
     ReportError("Invalid argument to function within TESLA assertion", P);
     return false;

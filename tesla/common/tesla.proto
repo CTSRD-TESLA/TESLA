@@ -185,5 +185,8 @@ message Argument {
 
   /** A type-specific representation of the expected value (for debugging). */
   optional string value = 4;
+
+  /** The integer value.  For constants, this will be present instead of index. */
+  optional int64 int_value = 5;
 }
 
