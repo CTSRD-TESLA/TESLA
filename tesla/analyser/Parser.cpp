@@ -702,14 +702,3 @@ llvm::APInt Parser::ParseIntegerLiteral(const Expr* E) {
   return LiteralValue->getValue();
 }
 
-
-StringRef Parser::IntegerConstantStr(const Expr *E,
-                                     const llvm::APSInt& ConstValue) {
-  SourceLocation Loc = E->getLocStart();
-
-  if (!Loc.isMacroID())
-    return ("0x" + ConstValue.toString(16));
-
-  return Lexer::getImmediateMacroName(Loc, Ctx.getSourceManager(), Ctx.getLangOpts());
-}
-
