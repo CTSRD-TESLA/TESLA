@@ -33,7 +33,6 @@
 #define AUTOMATON_H
 
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
 
 #include <map>
