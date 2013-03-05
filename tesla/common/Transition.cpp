@@ -244,7 +244,7 @@ string FieldAssignTransition::ShortLabel() const {
     + " "
     + OpString(Assign.operation())
     + " "
-    + Assign.value().value()
+    + ShortName(Assign.value())
   ).str();
 }
 

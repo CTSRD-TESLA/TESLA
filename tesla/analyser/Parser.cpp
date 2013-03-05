@@ -36,6 +36,7 @@
 #include <clang/AST/Expr.h>
 #include <clang/AST/ExprCXX.h>
 #include <clang/Basic/Diagnostic.h>
+#include <clang/Lex/Lexer.h>
 
 #include <llvm/ADT/StringSwitch.h>
 
@@ -595,8 +596,17 @@ bool Parser::Parse(Argument *Arg, const Expr *E) {
 
   } else if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Arg->set_type(Argument::Constant);
-    *Arg->mutable_value() = "0x" + ConstValue.toString(16);
     Arg->set_int_value(ConstValue.getSExtValue());
+
+    SourceLocation Loc = P->getLocStart();
+    if (Loc.isMacroID())
+      *Arg->mutable_name() =
+        Lexer::getImmediateMacroName(Loc, Ctx.getSourceManager(),
+                                     Ctx.getLangOpts());
+
+    else
+      *Arg->mutable_name() = ("0x" + ConstValue.toString(16));
+
   } else {
     ReportError("Invalid argument to function within TESLA assertion", P);
     return false;
@@ -690,5 +700,16 @@ llvm::APInt Parser::ParseIntegerLiteral(const Expr* E) {
   }
 
   return LiteralValue->getValue();
+}
+
+
+StringRef Parser::IntegerConstantStr(const Expr *E,
+                                     const llvm::APSInt& ConstValue) {
+  SourceLocation Loc = E->getLocStart();
+
+  if (!Loc.isMacroID())
+    return ("0x" + ConstValue.toString(16));
+
+  return Lexer::getImmediateMacroName(Loc, Ctx.getSourceManager(), Ctx.getLangOpts());
 }
 

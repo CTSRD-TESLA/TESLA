@@ -54,6 +54,10 @@ namespace clang {
   class ValueDecl;
 }
 
+namespace llvm {
+  class APSInt;
+}
+
 
 namespace tesla {
 

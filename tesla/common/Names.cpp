@@ -42,7 +42,7 @@ using llvm::Twine;
 std::string tesla::ArgString(const Argument& A) {
   switch (A.type()) {
   case Argument::Constant:
-    return A.value();
+    return A.name();
 
   case Argument::Variable:
     return (Twine()
@@ -63,7 +63,7 @@ std::string tesla::ShortName(const Argument& A) {
 
   switch (A.type()) {
   case Argument::Constant:
-    return A.value();
+    return A.name();
 
   case Argument::Variable:
     return A.name();
