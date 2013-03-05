@@ -137,7 +137,14 @@ void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
   // references are currently unknown (or NULL). If this transition references
   // variables but the previous state doesn't know about references, something
   // has gone wrong (e.g. a start state wasn't properly initialised).
-  assert(!From.References().empty() || this->Arguments().empty());
+  {
+    __unused size_t MyArguments = 0;
+    for (auto Arg : this->Arguments())
+      if (Arg->type() == Argument::Variable)
+        MyArguments++;
+
+    assert(!From.References().empty() || (MyArguments == 0));
+  }
 
   // Put this transition's *variable* references in var-index order.
   SmallVector<const Argument*, 4> MyRefs;
