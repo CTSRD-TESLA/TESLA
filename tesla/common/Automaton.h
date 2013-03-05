@@ -95,28 +95,21 @@ public:
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
 
-  //! A short but unique name for this automaton.
-  std::string Name() const { return name; }
-
-  //! A longer description.
-  std::string Description() const { return description; }
-
-  std::string String() const;
-  std::string Dot() const;
+  std::string Name() const { return name; } //!< Short, unique name.
+  std::string String() const;               //!< Human-readable representation.
+  std::string Dot() const;                  //!< GraphViz representation.
 
   //! Iterate over state transitions.
   TransitionVector::const_iterator begin() const { return Transitions.begin(); }
   TransitionVector::const_iterator end() const  { return Transitions.end(); }
 
 protected:
-  Automaton(size_t id, const AutomatonDescription&,
-            llvm::StringRef Name, llvm::StringRef Desc,
+  Automaton(size_t id, const AutomatonDescription&, llvm::StringRef Name,
             llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 
   const size_t id;
   const AutomatonDescription& assertion;
   const std::string name;
-  const std::string description;
 
   StateVector States;
   TransitionVector Transitions;
@@ -143,8 +136,7 @@ public:
   static NFA* Parse(const AutomatonDescription*, unsigned int id);
 
 private:
-  NFA(size_t id, const AutomatonDescription& A,
-      llvm::StringRef Name, llvm::StringRef Desc,
+  NFA(size_t id, const AutomatonDescription& A, llvm::StringRef Name,
       llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 
   friend class internal::NFAParser;
@@ -164,8 +156,7 @@ public:
   bool IsRealisable() const { return true; }
 
 private:
-  DFA(size_t id, AutomatonDescription& A,
-      llvm::StringRef Name, llvm::StringRef Desc,
+  DFA(size_t id, AutomatonDescription& A, llvm::StringRef Name,
       llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
 };
 

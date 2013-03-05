@@ -216,7 +216,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
   Args.push_back(ConstantInt::get(IntType, A.ID()));
   Args.push_back(ConstructKey(Builder, M, InstrArgs));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.Description()));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
   Args.push_back(CurrentState);
   Args.push_back(NextState);
 

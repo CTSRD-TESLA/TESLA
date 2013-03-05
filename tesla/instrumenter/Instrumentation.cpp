@@ -319,7 +319,7 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
     Args.push_back(ConstructKey(Builder, M,
                      InstrFn->getArgumentList(), T.FnEvent()));
     Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
-    Args.push_back(Builder.CreateGlobalStringPtr(A.Description()));
+    Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
     Args.push_back(CurrentState);
     Args.push_back(NextState);
 

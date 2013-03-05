@@ -113,10 +113,9 @@ Automaton* Automaton::Create(const AutomatonDescription *A, unsigned int id,
 }
 
 
-Automaton::Automaton(size_t id, const AutomatonDescription& A,
-                     StringRef Name, StringRef Desc,
+Automaton::Automaton(size_t id, const AutomatonDescription& A, StringRef Name,
                      ArrayRef<State*> S, ArrayRef<Transition*> T)
-  : id(id), assertion(A), name(Name), description(Desc)
+  : id(id), assertion(A), name(Name)
 {
   States.insert(States.begin(), S.begin(), S.end());
   Transitions.insert(Transitions.begin(), T.begin(), T.end());
@@ -176,9 +175,9 @@ NFA* NFA::Parse(const AutomatonDescription *A, unsigned int id) {
   return N.take();
 }
 
-NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name, StringRef Desc,
+NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
-  : Automaton(id, A, Name, Desc, S, T)
+  : Automaton(id, A, Name, S, T)
 {
 }
 
@@ -216,8 +215,7 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   string Description;
   ::google::protobuf::TextFormat::PrintToString(Automaton, &Description);
 
-  Out.reset(new NFA(id, Automaton, ShortName(ID), Description,
-                    States, Transitions));
+  Out.reset(new NFA(id, Automaton, ShortName(ID), States, Transitions));
 }
 
 State* NFAParser::Parse(const Expression& Expr, State& Start) {
@@ -433,8 +431,9 @@ class DFABuilder {
     }
     // FIXME: We can end up with a lot of accepting states, which could be
     // folded into a single one.
-    DFA *D = new DFA(N->ID(), const_cast<AutomatonDescription&>(N->getAssertion()),
-        N->Name(), N->Description(), States, Transitions);
+    DFA *D = new DFA(N->ID(),
+                     const_cast<AutomatonDescription&>(N->getAssertion()),
+                     N->Name(), States, Transitions);
 #ifndef NDEBUG
     if (getenv("VERBOSE_DEBUG")) {
       fprintf(stderr, "NFA: %s\n", N->String().c_str());
@@ -459,9 +458,9 @@ DFA* DFA::Convert(const NFA* N) {
   return B.ConstructDFA(N);
 }
 
-DFA::DFA(size_t id, AutomatonDescription& A, StringRef Name, StringRef Desc,
+DFA::DFA(size_t id, AutomatonDescription& A, StringRef Name,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
-  : Automaton(id, A, Name, Desc, S, T)
+  : Automaton(id, A, Name, S, T)
 {
   for (__unused const Transition* T: T) {
     assert(T->IsRealisable());
