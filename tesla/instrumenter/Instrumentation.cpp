@@ -325,6 +325,8 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
 
     // The instrumentation function should always end in a RetVoid;
     // assert this is so and then trim it so we can add new stuff.
+    // FIXME: This relies on an invariant (basic block ordering) that is NOT
+    // guaranteed and is liable to change!
     auto& PreviousEndBlock = InstrFn->back();
     assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
     PreviousEndBlock.getTerminator()->eraseFromParent();
@@ -342,6 +344,26 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
 
     ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
     ErrorHandler.CreateRetVoid();
+
+    auto Next = BasicBlock::Create(Ctx, "next", InstrFn);
+    auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
+    IRBuilder<>(Exit).CreateRetVoid();
+
+    if (FnEvent.has_expectedreturnvalue()) {
+      const Argument &Arg = FnEvent.expectedreturnvalue();
+      if (Arg.type() == Argument::Constant) {
+        Value *ReturnVal = --(InstrFn->arg_end());
+        Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
+            Arg.int_value());
+        Builder.CreateCondBr(Builder.CreateICmpNE(ReturnVal,
+              ExpectedReturnVal), Exit, Next);
+        Builder.SetInsertPoint(Next);
+      }
+    }
+    if (Builder.GetInsertBlock() != Next) {
+      Next->removeFromParent();
+      delete Next;
+    }
 
     Constant* TransArray[] = {
       ConstructTransition(Builder, M,
@@ -364,12 +386,10 @@ bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
     Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
     assert(Args.size() == UpdateStateFn->arg_size());
 
+
     Value *Error = Builder.CreateCall(UpdateStateFn, Args);
     Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
     Error = Builder.CreateICmpEQ(Error, NoError);
-
-    auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
-    IRBuilder<>(Exit).CreateRetVoid();
 
     Builder.CreateCondBr(Error, Exit, Die);
   }
