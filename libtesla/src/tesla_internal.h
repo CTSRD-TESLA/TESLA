@@ -88,6 +88,9 @@ int32_t	tesla_clone(struct tesla_class*, const struct tesla_instance *orig,
 int32_t	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
 	    struct tesla_instance **array, uint32_t *size);
 
+/** Copy new entries from @ref source into @ref dest. */
+int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
+
 
 #ifndef NDEBUG
 

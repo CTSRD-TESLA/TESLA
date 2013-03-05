@@ -36,6 +36,7 @@
 #include <stdio.h>
 
 
+#define	IS_SET(mask, index) (mask & (1 << index))
 #define	SUBSET(x,y) ((x & y) == x)
 
 int
@@ -61,5 +62,23 @@ tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)
 	}
 
 	return (1);
+}
+
+int32_t
+tesla_key_union(tesla_key *dest, const tesla_key *source)
+{
+	for (uint32_t i = 0; i < TESLA_KEY_SIZE; i++) {
+		if (IS_SET(source->tk_mask, i)) {
+			if (IS_SET(dest->tk_mask, i)) {
+			    if (dest->tk_keys[i] != source->tk_keys[i])
+				return (TESLA_ERROR_EINVAL);
+			} else {
+				dest->tk_keys[i] = source->tk_keys[i];
+			}
+		}
+	}
+
+	dest->tk_mask |= source->tk_mask;
+	return (TESLA_SUCCESS);
 }
 
