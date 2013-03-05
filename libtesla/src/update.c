@@ -103,6 +103,15 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			if (!tesla_key_matches(&pattern, &inst->ti_key))
 				continue;
 
+			tesla_key *k = &inst->ti_key;
+			if (!t->fork && (k->tk_mask != pattern.tk_mask))
+				continue;
+
+			// At this point, predjudice attaches: the instance
+			// matches a pattern in all ways that matter, so if
+			// it's not in the expected state, there had better
+			// be a successful transition somewhere in 'trans'
+			// that can be taken.
 			if (inst->ti_state != t->from) {
 				failure = true;
 				continue;
@@ -111,7 +120,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			// If the keys just match (and we haven't been explictly
 			// instructed to fork), just update the state.
 			if (!t->fork
-			    && SUBSET(pattern.tk_mask, inst->ti_key.tk_mask)) {
+			    && SUBSET(key->tk_mask, k->tk_mask)) {
 				VERBOSE_PRINT("update %ld: %tx->%tx\n",
 				              inst - start, t->from, t->to);
 
@@ -126,10 +135,10 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			CHECK(tesla_clone, class, inst, &copy);
 			VERBOSE_PRINT("clone  %ld:%tx -> %ld:%tx\n",
 			              inst - start, inst->ti_state,
-			              copy - start, copy->ti_state);
+			              copy - start, t->to);
 
 			CHECK(tesla_key_union, &copy->ti_key, key);
-			copy->ti_state = inst->ti_state;
+			copy->ti_state = t->to;
 			failure = false;
 			break;
 		}
