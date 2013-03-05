@@ -37,7 +37,7 @@
 char*
 transition_matrix(const struct tesla_transitions *trans)
 {
-	static const char EACH[] = "(%tx:0x%tx -> %tx%s) ";
+	static const char EACH[] = "(%d:0x%tx -> %d%s) ";
 
 	size_t needed = trans->length * (sizeof(EACH) + 4) + 4;
 	char *buffer = tesla_malloc(needed);
