@@ -51,6 +51,10 @@ public:
   TeslaAssertionSiteInstrumenter() : ModulePass(ID) {}
   virtual ~TeslaAssertionSiteInstrumenter();
 
+  const char* getPassName() const {
+    return "TESLA assertion site instrumenter";
+  }
+
   virtual bool runOnModule(llvm::Module &M);
 
 private:

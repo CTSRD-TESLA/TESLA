@@ -58,6 +58,10 @@ public:
   TeslaCalleeInstrumenter() : FunctionPass(ID) {}
   ~TeslaCalleeInstrumenter();
 
+  const char* getPassName() const {
+    return "TESLA function instrumenter (callee-side)";
+  }
+
   virtual bool doInitialization(llvm::Module &M);
   virtual bool runOnFunction(llvm::Function &F);
 
