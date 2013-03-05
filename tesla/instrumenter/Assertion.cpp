@@ -208,8 +208,13 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
   IRBuilder<> Builder(Block);
 
   auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
-  // TODO: provide notification of failure
-  IRBuilder<>(Die).CreateRetVoid();
+  IRBuilder<> ErrorHandler(Die);
+
+  auto *ErrMsg = ErrorHandler.CreateGlobalStringPtr(
+    "error in tesla_update_state() for automaton '" + A.Name() + "'");
+
+  ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
+  ErrorHandler.CreateRetVoid();
 
   std::vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
@@ -224,7 +229,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
   assert(Args.size() == UpdateStateFn->arg_size());
 
   Value *Error = Builder.CreateCall(UpdateStateFn, Args);
-  Error = Builder.CreateICmpNE(Error, Success);
+  Error = Builder.CreateICmpEQ(Error, Success);
 
   auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
   IRBuilder<>(Exit).CreateRetVoid();
