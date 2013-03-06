@@ -36,6 +36,8 @@
 
 #include <llvm/ADT/Twine.h>
 
+#include <sstream>
+
 using namespace llvm;
 using std::string;
 
@@ -224,12 +226,21 @@ string FnTransition::ShortLabel() const {
 }
 
 string FnTransition::DotLabel() const {
-  return (Twine()
-    + Ev.function().name()
-    + "\\n("
-    + FunctionEvent::Direction_Name(Ev.direction())
-    + ")"
-  ).str();
+  std::stringstream ss;
+  ss << Ev.function().name() << "(";
+
+  for (int i = 0; i < Ev.argument_size(); i++)
+    ss
+      << DotName(Ev.argument(i))
+      << ((i < Ev.argument_size() - 1) ? "," : "");
+
+  ss
+    << ")\\n("
+    << FunctionEvent::Direction_Name(Ev.direction())
+    << ")"
+    ;
+
+  return ss.str();
 }
 
 
