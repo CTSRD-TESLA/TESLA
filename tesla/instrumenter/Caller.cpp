@@ -160,8 +160,13 @@ bool TeslaCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
   for (auto &Inst : Block) {
     if (!isa<CallInst>(Inst)) continue;
     CallInst &Call = cast<CallInst>(Inst);
+    Function *Callee = Call.getCalledFunction();
 
-    auto I = FunctionsToInstrument.find(Call.getCalledFunction()->getName());
+    // TODO: handle indirection (e.g. function pointers)?
+    if (!Callee)
+      continue;
+
+    auto I = FunctionsToInstrument.find(Callee->getName());
     if (I == FunctionsToInstrument.end()) continue;
 
     auto *Instrumenter = I->second;
