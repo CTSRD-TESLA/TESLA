@@ -14,7 +14,7 @@ CC=		clang
 LINK=		clang
 
 REVISION:=	$(shell ./revision.sh)
-CFLAGS+=	-Wall -Werror -D TESLA -D REVISION="\"${REVISION}\""
+CFLAGS+=	-Wall -Werror -D TESLA -D REVISION="${REVISION}"
 LIBS+=		-l tesla
 
 BIN=		demo

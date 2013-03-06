@@ -33,15 +33,19 @@
 #include <stdio.h>
 #include <tesla.h>
 
-#ifndef REVISION
-#error Must -D REVISION=\"something\"
+#ifndef	REVISION
+#error Must -D REVISION=something
 #endif
+
+#define	STRINGIFY(x)	#x
+#define	TOSTRING(x)	STRINGIFY(x)
+#define	VERSION		TOSTRING(REVISION)
 
 int
 main(int argc, char *argv[]) {
 	struct credential cred;
 
-	printf("TESLA demo application; version %s\n\n", REVISION);
+	printf("TESLA demo application; version %s\n\n", VERSION);
 
 	printf("Calling the 'example_syscall' function...\n");
 	int retval = example_syscall(&cred, 0, 0);
