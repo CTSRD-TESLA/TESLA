@@ -84,7 +84,7 @@ bool TeslaVisitor::VisitFunctionDecl(FunctionDecl *F) {
   string RetTypeName = TypeID->getName();
 
   // Only inspect TESLA automata descriptions.
-  if (RetTypeName.compare(0, AUTOMATON.size(), AUTOMATON))
+  if (RetTypeName != AUTOMATON)
     return true;
 
   OwningPtr<Parser> P(Parser::AutomatonParser(F, *Context));
