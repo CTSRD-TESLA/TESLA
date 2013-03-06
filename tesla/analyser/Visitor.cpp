@@ -77,7 +77,11 @@ bool TeslaVisitor::VisitFunctionDecl(FunctionDecl *F) {
     return true;
 
   QualType Pointee = cast<PointerType>(RetTy)->getPointeeType();
-  string RetTypeName = Pointee.getBaseTypeIdentifier()->getName();
+  auto TypeID = Pointee.getBaseTypeIdentifier();
+  if (!TypeID)
+    return true;
+
+  string RetTypeName = TypeID->getName();
 
   // Only inspect TESLA automata descriptions.
   if (RetTypeName.compare(0, AUTOMATON.size(), AUTOMATON))
