@@ -1,8 +1,8 @@
 .SUFFIXES: .c .dot .ll .pdf .tesla
 
-ANALYSE=	tesla-analyse
-INSTRUMENT=	tesla-instrument -S -verify-each
-GRAPH=		tesla-graph
+ANALYSE=	tesla analyse
+INSTRUMENT=	tesla instrument -S -verify-each
+GRAPH=		tesla graph
 
 CFLAGS+=	-D TESLA
 LIBS+=		-l tesla
