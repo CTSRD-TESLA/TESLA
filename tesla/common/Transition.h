@@ -274,14 +274,13 @@ private:
 
 
 inline bool operator==(const FieldAssignment &X, const FieldAssignment &Y) {
-  if (X.type() != Y.type()) return false;
-  if (X.index() != Y.index()) return false;
-
-  if (X.has_base() != Y.has_base()) return false;
-  if (X.has_base() && (X.base() != Y.base())) return false;
-
-  if (X.operation() != Y.operation()) return false;
-  if (X.value() != Y.value()) return false;
+  return (
+    (X.type() == Y.type())
+    && (X.index() == Y.index())
+    && (X.base() == Y.base())
+    && (X.operation() == Y.operation())
+    && (X.value() == Y.value())
+  );
 
   return true;
 }
