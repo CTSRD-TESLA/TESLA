@@ -83,7 +83,7 @@ bool TeslaVisitor::VisitFunctionDecl(FunctionDecl *F) {
 
   string RetTypeName = TypeID->getName();
 
-  if (RetTypeName != AUTOMATON)
+  if (RetTypeName.compare(AUTOMATON_DESC))
     return true;
 
   // Ok, this is an automaton description; parse it!
