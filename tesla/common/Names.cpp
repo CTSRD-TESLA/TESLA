@@ -73,6 +73,21 @@ std::string tesla::ShortName(const Argument& A) {
   }
 }
 
+std::string tesla::DotName(const Argument& A) {
+  assert(&A != NULL);
+
+  switch (A.type()) {
+  case Argument::Constant:
+    return A.name();
+
+  case Argument::Variable:
+    return A.name();
+
+  case Argument::Any:
+    return "&#8902;";
+  }
+}
+
 std::string tesla::ShortName(const Identifier& ID) {
   if (ID.has_name())
     return ID.name();
