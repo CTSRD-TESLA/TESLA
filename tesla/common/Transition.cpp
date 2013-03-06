@@ -200,7 +200,7 @@ string Transition::Dot() const {
     + " -> "
     + Twine(Destination().ID())
     + " [ label = \""
-    + ShortLabel()
+    + DotLabel()
     + "\" ];\n"
   ).str();
 }
