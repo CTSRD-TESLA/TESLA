@@ -196,13 +196,13 @@ private:
 inline bool operator==(const Argument &A1, const Argument &A2) {
   if (A1.type() != A2.type()) return false;
   if (A1.has_index())
-    if (A2.has_index() && (A1.index() != A1.index())) return false;
+    if (A2.has_index() && (A1.index() != A2.index())) return false;
   if (A1.has_name())
-    if (A2.has_name() && (A1.name() != A1.name())) return false;
+    if (A2.has_name() && (A1.name() != A2.name())) return false;
   if (A1.has_value())
-    if (A2.has_value() && (A1.value() != A1.value())) return false;
+    if (A2.has_value() && (A1.value() != A2.value())) return false;
   if (A1.has_int_value())
-    if (A2.has_int_value() && (A1.int_value() != A1.int_value())) return false;
+    if (A2.has_int_value() && (A1.int_value() != A2.int_value())) return false;
   return true;
 }
 inline bool operator!=(const Argument &A1, const Argument &A2) {
