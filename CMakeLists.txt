@@ -35,4 +35,5 @@ include_directories("include")
 
 add_subdirectory(libtesla)
 add_subdirectory(tesla)
+add_subdirectory(scripts)
 

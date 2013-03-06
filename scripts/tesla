@@ -1,0 +1,21 @@
+#!/bin/sh
+
+usage() {
+	echo "Usage:  tesla <tool> [tool arguments]"
+	echo
+	echo "  where <tool> is one of:"
+	echo "    - analyse       (analyse C assertions, produce TESLA IR)"
+	echo "    - graph         (convert TESLA IR into GraphViz .dot format)"
+	echo "    - instrument    (add TESLA instrumention to LLVM IR)"
+	echo "    - read          (read information from TESLA IR)"
+	echo
+}
+
+if [ "$1" == "" ]; then
+	usage
+	exit 1
+fi
+
+DIR=$(dirname $0)
+${DIR}/tesla-$*
+
