@@ -91,6 +91,9 @@ bool operator < (const Location&, const Location&);
 bool operator == (const Identifier&, const Identifier&);
 bool operator < (const Identifier&, const Identifier&);
 
+template<class T>
+inline bool operator != (const T& x, const T& y) { return !(x == y); }
+
 } /* namespace tesla */
 
 #endif
