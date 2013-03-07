@@ -142,9 +142,9 @@ search_for_pattern(struct tesla_class *tclass, struct tesla_key *pattern) {
 		struct tesla_instance *inst = matches[i];
 		assert(inst != NULL);
 
-		for (uint32_t i = 0; i < INSTANCES; i++)
-			if (inst == instances[i])
-				found |= (1 << i);
+		for (uint32_t j = 0; j < INSTANCES; j++)
+			if (inst == instances[j])
+				found |= (1 << j);
 	}
 
 	return found;

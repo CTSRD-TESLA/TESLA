@@ -103,7 +103,7 @@ int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
 #define VERBOSE_PRINT(...) if (verbose_debug()) DEBUG_PRINT(__VA_ARGS__)
 
 /** Are we in (verbose) debug mode? */
-int32_t	verbose_debug();
+int32_t	verbose_debug(void);
 
 #else // NDEBUG
 
@@ -112,7 +112,7 @@ int32_t	verbose_debug();
 #define DEBUG_PRINT(...)
 #define VERBOSE_PRINT(...)
 
-int32_t	verbose_debug() { return 0; }
+int32_t	verbose_debug(void) { return 0; }
 
 #endif
 

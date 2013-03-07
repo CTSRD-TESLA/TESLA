@@ -12,6 +12,6 @@
 	} \
 } while(0)
 
-void	install_default_signal_handler();
-void	print_backtrace();
+void	install_default_signal_handler(void);
+void	print_backtrace(void);
 

@@ -148,7 +148,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	}
 
 	// If there is a (0 -> anything) transition, create a new instance.
-	for (int i = 0; i < trans->length; i++) {
+	for (uint32_t i = 0; i < trans->length; i++) {
 		const tesla_transition *t = trans->transitions + i;
 		if (t->from != 0)
 			continue;

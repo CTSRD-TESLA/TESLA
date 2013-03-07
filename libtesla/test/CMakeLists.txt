@@ -25,6 +25,9 @@ set(TESTS
 
 set(OBJ helpers)
 
+# Ignore "unused parameter 'int argc'" warnings in test programs.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
+
 foreach(test ${TESTS})
 	add_executable(${test} ${test}.c ${OBJ}.c)
 	target_link_libraries(${test} tesla)

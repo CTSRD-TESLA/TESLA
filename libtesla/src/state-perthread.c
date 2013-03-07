@@ -301,23 +301,23 @@ tesla_class_perthread_gettable(struct tesla_class *tsp,
 #else  /* !_KERNEL */
 
 int
-tesla_class_perthread_postinit(struct tesla_class *c)
+tesla_class_perthread_postinit(__unused struct tesla_class *c)
 {
 	return 0;
 }
 
 void
-tesla_class_perthread_acquire(struct tesla_class *c)
+tesla_class_perthread_acquire(__unused struct tesla_class *c)
 {
 }
 
 void
-tesla_class_perthread_release(struct tesla_class *c)
+tesla_class_perthread_release(__unused struct tesla_class *c)
 {
 }
 
 void
-tesla_class_perthread_destroy(struct tesla_class *c)
+tesla_class_perthread_destroy(__unused struct tesla_class *c)
 {
 }
 

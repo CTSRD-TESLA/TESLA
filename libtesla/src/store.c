@@ -41,7 +41,7 @@
 struct tesla_store global_store = { .length = 0 };
 
 /** The pthreads key used to identify TESLA data. */
-pthread_key_t	pthread_key();
+pthread_key_t	pthread_key(void);
 #endif
 
 static void	tesla_class_acquire(tesla_class*);
