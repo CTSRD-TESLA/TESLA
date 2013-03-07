@@ -17,7 +17,12 @@ if [ "$1" == "" ]; then
 fi
 
 if [ "$TESLA_BUILD_DIR" != "" ]; then
-  export PATH="$TESLA_BUILD_DIR/tesla/analyse:$TESLA_BUILD_DIR/tesla/instrument:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
+  if [ ! -d "$TESLA_BUILD_DIR/tesla/analyser" ]; then
+    echo "No 'tesla/analyser' directory in \$TESLA_BUILD_DIR: $TESLA_BUILD_DIR"
+    exit 1
+  fi
+
+  export PATH="$TESLA_BUILD_DIR/tesla/analyser:$TESLA_BUILD_DIR/tesla/instrumenter:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
 else
   export PATH=$(dirname $0)
 fi
