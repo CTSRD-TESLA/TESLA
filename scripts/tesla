@@ -16,6 +16,11 @@ if [ "$1" == "" ]; then
 	exit 1
 fi
 
-DIR=$(dirname $0)
-${DIR}/tesla-$*
+if [ "$TESLA_BUILD_DIR" != "" ]; then
+  export PATH="$TESLA_BUILD_DIR/tesla/analyse:$TESLA_BUILD_DIR/tesla/instrument:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
+else
+  export PATH=$(dirname $0)
+fi
+
+tesla-$*
 
