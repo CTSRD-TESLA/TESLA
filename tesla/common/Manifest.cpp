@@ -129,7 +129,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     }
 
     Identifier ID = A->identifier();
-    Descriptions[ID] = A.take();
+    Descriptions.insert(std::make_pair(ID, A.take()));
     Pos = End + SEP.length();
   }
 
