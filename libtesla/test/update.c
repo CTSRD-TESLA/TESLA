@@ -12,7 +12,6 @@
  * This test ensures that automata forking works correctly.
  */
 
-#include <tesla/libtesla.h>
 #include "tesla_internal.h"
 
 #include <assert.h>

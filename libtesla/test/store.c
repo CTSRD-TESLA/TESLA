@@ -3,7 +3,6 @@
  * Tests automata class storage.
  */
 
-#include <tesla/libtesla.h>
 #include "tesla_internal.h"
 
 #include <assert.h>
