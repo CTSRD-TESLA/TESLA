@@ -173,6 +173,7 @@ public:
   std::string DotLabel() const { return "NOW"; }
 
   const ReferenceVector Arguments() const { return Refs; }
+  const Location& Location() const { return Ev.location(); }
 
   static bool classof(const Transition *T) {
     return T->getKind() == Now;
