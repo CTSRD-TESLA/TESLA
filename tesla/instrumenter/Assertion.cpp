@@ -99,9 +99,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     ParseAssertionLocation(&Loc, Assert);
 
     auto *A = Manifest.FindAutomaton(Loc);
-    if (!A)
-      report_fatal_error(
-        "TESLA manifest does not contain assertion " + ShortName(Loc));
+    assert(A);
 
     // Implement the assertion instrumentation.
     const NowTransition *NowTrans;

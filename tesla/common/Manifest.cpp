@@ -74,7 +74,8 @@ const Automaton* Manifest::FindAutomaton(const Identifier& ID,
 
   auto i = Automata.find(ID);
   if (i == Automata.end())
-    return NULL;
+    report_fatal_error(
+      "TESLA manifest does not contain assertion " + ShortName(Loc));
 
   auto& Versions = i->second;
 
