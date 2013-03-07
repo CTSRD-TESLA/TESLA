@@ -61,27 +61,15 @@ private:
   //! Convert assertion declarations into instrumentation calls.
   bool ConvertAssertions(std::set<llvm::CallInst*>&, Manifest&, llvm::Module&);
 
-  //! Add instrumentation for all automata in a @ref Manifest.
-  bool AddInstrumentation(const Manifest&, llvm::Module& M);
-
-  //! Add instrumentation to an @ref Automaton's event handler.
-  bool AddInstrumentation(const Automaton&, llvm::Module& M);
-
   //! Add instrumentation for a single @ref NowTransition.
-  bool AddInstrumentation(const NowTransition&, const Automaton&,
-                          llvm::Module& M);
+  llvm::Function* CreateInstrumentation(const Automaton&, const NowTransition&,
+                                        llvm::Module&);
 
   /**
    * Parse a @ref Location out of a @ref CallInst to the TESLA assertion
    * pseudo-call.
    */
   static void ParseAssertionLocation(Location *Loc, llvm::CallInst*);
-
-  /**
-   * Find (or create) the instrumentation function for an @ref Assertion's
-   * 'NOW' event.
-   */
-  static llvm::Function* InstrumentationFn(const Automaton&, llvm::Module&);
 
   //! The TESLA pseudo-function used to declare assertions.
   llvm::Function *AssertFn = NULL;

@@ -80,10 +80,7 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   if (!Manifest)
     report_fatal_error("unable to load TESLA manifest");
 
-  return
-    ConvertAssertions(AssertCalls, *Manifest, M)
-    && AddInstrumentation(*Manifest, M)
-    ;
+  return ConvertAssertions(AssertCalls, *Manifest, M);
 }
 
 
@@ -103,6 +100,25 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
 
     auto *A = Manifest.FindAutomaton(Loc);
     assert(A);
+
+    // Implement the assertion instrumentation.
+    const NowTransition *NowTrans;
+    Function *InstrFn;
+
+    for (const Transition* T : *A)
+      if (auto Now = dyn_cast<NowTransition>(T)) {
+        if (Now->Location() != Loc)
+          continue;
+
+        if (!(InstrFn = CreateInstrumentation(*A, *Now, M)))
+          report_fatal_error("error instrumenting NOW event");
+
+        NowTrans = Now;
+      }
+
+    if (!NowTrans)
+      report_fatal_error(
+        "TESLA: no 'now' event for location '" + ShortName(Loc) + "'");
 
     // Record named values that might be passed to instrumentation, such as
     // function parameters and StoreInst results in the current BasicBlock.
@@ -133,11 +149,12 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
       Args[Arg.index()] = Cast(V, Arg.name(), IntPtrTy, Builder);
     }
 
-    Builder.CreateCall(InstrumentationFn(*A, M), Args);
+    Builder.CreateCall(InstrFn, Args);
 
     // Delete the call to the assertion pseudo-function.
     Assert->removeFromParent();
     delete Assert;
+
   }
 
   AssertFn->removeFromParent();
@@ -147,43 +164,28 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
 }
 
 
-bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Manifest& Man,
-                                                        Module& M) {
-  bool ModifiedIR = false;
+Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
+    const Automaton& A, const NowTransition& T, Module& M) {
 
-  for (auto i : Man.AllAutomata()) {
-    const Identifier& ID = i.second->identifier();
-    auto *A = Man.FindAutomaton(ID);
-    assert(A && "mismatch between descriptions, automata in Manifest");
+  const AutomatonDescription& Descrip = A.getAssertion();
+  LLVMContext& Ctx = M.getContext();
 
-    ModifiedIR |= AddInstrumentation(*A, M);
-  }
+  const size_t ArgCount = Descrip.argument_size();
 
-  return ModifiedIR;
-}
+  Type *Void = Type::getVoidTy(Ctx);
+  Type *IntPtrTy = IntPtrType(M);
 
-bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const Automaton& A,
-                                                        Module& M) {
+  // NOW events only take arguments of type intptr_t.
+  std::vector<Type*> ArgTypes(ArgCount, IntPtrTy);
+  FunctionType *FnType = FunctionType::get(Void, ArgTypes, false);
+  string Name = (ASSERTION_REACHED + "_" + Twine(A.ID())).str();
+
+  Function *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, FnType));
+  assert(InstrFn != NULL && "instrumentation function not a Function!");
 
   string Message = ("[NOW]  automaton " + Twine(A.ID())).str();
-  BasicBlock *PrintfStub = CallPrintf(M, Message, InstrumentationFn(A, M));
-  IRBuilder<>(PrintfStub).CreateRetVoid();
-
-  for (const Transition* T : A)
-    if (auto *NowTrans = dyn_cast<NowTransition>(T))
-      if (!AddInstrumentation(*NowTrans, A, M))
-        report_fatal_error("error instrumenting NOW event");
-
-  return true;
-}
-
-
-bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
-                                                        const Automaton& A,
-                                                        Module& M) {
-
-  Function *InstrFn = InstrumentationFn(A, M);
-  LLVMContext& Ctx = InstrFn->getContext();
+  BasicBlock *Block = CallPrintf(M, Message, InstrFn);
+  IRBuilder<> Builder(Block);
 
   Type *IntType = Type::getInt32Ty(Ctx);
   Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);
@@ -192,17 +194,6 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
   // libtesla via a tesla_key: they are already in the right order.
   std::vector<Value*> InstrArgs;
   for (Value& Arg : InstrFn->getArgumentList()) InstrArgs.push_back(&Arg);
-
-  // The instrumentation function should always end in a RetVoid;
-  // assert this is so and then trim it so we can add new stuff.
-  auto& PreviousEndBlock = InstrFn->back();
-  assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
-  PreviousEndBlock.getTerminator()->eraseFromParent();
-
-  auto Block = BasicBlock::Create(Ctx, A.Name(), InstrFn);
-  IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
-
-  IRBuilder<> Builder(Block);
 
   auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
   IRBuilder<> ErrorHandler(Die);
@@ -240,7 +231,7 @@ bool TeslaAssertionSiteInstrumenter::AddInstrumentation(const NowTransition& T,
 
   Builder.CreateCondBr(Error, Exit, Die);
 
-  return true;
+  return InstrFn;
 }
 
 
@@ -282,28 +273,6 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
   }
 
   Loc->set_counter(Count->getLimitedValue(INT_MAX));
-}
-
-
-Function* TeslaAssertionSiteInstrumenter::InstrumentationFn(
-    const Automaton& A, Module& M) {
-
-  const AutomatonDescription& Descrip = A.getAssertion();
-  const size_t ArgCount = Descrip.argument_size();
-
-  Type *Void = Type::getVoidTy(M.getContext());
-  Type *IntPtrTy = IntPtrType(M);
-
-  // NOW events only take arguments of type intptr_t.
-  std::vector<Type*> ArgTypes(ArgCount, IntPtrTy);
-
-  FunctionType *FnType = FunctionType::get(Void, ArgTypes, false);
-  string Name = (ASSERTION_REACHED + "_" + Twine(A.ID())).str();
-
-  Function *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, FnType));
-  assert(InstrFn != NULL && "instrumentation function not a Function!");
-
-  return InstrFn;
 }
 
 }
