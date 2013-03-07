@@ -38,7 +38,7 @@ tesla:
 #
 
 # Just in case TESLA isn't installed to /usr/local:
-CFLAGS+=	-I ../include/tesla
+CFLAGS+=	-I ../include
 LIBS+=		-L ${BUILD_DIR}/libtesla/src
 
 # For some reason, setting PATH interoperates poorly with the Bourne shell (sh):
