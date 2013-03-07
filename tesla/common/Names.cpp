@@ -119,9 +119,14 @@ bool tesla::operator == (const Location& x, const Location& y) {
 
 bool tesla::operator < (const Location& x, const Location& y) {
   // Again, don't trust operator<(string&,string&) because of NULL funniness.
-  return ((strcmp(x.filename().c_str(), y.filename().c_str()) < 0)
-          || (x.line() < y.line())
-          || (x.counter() < y.counter()));
+  int cmp = strcmp(x.filename().c_str(), y.filename().c_str());
+  if (cmp < 0) return true;
+  if (cmp > 0) return false;
+
+  if (x.line() < y.line()) return true;
+  if (x.line() > y.line()) return false;
+
+  return (x.counter() < y.counter());
 }
 
 
