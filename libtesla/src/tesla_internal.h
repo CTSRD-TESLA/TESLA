@@ -50,7 +50,7 @@
 #include <string.h>
 #endif
 
-#include <tesla/libtesla.h>
+#include <libtesla.h>
 
 //! Is @ref x a subset of @ref y?
 #define	SUBSET(x,y) ((x & y) == x)

@@ -29,7 +29,7 @@
  * SUCH DAMAGE.
  */
 
-#include <tesla/libtesla.h>
+#include <libtesla.h>
 
 #include "Automaton.h"
 #include "Instrumentation.h"

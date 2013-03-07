@@ -1,6 +1,6 @@
 /** @file match.c  Tests automata key matching. */
 
-#include <tesla/libtesla.h>
+#include <libtesla.h>
 
 #include <assert.h>
 #include <err.h>

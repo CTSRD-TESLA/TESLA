@@ -39,7 +39,7 @@
 
 #include "tesla.pb.h"
 
-#include <tesla/libtesla.h>
+#include <libtesla.h>
 
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
