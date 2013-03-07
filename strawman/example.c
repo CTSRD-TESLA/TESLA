@@ -33,6 +33,7 @@
 #include "tesla-macros.h"
 
 #include <assert.h>
+#include <openssl/des.h>
 
 #define previously_in_syscall(x)    since(called(example_syscall), x)
 #define eventually_in_syscall(x)    before(returned(example_syscall), x)
@@ -90,10 +91,17 @@ example_syscall(struct credential *cred, int index, int op)
 	if (error != 0)
 		return (error);
 
+	des_cblock		des_key;
+	des_key_schedule	key_schedule;
+
+	crypto_setup(&des_key, &key_schedule);
+
 	if ((error = security_check(cred, o, op))) return error;
 	some_helper(op);
 	void_helper(o);
 	perform_operation(op, o);
+
+	crypto_encrypt(&des_key, &key_schedule);
 
 	release(o);
 

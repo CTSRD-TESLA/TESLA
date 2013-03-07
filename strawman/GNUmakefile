@@ -14,13 +14,13 @@ CC=		clang
 LINK=		clang
 
 REVISION:=	$(shell ./revision.sh)
-CFLAGS+=	-Wall -Werror -D TESLA -D REVISION="${REVISION}"
-LIBS+=		-l tesla
+CFLAGS+=	-Wall -D TESLA -D REVISION="${REVISION}"
+LIBS+=		-l crypto -l tesla
 
 BIN=		demo
 
 # tesla.mk will create OBJS for instrumented .o files from SRCS and IR.
-SRCS=	example.c support.c main.c
+SRCS=	crypto.c example.c support.c main.c
 IR=	handcoded.ll
 
 

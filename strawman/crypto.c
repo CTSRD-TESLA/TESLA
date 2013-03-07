@@ -1,6 +1,5 @@
-/** @file demo.h    Declarations of demo structs, functions. */
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -29,40 +28,30 @@
  * SUCH DAMAGE.
  */
 
-#ifndef	DEMO_H
-#define	DEMO_H
+#include "demo.h"
+#include "tesla-macros.h"
 
-#include <assert.h>
-#include <openssl/des.h>
 
-struct object {
-	int	refcount;
-};
+int
+crypto_setup(const_DES_cblock *key, DES_key_schedule *schedule)
+{
+	// error: Ought to be checking return values! What if it's a weak
+	//        key (represented by retval -2)?
+	DES_set_key(key, schedule);
 
-struct credential {};
+	return 0;
+}
 
-/*
- * Note: these examples aren't actually thread-safe!
- */
-int get_object(int index, struct object **o);
-void hold(struct object *o);
-void release(struct object *o);
+int
+crypto_encrypt(const_DES_cblock *key, DES_key_schedule *schedule)
+{
+#ifdef TESLA
+	TESLA_PERTHREAD(
+		since(called(example_syscall),
+		      DES_set_key(key, schedule) == 1)
+	);
+#endif
 
-int security_check(struct credential *subject, struct object *object, int op);
-int log_audit_record(struct object *object, int op);
-
-int example_syscall(struct credential *cred, int index, int op);
-int some_helper(int op);
-void void_helper(struct object *object);
-
-int crypto_setup(const_DES_cblock *key, DES_key_schedule *schedule);
-int crypto_encrypt(const_DES_cblock *key, DES_key_schedule *schedule);
-
-/**
- * Assists in testing '||':
- * previously(foo) -> previously(foo || called(never_actually_called)).
- */
-void never_actually_called(void);
-
-#endif	/* !DEMO_H */
+	return 0;
+}
 
