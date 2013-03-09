@@ -24,7 +24,7 @@ if [ "$TESLA_BUILD_DIR" != "" ]; then
 
   export PATH="$TESLA_BUILD_DIR/tesla/analyser:$TESLA_BUILD_DIR/tesla/instrumenter:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
 else
-  export PATH=$(dirname $0)
+  export PATH="$(dirname $0):$PATH"
 fi
 
 tesla-$*
