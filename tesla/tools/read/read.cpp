@@ -49,15 +49,23 @@ cl::opt<string> ManifestName(cl::desc("[manifest file]"),
                              cl::Positional, cl::Optional);
 
 enum Command {
-  ListFunctions
+  ListAutomata
 };
 
 cl::opt<Command> UserCommand(cl::desc("Command to execute"), cl::Required,
   cl::values(
-    clEnumValN(ListFunctions, "list-functions",
-               "List functions that require instrumentation"),
+    clEnumValN(ListAutomata, "list-automata",
+               "Print short string representation of all automata"),
     clEnumValEnd)
 );
+
+cl::opt<Automaton::Type> Determinism(cl::desc("automata determinism:"),
+      cl::values(
+        clEnumValN(Automaton::Unlinked,      "u", "unlinked NFA"),
+        clEnumValN(Automaton::Linked,        "l", "linked NFA"),
+        clEnumValN(Automaton::Deterministic, "d", "DFA"),
+        clEnumValEnd),
+      cl::init(Automaton::Unlinked));
 
 int
 main(int argc, char *argv[]) {
@@ -77,16 +85,12 @@ main(int argc, char *argv[]) {
   }
 
   switch (UserCommand) {
-  case ListFunctions:
-    for (auto& Fn : Manifest->FunctionsToInstrument()) {
-      assert(Fn.has_function());
-      auto Name = Fn.function().name();
+  case ListAutomata:
+    for (auto i : Manifest->AllAutomata()) {
+      auto ID = i.first;
 
-      out
-        << "Function '" << Name << "':\n  "
-        << Fn.ShortDebugString()
-        << "\n\n"
-        ;
+      auto *A = Manifest->FindAutomaton(ID, Determinism);
+      out << A->String() << "\n\n";
     }
     break;
   }

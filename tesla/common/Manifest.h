@@ -68,9 +68,6 @@ public:
   const Automaton* FindAutomaton(const Location&,
       Automaton::Type = Automaton::Deterministic) const;
 
-  //! Returns a copy of all function events named in this manifest.
-  std::vector<FunctionEvent> FunctionsToInstrument();
-
   //! Load a @ref Manifest from a named file.
   static Manifest* load(llvm::raw_ostream& Err,
                         llvm::StringRef Path = defaultLocation());

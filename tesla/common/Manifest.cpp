@@ -161,18 +161,6 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
 StringRef Manifest::defaultLocation() { return ManifestName; }
 
 
-vector<FunctionEvent> Manifest::FunctionsToInstrument() {
-  vector<FunctionEvent> FnEvents;
-
-  for (auto i : Descriptions) {
-    auto SubEvents = FunctionsToInstrument(i.second->expression());
-    FnEvents.insert(FnEvents.end(), SubEvents.begin(), SubEvents.end());
-  }
-
-  return FnEvents;
-}
-
-
 vector<FunctionEvent> Manifest::FunctionsToInstrument(const Expression& Ex) {
   vector<FunctionEvent> Events;
 
