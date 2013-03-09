@@ -175,11 +175,13 @@ message Argument {
   required Type type = 1;
 
   /**
-   * An index within an automaton.
+   * An index for the variable within an automaton.
    *
    * For instance, if an assertion refers to foo(x,y) and bar(y,z), the
    * arguments to foo are [0,1] within the automata and the arguments to bar
    * are [1,2].
+   *
+   * Only applicable when type == Variable.
    */
   optional int32 index = 2;
 
@@ -189,7 +191,7 @@ message Argument {
   /** A type-specific representation of the expected value (for debugging). */
   optional string value = 4;
 
-  /** The integer value.  For constants, this will be present instead of index. */
+  /** The integer value. */
   optional int64 int_value = 5;
 }
 
