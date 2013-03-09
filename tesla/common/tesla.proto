@@ -153,11 +153,14 @@ message FieldAssignment {
   /** The name of the structure. */
   required string type = 1;
 
+  /** The base of the member being assigned to: the struct. */
+  required Argument base = 3;
+
   /** The index of the field within the struct. */
   required int32 index = 2;
 
-  /** The base of the member being assigned to: the struct. */
-  required Argument base = 3;
+  /** The name of the struct field being assigned to. */
+  required string fieldName = 6;
 
   /** The kind of assignment (e.g. '+='). */
   required AssignType operation = 4;

@@ -556,6 +556,7 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O) {
   }
 
   A->set_index(Member->getFieldIndex());
+  A->set_fieldname(Member->getName());
 
   return Parse(A->mutable_base(), Base, false)
       && Parse(A->mutable_value(), O->getRHS());

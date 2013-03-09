@@ -256,9 +256,9 @@ FieldAssignTransition::FieldAssignTransition(const State& From, const State& To,
 
 string FieldAssignTransition::ShortLabel() const {
   return (Twine()
-    + Assign.type()
-    + "."
     + ShortName(Assign.base())
+    + "."
+    + Assign.fieldname()
     + " "
     + OpString(Assign.operation())
     + " "
@@ -267,7 +267,16 @@ string FieldAssignTransition::ShortLabel() const {
 }
 
 string FieldAssignTransition::DotLabel() const {
-  return ShortLabel();
+  return (Twine()
+    + "struct " + Assign.type() + ":\\l"
+    + ShortName(Assign.base())
+    + "."
+    + Assign.fieldname()
+    + " "
+    + OpString(Assign.operation())
+    + " "
+    + ShortName(Assign.value())
+  ).str();
 }
 
 const char* FieldAssignTransition::OpString(FieldAssignment::AssignType T) {
