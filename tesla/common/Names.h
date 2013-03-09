@@ -63,10 +63,16 @@ const std::string INSTR_BASE        = TESLA_BASE + "instrumentation_";
 const std::string CALL              = INSTR_BASE + "call";
 const std::string RETURN            = INSTR_BASE + "return";
 
-const std::string CALLEE_ENTER      = INSTR_BASE + "callee_enter_";
-const std::string CALLEE_LEAVE      = INSTR_BASE + "callee_return_";
-const std::string CALLER_ENTER      = INSTR_BASE + "caller_enter_";
-const std::string CALLER_LEAVE      = INSTR_BASE + "caller_return_";
+const std::string CALLEE            = "callee_";
+const std::string CALLER            = "caller_";
+
+const std::string ENTER             = "enter_";
+const std::string EXIT              = "return_";
+
+const std::string CALLEE_ENTER      = INSTR_BASE + CALLEE + ENTER;
+const std::string CALLEE_LEAVE      = INSTR_BASE + CALLEE + EXIT;
+const std::string CALLER_ENTER      = INSTR_BASE + CALLER + ENTER;
+const std::string CALLER_LEAVE      = INSTR_BASE + CALLER + EXIT;
 
 const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 
