@@ -49,8 +49,7 @@ std::string tesla::ArgString(const Argument& A) {
       + Twine(A.index())
       + "('"
       + A.name()
-      + "'):"
-      + A.value()
+      + "')"
     ).str();
 
   case Argument::Any:

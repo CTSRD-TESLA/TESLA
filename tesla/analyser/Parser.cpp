@@ -597,7 +597,7 @@ bool Parser::Parse(Argument *Arg, const Expr *E) {
 
   } else if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Arg->set_type(Argument::Constant);
-    Arg->set_int_value(ConstValue.getSExtValue());
+    Arg->set_value(ConstValue.getSExtValue());
 
     SourceLocation Loc = P->getLocStart();
     if (Loc.isMacroID())

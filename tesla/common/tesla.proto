@@ -188,10 +188,7 @@ message Argument {
   /** The name of the referenced variable (if applicable, for debugging). */
   optional string name = 3;
 
-  /** A type-specific representation of the expected value (for debugging). */
-  optional string value = 4;
-
   /** The integer value. */
-  optional int64 int_value = 5;
+  optional int64 value = 5;
 }
 
