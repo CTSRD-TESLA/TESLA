@@ -98,37 +98,25 @@ bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
   return ModifiedIR;
 }
 
-CalleeInstrumentation* CalleeInstrumentation::Build(
-  LLVMContext &Context, Module &M, StringRef FnName,
-  FunctionEvent::Direction Dir)
-{
-  Function *Fn = M.getFunction(FnName);
-  if (Fn == NULL) return NULL;
+CalleeInstrumentation*
+    CalleeInstrumentation::Build(Module& M, const FnTransition& FnTrans) {
 
-  // Instrumentation functions do not return.
-  Type *VoidTy = Type::getVoidTy(Context);
+  auto FnEvent = FnTrans.FnEvent();
+  auto FnRef = FnEvent.function();
+  StringRef Name = FnRef.name();
+  Function *Fn = M.getFunction(Name);
 
-  // Get the argument types of the function to be instrumented.
-  TypeVector ArgTypes;
-  for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
+  Function *Entry = NULL;
+  Function *Return = NULL;
 
-  // Declare or retrieve instrumentation functions.
-  string Name = (CALLEE_ENTER + FnName).str();
-  auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
-  Function *Entry = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-  assert(Entry != NULL);
+  if (Fn) {
+    auto Context = FunctionEvent::Callee;
 
-  // Instrumentation of returns must include the returned value...
-  TypeVector RetTypes(ArgTypes);
-  if (!Fn->getReturnType()->isVoidTy())
-    RetTypes.push_back(Fn->getReturnType());
+    Entry = FunctionInstrumentation(M, *Fn, FunctionEvent::Entry, Context);
+    Return = FunctionInstrumentation(M, *Fn, FunctionEvent::Exit, Context);
+  }
 
-  Name = (CALLEE_LEAVE + FnName).str();
-  InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
-  Function *Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-  assert(Return != NULL);
-
-  return new CalleeInstrumentation(Fn, Entry, Return, Dir);
+  return new CalleeInstrumentation(Fn, Entry, Return, FnEvent.direction());
 }
 
 CalleeInstrumentation::CalleeInstrumentation(
@@ -156,44 +144,32 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
 
   bool ModifiedIR = false;
 
-  for (auto& Fn : Manifest->FunctionsToInstrument()) {
-    if (!Fn.context() & FunctionEvent::Callee) continue;
-
-    assert(Fn.has_function());
-    auto Name = Fn.function().name();
-
-    // If we've already defined the instrumentation, just record the direction.
-    auto *Existing = FunctionsToInstrument[Name];
-    if (Existing) {
-      Existing->AddDirection(Fn.direction());
-      continue;
-    }
-
-    // Define the instrumentation functions that receive this function's events.
-    //
-    // Note: this is not necessarily the same as "the functions whose calls are
-    //       instrumented within this module".
-    DefineInstrumentationFunctions(M, Name);
-
-    FunctionsToInstrument[Name] =
-      CalleeInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
-
-    ModifiedIR = true;
-  }
-
-  // Create code to receive events and translate them to the automata language.
   for (auto i : Manifest->AllAutomata()) {
-    const Identifier& ID = i.second->identifier();
-    auto *A = Manifest->FindAutomaton(ID, Automaton::Deterministic);
+    auto A = *Manifest->FindAutomaton(i.first);
+    for (auto T : A) {
+      auto FnTrans = dyn_cast<FnTransition>(T);
+      if (!FnTrans)
+        continue;
 
-    assert(A && "failed to parse (deterministic) assertion");
+      auto FnEvent = FnTrans->FnEvent();
+      StringRef Name = FnEvent.function().name();
 
-    const Automaton& Automaton = *A;
-    assert(Automaton.IsRealisable());
+      // Only build instrumentation for this module's functions.
+      Function *Target = M.getFunction(Name);
+      if (!Target || Target->empty())
+        continue;
 
-    for (const Transition* T : Automaton)
-      if (auto *FnTrans = dyn_cast<FnTransition>(T))
-        ModifiedIR |= AddInstrumentation(*FnTrans, *A, M);
+      // If instrumentation is already defined, just record the direction.
+      auto *Existing = FunctionsToInstrument[Name];
+      if (Existing) {
+        Existing->AddDirection(FnEvent.direction());
+        continue;
+      }
+
+      FunctionsToInstrument[Name] = CalleeInstrumentation::Build(M, *FnTrans);
+
+      ModifiedIR = true;
+    }
   }
 
   return ModifiedIR;
@@ -211,47 +187,6 @@ bool TeslaCalleeInstrumenter::runOnFunction(Function &F) {
   modifiedIR |= FnInstrumenter->InstrumentReturn(F);
 
   return modifiedIR;
-}
-
-void TeslaCalleeInstrumenter::DefineInstrumentationFunctions(
-    Module& Mod, StringRef Name) {
-  // Only instrument functions that are defined in this module.
-  Function *Subject = Mod.getFunction(Name);
-  if (!Subject || Subject->getBasicBlockList().empty()) return;
-
-  LLVMContext& Ctx = Mod.getContext();
-
-  Type *Void = Type::getVoidTy(Ctx);
-  FunctionType *SubType = Subject->getFunctionType();
-
-  // Entry instrumentation mirrors the instrumented function exactly.
-  TypeVector EntryArgs(SubType->param_begin(), SubType->param_end());
-  auto *EntryType = FunctionType::get(Void, EntryArgs, SubType->isVarArg());
-
-  // Return instrumentation also includes the return value (if applicable).
-  TypeVector ExitArgs(SubType->param_begin(), SubType->param_end());
-  Type *RetType = Subject->getReturnType();
-  if (!RetType->isVoidTy()) ExitArgs.push_back(Subject->getReturnType());
-  auto *ExitType = FunctionType::get(Void, ExitArgs, SubType->isVarArg());
-
-  // Create the (empty) instrumentation functions.
-  auto *CalleeEnter = cast<Function>(Mod.getOrInsertFunction(
-      (CALLEE_ENTER + Name).str(), EntryType));
-
-  auto *CalleeExit = cast<Function>(Mod.getOrInsertFunction(
-      (CALLEE_LEAVE + Name).str(), ExitType));
-
-  auto *CallerEnter = cast<Function>(Mod.getOrInsertFunction(
-      (CALLER_ENTER + Name).str(), EntryType));
-
-  auto *CallerExit = cast<Function>(Mod.getOrInsertFunction(
-      (CALLER_LEAVE + Name).str(), ExitType));
-
-  // For now, these functions should all just call printf.
-  IRBuilder<>(CallPrintf(Mod, "[CALE] " + Name, CalleeEnter)).CreateRetVoid();
-  IRBuilder<>(CallPrintf(Mod, "[RETE] " + Name, CalleeExit)).CreateRetVoid();
-  IRBuilder<>(CallPrintf(Mod, "[CALR] " + Name, CallerEnter)).CreateRetVoid();
-  IRBuilder<>(CallPrintf(Mod, "[RETR] " + Name, CallerExit)).CreateRetVoid();
 }
 
 } /* namespace tesla */

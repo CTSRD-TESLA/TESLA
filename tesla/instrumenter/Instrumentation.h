@@ -126,15 +126,10 @@ llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
 llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
                                      llvm::ArrayRef<llvm::Constant*>);
 
-/**
- * Convert a TESLA function state transition into instrumentation code.
- *
- * @param  T     the transition in a TESLA automaton
- * @param  A     the TESLA automaton
- * @param  M     the module containing the instrumentation functions.
- */
-bool AddInstrumentation(const FnTransition& T, const Automaton& A,
-                        llvm::Module& M);
+//! Find (or create) one function-event instrumentation function.
+llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,
+                                        FunctionEvent::Direction,
+                                        FunctionEvent::CallContext);
 
 }
 

@@ -32,6 +32,7 @@
 #include "Caller.h"
 #include "Manifest.h"
 #include "Names.h"
+#include "Transition.h"
 
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IRBuilder.h"
@@ -50,37 +51,19 @@ void CallerInstrumentation::AddDirection(FunctionEvent::Direction Dir) {
   this->Dir = static_cast<FunctionEvent::Direction>(this->Dir | Dir);
 }
 
-CallerInstrumentation* CallerInstrumentation::Build(
-  LLVMContext &Context, Module &M, StringRef FnName,
-  FunctionEvent::Direction Dir)
-{
+CallerInstrumentation*
+    CallerInstrumentation::Build(Module& M, const FunctionEvent& Ev) {
+
+  StringRef FnName = Ev.function().name();
+
   Function *Fn = M.getFunction(FnName);
   if (Fn == NULL) return NULL;
 
-  // Instrumentation functions do not return.
-  Type *VoidTy = Type::getVoidTy(Context);
+  auto C = FunctionEvent::Caller;
+  Function *Call = FunctionInstrumentation(M, *Fn, FunctionEvent::Entry, C);
+  Function *Return = FunctionInstrumentation(M, *Fn, FunctionEvent::Exit, C);
 
-  // Get the argument types of the function to be instrumented.
-  TypeVector ArgTypes;
-  for (auto &Arg : Fn->getArgumentList()) ArgTypes.push_back(Arg.getType());
-
-  // Declare or retrieve instrumentation functions.
-  string Name = (CALLER_ENTER + FnName).str();
-  auto InstrType = FunctionType::get(VoidTy, ArgTypes, Fn->isVarArg());
-  Function *Call = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-  assert(Call != NULL);
-
-  // Instrumentation of returns must include the returned value...
-  TypeVector RetTypes(ArgTypes);
-  if (!Fn->getReturnType()->isVoidTy())
-    RetTypes.push_back(Fn->getReturnType());
-
-  Name = (CALLER_LEAVE + FnName).str();
-  InstrType = FunctionType::get(VoidTy, RetTypes, Fn->isVarArg());
-  Function *Return = cast<Function>(M.getOrInsertFunction(Name, InstrType));
-  assert(Return != NULL);
-
-  return new CallerInstrumentation(Call, Return, Dir);
+  return new CallerInstrumentation(Call, Return, Ev.direction());
 }
 
 CallerInstrumentation::CallerInstrumentation(
@@ -129,16 +112,24 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
   OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
   if (!Manifest) return false;
 
-  for (auto& Fn : Manifest->FunctionsToInstrument()) {
-    if (!Fn.context() & FunctionEvent::Caller) continue;
+  for (auto i : Manifest->AllAutomata()) {
+    auto A = Manifest->FindAutomaton(i.second->identifier(), Automaton::Deterministic);
 
-    auto Name = Fn.function().name();
-    auto *Existing = FunctionsToInstrument[Name];
+    for (auto T : *A) {
+      if (auto *FnTrans = dyn_cast<FnTransition>(T)) {
+        auto Ev = FnTrans->FnEvent();
 
-    if (Existing) Existing->AddDirection(Fn.direction());
-    else
-      FunctionsToInstrument[Name] =
-        CallerInstrumentation::Build(M.getContext(), M, Name, Fn.direction());
+        if (Ev.context() == FunctionEvent::Callee)
+          continue;
+
+        auto Name = Ev.function().name();
+        auto *Existing = FunctionsToInstrument[Name];
+
+        if (Existing) Existing->AddDirection(Ev.direction());
+        else
+          FunctionsToInstrument[Name] = CallerInstrumentation::Build(M, Ev);
+      }
+    }
   }
 
   return false;

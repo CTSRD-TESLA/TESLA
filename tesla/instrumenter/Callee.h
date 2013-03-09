@@ -66,9 +66,6 @@ public:
   virtual bool runOnFunction(llvm::Function &F);
 
 private:
-  static void DefineInstrumentationFunctions(llvm::Module&,
-                                             llvm::StringRef FnName);
-
   llvm::StringMap<CalleeInstrumentation*> FunctionsToInstrument;
 };
 
@@ -77,11 +74,7 @@ private:
 class CalleeInstrumentation {
 public:
   /// Construct an object that can instrument a given function.
-  static CalleeInstrumentation* Build(llvm::LLVMContext &Context,
-                                      llvm::Module &M,
-                                      llvm::StringRef FnName,
-                                      FunctionEvent::Direction Dir
-                                     );
+  static CalleeInstrumentation* Build(llvm::Module&, const FnTransition&);
 
   /// Instrument a (possibly new) direction (entry, exit, both).
   void AddDirection(FunctionEvent::Direction);

@@ -75,11 +75,7 @@ class CallerInstrumentation : public InstInstrumentation
 {
 public:
   /// Construct an object that can instrument a given function.
-  static CallerInstrumentation* Build(llvm::LLVMContext &Context,
-                                      llvm::Module &M,
-                                      llvm::StringRef FnName,
-                                      FunctionEvent::Direction Dir
-                                     );
+  static CallerInstrumentation* Build(llvm::Module&, const FunctionEvent&);
 
   /// Instrument a (possibly new) direction (entry, exit, both).
   void AddDirection(FunctionEvent::Direction);

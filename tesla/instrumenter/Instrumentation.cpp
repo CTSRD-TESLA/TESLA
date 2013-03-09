@@ -49,20 +49,6 @@ using std::vector;
 
 namespace tesla {
 
-//! Find all functions within a module that will be notified of a Fn event.
-llvm::SmallVector<llvm::Function*,3>
-  FindInstrumentation(const FunctionEvent&, llvm::Module&);
-
-/**
- * Find the function within a given module that receives instrumentation events
- * of a given type.
- *
- * @returns  NULL if no such function exists yet
- */
-llvm::Function *FindInstrumentationFn(llvm::Module& M, llvm::StringRef Name,
-                                      FunctionEvent::Direction Dir,
-                                      FunctionEvent::CallContext Ctx);
-
 /**
  * Map instrumentation arguments into a @ref tesla_key that can be used to
  * look up automata.
@@ -112,6 +98,61 @@ const char* Format(Type *T) {
 }
 
 } /* namespace tesla */
+
+
+Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
+                                         FunctionEvent::Direction Dir,
+                                         FunctionEvent::CallContext Context) {
+
+  LLVMContext& Ctx = Mod.getContext();
+
+  // We should only be looking for a single instrumentation function.
+  assert(Dir != FunctionEvent::EntryAndExit);
+  assert(Context != FunctionEvent::CallerAndCallee);
+
+  string Name = (Twine()
+    + INSTR_BASE
+    + ((Context == FunctionEvent::Callee) ? CALLEE : CALLER)
+    + ((Dir == FunctionEvent::Entry) ? ENTER : EXIT)
+    + Subject.getName()
+  ).str();
+
+  string Tag = (Twine()
+    + "["
+    + ((Dir == FunctionEvent::Entry) ? "CAL" : "RET")
+    + ((Context == FunctionEvent::Callee) ? "E" : "R")
+    + "] "
+  ).str();
+
+
+  // Build the instrumentation function's type.
+  FunctionType *SubType = Subject.getFunctionType();
+  TypeVector Args(SubType->param_begin(), SubType->param_end());
+
+  if (Dir == FunctionEvent::Exit) {
+    Type *RetType = Subject.getReturnType();
+    if (!RetType->isVoidTy())
+      Args.push_back(RetType);
+  }
+
+  Type *Void = Type::getVoidTy(Ctx);
+  FunctionType *InstrType = FunctionType::get(Void, Args, SubType->isVarArg());
+
+
+  // Find (or build) the instrumentation function.
+  auto *InstrFn = dyn_cast<Function>(Mod.getOrInsertFunction(Name, InstrType));
+  assert(InstrFn != NULL);
+
+  if (Context == FunctionEvent::Caller)
+    InstrFn->setLinkage(GlobalValue::PrivateLinkage);
+
+  // TODO: this output is just temporary.
+  if (InstrFn->empty())
+    IRBuilder<>(CallPrintf(Mod, Tag + Subject.getName(), InstrFn))
+      .CreateRetVoid();
+
+  return InstrFn;
+}
 
 
 Type* tesla::IntPtrType(Module& M) {
@@ -242,159 +283,6 @@ Function* tesla::FindDieFn(Module& M) {
 
   assert(isa<Function>(Fn));
   return cast<Function>(Fn);
-}
-
-
-SmallVector<Function*,3>
-  tesla::FindInstrumentation(const FunctionEvent& FnEvent, Module& M) {
-
-  // Find existing instrumentation stubs.
-  SmallVector<FunctionEvent::CallContext,2> Contexts;
-  if (FnEvent.context() == FunctionEvent::CallerAndCallee) {
-    Contexts.push_back(FunctionEvent::Callee);
-    Contexts.push_back(FunctionEvent::Caller);
-  } else {
-    Contexts.push_back(FnEvent.context());
-  }
-
-  SmallVector<FunctionEvent::Direction,2> Directions;
-  if (FnEvent.direction() == FunctionEvent::EntryAndExit) {
-    Directions.push_back(FunctionEvent::Entry);
-    Directions.push_back(FunctionEvent::Exit);
-  } else {
-    Directions.push_back(FnEvent.direction());
-  }
-
-  SmallVector<Function*,3> ToInstrument;
-  for (auto C : Contexts)
-    for (auto D : Directions)
-      ToInstrument.push_back(
-        FindInstrumentationFn(M, FnEvent.function().name(), D, C));
-
-  return ToInstrument;
-}
-
-Function* tesla::FindInstrumentationFn(Module& M, StringRef Name,
-                                       FunctionEvent::Direction Dir,
-                                       FunctionEvent::CallContext Ctx) {
-
-  StringRef Prefix;
-  switch (Ctx) {
-  default:
-    // We don't accept e.g. (Entry | Exit); we're looking for one function.
-    assert(false && "Bad CallContext passed to FindInstrumentationFn");
-    break;
-
-  case FunctionEvent::Callee:
-    switch (Dir) {
-      default: assert(false && "Unhandled FunctionEvent::Direction");
-      case FunctionEvent::Entry:  Prefix = CALLEE_ENTER; break;
-      case FunctionEvent::Exit:   Prefix = CALLEE_LEAVE; break;
-    }
-    break;
-
-  case FunctionEvent::Caller:
-    switch (Dir) {
-      default: assert(false && "Unhandled FunctionEvent::Direction");
-      case FunctionEvent::Entry:  Prefix = CALLER_ENTER; break;
-      case FunctionEvent::Exit:   Prefix = CALLER_LEAVE; break;
-    }
-    break;
-  }
-
-  return M.getFunction((Prefix + Name).str());
-}
-
-
-bool tesla::AddInstrumentation(const FnTransition& T, const Automaton& A,
-                               Module& M) {
-
-  auto& FnEvent = T.FnEvent();
-  auto& Fn = FnEvent.function();
-
-  // Only build instrumentation for functions defined in this module.
-  Function *F = M.getFunction(Fn.name());
-  if (!F || (F->getBasicBlockList().empty()))
-    return false;
-
-  Type* IntType = Type::getInt32Ty(M.getContext());
-
-  for (Function *InstrFn : FindInstrumentation(FnEvent, M)) {
-    assert(InstrFn != NULL);
-    LLVMContext& Ctx = InstrFn->getContext();
-
-    // The instrumentation function should always end in a RetVoid;
-    // assert this is so and then trim it so we can add new stuff.
-    // FIXME: This relies on an invariant (basic block ordering) that is NOT
-    // guaranteed and is liable to change!
-    auto& PreviousEndBlock = InstrFn->back();
-    assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
-    PreviousEndBlock.getTerminator()->eraseFromParent();
-
-    auto Block = BasicBlock::Create(Ctx, A.Name(), InstrFn);
-    IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
-
-    IRBuilder<> Builder(Block);
-
-    auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
-    IRBuilder<> ErrorHandler(Die);
-
-    auto *ErrMsg = ErrorHandler.CreateGlobalStringPtr(
-      "error in tesla_update_state() for automaton '" + A.Name() + "'");
-
-    ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
-    ErrorHandler.CreateRetVoid();
-
-    auto Next = BasicBlock::Create(Ctx, "next", InstrFn);
-    auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
-    IRBuilder<>(Exit).CreateRetVoid();
-
-    if (FnEvent.has_expectedreturnvalue()) {
-      const Argument &Arg = FnEvent.expectedreturnvalue();
-      if (Arg.type() == Argument::Constant) {
-        Value *ReturnVal = --(InstrFn->arg_end());
-        Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
-            Arg.int_value());
-        Builder.CreateCondBr(Builder.CreateICmpNE(ReturnVal,
-              ExpectedReturnVal), Exit, Next);
-        Builder.SetInsertPoint(Next);
-      }
-    }
-    if (Builder.GetInsertBlock() != Next) {
-      Next->removeFromParent();
-      delete Next;
-    }
-
-    Constant* TransArray[] = {
-      ConstructTransition(Builder, M,
-                          T.Source().ID(), T.Source().Mask(),
-                          T.Destination().ID())
-    };
-    ArrayRef<Constant*> TransRef(TransArray,
-                                 sizeof(TransArray) / sizeof(Constant*));
-
-    vector<Value*> Args;
-    Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
-    Args.push_back(ConstantInt::get(IntType, A.ID()));
-    Args.push_back(ConstructKey(Builder, M,
-                                InstrFn->getArgumentList(),
-                                T.FnEvent()));
-    Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
-    Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-    Args.push_back(ConstructTransitions(Builder, M, TransRef));
-
-    Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
-    assert(Args.size() == UpdateStateFn->arg_size());
-
-
-    Value *Error = Builder.CreateCall(UpdateStateFn, Args);
-    Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
-    Error = Builder.CreateICmpEQ(Error, NoError);
-
-    Builder.CreateCondBr(Error, Exit, Die);
-  }
-
-  return true;
 }
 
 
