@@ -17,15 +17,23 @@ if [ "$1" == "" ]; then
 fi
 
 if [ "$TESLA_BUILD_DIR" != "" ]; then
-  if [ ! -d "$TESLA_BUILD_DIR/tesla/analyser" ]; then
-    echo "No 'tesla/analyser' directory in \$TESLA_BUILD_DIR: $TESLA_BUILD_DIR"
-    exit 1
-  fi
-
-  export PATH="$TESLA_BUILD_DIR/tesla/analyser:$TESLA_BUILD_DIR/tesla/instrumenter:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
-else
-  export PATH="$(dirname $0):$PATH"
+	export PATH="$TESLA_BUILD_DIR/tesla/analyser:$TESLA_BUILD_DIR/tesla/instrumenter:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
 fi
+
+if [ "`which tesla-analyse`" == "" ]; then
+	echo "Unable to find TESLA tools in current PATH."
+
+	if [ "$TESLA_BUILD_DIR" == "" ]; then
+		echo "Try setting TESLA_BUILD_DIR?"
+	else
+		echo "TESLA_BUILD_DIR ('$TESLA_BUILD_DIR')" \
+			"does not contain TESLA binaries."
+	fi
+
+	exit 1
+fi
+
+echo $PATH
 
 tesla-$*
 
