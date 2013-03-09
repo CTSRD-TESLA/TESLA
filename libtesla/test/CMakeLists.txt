@@ -37,3 +37,14 @@ foreach(test ${TESTS})
 	endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 endforeach(test)
 
+
+add_custom_target(libtesla-test
+	COMMAND
+		llvm-lit -q
+		${CMAKE_SOURCE_DIR}/libtesla/test
+		--param=build_dir=${CMAKE_BINARY_DIR}
+		--param=source_dir=${CMAKE_SOURCE_DIR}
+	COMMENT "Testing libtesla")
+
+add_dependencies(libtesla-test tesla)
+

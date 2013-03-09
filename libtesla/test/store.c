@@ -1,6 +1,10 @@
 /**
  * @file store.c
  * Tests automata class storage.
+ *
+ * Commands for llvm-lit:
+ * RUN: clang %cflags %ldflags helpers.c %s -o %t
+ * RUN: %t
  */
 
 #include "tesla_internal.h"

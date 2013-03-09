@@ -1,3 +1,5 @@
+// RUN: true
+
 #include <execinfo.h>
 #include <signal.h>
 #include <stdio.h>

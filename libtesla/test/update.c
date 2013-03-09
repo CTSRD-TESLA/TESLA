@@ -10,6 +10,10 @@
  * automaton named (x,y,z).
  *
  * This test ensures that automata forking works correctly.
+ *
+ * Commands for llvm-lit:
+ * RUN: clang %cflags %ldflags helpers.c %s -o %t
+ * RUN: %t
  */
 
 #include "tesla_internal.h"
