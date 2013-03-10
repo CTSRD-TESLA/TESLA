@@ -1,4 +1,5 @@
 import glob
+import platform
 import os
 import subprocess
 import sys
@@ -8,8 +9,13 @@ import sys
 #
 # Excluded from CFLAGS, LDFLAGS, etc.
 #
-std_incdirs = [ '/usr/include', '/usr/local/include' ]
-std_libdirs = [ '/lib', '/usr/lib', '/usr/local/lib' ]
+if platform.system() == 'FreeBSD':
+	std_incdirs = [ '/usr/include' ]
+	std_libdirs = [ '/lib', '/usr/lib' ]
+else:
+	std_incdirs = [ '/usr/include', '/usr/local/include' ]
+	std_libdirs = [ '/lib', '/usr/lib', '/usr/local/lib' ]
+
 
 def cflags(dirs, defines = []):
 	return ' '.join([
@@ -17,11 +23,11 @@ def cflags(dirs, defines = []):
 		' '.join([ '-D %s' % d for d in defines ])
 	])
 
-def ldflags(dirs, libs):
+def ldflags(dirs, libs, extras = []):
 	return ' '.join([
 		' '.join([ '-L %s' % d for d in dirs if d not in std_libdirs ]),
 		' '.join([ '-l %s' % l for l in libs ])
-	])
+	] + extras)
 
 
 def find_containing_dir(filename, paths, notfound_msg):
