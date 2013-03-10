@@ -31,15 +31,21 @@
 
 #include "Automaton.h"
 #include "Callee.h"
+#include "Instrumentation.h"
 #include "Manifest.h"
 #include "Names.h"
+#include "State.h"
 #include "Transition.h"
 
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/InstIterator.h"
 #include "llvm/Support/raw_ostream.h"
+
+#include <libtesla.h>
 
 using namespace llvm;
 
@@ -48,94 +54,6 @@ using std::vector;
 
 namespace tesla {
 
-// ==== CalleeInstrumentation implementation ===================================
-void CalleeInstrumentation::AddDirection(FunctionEvent::Direction Dir) {
-  switch (Dir) {
-  case FunctionEvent::Entry:   In = true;    break;
-  case FunctionEvent::Exit:    Out = true;   break;
-  }
-}
-
-bool CalleeInstrumentation::InstrumentEntry(Function &Fn) {
-  if (&Fn != this->Fn) return false;
-  if (!In) return false;
-  assert(EntryEvent != NULL);
-
-  // Instrumenting function entry is easy: just add a new call to
-  // instrumentation at the beginning of the function's entry block.
-  BasicBlock& Entry = Fn.getEntryBlock();
-  CallInst::Create(EntryEvent, Args)->insertBefore(Entry.getFirstNonPHI());
-
-  return true;
-}
-
-bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
-  if (&Fn != this->Fn) return false;
-  if (!Out) return false;
-  assert(ReturnEvent != NULL);
-
-  bool ModifiedIR = false;
-
-  // First, build up the set of blocks that return from the function.
-  vector<BasicBlock*> ReturnBlocks;
-
-  // We explicitly iterate over BasicBlocks (rather than using an InstIterator)
-  // because we need the blocks themselves (later, we'll split them).
-  for (auto &Block : Fn) {
-    auto *Return = dyn_cast<ReturnInst>(Block.getTerminator());
-    if (Return) ReturnBlocks.push_back(&Block);
-  }
-
-  // Finally, instrument the returns.
-  for (auto *Block : ReturnBlocks) {
-    auto *Return = cast<ReturnInst>(Block->getTerminator());
-    Value *RetVal = Return->getReturnValue();
-
-    ArgVector InstrumentationArgs(Args);
-    if (RetVal) InstrumentationArgs.push_back(RetVal);
-
-    CallInst::Create(ReturnEvent, InstrumentationArgs)->insertBefore(Return);
-    ModifiedIR = true;
-  }
-
-  return ModifiedIR;
-}
-
-CalleeInstrumentation*
-    CalleeInstrumentation::Build(Module& M, const FnTransition& FnTrans) {
-
-  auto FnEvent = FnTrans.FnEvent();
-  auto FnRef = FnEvent.function();
-  StringRef Name = FnRef.name();
-  Function *Fn = M.getFunction(Name);
-
-  Function *Entry = NULL;
-  Function *Return = NULL;
-
-  if (Fn) {
-    auto Context = FunctionEvent::Callee;
-
-    Entry = FunctionInstrumentation(M, *Fn, FunctionEvent::Entry, Context);
-    Return = FunctionInstrumentation(M, *Fn, FunctionEvent::Exit, Context);
-  }
-
-  return new CalleeInstrumentation(Fn, Entry, Return, FnEvent.direction());
-}
-
-CalleeInstrumentation::CalleeInstrumentation(
-  Function *Fn, Function *Entry, Function *Return, FunctionEvent::Direction Dir)
-  : Fn(Fn), In(false), Out(false), EntryEvent(Entry), ReturnEvent(Return) {
-
-  // Record the arguments passed to the instrumented function.
-  //
-  // LLVM's SSA magic will keep these around for us until we need them, even if
-  // C code overwrites its parameters.
-  for (auto &Arg : Fn->getArgumentList()) Args.push_back(&Arg);
-
-  AddDirection(Dir);
-}
-
-
 // ==== CalleeInstrumenter implementation ======================================
 char TeslaCalleeInstrumenter::ID = 0;
 
@@ -143,7 +61,7 @@ TeslaCalleeInstrumenter::~TeslaCalleeInstrumenter() {
   google::protobuf::ShutdownProtobufLibrary();
 }
 
-bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
+bool TeslaCalleeInstrumenter::runOnModule(Module &M) {
   OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
   if (!Manifest) return false;
 
@@ -164,13 +82,8 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
       if (!Target || Target->empty())
         continue;
 
-      // If instrumentation is already defined, just record the direction.
-      auto *Existing = FunctionsToInstrument[Name];
-      if (Existing)
-        Existing->AddDirection(FnEvent.direction());
-
-      else
-        FunctionsToInstrument[Name] = CalleeInstrumentation::Build(M, *FnTrans);
+      auto *FnInstr = GetOrCreateInstr(M, Target, FnEvent.direction());
+      FnInstr->AppendInstrumentation(A, *FnTrans);
 
       ModifiedIR = true;
     }
@@ -179,18 +92,169 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
   return ModifiedIR;
 }
 
-bool TeslaCalleeInstrumenter::runOnFunction(Function &F) {
-  auto I = FunctionsToInstrument.find(F.getName());
-  if (I == FunctionsToInstrument.end()) return false;
 
-  auto *FnInstrumenter = I->second;
-  assert(FnInstrumenter != NULL);
+FunctionInstr* TeslaCalleeInstrumenter::GetOrCreateInstr(
+    Module& M, Function *F, FunctionEvent::Direction Dir) {
 
-  bool modifiedIR = false;
-  modifiedIR |= FnInstrumenter->InstrumentEntry(F);
-  modifiedIR |= FnInstrumenter->InstrumentReturn(F);
+  assert(F != NULL);
+  StringRef Name = F->getName();
 
-  return modifiedIR;
+  auto& Map = (Dir == FunctionEvent::Entry) ? Entry : Exit;
+  FunctionInstr *Instr = Map[Name];
+  if (!Instr)
+    Instr = Map[Name] = FunctionInstr::Build(M, F, Dir);
+
+  return Instr;
+}
+
+
+
+// ==== FunctionInstr implementation ===========================================
+FunctionInstr* FunctionInstr::Build(Module& M, Function *Target,
+                                    FunctionEvent::Direction Dir) {
+
+  // Find (or create) the instrumentation function.
+  // Note: it doesn't yet contain the code to translate events and
+  //       dispatch them to tesla_update_state().
+  Function *InstrFn = FunctionInstrumentation(M, *Target, Dir,
+                                              FunctionEvent::Callee);
+
+  // Record the arguments passed to the instrumented function.
+  //
+  // LLVM's SSA magic will keep these around for us until we need them, even if
+  // C code overwrites its parameters.
+  ArgVector Args;
+  for (auto &Arg : Target->getArgumentList())
+    Args.push_back(&Arg);
+
+  // Instrument either the entry or return points of the target function.
+  switch (Dir) {
+  case FunctionEvent::Entry: {
+    // Instrumenting function entry is easy: just add a new call to
+    // instrumentation at the beginning of the function's entry block.
+    BasicBlock& Entry = Target->getEntryBlock();
+    CallInst::Create(InstrFn, Args)->insertBefore(Entry.getFirstNonPHI());
+    break;
+  }
+
+  case FunctionEvent::Exit: {
+    SmallPtrSet<ReturnInst*, 16> Returns;
+    for (auto i = inst_begin(Target), End = inst_end(Target); i != End; i++)
+      if (auto *Return = dyn_cast<ReturnInst>(&*i))
+        Returns.insert(Return);
+
+    for (ReturnInst *Return : Returns) {
+      ArgVector InstrArgs(Args);
+
+      if (Dir == FunctionEvent::Exit && !Target->getReturnType()->isVoidTy())
+        InstrArgs.push_back(Return->getReturnValue());
+
+      CallInst::Create(InstrFn, InstrArgs)->insertBefore(Return);
+    }
+    break;
+  }
+  }
+
+  return new FunctionInstr(M, Target, InstrFn, Dir);
+}
+
+
+void FunctionInstr::AppendInstrumentation(const Automaton& A,
+                                          const FnTransition& T) {
+
+  LLVMContext& Ctx = TargetFn->getContext();
+
+  auto Ev = T.FnEvent();
+  auto Fn = Ev.function();
+  assert(Fn.name() == TargetFn->getName());
+  assert(Ev.direction() == Dir);
+
+  // The instrumentation function should always end in a RetVoid;
+  // assert this is so and then trim it so we can add new stuff.
+  // FIXME: This relies on an invariant (basic block ordering) that is NOT
+  // guaranteed and is liable to change!
+  auto& PreviousEndBlock = InstrFn->back();
+  assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
+  PreviousEndBlock.getTerminator()->eraseFromParent();
+
+  auto Block = BasicBlock::Create(Ctx, A.Name(), InstrFn);
+  IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
+
+  IRBuilder<> Builder(Block);
+
+  auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
+  IRBuilder<> ErrorHandler(Die);
+
+  auto *ErrMsg = ErrorHandler.CreateGlobalStringPtr(
+    "error in tesla_update_state() for automaton '" + A.Name() + "'");
+
+  ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
+  ErrorHandler.CreateRetVoid();
+
+  auto Next = BasicBlock::Create(Ctx, "next", InstrFn);
+  auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
+  IRBuilder<>(Exit).CreateRetVoid();
+
+  if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
+    const Argument &Arg = Ev.expectedreturnvalue();
+    if (Arg.type() == Argument::Constant) {
+      Value *ReturnVal = --(InstrFn->arg_end());
+      Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
+          Arg.value());
+      Builder.CreateCondBr(Builder.CreateICmpNE(ReturnVal,
+            ExpectedReturnVal), Exit, Next);
+      Builder.SetInsertPoint(Next);
+    }
+  }
+
+  if (Builder.GetInsertBlock() != Next) {
+    Next->removeFromParent();
+    delete Next;
+  }
+
+  Constant* TransArray[] = {
+    ConstructTransition(Builder, M,
+                        T.Source().ID(), T.Source().Mask(),
+                        T.Destination().ID())
+  };
+  ArrayRef<Constant*> TransRef(TransArray,
+                               sizeof(TransArray) / sizeof(Constant*));
+
+  Type* IntType = Type::getInt32Ty(Ctx);
+
+  vector<Value*> Args;
+  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
+  Args.push_back(ConstantInt::get(IntType, A.ID()));
+  Args.push_back(ConstructKey(Builder, M, Args));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
+  Args.push_back(ConstructTransitions(Builder, M, TransRef));
+
+  Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
+  assert(Args.size() == UpdateStateFn->arg_size());
+
+
+  Value *Error = Builder.CreateCall(UpdateStateFn, Args);
+  Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
+  Error = Builder.CreateICmpEQ(Error, NoError);
+
+  Builder.CreateCondBr(Error, Exit, Die);
+}
+
+
+FunctionInstr::FunctionInstr(Module& M, Function *Target, Function *InstrFn,
+                             FunctionEvent::Direction Dir)
+  : M(M), TargetFn(Target), Dir(Dir), InstrFn(InstrFn)
+{
+  assert(TargetFn != NULL);
+  assert(InstrFn != NULL);
+
+  // Record the arguments passed to the instrumented function.
+  //
+  // LLVM's SSA magic will keep these around for us until we need them, even if
+  // C code overwrites its parameters.
+  for (auto &Arg : Target->getArgumentList())
+    Args.push_back(&Arg);
 }
 
 } /* namespace tesla */

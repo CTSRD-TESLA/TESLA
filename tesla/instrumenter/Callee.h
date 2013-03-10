@@ -49,59 +49,49 @@ namespace llvm {
 
 namespace tesla {
 
-class CalleeInstrumentation;
+class FunctionInstr;
 
 /// Instruments function calls in the callee context.
-class TeslaCalleeInstrumenter : public llvm::FunctionPass {
+class TeslaCalleeInstrumenter : public llvm::ModulePass {
 public:
   static char ID;
-  TeslaCalleeInstrumenter() : FunctionPass(ID) {}
+  TeslaCalleeInstrumenter() : ModulePass(ID) {}
   ~TeslaCalleeInstrumenter();
 
   const char* getPassName() const {
     return "TESLA function instrumenter (callee-side)";
   }
 
-  virtual bool doInitialization(llvm::Module &M);
-  virtual bool runOnFunction(llvm::Function &F);
+  virtual bool runOnModule(llvm::Module &M);
 
 private:
-  llvm::StringMap<CalleeInstrumentation*> FunctionsToInstrument;
+  FunctionInstr* GetOrCreateInstr(llvm::Module&, llvm::Function*,
+                                  FunctionEvent::Direction);
+
+  llvm::StringMap<FunctionInstr*> Entry;
+  llvm::StringMap<FunctionInstr*> Exit;
 };
 
 
 /// Function instrumentation (callee context).
-class CalleeInstrumentation {
+class FunctionInstr {
 public:
   /// Construct an object that can instrument a given function.
-  static CalleeInstrumentation* Build(llvm::Module&, const FnTransition&);
+  static FunctionInstr* Build(llvm::Module&, llvm::Function *Target,
+                              FunctionEvent::Direction);
 
-  /// Instrument a (possibly new) direction (entry, exit, both).
-  void AddDirection(FunctionEvent::Direction);
-
-  /// Create instrumentation for function entry.
-  /// @returns whether or not any changes were actually made
-  bool InstrumentEntry(llvm::Function &Fn);
-
-  /// Create instrumentation for function return.
-  /// @returns whether or not any changes were actually made
-  bool InstrumentReturn(llvm::Function&);
+  /// Add more event receivers to the instrumentation function.
+  void AppendInstrumentation(const Automaton&, const FnTransition&);
 
 private:
-  /// Private constructor: clients should use CalleeInstrumention::Build().
-  CalleeInstrumentation(llvm::Function *Fn,
-                        llvm::Function *Entry,
-                        llvm::Function *Return,
-                        FunctionEvent::Direction Dir
-                       );
+  FunctionInstr(llvm::Module&, llvm::Function *Fn, llvm::Function *Inst,
+                FunctionEvent::Direction);
 
-  llvm::Function *Fn;             ///< The function to instrument.
-  bool In;                        ///< Instrument function entry.
-  bool Out;                       ///< Instrument function return.
-
-  llvm::Function *EntryEvent;     ///< Call when entering instrumented function.
-  llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.
-  ArgVector Args;                 ///< Translated function arguments.
+  llvm::Module& M;                  ///< The module the function is defined in.
+  const llvm::Function *TargetFn;   ///< The function to instrument.
+  FunctionEvent::Direction Dir;     ///< Whether to instrument entry or exit.
+  llvm::Function *InstrFn;          ///< Call this when entering/exiting target.
+  ArgVector Args;                   ///< Translated function arguments.
 };
 
 }
