@@ -166,12 +166,11 @@ bool TeslaCalleeInstrumenter::doInitialization(Module &M) {
 
       // If instrumentation is already defined, just record the direction.
       auto *Existing = FunctionsToInstrument[Name];
-      if (Existing) {
+      if (Existing)
         Existing->AddDirection(FnEvent.direction());
-        continue;
-      }
 
-      FunctionsToInstrument[Name] = CalleeInstrumentation::Build(M, *FnTrans);
+      else
+        FunctionsToInstrument[Name] = CalleeInstrumentation::Build(M, *FnTrans);
 
       ModifiedIR = true;
     }
