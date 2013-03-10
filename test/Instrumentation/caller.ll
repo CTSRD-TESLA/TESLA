@@ -31,37 +31,27 @@
 ; Commands for llvm-lit:
 ; RUN: tesla instrument -S -tesla-manifest tesla.manifest %s | FileCheck %s
 
-%struct.object = type { i32 }
+%struct.DES_ks = type { [16 x %union.anon] }
+%union.anon = type { [2 x i32] }
 
-
-
-; CHECK: define i32 @example_syscall
-define i32 @example_syscall(i32 %op) #0 {
+; CHECK: define i32 @crypto_setup
+define i32 @crypto_setup([8 x i8]* %key, %struct.DES_ks* %schedule) {
 entry:
-  %o = alloca %struct.object*, align 8
-  %op.addr = alloca i32, align 4
-  store i32 %op, i32* %op.addr, align 4
+  %key.addr = alloca [8 x i8]*, align 8
+  %schedule.addr = alloca %struct.DES_ks*, align 8
+  store [8 x i8]* %key, [8 x i8]** %key.addr, align 8
+  store %struct.DES_ks* %schedule, %struct.DES_ks** %schedule.addr, align 8
+  %0 = load [8 x i8]** %key.addr, align 8
+  %1 = load %struct.DES_ks** %schedule.addr, align 8
 
-  %0 = load i32* %op.addr, align 4
-
-  ; The 'some_helper' function should only be instrumented on exit.
-  ; CHECK-NOT: call void @__tesla_instrumentation_caller_enter_some_helper
-  %call5 = call i32 @some_helper(i32 %0)
-  ; CHECK: call void @__tesla_instrumentation_caller_return_some_helper
-
-  %1 = load %struct.object** %o, align 8
-
-  ; The 'void_helper' function should only be instrumenter on entry.
-  ; CHECK: call void @__tesla_instrumentation_caller_enter_void_helper
-  call void @void_helper(%struct.object* %1)
-  ; CHECK-NOT: call void @__tesla_instrumentation_caller_return_void_helper
+  ; The 'DES_set_key' function should only be instrumented on exit.
+  ; CHECK-NOT: call void @__tesla_instrumentation_caller_enter_DES_set_key
+  %call = call i32 @DES_set_key([8 x i8]* %0, %struct.DES_ks* %1)
+  ; CHECK: call void @__tesla_instrumentation_caller_return_DES_set_key
 
   ret i32 0
 }
 
-; CHECK: declare i32 @some_helper
-declare i32 @some_helper(i32) #1
-
-; CHECK: declare void @void_helper
-declare void @void_helper(%struct.object*) #1
+; CHECK: declare i32 @DES_set_key
+declare i32 @DES_set_key([8 x i8]*, %struct.DES_ks*) #1
 

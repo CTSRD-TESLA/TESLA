@@ -38,7 +38,7 @@ expression {
           name: "DES_set_key"
         }
         direction: Exit
-        context: Callee
+        context: Caller
         argument {
           type: Variable
           index: 0
