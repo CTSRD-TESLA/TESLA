@@ -14,7 +14,7 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 
 	set(LIT_EXTRA
 		--param=extra_include_dirs=${EXECINFO_INCLUDE_DIRS}
-		--param=extra_libs=${EXECINFO_LIBRARY}
+		--param=extra_libs=${EXECINFO_LIBRARY})
 endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 
 # Provide access to internal headers.
