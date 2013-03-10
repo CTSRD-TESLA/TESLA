@@ -76,7 +76,7 @@ bool TeslaVisitor::VisitFunctionDecl(FunctionDecl *F) {
   if (!RetTy->isPointerType())
     return true;
 
-  QualType Pointee = cast<PointerType>(RetTy)->getPointeeType();
+  QualType Pointee = RetTy->getPointeeType();
   auto TypeID = Pointee.getBaseTypeIdentifier();
   if (!TypeID)
     return true;
