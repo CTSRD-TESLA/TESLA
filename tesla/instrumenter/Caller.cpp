@@ -115,7 +115,7 @@ TeslaCallerInstrumenter::~TeslaCallerInstrumenter() {
 
 bool TeslaCallerInstrumenter::doInitialization(Module &M) {
   OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
-  if (!Manifest) return false;
+  assert(Manifest);
 
   for (auto i : Manifest->AllAutomata()) {
     auto A = Manifest->FindAutomaton(i.second->identifier(), Automaton::Deterministic);
