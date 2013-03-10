@@ -48,7 +48,10 @@ namespace tesla {
 
 // ==== CallerInstrumentation implementation ===================================
 void CallerInstrumentation::AddDirection(FunctionEvent::Direction Dir) {
-  this->Dir = static_cast<FunctionEvent::Direction>(this->Dir | Dir);
+  switch (Dir) {
+  case FunctionEvent::Entry:   In = true;    break;
+  case FunctionEvent::Exit:    Out = true;   break;
+  }
 }
 
 CallerInstrumentation*
@@ -68,10 +71,12 @@ CallerInstrumentation*
 
 CallerInstrumentation::CallerInstrumentation(
   Function *Entry, Function *Return, FunctionEvent::Direction Dir)
-  : Dir(Dir), CallEvent(Entry), ReturnEvent(Return)
+  : In(false), Out(false), CallEvent(Entry), ReturnEvent(Return)
 {
   assert(CallEvent != NULL);
   assert(ReturnEvent != NULL);
+
+  AddDirection(Dir);
 }
 
 bool CallerInstrumentation::Instrument(Instruction &Inst) {
@@ -84,12 +89,12 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
   for (size_t i = 0; i < Call.getNumArgOperands(); i++)
     Args.push_back(Call.getArgOperand(i));
 
-  if (Dir & FunctionEvent::Entry) {
+  if (In) {
      CallInst::Create(CallEvent, Args)->insertBefore(&Inst);
      modifiedIR = true;
   }
 
-  if (Dir & FunctionEvent::Exit) {
+  if (Out) {
     ArgVector RetArgs(Args);
     if (!Call.getType()->isVoidTy()) RetArgs.push_back(&Call);
 

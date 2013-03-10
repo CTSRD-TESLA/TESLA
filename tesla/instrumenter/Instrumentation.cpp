@@ -106,10 +106,6 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
 
   LLVMContext& Ctx = Mod.getContext();
 
-  // We should only be looking for a single instrumentation function.
-  assert(Dir != FunctionEvent::EntryAndExit);
-  assert(Context != FunctionEvent::CallerAndCallee);
-
   string Name = (Twine()
     + INSTR_BASE
     + ((Context == FunctionEvent::Callee) ? CALLEE : CALLER)

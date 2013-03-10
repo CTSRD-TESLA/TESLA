@@ -50,12 +50,15 @@ namespace tesla {
 
 // ==== CalleeInstrumentation implementation ===================================
 void CalleeInstrumentation::AddDirection(FunctionEvent::Direction Dir) {
-  this->Dir = static_cast<FunctionEvent::Direction>(this->Dir | Dir);
+  switch (Dir) {
+  case FunctionEvent::Entry:   In = true;    break;
+  case FunctionEvent::Exit:    Out = true;   break;
+  }
 }
 
 bool CalleeInstrumentation::InstrumentEntry(Function &Fn) {
   if (&Fn != this->Fn) return false;
-  if (!(Dir & FunctionEvent::Entry)) return false;
+  if (!In) return false;
   assert(EntryEvent != NULL);
 
   // Instrumenting function entry is easy: just add a new call to
@@ -68,7 +71,7 @@ bool CalleeInstrumentation::InstrumentEntry(Function &Fn) {
 
 bool CalleeInstrumentation::InstrumentReturn(Function &Fn) {
   if (&Fn != this->Fn) return false;
-  if (!(Dir & FunctionEvent::Exit)) return false;
+  if (!Out) return false;
   assert(ReturnEvent != NULL);
 
   bool ModifiedIR = false;
@@ -121,13 +124,15 @@ CalleeInstrumentation*
 
 CalleeInstrumentation::CalleeInstrumentation(
   Function *Fn, Function *Entry, Function *Return, FunctionEvent::Direction Dir)
-  : Fn(Fn), Dir(Dir), EntryEvent(Entry), ReturnEvent(Return) {
+  : Fn(Fn), In(false), Out(false), EntryEvent(Entry), ReturnEvent(Return) {
 
   // Record the arguments passed to the instrumented function.
   //
   // LLVM's SSA magic will keep these around for us until we need them, even if
   // C code overwrites its parameters.
   for (auto &Arg : Fn->getArgumentList()) Args.push_back(&Arg);
+
+  AddDirection(Dir);
 }
 
 

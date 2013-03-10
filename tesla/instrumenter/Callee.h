@@ -96,7 +96,8 @@ private:
                        );
 
   llvm::Function *Fn;             ///< The function to instrument.
-  FunctionEvent::Direction Dir;   ///< When to instrument (call or return).
+  bool In;                        ///< Instrument function entry.
+  bool Out;                       ///< Instrument function return.
 
   llvm::Function *EntryEvent;     ///< Call when entering instrumented function.
   llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.

@@ -88,7 +88,8 @@ private:
                         FunctionEvent::Direction Dir
                        );
 
-  FunctionEvent::Direction Dir;   ///< When to instrument (call or return).
+  bool In;                        ///< Instrument function entry.
+  bool Out;                       ///< Instrument function exit.
 
   llvm::Function *CallEvent;      ///< Call when calling instrumented function.
   llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.
