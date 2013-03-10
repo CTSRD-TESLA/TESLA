@@ -39,10 +39,12 @@ exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 include_directories("${LLVM_SRC}/include" "${LLVM_OBJ}/include")
 link_directories("${LLVM_OBJ}/lib/")
 
-# LLVM CFLAGS and CXXFLAGS.
-exec_program(llvm-config ARGS --cflags   OUTPUT_VARIABLE LLVM_C_FLAGS)
-exec_program(llvm-config ARGS --cxxflags OUTPUT_VARIABLE LLVM_CXX_FLAGS)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LLVM_C_FLAGS}")
+# Use LLVM's CFLAGS and CXXFLAGS, but filter out optimisations and -DNDEBUG.
+exec_program(llvm-config ARGS --cflags   OUTPUT_VARIABLE LLVM_C)
+exec_program(llvm-config ARGS --cxxflags OUTPUT_VARIABLE LLVM_CXX)
+string(REGEX REPLACE "(.*)-O[0-9] -DNDEBUG(.*)" "\\1\\2" LLVM_C ${LLVM_C})
+string(REGEX REPLACE "(.*)-O[0-9] -DNDEBUG(.*)" "\\1\\2" LLVM_CXX ${LLVM_CXX})
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LLVM_C}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS}")
 
 # Important CXXFLAGS that llvm-config --cxxflags doesn't give us:
