@@ -11,6 +11,10 @@ set(CMAKE_BUILD_TYPE Debug)
 if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 	find_package(ExecInfo REQUIRED)
 	include_directories(${EXECINFO_INCLUDE_DIRS})
+
+	set(LIT_EXTRA
+		--param=extra_include_dirs=${EXECINFO_INCLUDE_DIRS}
+		--param=extra_libs=${EXECINFO_LIBRARY}
 endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 
 # Provide access to internal headers.
@@ -44,6 +48,7 @@ add_custom_target(libtesla-test
 		${CMAKE_SOURCE_DIR}/libtesla/test
 		--param=build_dir=${CMAKE_BINARY_DIR}
 		--param=source_dir=${CMAKE_SOURCE_DIR}
+		${LIT_EXTRA}
 	COMMENT "Testing libtesla")
 
 add_dependencies(libtesla-test tesla)
