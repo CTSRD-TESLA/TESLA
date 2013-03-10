@@ -72,3 +72,26 @@ entry:
   ret i32 0
 }
 
+
+
+; Callee instrumentation should be defined in this file:
+
+; i32 some_helper(): return only
+; CHECK-NOT: define void @__tesla_instrumentation_callee_enter_some_helper(i32
+
+; CHECK: define void @__tesla_instrumentation_callee_return_some_helper(i32
+; there should be at least one call to tesla_update_state():
+; CHECK: call i32 @tesla_update_state
+
+; CHECK-NOT: define void @__tesla_instrumentation_callee_enter_some_helper(i32
+
+
+; void void_helper(): entry only
+; CHECK-NOT: define void @__tesla_instrumentation_callee_return_void_helper()
+
+; CHECK: define void @__tesla_instrumentation_callee_enter_void_helper()
+; there should be at least one call to tesla_update_state():
+; CHECK: call i32 @tesla_update_state
+
+; CHECK-NOT: define void @__tesla_instrumentation_callee_return_void_helper()
+
