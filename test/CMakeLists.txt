@@ -1,6 +1,6 @@
 add_custom_target(tesla-test
 	COMMAND
-		llvm-lit -v
+		llvm-lit -q
 		${CMAKE_SOURCE_DIR}/test
 		--param=build_dir=${CMAKE_BINARY_DIR}
 		--param=source_dir=${CMAKE_SOURCE_DIR}
