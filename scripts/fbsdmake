@@ -38,7 +38,7 @@ fi
 # Run make, setting some variable and passing command-line arguments through.
 make \
 	XCC=$XCC XCXX=$XCXX XCPP=$XCPP XLLC=$XLLC TESLA=$TESLA \
-	CROSS_BINUTILS_PREFIX=$BINUTILS \
+	CROSS_BINUTILS_PREFIX=$BINUTILS/ \
 	CONFIGARGS=-t -DNO_MODULES -DWITHOUT_FORMAT_EXTENSIONS \
 	$*
 
