@@ -106,7 +106,7 @@ Parser* Parser::AutomatonParser(FunctionDecl *F, ASTContext& Ctx) {
 }
 
 
-bool Parser::Parse(Expression *E, const CompoundStmt *C) {
+bool Parser::Parse(Expression *E, const CompoundStmt *C, Flags F) {
   assert(E != NULL);
   assert(C != NULL);
 
@@ -133,7 +133,7 @@ bool Parser::Parse(Expression *E, const CompoundStmt *C) {
 
     } else if (auto *E = dyn_cast<Expr>(S)) {
       // Otherwise, it's just a regular TESLA expression.
-      if (!Parse(Seq->add_expression(), E))
+      if (!Parse(Seq->add_expression(), E, F))
         return false;
 
     } else {
@@ -196,10 +196,10 @@ AutomatonDescription* Parser::Parse() {
   // Parse the root: a compound statement or an expression.
   bool Success = false;
   if (auto *C = dyn_cast<CompoundStmt>(Root))
-    Success = Parse(A->mutable_expression(), C);
+    Success = Parse(A->mutable_expression(), C, Flags());
 
   else if (auto *E = dyn_cast<Expr>(Root))
-    Success = Parse(A->mutable_expression(), E);
+    Success = Parse(A->mutable_expression(), E, Flags());
 
   else
     ReportError("expected expression or compound statement", Root);
@@ -209,34 +209,34 @@ AutomatonDescription* Parser::Parse() {
 
   // Keep track of the variables we referenced.
   for (const ValueDecl *D : References)
-    if (!Parse(A->add_argument(), D, false))
+    if (!Parse(A->add_argument(), D, false, Flags()))
       return NULL;
 
   return A.take();
 }
 
 
-bool Parser::Parse(Expression *Ex, const Expr *E) {
+bool Parser::Parse(Expression *Ex, const Expr *E, Flags F) {
   E = E->IgnoreImplicit();
 
   if (auto Assign = dyn_cast<CompoundAssignOperator>(E))
-    return ParseFieldAssign(Ex, Assign);
+    return ParseFieldAssign(Ex, Assign, F);
 
   if (auto Bop = dyn_cast<BinaryOperator>(E))
-    return Parse(Ex, Bop);
+    return Parse(Ex, Bop, F);
 
   if (auto Call = dyn_cast<CallExpr>(E))
-    return Parse(Ex, Call);
+    return Parse(Ex, Call, F);
 
   if (auto DRE = dyn_cast<DeclRefExpr>(E))
-    return Parse(Ex, DRE);
+    return Parse(Ex, DRE, F);
 
   ReportError("unsupported TESLA expression", E);
   return false;
 }
 
 
-bool Parser::Parse(Expression *E, const BinaryOperator *Bop) {
+bool Parser::Parse(Expression *E, const BinaryOperator *Bop, Flags F) {
 
   BooleanExpr::Operation Op;
 
@@ -245,8 +245,8 @@ bool Parser::Parse(Expression *E, const BinaryOperator *Bop) {
       ReportError("unsupported boolean operation", Bop);
       return false;
 
-    case BO_Assign:   return ParseFieldAssign(E, Bop);  // e.g. 'x->foo = bar'
-    case BO_EQ:       return ParseFunctionCall(E, Bop); // e.g. 'foo(x) == y'
+    case BO_Assign:   return ParseFieldAssign(E, Bop, F);   // 'x->foo = bar'
+    case BO_EQ:       return ParseFunctionCall(E, Bop, F);  // 'foo(x) == y'
 
     case BO_LAnd:     Op = BooleanExpr::BE_And;   break;
     case BO_LOr:      Op = BooleanExpr::BE_Or;    break;
@@ -258,12 +258,12 @@ bool Parser::Parse(Expression *E, const BinaryOperator *Bop) {
   auto *BE = E->mutable_booleanexpr();
   BE->set_operation(Op);
 
-  return Parse(BE->add_expression(), Bop->getLHS())
-      && Parse(BE->add_expression(), Bop->getRHS());
+  return Parse(BE->add_expression(), Bop->getLHS(), F)
+      && Parse(BE->add_expression(), Bop->getRHS(), F);
 }
 
 
-bool Parser::Parse(Expression *E, const CallExpr *Call) {
+bool Parser::Parse(Expression *E, const CallExpr *Call, Flags F) {
 
   const FunctionDecl *Fun = Call->getDirectCallee();
   if (!Fun) {
@@ -296,11 +296,11 @@ bool Parser::Parse(Expression *E, const CallExpr *Call) {
      return false;
   }
 
-  return (this->*Parse)(E, Call);
+  return (this->*Parse)(E, Call, F);
 }
 
 
-bool Parser::Parse(Expression *E, const DeclRefExpr *Ref) {
+bool Parser::Parse(Expression *E, const DeclRefExpr *Ref, Flags F) {
   auto D = Ref->getDecl();
   assert(D != NULL);
 
@@ -321,27 +321,27 @@ bool Parser::Parse(Expression *E, const DeclRefExpr *Ref) {
 }
 
 
-bool Parser::ParseSequence(Expression *E, const CallExpr *Call) {
+bool Parser::ParseSequence(Expression *E, const CallExpr *Call, Flags F) {
 
   E->set_type(Expression::SEQUENCE);
   Sequence *Seq = E->mutable_sequence();
 
   for (auto Arg = Call->arg_begin(); Arg != Call->arg_end(); ++Arg)
-    if (!Parse(Seq->add_expression(), *Arg))
+    if (!Parse(Seq->add_expression(), *Arg, F))
       return false;
 
   return true;
 }
 
 
-bool Parser::ParseSubAutomaton(Expression *E, const CallExpr *Call) {
+bool Parser::ParseSubAutomaton(Expression *E, const CallExpr *Call, Flags F) {
   E->set_type(Expression::SUB_AUTOMATON);
   E->mutable_subautomaton()->set_name(Call->getDirectCallee()->getName());
   return true;
 }
 
 
-bool Parser::ParsePredicate(Expression *E, const CallExpr *Call) {
+bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
   const FunctionDecl *Fun = Call->getDirectCallee();
   assert(Fun != NULL);
 
@@ -357,11 +357,11 @@ bool Parser::ParsePredicate(Expression *E, const CallExpr *Call) {
     return false;
   }
 
-  return (this->*Parse)(E, Call);
+  return (this->*Parse)(E, Call, F);
 }
 
 
-bool Parser::ParseOptional(Expression *E, const CallExpr *Call) {
+bool Parser::ParseOptional(Expression *E, const CallExpr *Call, Flags F) {
 
   // The 'optional' predicate actually takes two arguments ('ignore' and
   // a programmer-supplied argument); only talk about the user argument in
@@ -377,11 +377,13 @@ bool Parser::ParseOptional(Expression *E, const CallExpr *Call) {
   B->set_operation(BooleanExpr::BE_Or);
 
   B->add_expression()->set_type(Expression::NULL_EXPR);
-  return Parse(B->add_expression(), Call->getArg(1));
+  return Parse(B->add_expression(), Call->getArg(1), F);
 }
 
 
-bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop) {
+bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
+                               Flags F) {
+
   E->set_type(Expression::FUNCTION);
   FunctionEvent *FnEvent = E->mutable_function();
 
@@ -404,7 +406,7 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop) {
 
   Expr *RetVal = (LHSisICE ? LHS : RHS);
   Expr *FnCall = (LHSisICE ? RHS : LHS);
-  if (!Parse(FnEvent->mutable_expectedreturnvalue(), RetVal))
+  if (!Parse(FnEvent->mutable_expectedreturnvalue(), RetVal, F))
     return false;
 
   auto FnCallExpr = dyn_cast<CallExpr>(FnCall);
@@ -419,11 +421,11 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop) {
     return false;
   }
 
-  if (!Parse(FnEvent->mutable_function(), Fn))
+  if (!Parse(FnEvent->mutable_function(), Fn, F))
     return false;
 
   for (auto I = FnCallExpr->arg_begin(); I != FnCallExpr->arg_end(); ++I) {
-    if (!Parse(FnEvent->add_argument(), I->IgnoreImplicit()))
+    if (!Parse(FnEvent->add_argument(), I->IgnoreImplicit(), F))
       return false;
   }
 
@@ -431,34 +433,34 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop) {
 }
 
 
-bool Parser::ParseFunctionCall(Expression *Expression, const CallExpr *Call) {
+bool Parser::ParseFunctionCall(Expression *E, const CallExpr *Call, Flags F) {
 
-  Expression->set_type(Expression::FUNCTION);
-  FunctionEvent *FnEvent = Expression->mutable_function();
+  E->set_type(Expression::FUNCTION);
+  FunctionEvent *FnEvent = E->mutable_function();
 
   // TODO: better distinguishing between callee and/or caller
   FnEvent->set_context(FunctionEvent::Callee);
   FnEvent->set_direction(FunctionEvent::Entry);
 
-  return ParseFunctionPredicate(FnEvent, Call, false);
+  return ParseFunctionPredicate(FnEvent, Call, false, F);
 }
 
 
-bool Parser::ParseFunctionReturn(Expression *Expression, const CallExpr *Call) {
+bool Parser::ParseFunctionReturn(Expression *E, const CallExpr *Call, Flags F) {
 
-  Expression->set_type(Expression::FUNCTION);
-  FunctionEvent *FnEvent = Expression->mutable_function();
+  E->set_type(Expression::FUNCTION);
+  FunctionEvent *FnEvent = E->mutable_function();
 
   // TODO: better distinguishing between callee and/or caller
   FnEvent->set_context(FunctionEvent::Callee);
   FnEvent->set_direction(FunctionEvent::Exit);
 
-  return ParseFunctionPredicate(FnEvent, Call, true);
+  return ParseFunctionPredicate(FnEvent, Call, true, F);
 }
 
 
 bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
-                                    bool ParseRetVal) {
+                                    bool ParseRetVal, Flags F) {
 
   // The arguments to __tesla_call/return are the function itself and then,
   // optionally, the arguments (any of which may be __tesla_any()).
@@ -491,19 +493,20 @@ bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
     }
 
     for (size_t i = 0; i < ArgCount; i++) {
-      if (!Parse(Event->add_argument(), Call->getArg(i + 1)))
+      if (!Parse(Event->add_argument(), Call->getArg(i + 1), F))
         return false;
     }
 
     if (HaveRetVal)
-      if (!Parse(Event->mutable_expectedreturnvalue(), Call->getArg(ArgCount)))
+      if (!Parse(Event->mutable_expectedreturnvalue(),
+                 Call->getArg(ArgCount), F))
         return false;
 
   } else {
     // The assertion doesn't specify any arguments; include information about
     // arguments from the function definition, just for information.
     for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
-      if (!Parse(Event->add_argument(), *I, true))
+      if (!Parse(Event->add_argument(), *I, true, F))
         return false;
     }
 
@@ -511,11 +514,12 @@ bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
       Event->mutable_expectedreturnvalue()->set_type(Argument::Any);
   }
 
-  return Parse(Event->mutable_function(), Fn);
+  return Parse(Event->mutable_function(), Fn, F);
 }
 
 
-bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O) {
+bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
+                              Flags F) {
 
   E->set_type(Expression::FIELD_ASSIGN);
   FieldAssignment *A = E->mutable_fieldassign();
@@ -558,12 +562,12 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O) {
   A->set_index(Member->getFieldIndex());
   A->set_fieldname(Member->getName());
 
-  return Parse(A->mutable_base(), Base, false)
-      && Parse(A->mutable_value(), O->getRHS());
+  return Parse(A->mutable_base(), Base, false, F)
+      && Parse(A->mutable_value(), O->getRHS(), F);
 }
 
 
-bool Parser::Parse(Argument *Arg, const Expr *E) {
+bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
   assert(Arg != NULL);
   assert(E != NULL);
 
@@ -617,7 +621,7 @@ bool Parser::Parse(Argument *Arg, const Expr *E) {
 }
 
 
-bool Parser::Parse(FunctionRef *FnRef, const FunctionDecl *Fn) {
+bool Parser::Parse(FunctionRef *FnRef, const FunctionDecl *Fn, Flags F) {
   FnRef->set_name(Fn->getName());
   if (FnRef->name().empty()) {
     ReportError("Function must have a name", Fn);
@@ -628,7 +632,7 @@ bool Parser::Parse(FunctionRef *FnRef, const FunctionDecl *Fn) {
 }
 
 
-bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny) {
+bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F) {
   assert(Arg != NULL);
   assert(D != NULL);
 
