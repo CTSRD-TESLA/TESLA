@@ -460,8 +460,13 @@ bool Parser::ParseCallee(Expression *E, const clang::CallExpr *Call, Flags F) {
 
   F.FnInstrContext = FunctionEvent::Callee;
 
-  assert(Call->getNumArgs() == 1);
-  return Parse(E, Call->getArg(0), F);
+  if (Call->getNumArgs() != 2) {
+    ReportError("expected two arguments: __tesla_ignore, expression", Call);
+    return false;
+  }
+
+  return CheckIgnore(Call->getArg(0))
+         && Parse(E, Call->getArg(1), F);
 }
 
 
@@ -469,8 +474,13 @@ bool Parser::ParseCaller(Expression *E, const clang::CallExpr *Call, Flags F) {
 
   F.FnInstrContext = FunctionEvent::Caller;
 
-  assert(Call->getNumArgs() == 1);
-  return Parse(E, Call->getArg(0), F);
+  if (Call->getNumArgs() != 2) {
+    ReportError("expected two arguments: __tesla_ignore, expression", Call);
+    return false;
+  }
+
+  return CheckIgnore(Call->getArg(0))
+         && Parse(E, Call->getArg(1), F);
 }
 
 
@@ -660,6 +670,18 @@ bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F) {
   else {
     Arg->set_type(Argument::Variable);
     Arg->set_index(ReferenceIndex(D));
+  }
+
+  return true;
+}
+
+
+bool Parser::CheckIgnore(const Expr *E) {
+  auto *IgnoreRef = dyn_cast<DeclRefExpr>(E->IgnoreImpCasts());
+  if (!IgnoreRef || IgnoreRef->getDecl()->getName() != IGNORE) {
+    ReportError("expected " + IGNORE, E);
+    E->dump();
+    return false;
   }
 
   return true;

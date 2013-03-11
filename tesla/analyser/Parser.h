@@ -129,6 +129,10 @@ private:
   bool ParseFieldAssign(Expression*, const clang::BinaryOperator*, Flags);
 
 
+  //! Check that an @ref Expression is '__tesla_ignore'.
+  bool CheckIgnore(const clang::Expr*);
+
+
   //! Parse a literal C string embedded in code.
   std::string ParseStringLiteral(const clang::Expr*);
 
