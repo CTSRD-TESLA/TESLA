@@ -348,6 +348,8 @@ bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
   auto Parse = llvm::StringSwitch<CallParser>(Fun->getName())
     .Case("__tesla_call",     &Parser::ParseFunctionCall)
     .Case("__tesla_return",   &Parser::ParseFunctionReturn)
+    .Case("__tesla_callee",   &Parser::ParseCallee)
+    .Case("__tesla_caller",   &Parser::ParseCaller)
     .Case("__tesla_sequence", &Parser::ParseSequence)
     .Case("__tesla_optional", &Parser::ParseOptional)
     .Default(NULL);
@@ -385,10 +387,9 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
                                Flags F) {
 
   E->set_type(Expression::FUNCTION);
-  FunctionEvent *FnEvent = E->mutable_function();
 
-  // TODO: better distinguishing between callee and/or caller
-  FnEvent->set_context(FunctionEvent::Callee);
+  FunctionEvent *FnEvent = E->mutable_function();
+  FnEvent->set_context(F.FnInstrContext);
 
   // Since we might care about the return value, we must instrument exiting
   // the function rather than entering it.
@@ -436,10 +437,8 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
 bool Parser::ParseFunctionCall(Expression *E, const CallExpr *Call, Flags F) {
 
   E->set_type(Expression::FUNCTION);
-  FunctionEvent *FnEvent = E->mutable_function();
 
-  // TODO: better distinguishing between callee and/or caller
-  FnEvent->set_context(FunctionEvent::Callee);
+  FunctionEvent *FnEvent = E->mutable_function();
   FnEvent->set_direction(FunctionEvent::Entry);
 
   return ParseFunctionPredicate(FnEvent, Call, false, F);
@@ -449,18 +448,36 @@ bool Parser::ParseFunctionCall(Expression *E, const CallExpr *Call, Flags F) {
 bool Parser::ParseFunctionReturn(Expression *E, const CallExpr *Call, Flags F) {
 
   E->set_type(Expression::FUNCTION);
-  FunctionEvent *FnEvent = E->mutable_function();
 
-  // TODO: better distinguishing between callee and/or caller
-  FnEvent->set_context(FunctionEvent::Callee);
+  FunctionEvent *FnEvent = E->mutable_function();
   FnEvent->set_direction(FunctionEvent::Exit);
 
   return ParseFunctionPredicate(FnEvent, Call, true, F);
 }
 
 
+bool Parser::ParseCallee(Expression *E, const clang::CallExpr *Call, Flags F) {
+
+  F.FnInstrContext = FunctionEvent::Callee;
+
+  assert(Call->getNumArgs() == 1);
+  return Parse(E, Call->getArg(0), F);
+}
+
+
+bool Parser::ParseCaller(Expression *E, const clang::CallExpr *Call, Flags F) {
+
+  F.FnInstrContext = FunctionEvent::Caller;
+
+  assert(Call->getNumArgs() == 1);
+  return Parse(E, Call->getArg(0), F);
+}
+
+
 bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
                                     bool ParseRetVal, Flags F) {
+
+  Event->set_context(F.FnInstrContext);
 
   // The arguments to __tesla_call/return are the function itself and then,
   // optionally, the arguments (any of which may be __tesla_any()).

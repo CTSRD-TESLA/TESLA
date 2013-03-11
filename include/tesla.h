@@ -66,6 +66,14 @@ struct __tesla_event* __tesla_call(void*, ...);
 /** Exiting a function (with optionally-specified arguments). */
 struct __tesla_event* __tesla_return(void*, ...);
 
+
+/** Function events inside this predicate refer to the callee context. */
+struct __tesla_event* __tesla_callee(__tesla_event*, ...);
+
+/** Function events inside this predicate refer to the caller context. */
+struct __tesla_event* __tesla_caller(__tesla_event*, ...);
+
+
 /** Nothing to see here, move along... */
 struct __tesla_event* __tesla_ignore;
 

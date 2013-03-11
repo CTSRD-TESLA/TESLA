@@ -57,6 +57,10 @@
 
 #define	called(...)	__tesla_call(__VA_ARGS__)
 #define	returned(...)	__tesla_return(__VA_ARGS__)
+
+#define	callee(...)	__tesla_callee(__VA_ARGS__)
+#define	caller(...)	__tesla_caller(__VA_ARGS__)
+
 #define	TESLA_NOW &__tesla_now
 
 

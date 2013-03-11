@@ -78,6 +78,9 @@ public:
 
 private:
   class Flags {
+  public:
+    //! Default to callee-context instrumentation.
+    FunctionEvent::CallContext FnInstrContext = FunctionEvent::Callee;
   };
 
   Parser(clang::ASTContext& Ctx, Identifier ID = Identifier(),
@@ -110,6 +113,8 @@ private:
 
   bool ParseFunctionCall(Expression*, const clang::CallExpr*, Flags);
   bool ParseFunctionReturn(Expression*, const clang::CallExpr*, Flags);
+  bool ParseCallee(Expression*, const clang::CallExpr*, Flags);
+  bool ParseCaller(Expression*, const clang::CallExpr*, Flags);
   bool ParseOptional(Expression*, const clang::CallExpr*, Flags);
   bool ParseSequence(Expression*, const clang::CallExpr*, Flags);
 
