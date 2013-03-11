@@ -117,7 +117,7 @@ int32_t	verbose_debug(void) { return 0; }
 #endif
 
 #ifndef __unused
-#if __has_attribute((unused))
+#if __has_attribute(unused)
 #define __unused __attribute__((unused))
 #else
 #define __unused
