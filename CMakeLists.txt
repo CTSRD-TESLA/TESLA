@@ -31,7 +31,7 @@ endif ()
 # -D NDEBUG for release builds and assuming debug mode otherwise.
 set_directory_properties(PROPERTIES COMPILE_DEFINITIONS_DEBUG DEBUG)
 
-include_directories("include")
+include_directories("${CMAKE_SOURCE_DIR}/include")
 
 add_subdirectory(libtesla)
 add_subdirectory(tesla)
