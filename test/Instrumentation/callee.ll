@@ -29,7 +29,8 @@
 ; SUCH DAMAGE.
 ;
 ; Commands for llvm-lit:
-; RUN: tesla instrument -S -tesla-manifest tesla.manifest %s | FileCheck %s
+; RUN: tesla instrument -S -tesla-manifest tesla.manifest %s > %t
+; RUN: FileCheck -input-file=%t %s
 
 
 ; The 'example_syscall' function is supposed to be instrumented in the

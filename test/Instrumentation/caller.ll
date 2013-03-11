@@ -29,7 +29,8 @@
 ; SUCH DAMAGE.
 ;
 ; Commands for llvm-lit:
-; RUN: tesla instrument -S -tesla-manifest tesla.manifest %s | FileCheck %s
+; RUN: tesla instrument -S -tesla-manifest tesla.manifest %s > %t
+; RUN: FileCheck -input-file=%t %s
 
 %struct.DES_ks = type { [16 x %union.anon] }
 %union.anon = type { [2 x i32] }
