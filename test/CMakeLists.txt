@@ -6,5 +6,5 @@ add_custom_target(tesla-test
 		--param=source_dir=${CMAKE_SOURCE_DIR}
 	COMMENT "Testing TESLA")
 
-add_dependencies(tesla-test tesla-analyse tesla-instrument)
+add_dependencies(tesla-test libtesla tesla-analyse tesla-instrument)
 
