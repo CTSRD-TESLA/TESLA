@@ -140,12 +140,14 @@ void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
   // variables but the previous state doesn't know about references, something
   // has gone wrong (e.g. a start state wasn't properly initialised).
   {
-    __unused size_t MyArguments = 0;
+#ifndef NDEBUG
+    size_t MyArguments = 0;
     for (auto Arg : this->Arguments())
       if (Arg->type() == Argument::Variable)
         MyArguments++;
 
     assert(!From.References().empty() || (MyArguments == 0));
+#endif
   }
 
   // Put this transition's *variable* references in var-index order.

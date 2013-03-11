@@ -488,9 +488,11 @@ DFA::DFA(size_t id, AutomatonDescription& A, StringRef Name,
          ArrayRef<State*> S, ArrayRef<Transition*> T)
   : Automaton(id, A, Name, S, T)
 {
-  for (__unused const Transition* T: T) {
+#ifndef NDEBUG
+  for (const Transition* T: T) {
     assert(T->IsRealisable());
   }
+#endif
 }
 
 } // namespace tesla
