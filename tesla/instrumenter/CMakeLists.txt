@@ -19,7 +19,7 @@ target_link_libraries(tesla-instrument
 	TeslaCommon
 )
 
-include_directories("${CMAKE_SOURCE_DIR}/include")
+include_directories("${CMAKE_SOURCE_DIR}/../include")
 
 install(TARGETS tesla-instrument DESTINATION bin)
 
