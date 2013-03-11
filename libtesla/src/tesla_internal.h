@@ -122,6 +122,7 @@ int32_t	verbose_debug(void) { return 0; }
 #else
 #define __unused
 #endif
+#endif
 
 // Kernel vs userspace implementation details.
 #ifdef _KERNEL
