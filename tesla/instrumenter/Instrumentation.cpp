@@ -49,6 +49,15 @@ using std::vector;
 
 namespace tesla {
 
+BasicBlock *FindBlock(StringRef Name, Function& Fn) {
+  for (auto& B : Fn)
+    if (B.getName() == Name)
+      return &B;
+
+  report_fatal_error("TESLA instrumentation function '"
+                      + Fn.getName() + "' has no '" + Name + "' block");
+}
+
 void FnInstrumentation::AppendInstrumentation(const Automaton& A,
                                               const FnTransition& T) {
 
@@ -59,49 +68,38 @@ void FnInstrumentation::AppendInstrumentation(const Automaton& A,
   assert(Fn.name() == TargetFn->getName());
   assert(Ev.direction() == Dir);
 
-  // The instrumentation function should always end in a RetVoid;
-  // assert this is so and then trim it so we can add new stuff.
-  // FIXME: This relies on an invariant (basic block ordering) that is NOT
-  // guaranteed and is liable to change!
-  auto& PreviousEndBlock = InstrFn->back();
-  assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
-  PreviousEndBlock.getTerminator()->eraseFromParent();
+  // An instrumentation function should be a linear chain of event pattern
+  // matchers and instrumentation blocks. Find the current end of this chain
+  // and insert the new instrumentation before it.
+  auto *Exit = FindBlock("exit", *InstrFn);
+  auto *Instr = BasicBlock::Create(Ctx, A.Name() + ":instr", InstrFn, Exit);
+  Exit->replaceAllUsesWith(Instr);
 
-  auto Block = BasicBlock::Create(Ctx, A.Name(), InstrFn);
-  IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
-
-  IRBuilder<> Builder(Block);
-
-  auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
-  IRBuilder<> ErrorHandler(Die);
-
-  auto *ErrMsg = ErrorHandler.CreateGlobalStringPtr(
-    "error in tesla_update_state() for automaton '" + A.Name() + "'");
-
-  ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
-  ErrorHandler.CreateRetVoid();
-
-  auto Next = BasicBlock::Create(Ctx, "next", InstrFn);
-  auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
-  IRBuilder<>(Exit).CreateRetVoid();
-
+  // We may need to check constant values (e.g. return values).
+  // TODO: check constants besides the return value!
+  BasicBlock *FirstPatternMatcher = NULL;
   if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
+
     const Argument &Arg = Ev.expectedreturnvalue();
     if (Arg.type() == Argument::Constant) {
+      auto *Match = BasicBlock::Create(Ctx, A.Name() + ":match-retval",
+                                       InstrFn, Instr);
+
+      Instr->replaceAllUsesWith(Match);
+      if (!FirstPatternMatcher)
+        FirstPatternMatcher = Match;
+
+      IRBuilder<> Matcher(Match);
       Value *ReturnVal = --(InstrFn->arg_end());
       Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
-          Arg.value());
-      Builder.CreateCondBr(Builder.CreateICmpNE(ReturnVal,
-            ExpectedReturnVal), Exit, Next);
-      Builder.SetInsertPoint(Next);
+                                                        Arg.value());
+
+      Matcher.CreateCondBr(Matcher.CreateICmpNE(ReturnVal, ExpectedReturnVal),
+                           Exit, Instr);
     }
   }
 
-  if (Builder.GetInsertBlock() != Next) {
-    Next->removeFromParent();
-    delete Next;
-  }
-
+  IRBuilder<> Builder(Instr);
   Constant* TransArray[] = {
     ConstructTransition(Builder, M,
                         T.Source().ID(), T.Source().Mask(),
@@ -128,7 +126,7 @@ void FnInstrumentation::AppendInstrumentation(const Automaton& A,
   Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
   Error = Builder.CreateICmpEQ(Error, NoError);
 
-  Builder.CreateCondBr(Error, Exit, Die);
+  Builder.CreateCondBr(Error, Exit, FindBlock("die", *InstrFn));
 }
 
 
@@ -225,10 +223,24 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
   if (Context == FunctionEvent::Caller)
     InstrFn->setLinkage(GlobalValue::PrivateLinkage);
 
-  // TODO: this output is just temporary.
-  if (InstrFn->empty())
-    IRBuilder<>(CallPrintf(Mod, Tag + Subject.getName(), InstrFn))
-      .CreateRetVoid();
+  // Invariant: instrumentation blocks should have two exit blocks: one for
+  // normal termination and one for abnormal termination.
+  if (InstrFn->empty()) {
+    auto *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
+    IRBuilder<> Builder(Entry);
+    // TODO: this output is just temporary.
+    CallPrintf(Mod, Builder, Tag + Subject.getName(), InstrFn);
+
+    auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
+    Builder.CreateBr(Exit);
+    IRBuilder<>(Exit).CreateRetVoid();
+
+    auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
+    IRBuilder<> ErrorHandler(Die);
+    auto *EventName = ErrorHandler.CreateGlobalStringPtr(InstrFn->getName());
+    ErrorHandler.CreateCall(FindDieFn(Mod), EventName);
+    ErrorHandler.CreateRetVoid();
+  }
 
   return InstrFn;
 }
@@ -272,21 +284,17 @@ StructType* tesla::TransitionSetType(Module& M) {
                             NULL);
 }
 
-BasicBlock* tesla::CallPrintf(Module& Mod, const Twine& Prefix, Function *F,
-                              BasicBlock *InsertBefore) {
+Value* tesla::CallPrintf(Module& Mod, IRBuilder<>& Builder,
+                         const Twine& Prefix, Function *F) {
+
   string FormatStr(Prefix.str());
   for (auto& Arg : F->getArgumentList()) FormatStr += Format(Arg.getType());
   FormatStr += "\n";
 
-  auto *Block = BasicBlock::Create(Mod.getContext(), "entry", F, InsertBefore);
-  IRBuilder<> Builder(Block);
-
   ArgVector PrintfArgs(1, Builder.CreateGlobalStringPtr(FormatStr));
   for (auto& Arg : F->getArgumentList()) PrintfArgs.push_back(&Arg);
 
-  Builder.CreateCall(Printf(Mod), PrintfArgs);
-
-  return Block;
+  return Builder.CreateCall(Printf(Mod), PrintfArgs);
 }
 
 

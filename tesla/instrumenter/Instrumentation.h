@@ -126,10 +126,8 @@ llvm::Value* Cast(llvm::Value *From, llvm::StringRef Name,
  *
  * TODO: remove this once we do more meaningful instrumentation.
  */
-llvm::BasicBlock* CallPrintf(llvm::Module& Mod,
-                             const llvm::Twine& Prefix,
-                             llvm::Function *F = NULL,
-                             llvm::BasicBlock *InsertBefore = NULL);
+llvm::Value* CallPrintf(llvm::Module& Mod, llvm::IRBuilder<>& Builder,
+                        const llvm::Twine& Prefix, llvm::Function *F);
 
 //! Map a set of values into a @ref tesla_key.
 llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,

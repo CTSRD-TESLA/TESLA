@@ -34,9 +34,9 @@
 
 
 void
-tesla_die(char *message)
+tesla_die(const char *event)
 {
-	tesla_panic("tesla_die: '%s'\n", message);
+	tesla_panic("tesla_die: fatal error in event '%s'\n", event);
 }
 
 const char *

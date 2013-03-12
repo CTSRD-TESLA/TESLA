@@ -184,8 +184,10 @@ Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
   assert(InstrFn != NULL && "instrumentation function not a Function!");
 
   string Message = ("[NOW]  automaton " + Twine(A.ID())).str();
-  BasicBlock *Block = CallPrintf(M, Message, InstrFn);
-  IRBuilder<> Builder(Block);
+
+  BasicBlock *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
+  IRBuilder<> Builder(Entry);
+  CallPrintf(M, Builder, Message, InstrFn);
 
   Type *IntType = Type::getInt32Ty(Ctx);
   Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);

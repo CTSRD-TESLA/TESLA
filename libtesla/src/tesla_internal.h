@@ -58,7 +58,7 @@
 /**
  * Call this if things go catastrophically, unrecoverably wrong.
  */
-void	tesla_die(char *message) __attribute__((noreturn));
+void	tesla_die(const char *event) __attribute__((noreturn));
 
 /**
  * Create a new @ref tesla_instance.
