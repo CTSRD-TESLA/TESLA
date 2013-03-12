@@ -56,3 +56,13 @@ entry:
 ; CHECK: declare i32 @DES_set_key
 declare i32 @DES_set_key([8 x i8]*, %struct.DES_ks*) #1
 
+
+
+; We should define the caller-side instrumentation for functions that we call
+; in this module. This instrumentation should have private linkage.
+
+; CHECK-NOT: define{{.*}} void @__tesla_instrumentation_caller_enter_DES_set_key
+; CHECK: define private void @__tesla_instrumentation_caller_return_DES_set_key
+; CHECK: call i32 @tesla_update_state
+; CHECK-NOT: define{{.*}} void @__tesla_instrumentation_caller_enter_DES_set_key
+
