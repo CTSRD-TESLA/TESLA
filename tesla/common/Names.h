@@ -32,6 +32,8 @@
 #ifndef _TESLA_NAMES_H_
 #define _TESLA_NAMES_H_
 
+#include "Protocol.h"
+
 #include <string>
 
 namespace tesla {
@@ -90,15 +92,6 @@ std::string ShortName(const Identifier&);
 
 //! Convert an @ref Location into a short, human-readable name.
 std::string ShortName(const Location&);
-
-bool operator == (const Location&, const Location&);
-bool operator < (const Location&, const Location&);
-
-bool operator == (const Identifier&, const Identifier&);
-bool operator < (const Identifier&, const Identifier&);
-
-template<class T>
-inline bool operator != (const T& x, const T& y) { return !(x == y); }
 
 } /* namespace tesla */
 

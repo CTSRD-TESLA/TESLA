@@ -33,6 +33,7 @@
 #define TRANSITION_H
 
 #include "Names.h"
+#include "Protocol.h"
 #include "Types.h"
 
 #include <llvm/ADT/ArrayRef.h>
@@ -40,8 +41,6 @@
 #include <llvm/Support/Casting.h>
 
 #include <string>
-
-#include "tesla.pb.h"
 
 namespace tesla {
 
@@ -194,49 +193,6 @@ private:
   friend class Transition;
 };
 
-inline bool operator==(const Argument &A1, const Argument &A2) {
-  if (A1.type() != A2.type()) return false;
-
-  if (A1.has_index())
-    if (!A2.has_index() || (A1.index() != A2.index()))
-      return false;
-
-  if (A1.has_name())
-    if (!A2.has_name() || (A1.name() != A2.name()))
-      return false;
-
-  if (A1.has_value())
-    if (!A2.has_value() || (A1.value() != A2.value()))
-      return false;
-
-  return true;
-}
-
-inline bool operator!=(const Argument &A1, const Argument &A2) {
-  return !(A1 == A2);
-}
-
-inline bool operator==(const FunctionEvent &E1, const FunctionEvent &E2) {
-  if (E1.has_direction())
-    if (!E2.has_direction() || (E1.direction() != E1.direction()))
-      return false;
-
-  if (E1.has_context())
-    if (!E2.has_context() || (E1.context() != E1.context()))
-      return false;
-
-  if (E1.has_expectedreturnvalue())
-    if (!E2.has_expectedreturnvalue() ||
-        (E1.expectedreturnvalue() != E1.expectedreturnvalue()))
-      return false;
-
-  if (E1.argument_size() != E2.argument_size()) return false;
-  for (int i=0 ; i<E1.argument_size() ; i++)
-    if (E1.argument(i) != E2.argument(i)) return false;
-
-  return true;
-}
-
 
 /// A function-related transition.
 class FnTransition : public Transition {
@@ -267,24 +223,6 @@ private:
 
   friend class Transition;
 };
-
-
-
-inline bool operator==(const FieldAssignment &X, const FieldAssignment &Y) {
-  return (
-    (X.type() == Y.type())
-    && (X.index() == Y.index())
-    && (X.base() == Y.base())
-    && (X.operation() == Y.operation())
-    && (X.value() == Y.value())
-  );
-
-  return true;
-}
-
-inline bool operator!=(const FieldAssignment &X, const FieldAssignment &Y) {
-  return !(X == Y);
-}
 
 
 /// A field assignment transition.
