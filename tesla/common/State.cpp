@@ -142,7 +142,7 @@ string State::Dot() const {
   std::stringstream InstanceName;
 
   for (auto i = Refs.begin(); i != Refs.end(); ) {
-    InstanceName << ShortName(*i);
+    InstanceName << DotName(*i);
 
     if (++i != Refs.end())
       InstanceName << ",";

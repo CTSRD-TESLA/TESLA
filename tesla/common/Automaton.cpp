@@ -145,12 +145,12 @@ string Automaton::Dot() const {
 
   ss << "\tnode [ shape = circle ];\n";
 
-  for (State *S : States)
-    ss << "\t" << S->Dot() << "\n";
+  for (State *S : States) {
+    ss << "\n\t" << S->Dot() << "\n";
 
-  for (auto i : Transitions)
-    for (const Transition *T : i)
+    for (auto *T : *S)
       ss << T->Dot();
+  }
 
   ss
     << "\tlabel = \"" << Name() << "\";\n"
