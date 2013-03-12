@@ -48,7 +48,7 @@ crypto_encrypt(const_DES_cblock *key, DES_key_schedule *schedule)
 #ifdef TESLA
 	TESLA_PERTHREAD(
 		since(called(example_syscall),
-		      caller(DES_set_key(key, schedule) == 1))
+		      caller(DES_set_key(key, schedule) == 0))
 	);
 #endif
 
