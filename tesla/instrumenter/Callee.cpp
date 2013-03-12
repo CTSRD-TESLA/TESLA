@@ -93,25 +93,25 @@ bool TeslaCalleeInstrumenter::runOnModule(Module &M) {
 }
 
 
-FunctionInstr* TeslaCalleeInstrumenter::GetOrCreateInstr(
+CalleeInstr* TeslaCalleeInstrumenter::GetOrCreateInstr(
     Module& M, Function *F, FunctionEvent::Direction Dir) {
 
   assert(F != NULL);
   StringRef Name = F->getName();
 
   auto& Map = (Dir == FunctionEvent::Entry) ? Entry : Exit;
-  FunctionInstr *Instr = Map[Name];
+  CalleeInstr *Instr = Map[Name];
   if (!Instr)
-    Instr = Map[Name] = FunctionInstr::Build(M, F, Dir);
+    Instr = Map[Name] = CalleeInstr::Build(M, F, Dir);
 
   return Instr;
 }
 
 
 
-// ==== FunctionInstr implementation ===========================================
-FunctionInstr* FunctionInstr::Build(Module& M, Function *Target,
-                                    FunctionEvent::Direction Dir) {
+// ==== CalleeInstr implementation ===========================================
+CalleeInstr* CalleeInstr::Build(Module& M, Function *Target,
+                                FunctionEvent::Direction Dir) {
 
   // Find (or create) the instrumentation function.
   // Note: it doesn't yet contain the code to translate events and
@@ -155,96 +155,13 @@ FunctionInstr* FunctionInstr::Build(Module& M, Function *Target,
   }
   }
 
-  return new FunctionInstr(M, Target, InstrFn, Dir);
+  return new CalleeInstr(M, Target, InstrFn, Dir);
 }
 
 
-void FunctionInstr::AppendInstrumentation(const Automaton& A,
-                                          const FnTransition& T) {
-
-  LLVMContext& Ctx = TargetFn->getContext();
-
-  auto Ev = T.FnEvent();
-  auto Fn = Ev.function();
-  assert(Fn.name() == TargetFn->getName());
-  assert(Ev.direction() == Dir);
-
-  // The instrumentation function should always end in a RetVoid;
-  // assert this is so and then trim it so we can add new stuff.
-  // FIXME: This relies on an invariant (basic block ordering) that is NOT
-  // guaranteed and is liable to change!
-  auto& PreviousEndBlock = InstrFn->back();
-  assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
-  PreviousEndBlock.getTerminator()->eraseFromParent();
-
-  auto Block = BasicBlock::Create(Ctx, A.Name(), InstrFn);
-  IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
-
-  IRBuilder<> Builder(Block);
-
-  auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
-  IRBuilder<> ErrorHandler(Die);
-
-  auto *ErrMsg = ErrorHandler.CreateGlobalStringPtr(
-    "error in tesla_update_state() for automaton '" + A.Name() + "'");
-
-  ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
-  ErrorHandler.CreateRetVoid();
-
-  auto Next = BasicBlock::Create(Ctx, "next", InstrFn);
-  auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
-  IRBuilder<>(Exit).CreateRetVoid();
-
-  if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
-    const Argument &Arg = Ev.expectedreturnvalue();
-    if (Arg.type() == Argument::Constant) {
-      Value *ReturnVal = --(InstrFn->arg_end());
-      Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
-          Arg.value());
-      Builder.CreateCondBr(Builder.CreateICmpNE(ReturnVal,
-            ExpectedReturnVal), Exit, Next);
-      Builder.SetInsertPoint(Next);
-    }
-  }
-
-  if (Builder.GetInsertBlock() != Next) {
-    Next->removeFromParent();
-    delete Next;
-  }
-
-  Constant* TransArray[] = {
-    ConstructTransition(Builder, M,
-                        T.Source().ID(), T.Source().Mask(),
-                        T.Destination().ID())
-  };
-  ArrayRef<Constant*> TransRef(TransArray,
-                               sizeof(TransArray) / sizeof(Constant*));
-
-  Type* IntType = Type::getInt32Ty(Ctx);
-
-  vector<Value*> Args;
-  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
-  Args.push_back(ConstantInt::get(IntType, A.ID()));
-  Args.push_back(ConstructKey(Builder, M, Args));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-  Args.push_back(ConstructTransitions(Builder, M, TransRef));
-
-  Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
-  assert(Args.size() == UpdateStateFn->arg_size());
-
-
-  Value *Error = Builder.CreateCall(UpdateStateFn, Args);
-  Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
-  Error = Builder.CreateICmpEQ(Error, NoError);
-
-  Builder.CreateCondBr(Error, Exit, Die);
-}
-
-
-FunctionInstr::FunctionInstr(Module& M, Function *Target, Function *InstrFn,
+CalleeInstr::CalleeInstr(Module& M, Function *Target, Function *InstrFn,
                              FunctionEvent::Direction Dir)
-  : M(M), TargetFn(Target), Dir(Dir), InstrFn(InstrFn)
+  : FnInstrumentation(M, Target, InstrFn, Dir)
 {
   assert(TargetFn != NULL);
   assert(InstrFn != NULL);

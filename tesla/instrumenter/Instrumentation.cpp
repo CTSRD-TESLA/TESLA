@@ -49,6 +49,89 @@ using std::vector;
 
 namespace tesla {
 
+void FnInstrumentation::AppendInstrumentation(const Automaton& A,
+                                              const FnTransition& T) {
+
+  LLVMContext& Ctx = TargetFn->getContext();
+
+  auto Ev = T.FnEvent();
+  auto Fn = Ev.function();
+  assert(Fn.name() == TargetFn->getName());
+  assert(Ev.direction() == Dir);
+
+  // The instrumentation function should always end in a RetVoid;
+  // assert this is so and then trim it so we can add new stuff.
+  // FIXME: This relies on an invariant (basic block ordering) that is NOT
+  // guaranteed and is liable to change!
+  auto& PreviousEndBlock = InstrFn->back();
+  assert(PreviousEndBlock.getTerminator()->getNumSuccessors() == 0);
+  PreviousEndBlock.getTerminator()->eraseFromParent();
+
+  auto Block = BasicBlock::Create(Ctx, A.Name(), InstrFn);
+  IRBuilder<>(&PreviousEndBlock).CreateBr(Block);
+
+  IRBuilder<> Builder(Block);
+
+  auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
+  IRBuilder<> ErrorHandler(Die);
+
+  auto *ErrMsg = ErrorHandler.CreateGlobalStringPtr(
+    "error in tesla_update_state() for automaton '" + A.Name() + "'");
+
+  ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
+  ErrorHandler.CreateRetVoid();
+
+  auto Next = BasicBlock::Create(Ctx, "next", InstrFn);
+  auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
+  IRBuilder<>(Exit).CreateRetVoid();
+
+  if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
+    const Argument &Arg = Ev.expectedreturnvalue();
+    if (Arg.type() == Argument::Constant) {
+      Value *ReturnVal = --(InstrFn->arg_end());
+      Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
+          Arg.value());
+      Builder.CreateCondBr(Builder.CreateICmpNE(ReturnVal,
+            ExpectedReturnVal), Exit, Next);
+      Builder.SetInsertPoint(Next);
+    }
+  }
+
+  if (Builder.GetInsertBlock() != Next) {
+    Next->removeFromParent();
+    delete Next;
+  }
+
+  Constant* TransArray[] = {
+    ConstructTransition(Builder, M,
+                        T.Source().ID(), T.Source().Mask(),
+                        T.Destination().ID())
+  };
+  ArrayRef<Constant*> TransRef(TransArray,
+                               sizeof(TransArray) / sizeof(Constant*));
+
+  Type* IntType = Type::getInt32Ty(Ctx);
+
+  vector<Value*> Args;
+  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
+  Args.push_back(ConstantInt::get(IntType, A.ID()));
+  Args.push_back(ConstructKey(Builder, M, Args));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
+  Args.push_back(ConstructTransitions(Builder, M, TransRef));
+
+  Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
+  assert(Args.size() == UpdateStateFn->arg_size());
+
+
+  Value *Error = Builder.CreateCall(UpdateStateFn, Args);
+  Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
+  Error = Builder.CreateICmpEQ(Error, NoError);
+
+  Builder.CreateCondBr(Error, Exit, Die);
+}
+
+
 /**
  * Map instrumentation arguments into a @ref tesla_key that can be used to
  * look up automata.

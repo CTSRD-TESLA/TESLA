@@ -55,6 +55,24 @@ namespace tesla {
 class Automaton;
 class FnTransition;
 
+//! Instrumentation for a function event.
+class FnInstrumentation {
+public:
+  void AppendInstrumentation(const Automaton&, const FnTransition&);
+
+protected:
+  FnInstrumentation(llvm::Module& M, const llvm::Function *TargetFn,
+                    llvm::Function *InstrFn, FunctionEvent::Direction Dir)
+    : M(M), TargetFn(TargetFn), InstrFn(InstrFn), Dir(Dir)
+  {
+  }
+
+  llvm::Module& M;                  //!< The current module.
+  const llvm::Function *TargetFn;   //!< The function being instrumented.
+  llvm::Function *InstrFn;          //!< The instrumentation function.
+  FunctionEvent::Direction Dir;     //!< Which way we instrument (in or out).
+};
+
 /// Instrumentation on a single instruction that does not change control flow.
 class InstInstrumentation {
 public:

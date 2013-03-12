@@ -49,7 +49,7 @@ namespace llvm {
 
 namespace tesla {
 
-class FunctionInstr;
+class CalleeInstr;
 
 /// Instruments function calls in the callee context.
 class TeslaCalleeInstrumenter : public llvm::ModulePass {
@@ -65,32 +65,25 @@ public:
   virtual bool runOnModule(llvm::Module &M);
 
 private:
-  FunctionInstr* GetOrCreateInstr(llvm::Module&, llvm::Function*,
-                                  FunctionEvent::Direction);
+  CalleeInstr* GetOrCreateInstr(llvm::Module&, llvm::Function*,
+                                FunctionEvent::Direction);
 
-  llvm::StringMap<FunctionInstr*> Entry;
-  llvm::StringMap<FunctionInstr*> Exit;
+  llvm::StringMap<CalleeInstr*> Entry;
+  llvm::StringMap<CalleeInstr*> Exit;
 };
 
 
 /// Function instrumentation (callee context).
-class FunctionInstr {
+class CalleeInstr : public FnInstrumentation {
 public:
   /// Construct an object that can instrument a given function.
-  static FunctionInstr* Build(llvm::Module&, llvm::Function *Target,
-                              FunctionEvent::Direction);
-
-  /// Add more event receivers to the instrumentation function.
-  void AppendInstrumentation(const Automaton&, const FnTransition&);
+  static CalleeInstr* Build(llvm::Module&, llvm::Function *Target,
+                            FunctionEvent::Direction);
 
 private:
-  FunctionInstr(llvm::Module&, llvm::Function *Fn, llvm::Function *Inst,
-                FunctionEvent::Direction);
+  CalleeInstr(llvm::Module&, llvm::Function *Fn, llvm::Function *Inst,
+              FunctionEvent::Direction);
 
-  llvm::Module& M;                  ///< The module the function is defined in.
-  const llvm::Function *TargetFn;   ///< The function to instrument.
-  FunctionEvent::Direction Dir;     ///< Whether to instrument entry or exit.
-  llvm::Function *InstrFn;          ///< Call this when entering/exiting target.
   ArgVector Args;                   ///< Translated function arguments.
 };
 
