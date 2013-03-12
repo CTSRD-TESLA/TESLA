@@ -38,6 +38,7 @@
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/OwningPtr.h>
+#include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/Support/Casting.h>
 
 #include <string>
@@ -54,6 +55,10 @@ class NowEvent;
 typedef llvm::ArrayRef<const Argument*> ReferenceVector;
 typedef llvm::MutableArrayRef<const Argument*> MutableReferenceVector;
 
+//! Sets of transitions whose TESLA events are equivalent (equivalence classes).
+typedef std::vector<llvm::SmallPtrSet<const Transition*,4> > TransitionSets;
+
+
 /// A transition from one TESLA state to another.
 class Transition {
 public:
@@ -68,25 +73,25 @@ public:
    * @param[in]       To           The state to transition to.
    * @param[out]      Transitions  A place to record the new transition.
    */
-  static void Create(State& From, State& To, TransitionVector& Transitions);
+  static void Create(State& From, State& To, TransitionSets& Transitions);
 
   static void Create(State& From, State& To, const FunctionEvent&,
-                     TransitionVector&);
+                     TransitionSets&);
 
   static void Create(State& From, State& To, const FieldAssignment&,
-                     TransitionVector&);
+                     TransitionSets&);
 
   static void Create(State& From, State& To, const NowEvent&,
-                     const AutomatonDescription&, TransitionVector&);
+                     const AutomatonDescription&, TransitionSets&);
 
   static void CreateSubAutomaton(State& From, State& To,
-                                 const Identifier&, TransitionVector&);
+                                 const Identifier&, TransitionSets&);
 
   /// Creates a transition between the specified states, with the same
   /// transition type as the copied transition.  This is used when constructing
   /// DFA transitions from NFA transitions.
   static void Copy(State &From, State& To, const Transition* Other,
-                   TransitionVector &);
+                   TransitionSets &);
 
   virtual ~Transition() {}
 
@@ -95,6 +100,14 @@ public:
 
   //! Arguments referenced by this transition.
   virtual const ReferenceVector Arguments() const = 0;
+
+  /**
+   * Whether or not another @ref Transition's expression equivalent to mine.
+   *
+   * This is not the same as @ref #IsEquivalent(), which also takes 'from'
+   * and 'to' states into account.
+   */
+  virtual bool EquivalentExpression(const Transition*) const = 0;
 
   /**
    * The references known at the point this transition occurs.
@@ -125,9 +138,10 @@ public:
   virtual bool IsEquivalent(const Transition &T) const = 0;
 
 protected:
-
   static void Register(llvm::OwningPtr<Transition>&, State& From, State& To,
-                       TransitionVector&);
+                       TransitionSets&);
+
+  static void Append(const llvm::OwningPtr<Transition>&, TransitionSets&);
 
   Transition(const State& From, const State& To);
 
@@ -145,6 +159,10 @@ public:
 
   const ReferenceVector Arguments() const {
     return ReferenceVector();
+  }
+
+  bool EquivalentExpression(const Transition* Other) const {
+    return llvm::isa<NullTransition>(Other);
   }
 
   static bool classof(const Transition *T) {
@@ -173,6 +191,13 @@ public:
 
   const ReferenceVector Arguments() const { return Refs; }
   const Location& Location() const { return Ev.location(); }
+
+  bool EquivalentExpression(const Transition* Other) const {
+    auto *T = llvm::dyn_cast<NowTransition>(Other);
+    if (!T) return false;
+
+    return T->Ev == Ev;
+  }
 
   static bool classof(const Transition *T) {
     return T->getKind() == Now;
@@ -204,6 +229,13 @@ public:
   const FunctionEvent& FnEvent() const { return Ev; }
   const ReferenceVector Arguments() const;
 
+  bool EquivalentExpression(const Transition* Other) const {
+    auto *T = llvm::dyn_cast<FnTransition>(Other);
+    if (!T) return false;
+
+    return T->Ev == Ev;
+  }
+
   static bool classof(const Transition *T) {
     return T->getKind() == Fn;
   }
@@ -234,6 +266,13 @@ public:
 
   const ReferenceVector Arguments() const { return Refs; }
   const FieldAssignment& Assignment() const { return Assign; }
+
+  bool EquivalentExpression(const Transition* Other) const {
+    auto *T = llvm::dyn_cast<FieldAssignTransition>(Other);
+    if (!T) return false;
+
+    return T->Assign == Assign;
+  }
 
   static bool classof(const Transition *T) {
     return T->getKind() == FieldAssign;
@@ -270,6 +309,13 @@ public:
 
   const ReferenceVector Arguments() const;
   const Identifier& GetID() const { return ID; }
+
+  bool EquivalentExpression(const Transition* Other) const {
+    auto *T = llvm::dyn_cast<SubAutomatonTransition>(Other);
+    if (!T) return false;
+
+    return T->ID == ID;
+  }
 
   static bool classof(const Transition *T) {
     return T->getKind() == SubAutomaton;

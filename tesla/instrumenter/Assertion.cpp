@@ -105,16 +105,17 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     const NowTransition *NowTrans;
     Function *InstrFn;
 
-    for (const Transition* T : *A)
-      if (auto Now = dyn_cast<NowTransition>(T)) {
-        if (Now->Location() != Loc)
-          continue;
+    for (auto i : *A)
+      for (const Transition *T : i)
+        if (auto Now = dyn_cast<NowTransition>(T)) {
+          if (Now->Location() != Loc)
+            continue;
 
-        if (!(InstrFn = CreateInstrumentation(*A, *Now, M)))
-          report_fatal_error("error instrumenting NOW event");
+          if (!(InstrFn = CreateInstrumentation(*A, *Now, M)))
+            report_fatal_error("error instrumenting NOW event");
 
-        NowTrans = Now;
-      }
+          NowTrans = Now;
+        }
 
     if (!NowTrans)
       report_fatal_error(

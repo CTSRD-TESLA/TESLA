@@ -69,24 +69,25 @@ bool TeslaCalleeInstrumenter::runOnModule(Module &M) {
 
   for (auto i : Manifest->AllAutomata()) {
     auto A = *Manifest->FindAutomaton(i.first);
-    for (auto T : A) {
-      auto FnTrans = dyn_cast<FnTransition>(T);
-      if (!FnTrans)
-        continue;
+    for (auto i : A)
+      for (auto *T : i) {
+        auto *FnTrans = dyn_cast<FnTransition>(T);
+        if (!FnTrans)
+          continue;
 
-      auto FnEvent = FnTrans->FnEvent();
-      StringRef Name = FnEvent.function().name();
+        auto FnEvent = FnTrans->FnEvent();
+        StringRef Name = FnEvent.function().name();
 
-      // Only build instrumentation for this module's functions.
-      Function *Target = M.getFunction(Name);
-      if (!Target || Target->empty())
-        continue;
+        // Only build instrumentation for this module's functions.
+        Function *Target = M.getFunction(Name);
+        if (!Target || Target->empty())
+          continue;
 
-      auto *FnInstr = GetOrCreateInstr(M, Target, FnEvent.direction());
-      FnInstr->AppendInstrumentation(A, *FnTrans);
+        auto *FnInstr = GetOrCreateInstr(M, Target, FnEvent.direction());
+        FnInstr->AppendInstrumentation(A, *FnTrans);
 
-      ModifiedIR = true;
-    }
+        ModifiedIR = true;
+      }
   }
 
   return ModifiedIR;

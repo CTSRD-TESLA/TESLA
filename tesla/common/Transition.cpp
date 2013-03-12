@@ -44,16 +44,14 @@ using std::string;
 namespace tesla {
 
 
-void Transition::Create(State& From, State& To,
-                        TransitionVector& Transitions) {
-
+void Transition::Create(State& From, State& To, TransitionSets& Transitions) {
   OwningPtr<Transition> T(new NullTransition(From, To));
   Register(T, From, To, Transitions);
 }
 
 void Transition::Create(State& From, State& To, const NowEvent& Ev,
                         const AutomatonDescription& Automaton,
-                        TransitionVector& Transitions) {
+                        TransitionSets& Transitions) {
 
   ReferenceVector Refs(Automaton.argument().data(),
                                  Automaton.argument_size());
@@ -63,27 +61,27 @@ void Transition::Create(State& From, State& To, const NowEvent& Ev,
 }
 
 void Transition::Create(State& From, State& To, const FunctionEvent& Ev,
-                        TransitionVector& Transitions) {
+                        TransitionSets& Transitions) {
 
   OwningPtr<Transition> T(new FnTransition(From, To, Ev));
   Register(T, From, To, Transitions);
 }
 
 void Transition::Create(State& From, State& To, const FieldAssignment& A,
-                        TransitionVector& Transitions) {
+                        TransitionSets& Transitions) {
   OwningPtr<Transition> T(new FieldAssignTransition(From, To, A));
   Register(T, From, To, Transitions);
 }
 
 void Transition::CreateSubAutomaton(State& From, State& To,
                                     const Identifier& ID,
-                                    TransitionVector& Transitions) {
+                                    TransitionSets& Transitions) {
   OwningPtr<Transition> T(new SubAutomatonTransition(From, To, ID));
   Register(T, From, To, Transitions);
 }
 
 void Transition::Copy(State &From, State& To, const Transition* Other,
-                   TransitionVector& Transitions) {
+                   TransitionSets& Transitions) {
 
   OwningPtr<Transition> New;
 
@@ -117,9 +115,9 @@ void Transition::Copy(State &From, State& To, const Transition* Other,
 }
 
 void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
-                          TransitionVector& Transitions) {
+                          TransitionSets& Transitions) {
 
-  Transitions.push_back(T.get());
+  Append(T, Transitions);
 
   // Update the state we're pointing to with the references it should
   // know about thus far in the execution of the automaton.
@@ -129,6 +127,22 @@ void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
   To.UpdateReferences(Ref);
 
   From.AddTransition(T);
+}
+
+void Transition::Append(const OwningPtr<Transition>& Tr,
+                        TransitionSets& Transitions) {
+
+  const Transition *T = Tr.get();
+
+  for (auto Set : Transitions)
+    if ((*Set.begin())->EquivalentExpression(T)) {
+      Set.insert(T);
+      return;
+    }
+
+  SmallPtrSet<const Transition*, 4> New;
+  New.insert(T);
+  Transitions.push_back(New);
 }
 
 

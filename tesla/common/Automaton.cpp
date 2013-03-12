@@ -102,7 +102,7 @@ private:
 
   bool SubAutomataAllowed;
   StateVector States;
-  TransitionVector Transitions;
+  TransitionSets Transitions;
 };
 
 }
@@ -110,17 +110,17 @@ private:
 
 // ---- Automaton implementation ----------------------------------------------
 Automaton::Automaton(size_t id, const AutomatonDescription& A, StringRef Name,
-                     ArrayRef<State*> S, ArrayRef<Transition*> T)
-  : id(id), assertion(A), name(Name)
+                     ArrayRef<State*> S, const TransitionSets& Transitions)
+  : id(id), assertion(A), name(Name), Transitions(Transitions)
 {
   States.insert(States.begin(), S.begin(), S.end());
-  Transitions.insert(Transitions.begin(), T.begin(), T.end());
 }
 
 bool Automaton::IsRealisable() const {
-  for (const Transition* T : Transitions)
-    if (!T->IsRealisable())
-      return false;
+  for (auto i : Transitions)
+    for (const Transition *T : i)
+      if (!T->IsRealisable())
+        return false;
 
   return true;
 }
@@ -148,8 +148,9 @@ string Automaton::Dot() const {
   for (State *S : States)
     ss << "\t" << S->Dot() << "\n";
 
-  for (Transition *T : Transitions)
-    ss << T->Dot();
+  for (auto i : Transitions)
+    for (const Transition *T : i)
+      ss << T->Dot();
 
   ss
     << "\tlabel = \"" << Name() << "\";\n"
@@ -184,7 +185,7 @@ NFA* NFA::Link(const map<Identifier,AutomatonDescription*>& Descriptions) {
 }
 
 NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name,
-         ArrayRef<State*> S, ArrayRef<Transition*> T)
+         ArrayRef<State*> S, const TransitionSets& T)
   : Automaton(id, A, Name, S, T)
 {
 }
@@ -344,7 +345,7 @@ class DFABuilder {
   /// States that have been created, but not yet emitted
   llvm::SmallVector<std::pair<NFAState, bool>, 16> UnfinishedStates;
   StateVector States;
-  TransitionVector Transitions;
+  TransitionSets Transitions;
   /// Collect the set of NFA states that correspond to a single DFA state (i.e.
   /// all of the states that are reachable from the input state via epsilon
   /// transitions)
@@ -446,12 +447,6 @@ class DFABuilder {
 
           State *Dest = stateForNFAStates(Destinations, Start);
           Transition::Copy(*DS, *Dest, T, Transitions);
-#ifndef NDEBUG
-          if (getenv("VERBOSE_DEBUG")) {
-            fprintf(stderr, "Old: %s\n", T->String().c_str());
-            fprintf(stderr, "New: %s\n", Transitions.back()->String().c_str());
-          }
-#endif
         }
       }
     }
@@ -485,13 +480,13 @@ DFA* DFA::Convert(const NFA* N) {
 }
 
 DFA::DFA(size_t id, AutomatonDescription& A, StringRef Name,
-         ArrayRef<State*> S, ArrayRef<Transition*> T)
+         ArrayRef<State*> S, const TransitionSets& T)
   : Automaton(id, A, Name, S, T)
 {
 #ifndef NDEBUG
-  for (const Transition* T: T) {
-    assert(T->IsRealisable());
-  }
+  for (auto i : T)
+    for (const Transition* T: i)
+      assert(T->IsRealisable());
 #endif
 }
 

@@ -35,6 +35,8 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 
+#include "Transition.h"
+
 #include <map>
 
 
@@ -52,7 +54,6 @@ class Sequence;
 
 // Automata classes
 class State;
-class Transition;
 
 namespace internal {
   class DFABuilder;
@@ -88,7 +89,7 @@ public:
   };
 
   typedef llvm::SmallVector<State*,10> StateVector;
-  typedef llvm::SmallVector<Transition*,10> TransitionVector;
+
 
   virtual ~Automaton() {}
   virtual bool IsRealisable() const;
@@ -103,19 +104,19 @@ public:
   std::string Dot() const;                  //!< GraphViz representation.
 
   //! Iterate over state transitions.
-  TransitionVector::const_iterator begin() const { return Transitions.begin(); }
-  TransitionVector::const_iterator end() const  { return Transitions.end(); }
+  TransitionSets::const_iterator begin() const { return Transitions.begin(); }
+  TransitionSets::const_iterator end() const  { return Transitions.end(); }
 
 protected:
   Automaton(size_t id, const AutomatonDescription&, llvm::StringRef Name,
-            llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+            llvm::ArrayRef<State*>, const TransitionSets&);
 
   const size_t id;
   const AutomatonDescription& assertion;
   const std::string name;
 
   StateVector States;
-  TransitionVector Transitions;
+  TransitionSets Transitions;
 };
 
 
@@ -148,7 +149,7 @@ public:
 
 private:
   NFA(size_t id, const AutomatonDescription& A, llvm::StringRef Name,
-      llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+      llvm::ArrayRef<State*>, const TransitionSets&);
 
   friend class internal::NFAParser;
 };
@@ -168,7 +169,7 @@ public:
 
 private:
   DFA(size_t id, AutomatonDescription& A, llvm::StringRef Name,
-      llvm::ArrayRef<State*>, llvm::ArrayRef<Transition*>);
+      llvm::ArrayRef<State*>, const TransitionSets&);
 };
 
 } // namespace tesla
