@@ -109,7 +109,7 @@ void State::UpdateReferences(ReferenceVector NewRefs)
     // Sanity check: we shouldn't be losing information.
     if ((Old->type() != Argument::Any) && (New->type() == Argument::Any))
       report_fatal_error(
-        "replacing concrete Argument '" + ShortName(*New) + " with ANY");
+        "replacing concrete Argument '" + ShortName(New) + " with ANY");
   }
 }
 
@@ -142,7 +142,7 @@ string State::Dot() const {
   std::stringstream InstanceName;
 
   for (auto i = Refs.begin(); i != Refs.end(); ) {
-    InstanceName << (*i ? ShortName(**i) : "X");
+    InstanceName << ShortName(*i);
 
     if (++i != Refs.end())
       InstanceName << ",";

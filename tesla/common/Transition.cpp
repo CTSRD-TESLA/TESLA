@@ -247,7 +247,7 @@ string FnTransition::DotLabel() const {
 
   for (int i = 0; i < Ev.argument_size(); i++)
     ss
-      << DotName(Ev.argument(i))
+      << DotName(&Ev.argument(i))
       << ((i < Ev.argument_size() - 1) ? "," : "");
 
   ss
@@ -272,26 +272,26 @@ FieldAssignTransition::FieldAssignTransition(const State& From, const State& To,
 
 string FieldAssignTransition::ShortLabel() const {
   return (Twine()
-    + ShortName(Assign.base())
+    + ShortName(&Assign.base())
     + "."
     + Assign.fieldname()
     + " "
     + OpString(Assign.operation())
     + " "
-    + ShortName(Assign.value())
+    + ShortName(&Assign.value())
   ).str();
 }
 
 string FieldAssignTransition::DotLabel() const {
   return (Twine()
     + "struct " + Assign.type() + ":\\l"
-    + ShortName(Assign.base())
+    + ShortName(&Assign.base())
     + "."
     + Assign.fieldname()
     + " "
     + OpString(Assign.operation())
     + " "
-    + ShortName(Assign.value())
+    + ShortName(&Assign.value())
   ).str();
 }
 

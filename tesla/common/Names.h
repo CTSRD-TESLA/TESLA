@@ -79,13 +79,13 @@ const std::string CALLER_LEAVE      = INSTR_BASE + CALLER + EXIT;
 const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 
 //! Convert an @ref Argument into something human-readable.
-std::string ArgString(const Argument&);
+std::string ArgString(const Argument*);
 
 //! Convert an @ref Argument into a very short, human-readable name.
-std::string ShortName(const Argument&);
+std::string ShortName(const Argument*);
 
 //! Convert an @ref Argument into a very short name for GraphViz's dot.
-std::string DotName(const Argument&);
+std::string DotName(const Argument*);
 
 //! Convert an @ref Identifier into a short, human-readable name.
 std::string ShortName(const Identifier&);

@@ -39,16 +39,19 @@
 using llvm::Twine;
 
 
-std::string tesla::ArgString(const Argument& A) {
-  switch (A.type()) {
+std::string tesla::ArgString(const Argument* A) {
+  if (A == NULL)
+    return "NULL";
+
+  switch (A->type()) {
   case Argument::Constant:
-    return A.name();
+    return A->name();
 
   case Argument::Variable:
     return (Twine()
-      + Twine(A.index())
+      + Twine(A->index())
       + "('"
-      + A.name()
+      + A->name()
       + "')"
     ).str();
 
@@ -57,33 +60,37 @@ std::string tesla::ArgString(const Argument& A) {
   }
 }
 
-std::string tesla::ShortName(const Argument& A) {
-  assert(&A != NULL);
+std::string tesla::ShortName(const Argument* A) {
+  if (A == NULL)
+    return "NULL";
 
-  switch (A.type()) {
+  switch (A->type()) {
   case Argument::Constant:
-    return A.name();
+    return A->name();
 
   case Argument::Variable:
-    return A.name();
+    return A->name();
 
   case Argument::Any:
     return "X";
   }
 }
 
-std::string tesla::DotName(const Argument& A) {
-  assert(&A != NULL);
+std::string tesla::DotName(const Argument* A) {
+  const static std::string Star = "&#8902;";
 
-  switch (A.type()) {
+  if (A == NULL)
+    return Star;
+
+  switch (A->type()) {
   case Argument::Constant:
-    return A.name();
+    return A->name();
 
   case Argument::Variable:
-    return A.name();
+    return A->name();
 
   case Argument::Any:
-    return "&#8902;";
+    return Star;
   }
 }
 
