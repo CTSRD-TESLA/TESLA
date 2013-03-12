@@ -46,66 +46,6 @@ using std::string;
 
 namespace tesla {
 
-// ==== CallerInstrumentation implementation ===================================
-void CallerInstrumentation::AddDirection(FunctionEvent::Direction Dir) {
-  switch (Dir) {
-  case FunctionEvent::Entry:   In = true;    break;
-  case FunctionEvent::Exit:    Out = true;   break;
-  }
-}
-
-CallerInstrumentation*
-    CallerInstrumentation::Build(Module& M, const FunctionEvent& Ev) {
-
-  StringRef FnName = Ev.function().name();
-
-  Function *Fn = M.getFunction(FnName);
-  if (Fn == NULL) return NULL;
-
-  auto C = FunctionEvent::Caller;
-  Function *Call = FunctionInstrumentation(M, *Fn, FunctionEvent::Entry, C);
-  Function *Return = FunctionInstrumentation(M, *Fn, FunctionEvent::Exit, C);
-
-  return new CallerInstrumentation(Call, Return, Ev.direction());
-}
-
-CallerInstrumentation::CallerInstrumentation(
-  Function *Entry, Function *Return, FunctionEvent::Direction Dir)
-  : In(false), Out(false), CallEvent(Entry), ReturnEvent(Return)
-{
-  assert(CallEvent != NULL);
-  assert(ReturnEvent != NULL);
-
-  AddDirection(Dir);
-}
-
-bool CallerInstrumentation::Instrument(Instruction &Inst) {
-  assert(isa<CallInst>(Inst));
-  CallInst &Call = cast<CallInst>(Inst);
-
-  bool modifiedIR = false;
-
-  ArgVector Args;
-  for (size_t i = 0; i < Call.getNumArgOperands(); i++)
-    Args.push_back(Call.getArgOperand(i));
-
-  if (In) {
-     CallInst::Create(CallEvent, Args)->insertBefore(&Inst);
-     modifiedIR = true;
-  }
-
-  if (Out) {
-    ArgVector RetArgs(Args);
-    if (!Call.getType()->isVoidTy()) RetArgs.push_back(&Call);
-
-    CallInst::Create(ReturnEvent, RetArgs)->insertAfter(&Inst);
-    modifiedIR = true;
-  }
-
-   return modifiedIR;
-}
-
-
 // ==== TeslaCallerInstrumenter implementation =================================
 char TeslaCallerInstrumenter::ID = 0;
 
@@ -117,28 +57,47 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
   OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
   assert(Manifest);
 
+  bool ModifiedIR = true;
+
   for (auto i : Manifest->AllAutomata()) {
-    auto A = Manifest->FindAutomaton(i.second->identifier(), Automaton::Deterministic);
+    auto A = *Manifest->FindAutomaton(i.first);
+    for (auto T : A) {
+      auto FnTrans = dyn_cast<FnTransition>(T);
+      if (!FnTrans)
+        continue;
 
-    for (auto T : *A) {
-      if (auto *FnTrans = dyn_cast<FnTransition>(T)) {
-        auto Ev = FnTrans->FnEvent();
+      auto FnEvent = FnTrans->FnEvent();
+      StringRef Name = FnEvent.function().name();
 
-        if (Ev.context() == FunctionEvent::Callee)
-          continue;
+      Function *Target = M.getFunction(Name);
+      if (!Target)
+        continue;
 
-        auto Name = Ev.function().name();
-        auto *Existing = FunctionsToInstrument[Name];
+      auto *FnInstr = GetOrCreateInstr(M, Target, FnEvent.direction());
+      FnInstr->AppendInstrumentation(A, *FnTrans);
 
-        if (Existing) Existing->AddDirection(Ev.direction());
-        else
-          FunctionsToInstrument[Name] = CallerInstrumentation::Build(M, Ev);
-      }
+      ModifiedIR = true;
     }
   }
 
-  return false;
+  return ModifiedIR;
 }
+
+
+CallerInstrumentation* TeslaCallerInstrumenter::GetOrCreateInstr(
+    Module& M, Function *F, FunctionEvent::Direction Dir) {
+
+  assert(F != NULL);
+  StringRef Name = F->getName();
+
+  auto& Map = (Dir == FunctionEvent::Entry) ? Calls : Returns;
+  CallerInstrumentation *Instr = Map[Name];
+  if (!Instr)
+    Instr = Map[Name] = CallerInstrumentation::Build(M, F, Dir);
+
+  return Instr;
+}
+
 
 bool TeslaCallerInstrumenter::runOnFunction(Function &Fn) {
   bool modifiedIR = false;
@@ -151,7 +110,7 @@ bool TeslaCallerInstrumenter::runOnFunction(Function &Fn) {
 }
 
 bool TeslaCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
-  bool modifiedIR = false;
+  bool ModifiedIR = false;
 
   for (auto &Inst : Block) {
     if (!isa<CallInst>(Inst)) continue;
@@ -162,16 +121,56 @@ bool TeslaCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
     if (!Callee)
       continue;
 
-    auto I = FunctionsToInstrument.find(Callee->getName());
-    if (I == FunctionsToInstrument.end()) continue;
+    StringRef Name = Callee->getName();
+    auto i = Calls.find(Name);
+    if (i != Calls.end())
+      ModifiedIR |= i->second->Instrument(Call);
 
-    auto *Instrumenter = I->second;
-    assert(Instrumenter != NULL);
-
-    modifiedIR |= Instrumenter->Instrument(Inst);
+    i = Returns.find(Name);
+    if (i != Returns.end())
+      ModifiedIR |= i->second->Instrument(Call);
   }
 
-  return modifiedIR;
+  return ModifiedIR;
+}
+
+
+// ==== CallerInstrumentation implementation ===================================
+CallerInstrumentation*
+    CallerInstrumentation::Build(Module& M, Function *Target,
+                                 FunctionEvent::Direction Dir) {
+
+  assert(Target != NULL);
+
+  Function *InstrFn = FunctionInstrumentation(M, *Target, Dir,
+                                              FunctionEvent::Caller);
+
+  return new CallerInstrumentation(M, Target, InstrFn, Dir);
+}
+
+
+bool CallerInstrumentation::Instrument(Instruction &Inst) {
+  assert(isa<CallInst>(Inst));
+  CallInst &Call = cast<CallInst>(Inst);
+
+  ArgVector Args;
+  for (size_t i = 0; i < Call.getNumArgOperands(); i++)
+    Args.push_back(Call.getArgOperand(i));
+
+  switch (Dir) {
+  case FunctionEvent::Entry:
+     CallInst::Create(InstrFn, Args)->insertBefore(&Inst);
+     break;
+
+  case FunctionEvent::Exit:
+    if (!Call.getType()->isVoidTy())
+      Args.push_back(&Call);
+
+    CallInst::Create(InstrFn, Args)->insertAfter(&Inst);
+    break;
+  }
+
+  return true;
 }
 
 

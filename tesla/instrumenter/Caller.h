@@ -66,33 +66,34 @@ public:
   virtual bool runOnBasicBlock(llvm::BasicBlock &Block);
 
 private:
-  llvm::StringMap<CallerInstrumentation*> FunctionsToInstrument;
+  CallerInstrumentation* GetOrCreateInstr(llvm::Module&, llvm::Function*,
+                                          FunctionEvent::Direction);
+
+  llvm::StringMap<CallerInstrumentation*> Calls;
+  llvm::StringMap<CallerInstrumentation*> Returns;
 };
 
 
+
 /// Function instrumentation (caller context).
-class CallerInstrumentation : public InstInstrumentation
+class CallerInstrumentation
+  : public FnInstrumentation, public InstInstrumentation
 {
 public:
-  /// Construct an object that can instrument a given function.
-  static CallerInstrumentation* Build(llvm::Module&, const FunctionEvent&);
+  /// Construct an object that can instrument calls to a given function.
+  static CallerInstrumentation* Build(llvm::Module&, llvm::Function *Target,
+                                      FunctionEvent::Direction);
 
-  /// Instrument a (possibly new) direction (entry, exit, both).
-  void AddDirection(FunctionEvent::Direction);
+  // InstInstrumentation implementation:
   bool Instrument(llvm::Instruction&);
 
 private:
   /// Private constructor: clients should use CalleeInstrumention::Build().
-  CallerInstrumentation(llvm::Function *Call,
-                        llvm::Function *Return,
-                        FunctionEvent::Direction Dir
-                       );
-
-  bool In;                        ///< Instrument function entry.
-  bool Out;                       ///< Instrument function exit.
-
-  llvm::Function *CallEvent;      ///< Call when calling instrumented function.
-  llvm::Function *ReturnEvent;    ///< Call when leaving instrumented function.
+  CallerInstrumentation(llvm::Module& M, llvm::Function *Target,
+                        llvm::Function *Instr, FunctionEvent::Direction Dir)
+    : FnInstrumentation(M, Target, Instr, Dir)
+  {
+  }
 };
 
 }
