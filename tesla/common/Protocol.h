@@ -80,6 +80,10 @@ inline bool operator==(const Argument &A1, const Argument &A2) {
   return true;
 }
 
+inline bool operator==(const NowEvent &X, const NowEvent &Y) {
+  return X.location() == Y.location();
+}
+
 inline bool operator==(const FunctionEvent &E1, const FunctionEvent &E2) {
   if (E1.has_direction())
     if (!E2.has_direction() || (E1.direction() != E1.direction()))
