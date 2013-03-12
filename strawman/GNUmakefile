@@ -55,7 +55,7 @@ include tesla.mk
 
 # Hold onto all LLVM IR files for manual inspection.
 # Just for TESLA development: real consumers don't need to do this.
-.PRECIOUS: ${TESLA_IR}
+.PRECIOUS: ${TESLA_IR} ${SRCS:.c=.ll}
 
 
 # Poor man's dependency tracking.
