@@ -44,7 +44,7 @@ endforeach(test)
 
 add_custom_target(libtesla-test
 	COMMAND
-		llvm-lit -q
+		llvm-lit -qv
 		${CMAKE_SOURCE_DIR}/libtesla/test
 		--param=build_dir=${CMAKE_BINARY_DIR}
 		--param=source_dir=${CMAKE_SOURCE_DIR}
