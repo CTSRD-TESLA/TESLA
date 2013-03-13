@@ -396,7 +396,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 
   if (InstrArgs.size() != TotalArgs)
     report_fatal_error(
-      "instrumentation function takes "
+      "instrumentation for '" + FnEvent.function().name() + "' takes "
       + Twine(InstrArgs.size())
       + " arguments but description in manifest provides "
       + Twine(FnEvent.argument_size())
