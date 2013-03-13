@@ -5,7 +5,7 @@
  * We should be able to look up automata by exact name or by using ANY.
  *
  * Commands for llvm-lit:
- * RUN: clang %cflags %ldflags helpers.c %s -o %t
+ * RUN: clang %cflags %ldflags %s -o %t
  * RUN: %t
  */
 

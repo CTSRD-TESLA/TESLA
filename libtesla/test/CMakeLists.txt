@@ -27,13 +27,11 @@ set(TESTS
 	update
 )
 
-set(OBJ helpers)
-
 # Ignore "unused parameter 'int argc'" warnings in test programs.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
 
 foreach(test ${TESTS})
-	add_executable(${test} ${test}.c ${OBJ}.c)
+	add_executable(${test} ${test}.c)
 	target_link_libraries(${test} tesla)
 
 	if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )

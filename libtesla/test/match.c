@@ -1,7 +1,7 @@
 /** @file match.c  Tests automata key matching. */
 /*
  * Commands for llvm-lit:
- * RUN: clang %cflags %ldflags helpers.c %s -o %t
+ * RUN: clang %cflags %ldflags %s -o %t
  * RUN: %t
  */
 
