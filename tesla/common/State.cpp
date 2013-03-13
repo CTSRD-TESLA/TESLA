@@ -81,17 +81,6 @@ void State::UpdateReferences(ReferenceVector NewRefs)
     return;
   }
 
-  // We already have some notion of variable references; update with
-  // the new information.
-  if (Refs.size() < Len) {
-    OwningArrayPtr<const Argument*> NewCopy(new const Argument*[Len]);
-    memcpy(NewCopy.get(), VariableReferences.get(),
-           Refs.size() * sizeof(Refs[0]));
-
-    VariableReferences.swap(NewCopy);
-    Refs = MutableReferenceVector(VariableReferences.get(), Len);
-  }
-
   for (auto *Arg : NewRefs) {
     assert(Arg != NULL);
     assert(Arg->type() == Argument::Variable);
