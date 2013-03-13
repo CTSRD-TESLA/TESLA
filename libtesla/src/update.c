@@ -104,7 +104,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 				continue;
 
 			tesla_key *k = &inst->ti_key;
-			if (!t->fork && (k->tk_mask != pattern.tk_mask))
+			if (k->tk_mask != pattern.tk_mask)
 				continue;
 
 			// At this point, predjudice attaches: the instance
