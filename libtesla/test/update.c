@@ -44,23 +44,21 @@ main(int argc, char **argv)
 
 	// Test the following sequence of automata update events:
 	//
-	// (X,X,X,X): 0->1       new    (X,X,X,X):1
+	// (X,X,X,X): 0->1       fork   (X,X,X,X):0 -> (X,X,X,X):1
 	// (1,X,X,X): 1->2       fork   (X,X,X,X):1 -> (1,X,X,X):2
 	// (1,2,X,X): 2->3       fork   (1,X,X,X):2 -> (1,2,X,X):3
 	// (1,2,X,X): 3->4       update (1,2,X,X):3 -> (1,2,X,X):4
 	// (2,X,X,X): 1->5       fork   (X,X,X,X):1 -> (2,X,X,X):5
 	// (2,X,X,3): 5->6       fork   (2,X,X,X):5 -> (2,X,X,3):6
 	// (2,X,X,4): 1->7       fork   (X,X,X,X):1 -> (2,X,X,4):7
+	// (3,X,X,X): 0->8       fork   (X,X,X,X):0 -> (3,X,X,X):8
 
 	struct tesla_key key;
 
-	struct tesla_transition transition = { .fork = 0 };
-	uint32_t *from = &transition.from;
-	uint32_t *from_mask = &transition.mask;
-	uint32_t *to = &transition.to;
+	struct tesla_transition t[2];
 	struct tesla_transitions trans = {
 		.length = 1,
-		.transitions = &transition
+		.transitions = t
 	};
 
 	const struct tesla_key
@@ -72,14 +70,15 @@ main(int argc, char **argv)
 	VERBOSE_PRINT(
 		"(X,X,X,X): 0->1       new    (X,X,X,X):1\n");
 	key.tk_mask = 0;
-	*from = 0;
-	*from_mask = 0x0;
-	*to = 1;
+	t[0].from = 0;
+	t[0].mask = 0x0;
+	t[0].to = 1;
+	t[0].fork = 1;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (0:0x0 -> 1) ]
+	 * CHECK:   transitions:    [ (0:0x0 -> 1 <fork>) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
 	 * CHECK: ----
@@ -99,9 +98,10 @@ main(int argc, char **argv)
 		"(1,X,X,X): 1->2       fork   (X,X,X,X):1 -> (1,X,X,X):2\n");
 	key.tk_mask = 1;
 	key.tk_keys[0] = 1;
-	*from = 1;
-	*from_mask = 0x0;
-	*to = 2;
+	t[0].from = 1;
+	t[0].mask = 0x0;
+	t[0].to = 2;
+	t[0].fork = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -128,9 +128,10 @@ main(int argc, char **argv)
 	key.tk_mask = 3;
 	key.tk_keys[0] = 1;
 	key.tk_keys[1] = 2;
-	*from = 2;
-	*from_mask = 0x1;
-	*to = 3;
+	t[0].from = 2;
+	t[0].mask = 0x1;
+	t[0].to = 3;
+	t[0].fork = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -157,9 +158,10 @@ main(int argc, char **argv)
 	key.tk_mask = 3;
 	key.tk_keys[0] = 1;
 	key.tk_keys[1] = 2;
-	*from = 3;
-	*from_mask = 0x3;
-	*to = 4;
+	t[0].from = 3;
+	t[0].mask = 0x3;
+	t[0].to = 4;
+	t[0].fork = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -185,9 +187,10 @@ main(int argc, char **argv)
 		"(2,X,X,X): 1->5       fork   (X,X,X,X):1 -> (2,X,X,X):5\n");
 	key.tk_mask = 1;
 	key.tk_keys[0] = 2;
-	*from = 1;
-	*from_mask = 0;
-	*to = 5;
+	t[0].from = 1;
+	t[0].mask = 0;
+	t[0].to = 5;
+	t[0].fork = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -214,9 +217,10 @@ main(int argc, char **argv)
 	key.tk_mask = 9;
 	key.tk_keys[0] = 2;
 	key.tk_keys[3] = 3;
-	*from = 5;
-	*from_mask = 0x1;
-	*to = 6;
+	t[0].from = 5;
+	t[0].mask = 0x1;
+	t[0].to = 6;
+	t[0].fork = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -243,9 +247,10 @@ main(int argc, char **argv)
 	key.tk_mask = 9;
 	key.tk_keys[0] = 2;
 	key.tk_keys[3] = 4;
-	*from = 1;
-	*from_mask = 0x0;
-	*to = 7;
+	t[0].from = 1;
+	t[0].mask = 0x0;
+	t[0].to = 7;
+	t[0].fork = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -259,6 +264,7 @@ main(int argc, char **argv)
 	 * CHECK: clone  0:1 -> 5:7
 	 * CHECK: ----
 	 * CHECK: 6/{{[0-9]+}} instances
+	 * CHECK: ====
 	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 
@@ -266,16 +272,50 @@ main(int argc, char **argv)
 	assert(count(store, &one) == 2);
 	assert(count(store, &two) == 3);
 
+	// (X,X,X,X): 0->8       fork   (X,X,X,X):0 -> (X,X,X,X):8
+	VERBOSE_PRINT(
+		"(X,X,X,X): 0->8       fork   (X,X,X,X):0 -> (X,X,X,X):8\n");
+	key.tk_mask = 0;
+	t[0].from = 0;
+	t[0].mask = 0x0;
+	t[0].to = 8;
+	t[0].fork = 1;
+	t[1].from = 1;
+	t[1].mask = 0x0;
+	t[1].to = 9;
+	t[1].fork = 0;
+	trans.length = 2;
+	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state()
+	 * CHECK:   context:        global
+	 * CHECK:   transitions:    [ (0:0x0 -> 8 <fork>) (1:0x0 -> 9) ]
+	 * CHECK: ----
+	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: ----
+	 * CHECK: 6/{{[0-9]+}} instances
+	 * CHECK: ----
+	 * CHECK: update 0: 1->9
+	 * CHECK: new    6: 8
+	 * CHECK: ----
+	 * CHECK: 7/{{[0-9]+}} instances
+	 */
+	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
+
+	assert(count(store, &any) == 7);
+	assert(count(store, &one) == 2);
+	assert(count(store, &two) == 3);
 
 	/*
 	 * After all that, we should be left with the following automata:
 	 *
-	 * CHECK: 0: state 1, 0x0 [ X X X X ]
+	 * CHECK: 0: state 9, 0x0 [ X X X X ]
 	 * CHECK: 1: state 2, 0x1 [ 1 X X X ]
 	 * CHECK: 2: state 4, 0x3 [ 1 2 X X ]
 	 * CHECK: 3: state 5, 0x1 [ 2 X X X ]
 	 * CHECK: 4: state 6, 0x9 [ 2 X X 3 ]
 	 * CHECK: 5: state 7, 0x9 [ 2 X X 4 ]
+	 * CHECK: 6: state 8, 0x0 [ X X X X ]
 	 * CHECK: ====
 	 */
 
