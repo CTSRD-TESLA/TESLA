@@ -82,23 +82,21 @@ void State::UpdateReferences(ReferenceVector NewRefs)
   }
 
   for (auto *Arg : NewRefs) {
-    assert(Arg != NULL);
+    if (Arg == NULL)
+      continue;
+
     assert(Arg->type() == Argument::Variable);
     assert(((size_t) Arg->index()) <= Len);
-    Refs[Arg->index()] = Arg;
-  }
 
-  for (size_t i = 0; i < NewRefs.size(); i++) {
-    assert(Refs[i] != NULL);
+    uint32_t Index = Arg->index();
+    const Argument *Existing = Refs[Index];
 
-    const Argument **Space = VariableReferences.get() + i;
-    const Argument *Old = *Space;
-    const Argument *New = NewRefs[i];
+    if (Existing == NULL)
+      Refs[Index] = Arg;
 
-    // Sanity check: we shouldn't be losing information.
-    if ((Old->type() != Argument::Any) && (New->type() == Argument::Any))
-      report_fatal_error(
-        "replacing concrete Argument '" + ShortName(New) + " with ANY");
+    else
+      // Sanity check: we shouldn't be losing information.
+      assert(*Existing == *Arg);
   }
 }
 
