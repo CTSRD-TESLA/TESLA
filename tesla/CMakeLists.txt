@@ -61,5 +61,6 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}/common")
 add_subdirectory(analyser)
 add_subdirectory(common)
 add_subdirectory(instrumenter)
+add_subdirectory(test)
 add_subdirectory(tools)
 

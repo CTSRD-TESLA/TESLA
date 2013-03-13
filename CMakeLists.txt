@@ -36,7 +36,6 @@ include_directories("${CMAKE_SOURCE_DIR}/include")
 add_subdirectory(libtesla)
 add_subdirectory(tesla)
 add_subdirectory(scripts)
-add_subdirectory(test)
 
 # A top-level 'test' target to drive all tests of TESLA subdirectories.
 add_custom_target(test ALL DEPENDS libtesla-test tesla-test)
