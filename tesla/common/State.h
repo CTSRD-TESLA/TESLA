@@ -68,6 +68,7 @@ public:
   size_t ID() const { return id; }
   bool IsStartState() const { return start; }
   bool IsAcceptingState() const { return (Transitions.size() == 0); }
+  bool RequiresFork() const { return (Transitions.size() > 1); }
 
   void UpdateReferences(llvm::ArrayRef<const Argument*>);
   const ReferenceVector References() const { return Refs; }
