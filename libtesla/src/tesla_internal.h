@@ -99,7 +99,7 @@ int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
 #define __debug
 
 #include <stdio.h>
-#define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
+#define DEBUG_PRINT(...) printf(__VA_ARGS__)
 #define VERBOSE_PRINT(...) if (verbose_debug()) DEBUG_PRINT(__VA_ARGS__)
 
 /** Are we in (verbose) debug mode? */
