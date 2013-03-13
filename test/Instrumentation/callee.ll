@@ -36,7 +36,7 @@
 ; The 'example_syscall' function is supposed to be instrumented in the
 ; callee context, on both entry and exit.
 ; CHECK: define i32 @example_syscall
-define i32 @example_syscall() {
+define i32 @example_syscall(i32* %cred, i32 %index, i32 %op) {
 entry:
   ; CHECK: call void @__tesla_instrumentation_callee_enter_example_syscall
   ; CHECK: call void @__tesla_instrumentation_callee_return_example_syscall
@@ -46,7 +46,7 @@ entry:
 
 ; This function should only be instrumented on entry.
 ; CHECK: define void @void_helper
-define void @void_helper() {
+define void @void_helper(i32 %foo) {
 entry:
   ; CHECK: call void @__tesla_instrumentation_callee_enter_void_helper
   ; CHECK-NOT: call void @__tesla_instrumentation_callee_return_void_helper
@@ -56,7 +56,7 @@ entry:
 
 ; This one should only be instrumented on exit.
 ; CHECK: define i32 @some_helper
-define i32 @some_helper() {
+define i32 @some_helper(i32 %foo) {
 entry:
   ; CHECK-NOT: call void @__tesla_instrumentation_callee_enter_some_helper
   ; CHECK: call void @__tesla_instrumentation_callee_return_some_helper
@@ -88,11 +88,11 @@ entry:
 
 
 ; void void_helper(): entry only
-; CHECK-NOT: define void @__tesla_instrumentation_callee_return_void_helper()
+; CHECK-NOT: define void @__tesla_instrumentation_callee_return_void_helper(
 
-; CHECK: define void @__tesla_instrumentation_callee_enter_void_helper()
+; CHECK: define void @__tesla_instrumentation_callee_enter_void_helper(
 ; there should be at least one call to tesla_update_state():
 ; CHECK: call i32 @tesla_update_state
 
-; CHECK-NOT: define void @__tesla_instrumentation_callee_return_void_helper()
+; CHECK-NOT: define void @__tesla_instrumentation_callee_return_void_helper(
 

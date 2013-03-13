@@ -49,6 +49,14 @@ using std::vector;
 
 namespace tesla {
 
+/**
+ * Map instrumentation arguments into a @ref tesla_key that can be used to
+ * look up automata.
+ */
+llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
+                          llvm::Function::ArgumentListType& InstrumentationArgs,
+                          FunctionEvent FnEventDescription);
+
 //! Construct a single @ref tesla_transition.
 Constant* ConstructTransition(IRBuilder<>&, Module&,
                               const struct tesla_transition&);
@@ -113,7 +121,7 @@ void FnInstrumentation::AppendInstrumentation(
   vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
   Args.push_back(ConstantInt::get(IntType, A.ID()));
-  Args.push_back(ConstructKey(Builder, M, Args));
+  Args.push_back(ConstructKey(Builder, M, InstrFn->getArgumentList(), Ev));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
   Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
   Args.push_back(ConstructTransitions(Builder, M, Transitions));
@@ -129,14 +137,6 @@ void FnInstrumentation::AppendInstrumentation(
   Builder.CreateCondBr(Error, Exit, FindBlock("die", *InstrFn));
 }
 
-
-/**
- * Map instrumentation arguments into a @ref tesla_key that can be used to
- * look up automata.
- */
-llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
-                          llvm::Function::ArgumentListType& InstrumentationArgs,
-                          FunctionEvent FnEventDescription);
 
 StructType* KeyType(Module& M) {
   const char Name[] = "tesla_key";
