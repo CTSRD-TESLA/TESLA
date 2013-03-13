@@ -70,6 +70,9 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
         continue;
 
       auto& FnEvent = Head->FnEvent();
+      if (FnEvent.context() != FunctionEvent::Caller)
+        continue;
+
       Function *Target = M.getFunction(FnEvent.function().name());
       if (!Target)
         continue;

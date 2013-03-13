@@ -75,6 +75,9 @@ bool TeslaCalleeInstrumenter::runOnModule(Module &M) {
         continue;
 
       auto& FnEvent = Head->FnEvent();
+      if (FnEvent.context() != FunctionEvent::Callee)
+        continue;
+
       Function *Target = M.getFunction(FnEvent.function().name());
 
       // Only handle functions that are defined in this module.
