@@ -13,7 +13,8 @@
  *
  * Commands for llvm-lit:
  * RUN: clang %cflags %ldflags helpers.c %s -o %t
- * RUN: %t
+ * RUN: %t > %t.out 2>&1
+ * RUN: FileCheck --input-file=%t.out %s
  */
 
 #include "tesla_internal.h"
@@ -74,6 +75,21 @@ main(int argc, char **argv)
 	*from = 0;
 	*from_mask = 0x0;
 	*to = 1;
+	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state()
+	 * CHECK:   context:        global
+	 * CHECK:   transitions:    [ (0:0x0 -> 1) ]
+	 * CHECK: ----
+	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: ----
+	 * CHECK: 0/{{[0-9]+}} instances
+	 * CHECK: ----
+	 * CHECK: new  0: 1
+	 * CHECK: ----
+	 * CHECK: 1/{{[0-9]+}} instances
+	 * CHECK: ====
+	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 	assert(count(store, &any) == 1);
 	assert(count(store, &one) == 0);
@@ -86,6 +102,21 @@ main(int argc, char **argv)
 	*from = 1;
 	*from_mask = 0x0;
 	*to = 2;
+	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state()
+	 * CHECK:   context:        global
+	 * CHECK:   transitions:    [ (1:0x0 -> 2) ]
+	 * CHECK: ----
+	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: ----
+	 * CHECK: 1/{{[0-9]+}} instances
+	 * CHECK: ----
+	 * CHECK: clone  0:1 -> 1:2
+	 * CHECK: ----
+	 * CHECK: 2/{{[0-9]+}} instances
+	 * CHECK: ====
+	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 
 	assert(count(store, &any) == 2);
@@ -100,6 +131,21 @@ main(int argc, char **argv)
 	*from = 2;
 	*from_mask = 0x1;
 	*to = 3;
+	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state()
+	 * CHECK:   context:        global
+	 * CHECK:   transitions:    [ (2:0x1 -> 3) ]
+	 * CHECK: ----
+	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: ----
+	 * CHECK: 2/{{[0-9]+}} instances
+	 * CHECK: ----
+	 * CHECK: clone  1:2 -> 2:3
+	 * CHECK: ----
+	 * CHECK: 3/{{[0-9]+}} instances
+	 * CHECK: ====
+	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 
 	assert(count(store, &any) == 3);
@@ -114,6 +160,21 @@ main(int argc, char **argv)
 	*from = 3;
 	*from_mask = 0x3;
 	*to = 4;
+	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state()
+	 * CHECK:   context:        global
+	 * CHECK:   transitions:    [ (3:0x3 -> 4) ]
+	 * CHECK: ----
+	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: ----
+	 * CHECK: 3/{{[0-9]+}} instances
+	 * CHECK: ----
+	 * CHECK: update  2: 3->4
+	 * CHECK: ----
+	 * CHECK: 3/{{[0-9]+}} instances
+	 * CHECK: ====
+	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 
 	assert(count(store, &any) == 3);
@@ -127,6 +188,21 @@ main(int argc, char **argv)
 	*from = 1;
 	*from_mask = 0;
 	*to = 5;
+	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state()
+	 * CHECK:   context:        global
+	 * CHECK:   transitions:    [ (1:0x0 -> 5) ]
+	 * CHECK: ----
+	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: ----
+	 * CHECK: 3/{{[0-9]+}} instances
+	 * CHECK: ----
+	 * CHECK: clone  0:1 -> 3:5
+	 * CHECK: ----
+	 * CHECK: 4/{{[0-9]+}} instances
+	 * CHECK: ====
+	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 
 	assert(count(store, &any) == 4);
@@ -141,6 +217,21 @@ main(int argc, char **argv)
 	*from = 5;
 	*from_mask = 0x1;
 	*to = 6;
+	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state()
+	 * CHECK:   context:        global
+	 * CHECK:   transitions:    [ (5:0x1 -> 6) ]
+	 * CHECK: ----
+	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: ----
+	 * CHECK: 4/{{[0-9]+}} instances
+	 * CHECK: ----
+	 * CHECK: clone  3:5 -> 4:6
+	 * CHECK: ----
+	 * CHECK: 5/{{[0-9]+}} instances
+	 * CHECK: ====
+	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 
 	assert(count(store, &any) == 5);
@@ -155,6 +246,20 @@ main(int argc, char **argv)
 	*from = 1;
 	*from_mask = 0x0;
 	*to = 7;
+	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state()
+	 * CHECK:   context:        global
+	 * CHECK:   transitions:    [ (1:0x0 -> 7) ]
+	 * CHECK: ----
+	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: ----
+	 * CHECK: 5/{{[0-9]+}} instances
+	 * CHECK: ----
+	 * CHECK: clone  0:1 -> 5:7
+	 * CHECK: ----
+	 * CHECK: 6/{{[0-9]+}} instances
+	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 
 	assert(count(store, &any) == 6);
@@ -165,12 +270,13 @@ main(int argc, char **argv)
 	/*
 	 * After all that, we should be left with the following automata:
 	 *
-	 * (X,X,X,X):1
-	 * (1,X,X,X):2
-	 * (1,2,X,X):3
-	 * (2,X,X,X):4
-	 * (2,X,X,3):5
-	 * (2,X,X,4):6
+	 * CHECK: 0: state 1, 0x0 [ X X X X ]
+	 * CHECK: 1: state 2, 0x1 [ 1 X X X ]
+	 * CHECK: 2: state 4, 0x3 [ 1 2 X X ]
+	 * CHECK: 3: state 5, 0x1 [ 2 X X X ]
+	 * CHECK: 4: state 6, 0x9 [ 2 X X 3 ]
+	 * CHECK: 5: state 7, 0x9 [ 2 X X 4 ]
+	 * CHECK: ====
 	 */
 
 	return 0;
