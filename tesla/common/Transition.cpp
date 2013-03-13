@@ -149,20 +149,19 @@ void Transition::Append(const OwningPtr<Transition>& Tr,
 void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
                                    ReferenceVector& Ref) const {
 
-  // All states should have the same number of references, even if those
-  // references are currently unknown (or NULL). If this transition references
-  // variables but the previous state doesn't know about references, something
-  // has gone wrong (e.g. a start state wasn't properly initialised).
-  {
 #ifndef NDEBUG
+  // Automata instances are named by a tuple of variables they refererence.
+  // In early states, these references may be unbound (or NULL), but all states
+  // should have the same number of variables.
+  {
     size_t MyArguments = 0;
     for (auto Arg : this->Arguments())
       if (Arg->type() == Argument::Variable)
         MyArguments++;
 
     assert(!From.References().empty() || (MyArguments == 0));
-#endif
   }
+#endif
 
   // Put this transition's *variable* references in var-index order.
   SmallVector<const Argument*, 4> MyRefs;

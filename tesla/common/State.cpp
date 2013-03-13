@@ -73,7 +73,7 @@ void State::UpdateReferences(ReferenceVector NewRefs)
   const size_t Len = NewRefs.size();
 
   if (!VariableReferences) {
-    // If we don't currently know about variable references, copy these.
+    // If we don't have any bound variables, just copy NewRefs.
     VariableReferences.reset(new const Argument*[Len]);
     memcpy(VariableReferences.get(), NewRefs.data(), Len * sizeof(Refs[0]));
 
