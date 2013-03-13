@@ -108,11 +108,11 @@ expression {
     expression {
       type: BOOLEAN_EXPR
       booleanExpr {
-        operation: BE_Or
+        operation: BE_Xor
         expression {
           type: BOOLEAN_EXPR
           booleanExpr {
-            operation: BE_Or
+            operation: BE_Xor
             expression {
               type: SEQUENCE
               sequence {
@@ -141,7 +141,7 @@ expression {
                 expression {
                   type: BOOLEAN_EXPR
                   booleanExpr {
-                    operation: BE_Or
+                    operation: BE_Xor
                     expression {
                       type: NULL_EXPR
                     }
@@ -192,7 +192,7 @@ expression {
                 expression {
                   type: BOOLEAN_EXPR
                   booleanExpr {
-                    operation: BE_Or
+                    operation: BE_Xor
                     expression {
                       type: NULL_EXPR
                     }
@@ -220,7 +220,7 @@ expression {
                 expression {
                   type: BOOLEAN_EXPR
                   booleanExpr {
-                    operation: BE_Or
+                    operation: BE_Xor
                     expression {
                       type: SEQUENCE
                       sequence {
@@ -249,7 +249,7 @@ expression {
                         expression {
                           type: BOOLEAN_EXPR
                           booleanExpr {
-                            operation: BE_Or
+                            operation: BE_Xor
                             expression {
                               type: SUB_AUTOMATON
                               subAutomaton {
@@ -332,7 +332,7 @@ expression {
     expression {
       type: BOOLEAN_EXPR
       booleanExpr {
-        operation: BE_Or
+        operation: BE_Xor
         expression {
           type: SEQUENCE
           sequence {
@@ -498,7 +498,7 @@ expression {
     expression {
       type: BOOLEAN_EXPR
       booleanExpr {
-        operation: BE_Or
+        operation: BE_Xor
         expression {
           type: SUB_AUTOMATON
           subAutomaton {
@@ -552,7 +552,7 @@ expression {
             expression {
               type: BOOLEAN_EXPR
               booleanExpr {
-                operation: BE_Or
+                operation: BE_Xor
                 expression {
                   type: NULL_EXPR
                 }
@@ -1038,7 +1038,7 @@ context: ThreadLocal
 expression {
   type: BOOLEAN_EXPR
   booleanExpr {
-    operation: BE_Or
+    operation: BE_Xor
     expression {
       type: SEQUENCE
       sequence {
@@ -1193,7 +1193,7 @@ context: Global
 expression {
   type: BOOLEAN_EXPR
   booleanExpr {
-    operation: BE_Or
+    operation: BE_Xor
     expression {
       type: SEQUENCE
       sequence {
@@ -1274,7 +1274,7 @@ expression {
         expression {
           type: BOOLEAN_EXPR
           booleanExpr {
-            operation: BE_Or
+            operation: BE_Xor
             expression {
               type: FUNCTION
               function {
@@ -1310,7 +1310,7 @@ expression {
         expression {
           type: BOOLEAN_EXPR
           booleanExpr {
-            operation: BE_Or
+            operation: BE_Xor
             expression {
               type: NULL_EXPR
             }

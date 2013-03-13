@@ -38,6 +38,7 @@
 
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Twine.h>
+#include <llvm/Support/raw_ostream.h>   // TODO: remove once TODOs below fixed
 
 #include <google/protobuf/text_format.h>
 
@@ -271,20 +272,18 @@ State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
   Transition::Create(*RHSFinal, *Join, Transitions);
 
   switch (Expr.operation()) {
-  default:
-    llvm_unreachable("unhandled BooleanExpr::Operation");
+  case BooleanExpr::BE_Xor:
+    return Join;
 
   case BooleanExpr::BE_Or:
+    // TODO: convert to exclusive-or
+    llvm::errs() << "TESLA WARNING: using unsupported inclusive OR feature\n";
     return Join;
 
   case BooleanExpr::BE_And:
     // TODO: join two (sets of) final states together
+    llvm::errs() << "TESLA WARNING: using unsupported AND feature\n";
     return Join;
-
-#if 0
-  case BooleanExpr::BE_XOr:
-    // TODO: ???
-#endif
   }
 }
 

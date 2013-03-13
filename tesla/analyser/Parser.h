@@ -80,13 +80,16 @@ private:
   class Flags {
   public:
     //! Default to callee-context instrumentation.
-    FunctionEvent::CallContext FnInstrContext = FunctionEvent::Callee;
+    FunctionEvent::CallContext FnInstrContext;
+
+    //! Default to inclusive-or.
+    BooleanExpr::Operation OrOperator;
   };
 
   Parser(clang::ASTContext& Ctx, Identifier ID = Identifier(),
          AutomatonDescription::Context C = AutomatonDescription::Global,
-         clang::Stmt *Root = NULL)
-    : Ctx(Ctx), ID(ID), TeslaContext(C), Root(Root)
+         clang::Stmt *Root = NULL, Flags InitialFlags = Flags())
+    : Ctx(Ctx), ID(ID), TeslaContext(C), Root(Root), RootFlags(InitialFlags)
   {
   }
 
@@ -157,6 +160,7 @@ private:
   const Identifier ID;
   const AutomatonDescription::Context TeslaContext;
   const clang::Stmt *Root;
+  const Flags RootFlags;
 
   RefVector References;
 };

@@ -72,7 +72,11 @@ Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
   if (!Bootstrap->Parse(&TeslaContext, Context))
     return NULL;
 
-  return new Parser(Ctx, ID, TeslaContext, Expression);
+  Flags RootFlags;
+  RootFlags.FnInstrContext = FunctionEvent::Callee;
+  RootFlags.OrOperator = BooleanExpr::BE_Or;
+
+  return new Parser(Ctx, ID, TeslaContext, Expression, RootFlags);
 }
 
 
@@ -102,7 +106,11 @@ Parser* Parser::AutomatonParser(FunctionDecl *F, ASTContext& Ctx) {
     return NULL;
   }
 
-  return new Parser(Ctx, ID, Context, F->getBody());
+  Flags RootFlags;
+  RootFlags.FnInstrContext = FunctionEvent::Callee;
+  RootFlags.OrOperator = BooleanExpr::BE_Xor;
+
+  return new Parser(Ctx, ID, Context, F->getBody(), RootFlags);
 }
 
 
@@ -196,10 +204,10 @@ AutomatonDescription* Parser::Parse() {
   // Parse the root: a compound statement or an expression.
   bool Success = false;
   if (auto *C = dyn_cast<CompoundStmt>(Root))
-    Success = Parse(A->mutable_expression(), C, Flags());
+    Success = Parse(A->mutable_expression(), C, RootFlags);
 
   else if (auto *E = dyn_cast<Expr>(Root))
-    Success = Parse(A->mutable_expression(), E, Flags());
+    Success = Parse(A->mutable_expression(), E, RootFlags);
 
   else
     ReportError("expected expression or compound statement", Root);
@@ -209,7 +217,7 @@ AutomatonDescription* Parser::Parse() {
 
   // Keep track of the variables we referenced.
   for (const ValueDecl *D : References)
-    if (!Parse(A->add_argument(), D, false, Flags()))
+    if (!Parse(A->add_argument(), D, false, RootFlags))
       return NULL;
 
   return A.take();
@@ -238,6 +246,8 @@ bool Parser::Parse(Expression *Ex, const Expr *E, Flags F) {
 
 bool Parser::Parse(Expression *E, const BinaryOperator *Bop, Flags F) {
 
+  assert(BooleanExpr_Operation_IsValid(F.OrOperator));
+
   BooleanExpr::Operation Op;
 
   switch (Bop->getOpcode()) {
@@ -249,8 +259,7 @@ bool Parser::Parse(Expression *E, const BinaryOperator *Bop, Flags F) {
     case BO_EQ:       return ParseFunctionCall(E, Bop, F);  // 'foo(x) == y'
 
     case BO_LAnd:     Op = BooleanExpr::BE_And;   break;
-    case BO_LOr:      Op = BooleanExpr::BE_Or;    break;
-    case BO_Xor:      Op = BooleanExpr::BE_Xor;   break;
+    case BO_LOr:      Op = F.OrOperator;          break;
   }
 
   E->set_type(Expression::BOOLEAN_EXPR);
@@ -376,7 +385,7 @@ bool Parser::ParseOptional(Expression *E, const CallExpr *Call, Flags F) {
   // Implemented as (null || optional_expression).
   E->set_type(Expression::BOOLEAN_EXPR);
   BooleanExpr *B = E->mutable_booleanexpr();
-  B->set_operation(BooleanExpr::BE_Or);
+  B->set_operation(BooleanExpr::BE_Xor);
 
   B->add_expression()->set_type(Expression::NULL_EXPR);
   return Parse(B->add_expression(), Call->getArg(1), F);
