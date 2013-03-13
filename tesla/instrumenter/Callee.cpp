@@ -45,8 +45,6 @@
 #include "llvm/Support/InstIterator.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include <libtesla.h>
-
 using namespace llvm;
 
 using std::string;
@@ -69,25 +67,39 @@ bool TeslaCalleeInstrumenter::runOnModule(Module &M) {
 
   for (auto i : Manifest->AllAutomata()) {
     auto A = *Manifest->FindAutomaton(i.first);
-    for (auto i : A)
-      for (auto *T : i) {
-        auto *FnTrans = dyn_cast<FnTransition>(T);
-        if (!FnTrans)
-          continue;
+    for (auto EquivClass : A) {
+      assert(!EquivClass.empty());
 
-        auto FnEvent = FnTrans->FnEvent();
-        StringRef Name = FnEvent.function().name();
+      auto *Head = dyn_cast<FnTransition>(*EquivClass.begin());
+      if (!Head)
+        continue;
 
-        // Only build instrumentation for this module's functions.
-        Function *Target = M.getFunction(Name);
-        if (!Target || Target->empty())
-          continue;
+      auto& FnEvent = Head->FnEvent();
+      Function *Target = M.getFunction(FnEvent.function().name());
 
-        auto *FnInstr = GetOrCreateInstr(M, Target, FnEvent.direction());
-        FnInstr->AppendInstrumentation(A, *FnTrans);
+      // Only handle functions that are defined in this module.
+      if (!Target || Target->empty())
+        continue;
 
-        ModifiedIR = true;
+      auto *FnInstr = GetOrCreateInstr(M, Target, FnEvent.direction());
+
+      vector<struct tesla_transition> Transitions;
+      for (auto *T : EquivClass) {
+        assert(Head->EquivalentExpression(T) && "not an equivalence class!");
+
+        struct tesla_transition Trans = {
+          .fork   = T->Source().RequiresFork(),
+          .mask   = T->Source().Mask(),
+          .from   = T->Source().ID(),
+          .to     = T->Destination().ID()
+        };
+
+        Transitions.push_back(Trans);
       }
+
+      FnInstr->AppendInstrumentation(A, FnEvent, Transitions);
+      ModifiedIR = true;
+    }
   }
 
   return ModifiedIR;

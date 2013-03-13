@@ -38,6 +38,7 @@
 #include "llvm/IR/IRBuilder.h"
 
 #include "tesla.pb.h"
+#include <libtesla.h>
 
 namespace llvm {
   class BasicBlock;
@@ -58,7 +59,8 @@ class FnTransition;
 //! Instrumentation for a function event.
 class FnInstrumentation {
 public:
-  void AppendInstrumentation(const Automaton&, const FnTransition&);
+  void AppendInstrumentation(const Automaton&, const FunctionEvent&,
+                             llvm::ArrayRef<struct tesla_transition>);
 
 protected:
   FnInstrumentation(llvm::Module& M, const llvm::Function *TargetFn,
