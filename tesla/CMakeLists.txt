@@ -20,8 +20,15 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
 
 
 #
-# LLVM configuration
+# LLVM configuration:
 #
+
+# Explicitly add /usr/local/share/llvm/cmake to the CMake module path; by default,
+# it seems like AddLLVM wants to find things in the build directory (!).
+exec_program(llvm-config ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${LLVM_PREFIX}/share/llvm/cmake")
+
+# Include LLVM configuration:
 find_package(LLVM REQUIRED)
 include(AddLLVM)
 
