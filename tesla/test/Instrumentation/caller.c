@@ -5,9 +5,6 @@
  * RUN: clang -S -emit-llvm %cflags %s -o %t.ll
  * RUN: tesla instrument -S -tesla-manifest %t.tesla %t.ll -o %t.instr.ll
  * RUN: FileCheck -input-file %t.instr.ll %s
- *
- * This test currently fails...
- * XFAIL: *
  */
 
 #include "tesla-macros.h"

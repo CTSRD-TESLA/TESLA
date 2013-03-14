@@ -84,7 +84,14 @@ inline bool operator==(const NowEvent &X, const NowEvent &Y) {
   return X.location() == Y.location();
 }
 
+inline bool operator==(const FunctionRef &X, const FunctionRef &Y) {
+  return (X.name() == Y.name());
+}
+
 inline bool operator==(const FunctionEvent &E1, const FunctionEvent &E2) {
+  if (E1.function() != E2.function())
+    return false;
+
   if (E1.has_direction())
     if (!E2.has_direction() || (E1.direction() != E1.direction()))
       return false;
