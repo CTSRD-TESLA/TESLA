@@ -1,4 +1,4 @@
-/** @file  tesla_debug.c    Debugging helpers for TESLA state. */
+/** @file  debug.c    Debugging helpers for TESLA state. */
 /*-
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
