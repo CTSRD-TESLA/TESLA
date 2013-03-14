@@ -31,6 +31,27 @@ endif ()
 # -D NDEBUG for release builds and assuming debug mode otherwise.
 set_directory_properties(PROPERTIES COMPILE_DEFINITIONS_DEBUG DEBUG)
 
+#
+# Set up some variables to control the testing framework:
+#
+set(SHOW_TEST_STATS false CACHE BOOL "Show statistics after running tests")
+if (SHOW_TEST_STATS)
+  message(STATUS "Will show statistics after each test run")
+  set(LIT_OPTIONS "-sv")
+else ()
+  message(STATUS "Will run successful tests quietly")
+  set(LIT_OPTIONS "-qv")
+endif ()
+
+set(TEST_UNDER_VALGRIND false CACHE BOOL "Run tests under Valgrind")
+if (TEST_UNDER_VALGRIND)
+  message(STATUS "Tests will be run under Valgrind")
+  set(LIT_OPTIONS "${LIT_OPTIONS}" "--vg-leak")
+else ()
+  message(STATUS "Tests will not be run under Valgrind")
+endif ()
+
+
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
 add_subdirectory(libtesla)
