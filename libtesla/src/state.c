@@ -216,11 +216,11 @@ tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip,
 	switch (tsp->ts_action) {
 	case TESLA_ACTION_FAILSTOP:
 		tesla_panic(
-			"tesla_assert_failed: "
-			"unable to move '%s' from state %d"
-			" according to transition matrix %s",
-			tsp->ts_name, tip->ti_state,
-			transition_matrix(trans));
+			"TESLA failure; in automaton '%s':\n%s\n\n"
+			"required to take a transition in %s "
+			"but currently in state %d",
+			tsp->ts_name, tsp->ts_description,
+			transition_matrix(trans), tip->ti_state);
 		break;		/* A bit gratuitous. */
 #ifdef NOTYET
 	case TESLA_ACTION_DTRACE:
