@@ -140,13 +140,11 @@ bool TeslaCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
       continue;
 
     StringRef Name = Callee->getName();
-    auto i = Calls.find(Name);
-    if (i != Calls.end())
-      ModifiedIR |= i->second->Instrument(Call);
+    if (auto Instr = Calls.lookup(Name))
+      ModifiedIR |= Instr->Instrument(Call);
 
-    i = Returns.find(Name);
-    if (i != Returns.end())
-      ModifiedIR |= i->second->Instrument(Call);
+    if (auto Instr = Returns.lookup(Name))
+      ModifiedIR |= Instr->Instrument(Call);
   }
 
   return ModifiedIR;
