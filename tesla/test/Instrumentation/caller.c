@@ -55,7 +55,7 @@ foo()
 	 */
 }
 
-// CHECK: define void @foo()
+// CHECK: define void @bar()
 void
 bar()
 {
