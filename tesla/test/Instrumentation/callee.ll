@@ -29,7 +29,7 @@
 ; SUCH DAMAGE.
 ;
 ; Commands for llvm-lit:
-; RUN: tesla instrument -S -tesla-manifest %p/tesla.manifest %s > %t
+; RUN: tesla instrument -S -tesla-manifest %p/tesla.manifest %s -o %t
 ; RUN: FileCheck -input-file=%t %s
 
 
