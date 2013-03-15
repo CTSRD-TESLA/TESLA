@@ -39,6 +39,9 @@
  * Macros to make TESLA assertions a little easier to read.
  */
 
+#define previously_in_syscall(x)    since(called(example_syscall), x)
+#define eventually_in_syscall(x)    before(returned(example_syscall), x)
+
 /** An inline assertion. */
 #define	TESLA_ASSERT(locality, predicate)				\
 	__tesla_inline_assertion(					\
