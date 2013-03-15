@@ -267,6 +267,9 @@ void	tesla_class_perthread_destroy(struct tesla_class*);
  */
 void	assert_instanceof(struct tesla_instance *i, struct tesla_class *tclass);
 
+/** Print a key into a buffer. */
+int	key_string(char *buffer, size_t len, const struct tesla_key *key);
+
 /** Print a @ref tesla_key to stderr. */
 void	print_key(const struct tesla_key *key);
 
