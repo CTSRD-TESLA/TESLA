@@ -90,32 +90,40 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		if (!tesla_instance_active(inst))
 			continue;
 
-		bool failure = false;
+		// Is this instance required to take a transition?
+		bool transition_required = false;
+
+		// Has this instance actually taken a transition?
+		bool transition_taken = false;
+
 		for (uint32_t j = 0; j < trans->length; j++) {
 			tesla_transition *t = trans->transitions + j;
 
 			// Check whether or not the instance matches the
 			// provided key, masked by what the transition says to
 			// expect from its 'previous' state.
-			tesla_key pattern = *key;
-			pattern.tk_mask &= t->mask;
+			tesla_key masked = *key;
+			masked.tk_mask &= t->mask;
 
-			if (!tesla_key_matches(&pattern, &inst->ti_key))
+			if (!tesla_key_matches(&masked, &inst->ti_key))
 				continue;
 
 			tesla_key *k = &inst->ti_key;
-			if (k->tk_mask != pattern.tk_mask)
+			if (k->tk_mask != masked.tk_mask)
 				continue;
 
 			// At this point, predjudice attaches: the instance
-			// matches a pattern in all ways that matter, so if
-			// it's not in the expected state, there had better
+			// matches everything but the state, so there had better
 			// be a successful transition somewhere in 'trans'
 			// that can be taken.
 			if (inst->ti_state != t->from) {
-				failure = true;
+				transition_required = true;
 				continue;
 			}
+
+			// The match has succeeded: we are either going to
+			// update or clone an existing state.
+			transition_taken = true;
 
 			// If the keys just match (and we haven't been explictly
 			// instructed to fork), just update the state.
@@ -125,7 +133,6 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 				              inst - start, t->from, t->to);
 
 				inst->ti_state = t->to;
-				failure = false;
 				break;
 			}
 
@@ -139,11 +146,10 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 			CHECK(tesla_key_union, &copy->ti_key, key);
 			copy->ti_state = t->to;
-			failure = false;
 			break;
 		}
 
-		if (failure)
+		if (transition_required && !transition_taken)
 			tesla_assert_fail(class, inst, trans);
 	}
 
