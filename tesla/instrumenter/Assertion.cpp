@@ -145,7 +145,9 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     for (const Argument& Arg : Descrip.argument()) {
       Value *V = ValuesInScope[Arg.name()];
       if (V == NULL)
-        report_fatal_error("failed to find assertion arg '" + Arg.name() + "'");
+        report_fatal_error(
+          "TESLA: assertion references non-existent variable '" + Arg.name()
+           + "'; was it defined under '#ifdef TESLA'?");
 
       Args[Arg.index()] = Cast(V, Arg.name(), IntPtrTy, Builder);
     }
