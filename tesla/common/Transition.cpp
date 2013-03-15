@@ -237,7 +237,21 @@ const ReferenceVector FnTransition::Arguments() const {
 }
 
 string FnTransition::ShortLabel() const {
-  return Ev.function().name();
+  std::stringstream ss;
+  ss << Ev.function().name() << "(";
+
+  for (int i = 0; i < Ev.argument_size(); i++)
+    ss
+      << ShortName(&Ev.argument(i))
+      << ((i < Ev.argument_size() - 1) ? "," : "");
+
+  ss
+    << "):"
+    << FunctionEvent::Direction_Name(Ev.direction())
+    << ""
+    ;
+
+  return ss.str();
 }
 
 string FnTransition::DotLabel() const {
