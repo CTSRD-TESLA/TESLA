@@ -53,10 +53,10 @@ perform_operation(int op, struct object *o)
 	TESLA_PERTHREAD(previously_in_syscall(returned(hold, o)));
 	TESLA_PERTHREAD(eventually_in_syscall(called(release, o)));
 
+#ifdef NOTYET
 	/* A simple assertion about struct manipulation. */
 	TESLA_PERTHREAD(previously_in_syscall(o->refcount += 1));
 
-#ifdef NOTYET
 	/* An example of using high-level TESLA macros. */
 	TESLA_PERTHREAD(
 		previously_in_syscall(security_check(ANY(ptr), o, op) == 0)
