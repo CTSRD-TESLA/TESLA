@@ -224,6 +224,9 @@ struct tesla_store {
 int	tesla_class_init(struct tesla_class*, uint32_t context,
 		uint32_t instances);
 
+//! We have failed to find an instance that matches a @ref tesla_key.
+void	tesla_match_fail(struct tesla_class*, const struct tesla_key*,
+		const struct tesla_transitions*);
 
 /*
  * When the assertion fails, what to do?

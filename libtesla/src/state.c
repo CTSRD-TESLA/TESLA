@@ -203,6 +203,53 @@ tesla_class_reset(struct tesla_class *c)
 }
 
 void
+tesla_match_fail(struct tesla_class *class, const struct tesla_key *key,
+                 const struct tesla_transitions *trans)
+{
+	assert(class !=NULL);
+
+	if (class->ts_handler != NULL) {
+		class->ts_handler(NULL);
+		return;
+	}
+
+	static const char *message =
+		"TESLA failure in automaton '%s':\n%s\n\n"
+		"no instance found to match key '%s' for transition(s) %s";
+
+	// Assume a pretty big key...
+	static const size_t LEN = 160;
+	char key_str[LEN];
+	int err = key_string(key_str, LEN, key);
+	assert(err == TESLA_SUCCESS);
+
+	char *trans_str = transition_matrix(trans);
+
+	switch (class->ts_action) {
+	case TESLA_ACTION_FAILSTOP:
+		tesla_panic(message, class->ts_name, class->ts_description,
+		            key_str, trans_str);
+		break;
+
+#ifdef NOTYET
+	case TESLA_ACTION_DTRACE:
+		dtrace_probe(...);
+		return;
+#endif
+
+	case TESLA_ACTION_PRINTF:
+#if defined(_KERNEL) && defined(KDB)
+		kdb_backtrace();
+#endif
+		printf(message, class->ts_name, class->ts_description,
+		       key_str, trans_str);
+		break;
+	}
+
+	free(trans_str);
+}
+
+void
 tesla_assert_fail(struct tesla_class *tsp, struct tesla_instance *tip,
                   const struct tesla_transitions *trans)
 {

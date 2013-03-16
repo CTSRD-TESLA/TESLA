@@ -81,6 +81,21 @@ example_syscall(struct credential *cred, int index, int op)
 		return (error);
 
 	/*
+	 * CHECK: ====
+	 * CHECK: tesla_update_state
+	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: ====
+	 *
+	 * CHECK: ====
+	 * CHECK: tesla_update_state
+	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: ====
+	 */
+	error = get_object(index + 1, &o);
+	if (error != 0)
+		return (error);
+
+	/*
 	 * perform_operation() contains all NOW events:
 	 *
 	 * CHECK: ====

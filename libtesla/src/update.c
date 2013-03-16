@@ -84,6 +84,13 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 	assert(table->tt_length <= 32);
 
+	// Did we match any instances?
+	bool matched_something = false;
+
+	// Make space for cloning existing instances.
+	tesla_instance clones[table->tt_free];
+	size_t cloned = 0;
+
 	// Update existing instances, forking/specialising if necessary.
 	for (uint32_t i = 0; i < table->tt_length; i++) {
 		tesla_instance *inst = table->tt_instances + i;
@@ -98,6 +105,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 		for (uint32_t j = 0; j < trans->length; j++) {
 			tesla_transition *t = trans->transitions + j;
+			const tesla_key *k = &inst->ti_key;
 
 			// Check whether or not the instance matches the
 			// provided key, masked by what the transition says to
@@ -105,30 +113,27 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			tesla_key masked = *key;
 			masked.tk_mask &= t->mask;
 
-			if (!tesla_key_matches(&masked, &inst->ti_key))
+			if (!tesla_key_matches(&masked, k))
 				continue;
 
-			tesla_key *k = &inst->ti_key;
-			if (k->tk_mask != masked.tk_mask)
-				continue;
-
-			// At this point, predjudice attaches: the instance
-			// matches everything but the state, so there had better
-			// be a successful transition somewhere in 'trans'
-			// that can be taken.
 			if (inst->ti_state != t->from) {
-				transition_required = true;
+				// If the instance matches everything but the
+				// state, so there had better be a transition
+				// somewhere in 'trans' that can be taken!
+				if (k->tk_mask == masked.tk_mask)
+					transition_required = true;
+
 				continue;
 			}
 
 			// The match has succeeded: we are either going to
 			// update or clone an existing state.
 			transition_taken = true;
+			matched_something = true;
 
 			// If the keys just match (and we haven't been explictly
 			// instructed to fork), just update the state.
-			if (!t->fork
-			    && SUBSET(key->tk_mask, k->tk_mask)) {
+			if (!t->fork && key->tk_mask == k->tk_mask) {
 				VERBOSE_PRINT("update %td: %tx->%tx\n",
 				              inst - start, t->from, t->to);
 
@@ -138,20 +143,30 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 			// If the keys weren't an exact match, we need to fork
 			// a new (more specific) automaton instance.
-			struct tesla_instance *copy;
-			CHECK(tesla_clone, class, inst, &copy);
-			VERBOSE_PRINT("clone  %td:%tx -> %td:%tx\n",
-			              inst - start, inst->ti_state,
-			              copy - start, t->to);
+			struct tesla_instance *clone = clones + cloned++;
+			*clone = *inst;
+			clone->ti_state = t->to;
 
-			CHECK(tesla_key_union, &copy->ti_key, key);
-			copy->ti_state = t->to;
+			VERBOSE_PRINT("clone  %td:%tx -> %tx\n",
+			              inst - start, inst->ti_state,
+			              t->to);
+
+			CHECK(tesla_key_union, &clone->ti_key, key);
 			break;
 		}
 
 		if (transition_required && !transition_taken)
 			tesla_assert_fail(class, inst, trans);
 	}
+
+	// Move any clones into the instance.
+	for (size_t i = 0; i < cloned; i++) {
+		struct tesla_instance *clone = clones + i;
+		struct tesla_instance *copied_in_place;
+
+		CHECK(tesla_clone, class, clone, &copied_in_place);
+	}
+
 
 	// If there is a (0 -> anything) transition, create a new instance.
 	for (uint32_t i = 0; i < trans->length; i++) {
@@ -163,6 +178,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		CHECK(tesla_instance_new, class, key, t->to, &inst);
 		assert(tesla_instance_active(inst));
 
+		matched_something = true;
 		VERBOSE_PRINT("new    %td: %tx\n",
 		              inst - start, inst->ti_state);
 	}
@@ -172,6 +188,9 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		print_class(class);
 		DEBUG_PRINT("\n====\n\n");
 	}
+
+	if (!matched_something)
+		tesla_match_fail(class, key, trans);
 
 	tesla_class_put(class);
 

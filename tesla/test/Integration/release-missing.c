@@ -8,8 +8,6 @@
  * RUN: %t > %t.out 2>%t.err || true
  * RUN: FileCheck -input-file %t.out %s
  * RUN: FileCheck -check-prefix=ERR -input-file %t.err %s
- *
- * XFAIL: *
  */
 
 #include <errno.h>
