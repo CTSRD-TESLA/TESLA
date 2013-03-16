@@ -10,6 +10,9 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wchar-subscripts -Winline")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wnested-externs -Wredundant-decls")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wold-style-definition")
 
+# For some reason, shared libs on zenith aren't always build with -fPIC...
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+
 add_subdirectory(src)
 add_subdirectory(test)
 
