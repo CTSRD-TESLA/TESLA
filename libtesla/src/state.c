@@ -81,6 +81,14 @@ tesla_class_init(struct tesla_class *tclass,
 }
 
 
+void
+tesla_class_free(struct tesla_class *class)
+{
+	free(class->ts_table);
+	free(class);
+}
+
+
 int
 tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
 	    struct tesla_instance **array, uint32_t *size)

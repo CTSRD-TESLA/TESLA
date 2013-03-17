@@ -61,6 +61,11 @@
 void	tesla_die(const char *event) __attribute__((noreturn));
 
 /**
+ * Clean up a @ref tesla_class.
+ */
+void	tesla_class_free(struct tesla_class*);
+
+/**
  * Create a new @ref tesla_instance.
  *
  * The caller is responsible for locking the class if needed.
