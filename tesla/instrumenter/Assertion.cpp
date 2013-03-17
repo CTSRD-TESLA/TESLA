@@ -103,13 +103,16 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
 
     // Implement the assertion instrumentation.
     const NowTransition *NowTrans = NULL;
-    Function *InstrFn = NULL;
+    Function *InstrFn;
 
     for (auto i : *A)
       for (const Transition *T : i)
         if (auto Now = dyn_cast<NowTransition>(T)) {
           if (Now->Location() != Loc)
-            continue;
+            report_fatal_error(
+              "TESLA: automaton '" + ShortName(Loc)
+              + "' contains NOW event with location '"
+              + ShortName(Now->Location()) + "'");
 
           if (!(InstrFn = CreateInstrumentation(*A, *Now, M)))
             report_fatal_error("error instrumenting NOW event");
@@ -120,7 +123,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
 
     if (!NowTrans)
       report_fatal_error(
-        "TESLA: no 'now' event for location '" + ShortName(Loc) + "'");
+        "TESLA: automaton '" + ShortName(Loc) + "' contains no NOW event");
 
     // Record named values that might be passed to instrumentation, such as
     // function parameters and StoreInst results in the current BasicBlock.
