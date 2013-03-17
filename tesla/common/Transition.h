@@ -72,20 +72,25 @@ public:
    *                               ownership of the new transition.
    * @param[in]       To           The state to transition to.
    * @param[out]      Transitions  A place to record the new transition.
+   * @param[in]       Init         Transition triggers class initialisation.
+   * @param[in]       Cleanup      Transition triggers class cleanup.
    */
-  static void Create(State& From, State& To, TransitionSets& Transitions);
+  static void Create(State& From, State& To, TransitionSets& Transitions,
+                     bool Init = false, bool Cleanup = false);
 
   static void Create(State& From, State& To, const FunctionEvent&,
-                     TransitionSets&);
+                     TransitionSets&, bool Init, bool Cleanup);
 
   static void Create(State& From, State& To, const FieldAssignment&,
-                     TransitionSets&);
+                     TransitionSets&, bool Init, bool Cleanup);
 
   static void Create(State& From, State& To, const NowEvent&,
-                     const AutomatonDescription&, TransitionSets&);
+                     const AutomatonDescription&, TransitionSets&,
+                     bool Init, bool Cleanup);
 
   static void CreateSubAutomaton(State& From, State& To,
-                                 const Identifier&, TransitionSets&);
+                                 const Identifier&, TransitionSets&,
+                                 bool Init, bool Cleanup);
 
   /// Creates a transition between the specified states, with the same
   /// transition type as the copied transition.  This is used when constructing
@@ -97,6 +102,12 @@ public:
 
   const State& Source() const { return From; }
   const State& Destination() const { return To; }
+
+  //! This transition triggers initialisation of its TESLA automata class.
+  bool RequiresInit() const { return Init; }
+
+  //! This transition triggers cleanup of its TESLA automata class.
+  bool RequiresCleanup() const { return Cleanup; }
 
   //! Arguments referenced by this transition.
   virtual const ReferenceVector Arguments() const = 0;
@@ -143,10 +154,17 @@ protected:
 
   static void Append(const llvm::OwningPtr<Transition>&, TransitionSets&);
 
-  Transition(const State& From, const State& To);
+  Transition(const State& From, const State& To, bool Init, bool Cleanup)
+    : From(From), To(To), Init(Init), Cleanup(Cleanup)
+  {
+  }
+
 
   const State& From;
   const State& To;
+
+  bool Init;            //!< This transition triggers initialisation.
+  bool Cleanup;         //!< This transition triggers cleanup.
 };
 
 
@@ -175,8 +193,8 @@ public:
   }
 
 private:
-  NullTransition(const State& From, const State& To)
-    : Transition(From, To) {}
+  NullTransition(const State& From, const State& To, bool Init, bool Cleanup)
+    : Transition(From, To, Init, Cleanup) {}
 
   friend class Transition;
 };
@@ -210,7 +228,10 @@ public:
 
 private:
   NowTransition(const State& From, const State& To, const NowEvent& Ev,
-                const ReferenceVector& Refs);
+                const ReferenceVector& Refs, bool Init, bool Cleanup)
+    : Transition(From, To, Init, Cleanup), Ev(Ev), Refs(Refs)
+  {
+  }
 
   const NowEvent& Ev;
   const ReferenceVector Refs;
@@ -248,8 +269,9 @@ public:
   }
 
 private:
-  FnTransition(const State& From, const State& To, const FunctionEvent& Ev)
-    : Transition(From, To), Ev(Ev) {}
+  FnTransition(const State& From, const State& To, const FunctionEvent& Ev,
+               bool Init, bool Cleanup)
+    : Transition(From, To, Init, Cleanup), Ev(Ev) {}
 
   const FunctionEvent& Ev;
 
@@ -287,7 +309,7 @@ public:
 
 private:
   FieldAssignTransition(const State& From, const State& To,
-                        const FieldAssignment& A);
+                        const FieldAssignment& A, bool Init, bool Cleanup);
 
   static const char *OpString(FieldAssignment::AssignType);
 
@@ -330,8 +352,8 @@ public:
 
 private:
   SubAutomatonTransition(const State& From, const State& To,
-                         const Identifier& ID)
-    : Transition(From, To), ID(ID) {}
+                         const Identifier& ID, bool Init, bool Cleanup)
+    : Transition(From, To, Init, Cleanup), ID(ID) {}
 
   const Identifier& ID;
 

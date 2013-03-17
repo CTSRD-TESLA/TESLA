@@ -83,8 +83,18 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
       for (auto *T : EquivClass) {
         assert(Head->EquivalentExpression(T) && "not an equivalence class!");
 
+        bool Fork = T->Source().RequiresFork();
+        bool Init = T->RequiresInit();
+        bool Clean = T->RequiresCleanup();
+
+        uint32_t Flags =
+          (Fork ? TESLA_TRANS_FORK : 0)
+          | (Init ? TESLA_TRANS_INIT : 0)
+          | (Clean ? TESLA_TRANS_CLEANUP : 0)
+          ;
+
         struct tesla_transition Trans = {
-          .fork   = T->Source().RequiresFork(),
+          .flags  = Flags,
           .mask   = T->Source().Mask(),
           .from   = T->Source().ID(),
           .to     = T->Destination().ID()

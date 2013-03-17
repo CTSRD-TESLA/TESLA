@@ -92,13 +92,15 @@ public:
   void Parse(OwningPtr<NFA>& Out, unsigned int id);
 
 private:
-  State* Parse(const Expression&, State& InitialState);
+  State* Parse(const Expression&, State& InitialState,
+               bool Init = false, bool Cleanup = false);
+
   State* Parse(const BooleanExpr&, State& InitialState);
   State* Parse(const Sequence&, State& InitialState);
-  State* Parse(const NowEvent&, State& InitialState);
-  State* Parse(const FunctionEvent&, State& InitialState);
-  State* Parse(const FieldAssignment&, State& InitialState);
-  State* SubAutomaton(const Identifier&, State& InitialState);
+  State* Parse(const NowEvent&, State& InitialState, bool, bool);
+  State* Parse(const FunctionEvent&, State& InitialState, bool, bool);
+  State* Parse(const FieldAssignment&, State& InitialState, bool, bool);
+  State* SubAutomaton(const Identifier&, State& InitialState, bool, bool);
 
   const AutomatonDescription& Automaton;
   const map<Identifier,AutomatonDescription*>* Descriptions;
@@ -212,7 +214,7 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
 
   // Parse the automaton entry point, if provided...
   if (Automaton.has_beginning()) {
-    Start = Parse(Automaton.beginning(), *Start);
+    Start = Parse(Automaton.beginning(), *Start, true);
     if (!Start) {
       string Str;
       TextFormat::PrintToString(Automaton.beginning(), &Str);
@@ -229,7 +231,7 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
 
   // Parse the automaton finalisation point, if provided...
   if (Automaton.has_end()) {
-    End = Parse(Automaton.end(), *End);
+    End = Parse(Automaton.end(), *End, false, true);
     if (!End) {
       string Str;
       TextFormat::PrintToString(Automaton.end(), &Str);
@@ -237,10 +239,6 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
         "TESLA: failed to parse automaton 'end' event: " + Str);
     }
   }
-
-  // Finally, create the accepting state.
-  State *Accept = State::CreateFinalState(States);
-  Transition::Create(*End, *Accept, Transitions);
 
   const Identifier &ID = Automaton.identifier();
 
@@ -250,29 +248,49 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   Out.reset(new NFA(id, Automaton, ShortName(ID), States, Transitions));
 }
 
-State* NFAParser::Parse(const Expression& Expr, State& Start) {
+State* NFAParser::Parse(const Expression& Expr, State& Start,
+                        bool Init, bool Cleanup) {
+
   switch (Expr.type()) {
   case Expression::BOOLEAN_EXPR:
+    if (Init)
+      report_fatal_error("boolean expression cannot do initialisation");
+
+    if (Cleanup)
+      report_fatal_error("boolean expression cannot do cleanup");
+
     return Parse(Expr.booleanexpr(), Start);
 
   case Expression::SEQUENCE:
+    if (Init)
+      report_fatal_error("sequence transition cannot do initialisation");
+
+    if (Cleanup)
+      report_fatal_error("sequence transition cannot do cleanup");
+
     return Parse(Expr.sequence(), Start);
 
   case Expression::NULL_EXPR:
+    if (Init)
+      report_fatal_error("epsilon transition cannot do initialisation");
+
+    if (Cleanup)
+      report_fatal_error("epsilon transition cannot do cleanup");
+
     return &Start;
 
   case Expression::NOW:
-    return Parse(Expr.now(), Start);
+    return Parse(Expr.now(), Start, Init, Cleanup);
 
   case Expression::FUNCTION:
-    return Parse(Expr.function(), Start);
+    return Parse(Expr.function(), Start, Init, Cleanup);
 
   case Expression::FIELD_ASSIGN:
-    return Parse(Expr.fieldassign(), Start);
+    return Parse(Expr.fieldassign(), Start, Init, Cleanup);
 
   case Expression::SUB_AUTOMATON:
     if (SubAutomataAllowed)
-      return SubAutomaton(Expr.subautomaton(), Start);
+      return SubAutomaton(Expr.subautomaton(), Start, Init, Cleanup);
 
     else {
       // If sub-automata are not allowed, find and parse the sub's definition.
@@ -326,27 +344,33 @@ State* NFAParser::Parse(const Sequence& Seq, State& Start) {
   return Current;
 }
 
-State* NFAParser::Parse(const NowEvent& now, State& InitialState) {
+State* NFAParser::Parse(const NowEvent& now, State& InitialState,
+                        bool Init, bool Cleanup) {
   State *Final = State::Create(States);
-  Transition::Create(InitialState, *Final, now, Automaton, Transitions);
+  Transition::Create(InitialState, *Final, now, Automaton, Transitions,
+                     Init, Cleanup);
   return Final;
 }
 
-State* NFAParser::Parse(const FunctionEvent& Ev, State& InitialState) {
+State* NFAParser::Parse(const FunctionEvent& Ev, State& From,
+                        bool Init, bool Cleanup) {
   State *Final = State::Create(States);
-  Transition::Create(InitialState, *Final, Ev, Transitions);
+  Transition::Create(From, *Final, Ev, Transitions, Init, Cleanup);
   return Final;
 }
 
-State* NFAParser::Parse(const FieldAssignment& Assign, State& InitialState) {
+State* NFAParser::Parse(const FieldAssignment& Assign, State& From,
+                        bool Init, bool Cleanup) {
   State *Final = State::Create(States);
-  Transition::Create(InitialState, *Final, Assign, Transitions);
+  Transition::Create(From, *Final, Assign, Transitions, Init, Cleanup);
   return Final;
 }
 
-State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState) {
+State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState,
+                               bool Init, bool Cleanup) {
   State *Final = State::Create(States);
-  Transition::CreateSubAutomaton(InitialState, *Final, ID, Transitions);
+  Transition::CreateSubAutomaton(InitialState, *Final, ID, Transitions,
+                                 Init, Cleanup);
   return Final;
 }
 

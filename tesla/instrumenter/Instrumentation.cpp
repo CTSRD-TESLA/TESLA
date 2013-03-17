@@ -459,7 +459,8 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 Constant* tesla::ConstructTransition(IRBuilder<>& Builder,
                                      llvm::Module& M,
                                      uint32_t From, uint32_t Mask,
-                                     uint32_t To, bool AlwaysFork) {
+                                     uint32_t To, bool AlwaysFork,
+                                     bool Begin, bool End) {
 
   assert(From != To);
 
@@ -477,7 +478,7 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder,
                                      llvm::Module& M,
                                      const struct tesla_transition& T) {
 
-  uint32_t Values[] = { T.from, T.mask, T.to, T.fork };
+  uint32_t Values[] = { T.from, T.mask, T.to, T.flags };
   Type *IntType = Type::getInt32Ty(M.getContext());
 
   vector<Constant*> Elements;

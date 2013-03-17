@@ -59,7 +59,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1) ]
+	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
 	 * CHECK: ====
 	 */
 	perform_operation(op, o);
@@ -71,7 +71,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * CHECK-NOT: update {{[0-9]+}}: 1->2
 	 *
 	 * ERR: TESLA failure
-	 * ERR: no instance found to match key '0x0 [ X X X X ]' for transition(s) [ (3:0x1 -> 4) ]
+	 * ERR: no instance found to match key '0x0 [ X X X X ]' for transition(s) [ (3:0x1 -> 4 <clean>) ]
 	 */
 	return 0;
 }

@@ -73,7 +73,7 @@ main(int argc, char **argv)
 	t[0].from = 0;
 	t[0].mask = 0x0;
 	t[0].to = 1;
-	t[0].fork = 1;
+	t[0].flags = TESLA_TRANS_FORK;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -101,7 +101,7 @@ main(int argc, char **argv)
 	t[0].from = 1;
 	t[0].mask = 0x0;
 	t[0].to = 2;
-	t[0].fork = 0;
+	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -131,7 +131,7 @@ main(int argc, char **argv)
 	t[0].from = 2;
 	t[0].mask = 0x1;
 	t[0].to = 3;
-	t[0].fork = 0;
+	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -161,7 +161,7 @@ main(int argc, char **argv)
 	t[0].from = 3;
 	t[0].mask = 0x3;
 	t[0].to = 4;
-	t[0].fork = 0;
+	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -190,7 +190,7 @@ main(int argc, char **argv)
 	t[0].from = 1;
 	t[0].mask = 0;
 	t[0].to = 5;
-	t[0].fork = 0;
+	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -220,7 +220,7 @@ main(int argc, char **argv)
 	t[0].from = 5;
 	t[0].mask = 0x1;
 	t[0].to = 6;
-	t[0].fork = 0;
+	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -250,7 +250,7 @@ main(int argc, char **argv)
 	t[0].from = 1;
 	t[0].mask = 0x0;
 	t[0].to = 7;
-	t[0].fork = 0;
+	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
@@ -279,11 +279,11 @@ main(int argc, char **argv)
 	t[0].from = 0;
 	t[0].mask = 0x0;
 	t[0].to = 8;
-	t[0].fork = 1;
+	t[0].flags = TESLA_TRANS_FORK;
 	t[1].from = 1;
 	t[1].mask = 0x0;
 	t[1].to = 9;
-	t[1].fork = 0;
+	t[1].flags = 0;
 	trans.length = 2;
 	/*
 	 * CHECK: ====

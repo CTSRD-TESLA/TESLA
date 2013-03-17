@@ -23,7 +23,7 @@ main(int argc, char *argv[])
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
 	 * CHECK: per-thread
-	 * CHECK: transitions:  [ (0:0x0 -> 1) ]
+	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ====
 	 */

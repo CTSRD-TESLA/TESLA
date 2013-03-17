@@ -53,12 +53,12 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1) ]
+	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
 	 * CHECK: ====
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1) ]
+	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
 	 * CHECK: ====
 	 */
 

@@ -44,39 +44,45 @@ using std::string;
 namespace tesla {
 
 
-void Transition::Create(State& From, State& To, TransitionSets& Transitions) {
-  OwningPtr<Transition> T(new NullTransition(From, To));
+void Transition::Create(State& From, State& To, TransitionSets& Transitions,
+                        bool Init, bool Cleanup) {
+  OwningPtr<Transition> T(new NullTransition(From, To, Init, Cleanup));
   Register(T, From, To, Transitions);
 }
 
 void Transition::Create(State& From, State& To, const NowEvent& Ev,
                         const AutomatonDescription& Automaton,
-                        TransitionSets& Transitions) {
+                        TransitionSets& Transitions, bool Init, bool Cleanup) {
 
   ReferenceVector Refs(Automaton.argument().data(),
                                  Automaton.argument_size());
 
-  OwningPtr<Transition> T(new NowTransition(From, To, Ev, Refs));
+  OwningPtr<Transition> T(new NowTransition(From, To, Ev, Refs, Init, Cleanup));
   Register(T, From, To, Transitions);
 }
 
 void Transition::Create(State& From, State& To, const FunctionEvent& Ev,
-                        TransitionSets& Transitions) {
+                        TransitionSets& Transitions, bool Init, bool Cleanup) {
 
-  OwningPtr<Transition> T(new FnTransition(From, To, Ev));
+  OwningPtr<Transition> T(new FnTransition(From, To, Ev, Init, Cleanup));
   Register(T, From, To, Transitions);
 }
 
 void Transition::Create(State& From, State& To, const FieldAssignment& A,
-                        TransitionSets& Transitions) {
-  OwningPtr<Transition> T(new FieldAssignTransition(From, To, A));
+                        TransitionSets& Transitions, bool Init, bool Cleanup) {
+
+  OwningPtr<Transition> T(new FieldAssignTransition(From, To, A,
+                                                    Init, Cleanup));
   Register(T, From, To, Transitions);
 }
 
 void Transition::CreateSubAutomaton(State& From, State& To,
                                     const Identifier& ID,
-                                    TransitionSets& Transitions) {
-  OwningPtr<Transition> T(new SubAutomatonTransition(From, To, ID));
+                                    TransitionSets& Transitions,
+                                    bool Init, bool Cleanup) {
+
+  OwningPtr<Transition> T(new SubAutomatonTransition(From, To, ID,
+                                                     Init, Cleanup));
   Register(T, From, To, Transitions);
 }
 
@@ -84,6 +90,8 @@ void Transition::Copy(State &From, State& To, const Transition* Other,
                    TransitionSets& Transitions) {
 
   OwningPtr<Transition> New;
+  bool Init = Other->RequiresInit();
+  bool Cleanup = Other->RequiresCleanup();
 
   switch (Other->getKind()) {
   case Null:
@@ -91,22 +99,23 @@ void Transition::Copy(State &From, State& To, const Transition* Other,
 
   case Now: {
     auto O = cast<NowTransition>(Other);
-    New.reset(new NowTransition(From, To, O->Ev, O->Refs));
+    New.reset(new NowTransition(From, To, O->Ev, O->Refs, Init, Cleanup));
     break;
   }
 
   case Fn:
-    New.reset(new FnTransition(From, To, cast<FnTransition>(Other)->Ev));
+    New.reset(new FnTransition(From, To, cast<FnTransition>(Other)->Ev,
+                               Init, Cleanup));
     break;
 
   case FieldAssign:
     New.reset(new FieldAssignTransition(From, To,
-                  cast<FieldAssignTransition>(Other)->Assign));
+                  cast<FieldAssignTransition>(Other)->Assign, Init, Cleanup));
     break;
 
   case SubAutomaton:
     New.reset(new SubAutomatonTransition(From, To,
-                  cast<SubAutomatonTransition>(Other)->ID));
+                  cast<SubAutomatonTransition>(Other)->ID, Init, Cleanup));
     break;
   }
 
@@ -196,21 +205,28 @@ void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
 }
 
 
-Transition::Transition(const State& From, const State& To)
-  : From(From), To(To) {}
-
-
 string Transition::String() const {
+  string Special =
+    string(RequiresInit() ? "<<init>>" : "")
+    + (RequiresCleanup() ? "<<cleanup>>" : "")
+    ;
+
   return (Twine()
     + "--"
     + ShortLabel()
     + "-->("
     + Twine(To.ID())
+    + (Special.empty() ? "" : "; " + Special)
     + ")"
   ).str();
 }
 
 string Transition::Dot() const {
+  string Special =
+    string(RequiresInit() ? "&laquo;init&raquo;" : "")
+    + (RequiresCleanup() ? "&laquo;cleanup&raquo;" : "")
+    ;
+
   return (Twine()
     + "\t"
     + Twine(Source().ID())
@@ -218,15 +234,10 @@ string Transition::Dot() const {
     + Twine(Destination().ID())
     + " [ label = \""
     + DotLabel()
+    + (Special.empty() ? "" : "\\n" + Special)
     + "\" ];\n"
   ).str();
 }
-
-
-NowTransition::NowTransition(const State& From, const State& To,
-                             const NowEvent& Ev,
-                             const ReferenceVector& Refs)
-  : Transition(From, To), Ev(Ev), Refs(Refs) {}
 
 
 const ReferenceVector FnTransition::Arguments() const {
@@ -274,8 +285,9 @@ string FnTransition::DotLabel() const {
 
 
 FieldAssignTransition::FieldAssignTransition(const State& From, const State& To,
-                                             const FieldAssignment& A)
-  : Transition(From, To), Assign(A),
+                                             const FieldAssignment& A,
+                                             bool Init, bool Cleanup)
+  : Transition(From, To, Init, Cleanup), Assign(A),
     ReferencedVariables(new const Argument*[2]),
     Refs(ReferencedVariables.get(), 2)
 {

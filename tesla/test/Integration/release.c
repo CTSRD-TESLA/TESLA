@@ -53,7 +53,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1) ]
+	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
 	 * CHECK: ====
 	 */
 
@@ -84,7 +84,8 @@ example_syscall(struct credential *cred, int index, int op)
 	 * Finally, leaving example_syscall() finalises the automaton:
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (3:0x1 -> 4) ]
+	 * CHECK: transitions:  [ (3:0x1 -> 4 <clean>) ]
+	 * CHECK: tesla_class_reset
 	 * CHECK: ====
 	 */
 	return 0;
