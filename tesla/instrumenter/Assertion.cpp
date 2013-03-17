@@ -102,8 +102,8 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     assert(A);
 
     // Implement the assertion instrumentation.
-    const NowTransition *NowTrans;
-    Function *InstrFn;
+    const NowTransition *NowTrans = NULL;
+    Function *InstrFn = NULL;
 
     for (auto i : *A)
       for (const Transition *T : i)
