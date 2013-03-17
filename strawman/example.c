@@ -52,32 +52,28 @@ perform_operation(int op, struct object *o)
 	TESLA_WITHIN(example_syscall, previously(returned(hold, o)));
 	TESLA_WITHIN(example_syscall, eventually(called(release, o)));
 
-#ifdef NOTYET
 	/* A simple assertion about struct manipulation. */
 	TESLA_WITHIN(example_syscall, previously(o->refcount += 1));
 
 	/* An example of using high-level TESLA macros. */
-	TESLA_WITHIN(
+	TESLA_WITHIN(example_syscall,
 		previously(security_check(ANY(ptr), o, op) == 0)
 		||
 		eventually(log_audit_record(o, op) == 0)
 	);
 
 	/* An example of using the lower-level TESLA interface. */
-	TESLA_GLOBAL(
+	TESLA_GLOBAL(called(example_syscall), returned(example_syscall),
 		TSEQUENCE(
-			called(example_syscall),
 			get_object(ANY(int), ANY(ptr)) == 0,
 			security_check(ANY(ptr), o, op) == 0,
 			some_helper(op) == 0 || called(never_actually_called),
 			optional(called(void_helper, o)),
-			returned(release, o),
-			returned(example_syscall)
+			returned(release, o)
 		)
 		||
 		eventually(log_audit_record(o, op) == 0)
 	);
-#endif
 #endif
 
 	return 0;
