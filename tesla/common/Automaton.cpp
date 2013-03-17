@@ -402,7 +402,11 @@ string stringifyTransitionVectors(TransitionVectors& TVs) {
 }
 
 void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
-  errs() << "Converting inclusive-or to exclusive-or\n";
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
+    errs() << "Converting inclusive-or to exclusive-or\n";
+  }
+#endif  
   /* 
    * X `inclusive-or` Y is computed as:
    * (prefix*(X) || Y) | (X || prefix*(Y)) | (X || Y)
@@ -425,15 +429,25 @@ void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
   auto TI = InitialState.begin();
   Transition *LhsFirstT = *TI;
   Transition *RhsFirstT = *(TI+1);
-  errs() << "Lhs: " << LhsFirstT->String() << "\n";
-  errs() << "Rhs: " << RhsFirstT->String() << "\n";
+
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
+    errs() << "Lhs: " << LhsFirstT->String() << "\n";
+    errs() << "Rhs: " << RhsFirstT->String() << "\n";
+  }
+#endif 
+
   lhs.push_back(LhsFirstT);
   rhs.push_back(RhsFirstT);
   CalculateReachableTransitionsBetween(LhsFirstT->Destination(), EndState, lhs);
   CalculateReachableTransitionsBetween(RhsFirstT->Destination(), EndState, rhs);
 
-  errs() << "Calculated reachable transitions for lhs: " << stringifyTransitionVector(lhs) << "\n";
-  errs() << "Calculated reachable transitions for rhs: " << stringifyTransitionVector(rhs) << "\n";
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
+    errs() << "Calculated reachable transitions for lhs: " << stringifyTransitionVector(lhs) << "\n";
+    errs() << "Calculated reachable transitions for rhs: " << stringifyTransitionVector(rhs) << "\n";
+  }
+#endif 
 
   // End is already the result of lhs | rhs
   // We need to add to this:
@@ -457,7 +471,12 @@ void NFAParser::CalculateReachableTransitionsBetween(const State& Start, State& 
 }
 
 TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts) {
-  errs() << "Generating transition prefixes of " << stringifyTransitionVector(Ts) << "\n";
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
+    errs() << "Generating transition prefixes of " << stringifyTransitionVector(Ts) << "\n";
+  }
+#endif 
+
   TransitionVectors prefixes;
   // add empty prefix
   SmallVector<Transition*,16> lastPrefix;
@@ -473,7 +492,13 @@ TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition
       prefixes.pop_back(); // delete the last element as it is not a prefix
     }
   }
-  errs() << "Computed prefixes: " << stringifyTransitionVectors(prefixes) << "\n";
+
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
+    errs() << "Computed prefixes: " << stringifyTransitionVectors(prefixes) << "\n";
+  }
+#endif
+
   return prefixes;
 }
 
@@ -495,7 +520,11 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
    *            = a ( bcd | cbd | cdb )          | c ( abd | adb | dab )
    *            = abcd | acbd | acdb             | cabd | cadb | cdab
    */
-  errs() << "Entering CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
+    errs() << "Entering CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
+  }
+#endif
 
   if (lhs.empty()) {
     CreateTransitionChainCopy(rhs, InitialState, EndState);
@@ -522,15 +551,27 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
     CreateParallelAutomaton(lhs, rhsCopy, *RhsFirstTNewDest, EndState);
   }
 
-  errs() << "Exiting CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
+    errs() << "Exiting CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
+  }
+#endif
 }
 
 void NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState) {
   State* CurrSource = &InitialState;
-  errs() << "Creating copy of transition chain: " << stringifyTransitionVector(chain) << "\n";
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
+    errs() << "Creating copy of transition chain: " << stringifyTransitionVector(chain) << "\n";
+  }
+#endif
   for (auto TI=chain.begin(), TE=chain.end()-1; TI != TE; TI++) {
     Transition* T = *TI;
+#ifndef NDEBUG
+  if (getenv("VERBOSE_DEBUG")) {
     errs() << "Creating copy of transition: " << T->String() << "\n";
+  }
+#endif
     State* TDest = State::Create(States);
     Transition::Copy(*CurrSource, *TDest, T, Transitions);
     CurrSource = TDest;
