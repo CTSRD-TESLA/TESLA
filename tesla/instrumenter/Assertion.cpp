@@ -115,6 +115,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
             report_fatal_error("error instrumenting NOW event");
 
           NowTrans = Now;
+          break;
         }
 
     if (!NowTrans)
