@@ -58,6 +58,9 @@ public:
    */
   static State* CreateStartState(StateVector& States, unsigned int RefSize);
 
+  //! Create the final, accepting @ref State for an @ref Automaton.
+  static State* CreateFinalState(StateVector& States);
+
   //! Create a non-initial @ref State.
   static State* Create(StateVector&);
 
@@ -67,7 +70,7 @@ public:
 
   size_t ID() const { return id; }
   bool IsStartState() const { return start; }
-  bool IsAcceptingState() const { return (Transitions.size() == 0); }
+  bool IsAcceptingState() const { return accept; }
   bool RequiresFork() const { return (Transitions.size() > 1); }
 
   void UpdateReferences(llvm::ArrayRef<const Argument*>);
@@ -80,10 +83,14 @@ public:
   Transition *const*end() const { return Transitions.end(); }
 
 private:
-  State(size_t id, bool start = false) : id(id), start(start) {}
+  State(size_t id, bool start = false, bool accept = false)
+    : id(id), start(start), accept(accept)
+  {
+  }
 
   const size_t id;
   const bool start;
+  const bool accept;
 
   //! What variables this state references (how an instance is named).
   llvm::OwningArrayPtr<const Argument*> VariableReferences;

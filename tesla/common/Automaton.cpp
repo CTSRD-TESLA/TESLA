@@ -238,6 +238,10 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
     }
   }
 
+  // Finally, create the accepting state.
+  State *Accept = State::CreateFinalState(States);
+  Transition::Create(*End, *Accept, Transitions);
+
   const Identifier &ID = Automaton.identifier();
 
   string Description;

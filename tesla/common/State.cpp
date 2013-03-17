@@ -58,6 +58,12 @@ State* State::CreateStartState(StateVector& States, unsigned int RefSize) {
   return New;
 }
 
+State* State::CreateFinalState(StateVector& States) {
+  State *New = new State(States.size(), false, true);
+  States.push_back(New);
+  return New;
+}
+
 State::~State() {
   for (Transition *T : Transitions) delete T;
 }
