@@ -32,7 +32,10 @@
  */
 
 #include "tesla_internal.h"
+
+#ifndef _KERNEL
 #include <stdlib.h>
+#endif
 
 #define SAFE_SPRINTF(dest, end,  ...)					\
 	dest += snprintf(dest, end - dest, __VA_ARGS__);		\

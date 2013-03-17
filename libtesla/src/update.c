@@ -32,8 +32,10 @@
 
 #include "tesla_internal.h"
 
+#ifndef _KERNEL
 #include <stdbool.h>
 #include <inttypes.h>
+#endif
 
 #define	CHECK(fn, ...) do { \
 	int err = fn(__VA_ARGS__); \
@@ -67,7 +69,8 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	}
 
 	struct tesla_store *store;
-	CHECK(tesla_store_get, tesla_context, 12, 8, &store);
+	CHECK(tesla_store_get, tesla_context, TESLA_MAX_CLASSES,
+	    TESLA_MAX_INSTANCES, &store);
 	VERBOSE_PRINT("store: 0x%tx", (intptr_t) store);
 	VERBOSE_PRINT("\n----\n");
 
