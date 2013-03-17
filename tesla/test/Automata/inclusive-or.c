@@ -4,11 +4,10 @@
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
  * RUN: tesla graph -l %t.tesla -o %t.dot
  * RUN: FileCheck -input-file=%t.dot %s
- *
- * XFAIL: *
+ * 
  */
 
-#include <tesla.h>
+#include "Inputs/tesla-macros.h"
 
 int	a(int);
 int	b(int);
@@ -17,89 +16,75 @@ int	d(int);
 int	e(int);
 int	f(int);
 
-// CHECK: digraph automaton_{{[0-9]+}}
+void ab() {
+  /*
+   * Test a `inclusive-or` b:
+   * This should produce the following automaton:
+   *
+   * = (prefix*(a) || b) | (a || prefix*(b)) | (a || b)
+   * = (ø || b          | (a || ø          | (a || b)
+   * = b                 | a                 | ab | ba
+   */
+  // CHECK: digraph automaton_{{[0-9]+}}
+  int x, y;
+  __tesla_inline_assertion("example.c", __LINE__, __COUNTER__, 
+                           __tesla_perthread, 
+                           called(ab), 
+                           returned(ab), 
+                           a(x)==0 
+                           || 
+                           b(y)==0
+                          );
+  // 0 -- ab() --> 1
+  // CHECK: 0 -> [[CALL:[0-9]+]] [ label = "ab()
+  // 1 -- a(x) --> 1
+  // CHECK: [[CALL]] -> [[A1:[0-9]+]] [ label = "a(x)
+  // 1 -- b(y) --> 3
+  // CHECK: [[CALL]] -> [[B1:[0-9]+]] [ label = "b(y)
+  // 1 -- b(y) --> 4
+  // CHECK: [[CALL]] -> [[A2:[0-9]+]] [ label = "b(y)
+  // 1 -- a(x) --> 4
+  // CHECK: [[CALL]] -> [[A2]] [ label = "a(x)
+  // 1 -- a(x) --> 5
+  // CHECK: [[CALL]] -> [[A3:[0-9]+]] [ label = "a(x)
+  // 1 -- b(y) --> 6
+  // CHECK: [[CALL]] -> [[B3:[0-9]+]] [ label = "b(y)
+  // 2 -- ø -->43
+  // CHECK: [[A1]] -> [[Final:[0-9]+]] [ label = "&#949;
+  // 3 -- � --> 4
+  // CHECK: [[B1]] -> [[Final]] [ label = "&#949;
+  // 5 -- b(y) --> 4
+  // CHECK: [[A3]] -> [[Final]] [ label = "b(y)
+  // 6 -- a(x) --> 4
+  // CHECK: [[B3]] -> [[Final]] [ label = "a(x)
 
-int main(int argc, char *argv[]) {
-	int x, y, z;
-
-	/*
-	 * This simple assertion should result in a not-so-simple automaton:
-	 *
-	 * abc 'inclusive-or' def
-	 * = (prefix*(abc) || def) | (abc || prefix*(def))
-	 * = ((ab?)? || def) | (abc || (de?)?)
-	 * = (∅|a|ab || def) | (abc || ∅|d|de)
-	 * = (def | (a || def) | (ab || def)) | (abc | (abc || d) | (abc || de))
-	 * = (def
-	 *    | (adef | daef | deaf | defa)
-	 *    | (abdef | adbef | adebf | adefb
-	 *       | dabef | daebf | daefb
-	 *       | deabf | deafb
-	 *       | defab)
-	 *   )
-	 *   |
-	 *   (abc
-	 *    | (abcd | abdc | adbc | dabc)
-	 *    | (abcde | abdce | adbce | dabce
-	 *       | abdec | adbec | dabec
-	 *       | adebc | daebc
-	 *       | deabc)
-	 *   )
-	 * = def | adef | daef | deaf | defa | abdef | adbef | adebf | adefb
-	 *   | dabef | daebf | daefb | deabf | deafb | defab
-	 *   | abc | abcd | abdc | adbc | dabc | abcde | abdce | adbce | dabce
-	 *   | abdec | adbec | dabec | adebc | daebc | deabc
-	 *
-	 * = abc | abcd | abcde | abdc | abdce | abdec | abdef
-	 *   | adbc | adbce | adbec | adbef | adebc | adebf | adef | adefb
-	 *   | dabc | dabce | dabec | dabef | daebc | daebf
-	 *   | daef | daefb | deabc | deabf | deaf | deafb
-	 *   | def | defa | defab
-	 *
-	 * = a(b(c | c(d|de) | d(c|ce|ec|ef)))
-	 *   | d(b(c | ce | e(c|f)) | e(b(c|f) | f | fb))
-	 *
-	 */
-	__tesla_inline_assertion("example.c", __LINE__, __COUNTER__,
-	                         __tesla_perthread,
-	                         __tesla_sequence(
-	                             a(x) == 0,
-	                             b(y) == 0,
-	                             c(z) == 0
-	                         )
-	                         ||
-	                         __tesla_sequence(
-	                             d(x) == 0,
-	                             e(y) == 0,
-	                             f(z) == 0
-	                         )
-	);
-	/*
-	 * CHECK: 0 -> [[A:[0-9]+]] [ label = "a(x)
-	 * CHECK: 0 -> [[D:[0-9]+]] [ label = "d(x)
-	 *
-	 * CHECK: [[A]] -> [[AB:[0-9]+]]
-	 * CHECK: [[A]] -> [[AC:[0-9]+]]
-	 * CHECK: [[A]] -> [[AD:[0-9]+]]
-	 *
-	 * CHECK: [[AB]] -> [[ABC:[0-9]+]]
-	 * CHECK: [[AB]] -> [[ABD:[0-9]+]]
-	 *
-	 * CHECK: [[ABC]] -> [[ABCD:[0-9]+]]
-	 *
-	 * CHECK: [[ABCD]] -> [[ABCDE:[0-9]+]]
-	 *
-	 * CHECK: [[ABD]] -> [[ABDC:[0-9]+]]
-	 * CHECK: [[ABD]] -> [[ABDE:[0-9]+]]
-	 *
-	 * CHECK: [[ABDC]] -> [[ABDCE:[0-9]+]]
-	 *
-	 * CHECK: [[ABDE]] -> [[ABDEC:[0-9]+]]
-	 * CHECK: [[ABDE]] -> [[ABDEF:[0-9]+]]
-	 *
-	 * etc.
-	 */
+  // CHECK: label = "example.c:30#0"
 }
 
-// CHECK: label = "example.c:61#0"
+// TODO: write this test
+void abcd() {
+  /*
+   * Test ab `inclusive-or` cd:
+   * This should produce the following automaton:
+   *
+   * = (prefix*(ab) || cd)         | (ab || prefix*(cd))          | (ab || cd)
+   * = (� || cd) | (a || cd)       | (ab || c)       | (ab || ø) | (ab || cd)
+   * = 
+   * = cd        | acd | cad | cda | abc | acb | cab | ab         | a (b || cd)        | c (ab || d)
+   * = cd        | acd | cad | cda | abc | acb | cab | ab         | abcd | acbd | acdb | cabd | cadb | cdab
+   */
+  /*int w, x, y, z;
+  __tesla_inline_assertion("example.c", __LINE__, __COUNTER__,
+                           __tesla_perthread,
+                           __tesla_sequence (
+                             a(w) == 0,
+                             b(x) == 0
+                           )
+                           ||
+                           __tesla_sequence(
+                             c(y) == 0,
+                             d(z) == 0
+                           )
+  );*/
+}
 

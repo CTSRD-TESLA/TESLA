@@ -58,6 +58,7 @@ typedef llvm::MutableArrayRef<const Argument*> MutableReferenceVector;
 //! Sets of transitions whose TESLA events are equivalent (equivalence classes).
 typedef std::vector<llvm::SmallPtrSet<const Transition*,4> > TransitionSets;
 
+typedef llvm::SmallVector<llvm::SmallVector<Transition*, 16>, 4> TransitionVectors;
 
 /// A transition from one TESLA state to another.
 class Transition {

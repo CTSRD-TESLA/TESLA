@@ -101,6 +101,14 @@ private:
   State* Parse(const FunctionEvent&, State& InitialState, bool, bool);
   State* Parse(const FieldAssignment&, State& InitialState, bool, bool);
   State* SubAutomaton(const Identifier&, State& InitialState, bool, bool);
+  
+  // Inclusive-Or stuff
+  void ConvertIncOrToExcOr(State& InitialState, State& EndState);
+  void CalculateReachableTransitionsBetween(const State& InitialState, State& EndState, SmallVector<Transition*,16>& Ts);
+  TransitionVectors GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts);
+  void CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
+  void CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
+  void CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState); 
 
   const AutomatonDescription& Automaton;
   const map<Identifier,AutomatonDescription*>* Descriptions;
@@ -325,13 +333,12 @@ State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
     return Join;
 
   case BooleanExpr::BE_Or:
-    // TODO: convert to exclusive-or
-    llvm::errs() << "TESLA WARNING: using unsupported inclusive OR feature\n";
+    ConvertIncOrToExcOr(Branch, *Join);
     return Join;
 
   case BooleanExpr::BE_And:
     // TODO: join two (sets of) final states together
-    llvm::errs() << "TESLA WARNING: using unsupported AND feature\n";
+    errs() << "TESLA WARNING: using unsupported AND feature\n";
     return Join;
   }
 }
@@ -374,6 +381,163 @@ State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState,
   return Final;
 }
 
+string stringifyTransitionVector(SmallVector<Transition*,16>& Ts) {
+  stringstream ss;
+  for (auto T : Ts) {
+    ss << T->String() << " ";
+  }
+  return ss.str();
+}
+
+string stringifyTransitionVectors(TransitionVectors& TVs) {
+  stringstream ss;
+  ss << "[";
+  for (auto& TV : TVs) {
+    ss << "{";
+    ss << stringifyTransitionVector(TV);
+    ss << "}, ";
+  }
+  ss << "]";
+  return ss.str();
+}
+
+void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
+  errs() << "Converting inclusive-or to exclusive-or\n";
+  /* 
+   * X `inclusive-or` Y is computed as:
+   * (prefix*(X) || Y) | (X || prefix*(Y)) | (X || Y)
+   * where
+   *   X and Y are sequences of transitions
+   *   prefix*(X) is the set of sets of transition prefixes of X 
+   *     (This is equivalent to the powerset of X minus X itself.)
+   *   || is the parallel operator that allow possible interleavings of the 
+   *     lhs and rhs
+   *
+   * For example, ab `inclusive-or` cd refers to the following automaton:
+   *   = (prefix*(ab) || cd)           | (ab || prefix*(cd))   | (ab || cd)
+   *   = (Ã || cd) | (a || cd)         | (ab || Ã) | (ab || c) | (ab || cd)
+   *   = (cd)      | (a || cd)         | (ab)      | (ab || c) | (ab || cd)
+   *   = (cd)      | (acd | cad | cda) | (ab)      | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
+   *   = cd        | acd | cad | cda   | ab        | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
+   */
+  // separate lhs and rhs into different vectors
+  SmallVector<Transition*,16> lhs, rhs;
+  auto TI = InitialState.begin();
+  Transition *LhsFirstT = *TI;
+  Transition *RhsFirstT = *(TI+1);
+  errs() << "Lhs: " << LhsFirstT->String() << "\n";
+  errs() << "Rhs: " << RhsFirstT->String() << "\n";
+  lhs.push_back(LhsFirstT);
+  rhs.push_back(RhsFirstT);
+  CalculateReachableTransitionsBetween(LhsFirstT->Destination(), EndState, lhs);
+  CalculateReachableTransitionsBetween(RhsFirstT->Destination(), EndState, rhs);
+
+  errs() << "Calculated reachable transitions for lhs: " << stringifyTransitionVector(lhs) << "\n";
+  errs() << "Calculated reachable transitions for rhs: " << stringifyTransitionVector(rhs) << "\n";
+
+  // End is already the result of lhs | rhs
+  // We need to add to this:
+  //   (prefix*(lhs) || rhs) | (lhs || prefix*(rhs)) | (lhs || rhs)
+  TransitionVectors lhsPrefixes = GenerateTransitionPrefixesOf(lhs);
+  TransitionVectors rhsPrefixes = GenerateTransitionPrefixesOf(rhs);
+  CreateParallelAutomata(lhsPrefixes, rhs, InitialState, EndState);
+  CreateParallelAutomata(rhsPrefixes, lhs, InitialState, EndState);
+  CreateParallelAutomaton(lhs, rhs, InitialState, EndState);
+}
+
+void NFAParser::CalculateReachableTransitionsBetween(const State& Start, State& End, SmallVector<Transition*,16>& Ts) {
+  Transition* T = *Start.begin();
+  if (Start.ID() == End.ID()) {
+    return;
+  }
+  if (!isa<NullTransition>(T)) { // skip epsilon edges
+    Ts.push_back(T);
+  }
+  CalculateReachableTransitionsBetween(T->Destination(), End, Ts);
+}
+
+TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts) {
+  errs() << "Generating transition prefixes of " << stringifyTransitionVector(Ts) << "\n";
+  TransitionVectors prefixes;
+  // add empty prefix
+  SmallVector<Transition*,16> lastPrefix;
+  prefixes.push_back(lastPrefix);
+  if (Ts.size() > 1) { // catch corner case where length of Ts is 1
+    bool nonEmptyPrefix = false;
+    for (auto T : Ts) {
+      lastPrefix.push_back(T);
+      prefixes.push_back(lastPrefix);
+      nonEmptyPrefix = true;
+    }
+    if (nonEmptyPrefix) {
+      prefixes.pop_back(); // delete the last element as it is not a prefix
+    }
+  }
+  errs() << "Computed prefixes: " << stringifyTransitionVectors(prefixes) << "\n";
+  return prefixes;
+}
+
+void NFAParser::CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState) {
+  for (auto prefix : prefixes) {
+    CreateParallelAutomaton(prefix, rhs, InitialState, EndState);
+  }
+}
+
+// Compute the automaton for lhs || rhs (where || is the parallel operator)
+void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState) {
+  /* 
+   * We build the automaton recursively by repeatedly decomposing lhs || rhs,
+   * until it cannot be decomposed any further.
+   * For example, ab || cd can be decomposed as follows:
+   *   ab || cd = a (b || cd)                    | c (ab || d)
+   *            = a ( b (Ã¸ || cd) | c (b || d) ) | c ( a (b || d)  | d ( ab || Ã¸) )
+   *            = a ( bcd | c (bd | db) )        | c ( a (bd | db) | dab )
+   *            = a ( bcd | cbd | cdb )          | c ( abd | adb | dab )
+   *            = abcd | acbd | acdb             | cabd | cadb | cdab
+   */
+  errs() << "Entering CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
+
+  if (lhs.empty()) {
+    CreateTransitionChainCopy(rhs, InitialState, EndState);
+  }
+  else if (rhs.empty()) {
+    CreateTransitionChainCopy(lhs, InitialState, EndState);
+  }
+  else {
+    // Decompose as per above comment
+    // a (b ||cd)
+    Transition *LhsFirstT = lhs.front();
+    State *LhsFirstTNewDest = State::Create(States);
+    Transition::Copy(InitialState, *LhsFirstTNewDest, LhsFirstT, Transitions);
+    SmallVector<Transition*,16> lhsCopy = lhs;
+    lhsCopy.erase(lhsCopy.begin()); // TODO: use a more efficient data structure (deque?)
+    CreateParallelAutomaton(lhsCopy, rhs, *LhsFirstTNewDest, EndState);
+    
+    // c (ab || d)
+    Transition *RhsFirstT = rhs.front();
+    State *RhsFirstTNewDest = State::Create(States);
+    Transition::Copy(InitialState, *RhsFirstTNewDest, RhsFirstT, Transitions);
+    SmallVector<Transition*,16> rhsCopy = rhs;
+    rhsCopy.erase(rhsCopy.begin()); // TODO: use a more efficient data structure (deque?)
+    CreateParallelAutomaton(lhs, rhsCopy, *RhsFirstTNewDest, EndState);
+  }
+
+  errs() << "Exiting CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
+}
+
+void NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState) {
+  State* CurrSource = &InitialState;
+  errs() << "Creating copy of transition chain: " << stringifyTransitionVector(chain) << "\n";
+  for (auto TI=chain.begin(), TE=chain.end()-1; TI != TE; TI++) {
+    Transition* T = *TI;
+    errs() << "Creating copy of transition: " << T->String() << "\n";
+    State* TDest = State::Create(States);
+    Transition::Copy(*CurrSource, *TDest, T, Transitions);
+    CurrSource = TDest;
+  }
+  // last transition copy goes from CurrSource -> End
+  Transition::Copy(*CurrSource, EndState, chain.back(), Transitions);
+}
 
 typedef std::set<unsigned> NFAState;
 void dump(const NFAState &S) {
