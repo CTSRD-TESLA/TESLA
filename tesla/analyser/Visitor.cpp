@@ -55,8 +55,10 @@ bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
   if (F->getName().compare(INLINE_ASSERTION) != 0) return true;
 
   OwningPtr<Parser> P(Parser::AssertionParser(E, *Context));
-  OwningPtr<AutomatonDescription> A(P->Parse());
+  if (!P)
+    return false;
 
+  OwningPtr<AutomatonDescription> A(P->Parse());
   if (!A)
     return false;
 
