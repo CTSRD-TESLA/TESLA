@@ -38,7 +38,15 @@ typedef	struct __tesla_locality {}	__tesla_locality;
 /** A number of times to match an event: positive or "any number". */
 typedef	int	__tesla_count;
 
-/** Magic "function" representing a TESLA assertion. */
+/**
+ * Magic "function" representing a TESLA assertion.
+ *
+ * Its arguments are:
+ *  * name of the file the assertion is located in (__FILE__)
+ *  * the line the assertion is defined at (__LINE__)
+ *  * a counter to ensure uniqueness (__COUNTER__)
+ *  * the TESLA context (per-thread or global)
+ */
 void __tesla_inline_assertion(const char *filename, int line, int count,
 		__tesla_locality*, ...);
 
