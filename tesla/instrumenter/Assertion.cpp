@@ -141,8 +141,9 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     // Find the arguments to the relevant 'now' instrumentation function.
     const AutomatonDescription& Descrip = A->getAssertion();
     size_t ArgCount = Descrip.argument_size();
-    std::vector<Value*> Args(ArgCount, NULL);
+    assert(ArgCount == InstrFn->getArgumentList().size());
 
+    std::vector<Value*> Args(ArgCount, NULL);
     for (const Argument& Arg : Descrip.argument()) {
       Value *V = ValuesInScope[Arg.name()];
       if (V == NULL)
