@@ -60,6 +60,8 @@ using std::tr1::unordered_set;
 #include <stdlib.h>
 #endif
 
+using google::protobuf::TextFormat;
+
 using namespace llvm;
 
 using std::map;
@@ -208,13 +210,38 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
 
   State *Start = State::CreateStartState(States, VariableRefs);
 
-  if (Parse(Automaton.expression(), *Start) == NULL)
-    return;
+  // Parse the automaton entry point, if provided...
+  if (Automaton.has_beginning()) {
+    Start = Parse(Automaton.beginning(), *Start);
+    if (!Start) {
+      string Str;
+      TextFormat::PrintToString(Automaton.beginning(), &Str);
+      report_fatal_error(
+        "TESLA: failed to parse automaton 'beginning' event: " + Str);
+    }
+  }
+
+  // Parse the main automaton itself.
+  State *End = Parse(Automaton.expression(), *Start);
+  if (!End)
+    report_fatal_error(
+      "TESLA: failed to parse automaton '" + ShortName(Automaton.identifier()));
+
+  // Parse the automaton finalisation point, if provided...
+  if (Automaton.has_end()) {
+    End = Parse(Automaton.end(), *End);
+    if (!End) {
+      string Str;
+      TextFormat::PrintToString(Automaton.end(), &Str);
+      report_fatal_error(
+        "TESLA: failed to parse automaton 'end' event: " + Str);
+    }
+  }
 
   const Identifier &ID = Automaton.identifier();
 
   string Description;
-  ::google::protobuf::TextFormat::PrintToString(Automaton, &Description);
+  TextFormat::PrintToString(Automaton, &Description);
 
   Out.reset(new NFA(id, Automaton, ShortName(ID), States, Transitions));
 }

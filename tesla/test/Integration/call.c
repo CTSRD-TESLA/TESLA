@@ -54,12 +54,14 @@ main(int argc, char *argv[])
 
 
 	// And finally, on the NOW event:
-	TESLA_PERTHREAD(since(called(main),
-		TSEQUENCE(
-			caller(called(foo)),
-			callee(called(bar))
+	TESLA_PERTHREAD(called(main), returned(main),
+		previously(
+			TSEQUENCE(
+				caller(called(foo)),
+				callee(called(bar))
+			)
 		)
-	));
+	);
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state

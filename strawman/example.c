@@ -35,33 +35,32 @@
 #include <assert.h>
 #include <openssl/des.h>
 
-#define previously_in_syscall(x)    since(called(example_syscall), x)
-#define eventually_in_syscall(x)    before(returned(example_syscall), x)
 
 int
 perform_operation(int op, struct object *o)
 {
 #ifdef TESLA
 	/* A very simple TESLA assertion. */
-	TESLA_PERTHREAD(previously_in_syscall(security_check(ANY(ptr), o, op) == 0));
+	TESLA_WITHIN(example_syscall,
+		previously(security_check(ANY(ptr), o, op) == 0));
 
 	/* An even simpler assertion! */
-	TESLA_PERTHREAD(previously_in_syscall(called(security_check)));
+	TESLA_WITHIN(example_syscall, previously(called(security_check)));
 
 	/* More simple assertions. */
-	TESLA_PERTHREAD(previously_in_syscall(called(hold, o)));
-	TESLA_PERTHREAD(previously_in_syscall(returned(hold, o)));
-	TESLA_PERTHREAD(eventually_in_syscall(called(release, o)));
+	TESLA_WITHIN(example_syscall, previously(called(hold, o)));
+	TESLA_WITHIN(example_syscall, previously(returned(hold, o)));
+	TESLA_WITHIN(example_syscall, eventually(called(release, o)));
 
 #ifdef NOTYET
 	/* A simple assertion about struct manipulation. */
-	TESLA_PERTHREAD(previously_in_syscall(o->refcount += 1));
+	TESLA_WITHIN(example_syscall, previously(o->refcount += 1));
 
 	/* An example of using high-level TESLA macros. */
-	TESLA_PERTHREAD(
-		previously_in_syscall(security_check(ANY(ptr), o, op) == 0)
+	TESLA_WITHIN(
+		previously(security_check(ANY(ptr), o, op) == 0)
 		||
-		eventually_in_syscall(log_audit_record(o, op) == 0)
+		eventually(log_audit_record(o, op) == 0)
 	);
 
 	/* An example of using the lower-level TESLA interface. */
@@ -76,7 +75,7 @@ perform_operation(int op, struct object *o)
 			returned(example_syscall)
 		)
 		||
-		eventually_in_syscall(log_audit_record(o, op) == 0)
+		eventually(log_audit_record(o, op) == 0)
 	);
 #endif
 #endif

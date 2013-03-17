@@ -40,7 +40,7 @@ static void	release(struct object *o) { o->refcount -= 1; }
 int
 perform_operation(int op, struct object *o)
 {
-	TESLA_PERTHREAD(eventually_in_syscall(called(release, o)));
+	TESLA_WITHIN(example_syscall, eventually(called(release, o)));
 
 	return 0;
 }
@@ -71,7 +71,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * CHECK-NOT: update {{[0-9]+}}: 1->2
 	 *
 	 * ERR: TESLA failure
-	 * ERR: no instance found to match key '0x0 [ X X X X ]' for transition(s) [ (2:0x1 -> 3) ]
+	 * ERR: no instance found to match key '0x0 [ X X X X ]' for transition(s) [ (3:0x1 -> 4) ]
 	 */
 	return 0;
 }

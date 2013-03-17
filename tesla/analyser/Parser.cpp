@@ -51,9 +51,10 @@ Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
 
   OwningPtr<Parser> Bootstrap(new Parser(Ctx));
 
-  if (Call->getNumArgs() != 5) {
+  if (Call->getNumArgs() != 7) {
     Bootstrap->ReportError(
-      "expected five arguments: filename, line, counter, context, expression",
+      "expected seven arguments: "
+      "filename, line, counter, context, start, end, expression",
       Call);
     return NULL;
   }
@@ -62,7 +63,9 @@ Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
   Expr *Line        = Call->getArg(1);
   Expr *Counter     = Call->getArg(2);
   Expr *Context     = Call->getArg(3);
-  Expr *Expression  = Call->getArg(4);
+  Expr *Beginning   = Call->getArg(4);
+  Expr *End         = Call->getArg(5);
+  Expr *Expression  = Call->getArg(6);
 
   Identifier ID;
   if (!Bootstrap->Parse(ID.mutable_location(), Filename, Line, Counter))
@@ -76,7 +79,7 @@ Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
   RootFlags.FnInstrContext = FunctionEvent::Callee;
   RootFlags.OrOperator = BooleanExpr::BE_Or;
 
-  return new Parser(Ctx, ID, TeslaContext, Expression, RootFlags);
+  return new Parser(Ctx, ID, TeslaContext, Beginning, End, Expression, RootFlags);
 }
 
 
@@ -110,7 +113,7 @@ Parser* Parser::AutomatonParser(FunctionDecl *F, ASTContext& Ctx) {
   RootFlags.FnInstrContext = FunctionEvent::Callee;
   RootFlags.OrOperator = BooleanExpr::BE_Xor;
 
-  return new Parser(Ctx, ID, Context, F->getBody(), RootFlags);
+  return new Parser(Ctx, ID, Context, NULL, NULL, F->getBody(), RootFlags);
 }
 
 
@@ -201,6 +204,13 @@ AutomatonDescription* Parser::Parse() {
   *A->mutable_identifier() = ID;
   A->set_context(TeslaContext);
 
+  // Parse the automaton's [beginning,end] bounds.
+  if (Beginning && !Parse(A->mutable_beginning(), Beginning, RootFlags))
+    return NULL;
+
+  if (End && !Parse(A->mutable_end(), End, RootFlags))
+    return NULL;
+
   // Parse the root: a compound statement or an expression.
   bool Success = false;
   if (auto *C = dyn_cast<CompoundStmt>(Root))
@@ -225,6 +235,9 @@ AutomatonDescription* Parser::Parse() {
 
 
 bool Parser::Parse(Expression *Ex, const Expr *E, Flags F) {
+  assert(Ex != NULL);
+  assert(E != NULL);
+
   E = E->IgnoreImplicit();
 
   if (auto Assign = dyn_cast<CompoundAssignOperator>(E))

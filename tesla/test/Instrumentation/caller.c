@@ -19,12 +19,13 @@ main(int argc, char *argv[])
 	// CHECK: call void @__tesla_instrumentation_callee_enter_main([[INT]] %argc, i8** %argv)
 
 	// Make an assertion about calling foo() and returning from bar():
-	TESLA_PERTHREAD(since(called(main),
+	TESLA_PERTHREAD(called(main), returned(main),
 		TSEQUENCE(
 			caller(called(foo)),
-			caller(returned(bar))
+			caller(returned(bar)),
+			TESLA_NOW
 		)
-	));
+	);
 
 	// We should instrument foo's call but not the return:
 	// CHECK: call void @__tesla_instrumentation_caller_enter_foo

@@ -143,6 +143,12 @@ struct __tesla_automaton_description*	__tesla_automaton_done();
 #define	__tesla_struct_automaton(fn_name)
 #define	__tesla_automaton(name, ...)
 
+#define	__tesla_call(...)	0
+#define	__tesla_return(...)	0
+
+#define	__tesla_callee(...)	0
+#define	__tesla_caller(...)	0
+
 #endif	/* __TESLA_ANALYSER__ */
 
 #endif	/* TESLA_H */

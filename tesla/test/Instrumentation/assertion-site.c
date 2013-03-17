@@ -18,22 +18,24 @@ main(int argc, char *argv[])
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
 	// CHECK: call void @__tesla_instrumentation_assertion_reached_0()
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
-	TESLA_PERTHREAD(since(called(main),
+	TESLA_WITHIN(main,
 		TSEQUENCE(
 			callee(called(foo)),
+			TESLA_NOW,
 			callee(returned(bar))
 		)
-	));
+	);
 
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
 	// CHECK: call void @__tesla_instrumentation_assertion_reached_1()
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
-	TESLA_PERTHREAD(since(called(main),
+	TESLA_WITHIN(main,
 		TSEQUENCE(
 			caller(called(foo)),
-			caller(returned(bar))
+			caller(returned(bar)),
+			TESLA_NOW
 		)
-	));
+	);
 
 	return 0;
 }

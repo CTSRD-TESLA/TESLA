@@ -34,4 +34,43 @@ expression {
     }
   }
 }
+beginning {
+  type: FUNCTION
+  function {
+    function {
+      name: "main"
+    }
+    direction: Entry
+    context: Callee
+    argument {
+      type: Any
+      name: "argc"
+    }
+    argument {
+      type: Any
+      name: "argv"
+    }
+  }
+}
+end {
+  type: FUNCTION
+  function {
+    function {
+      name: "main"
+    }
+    direction: Exit
+    context: Callee
+    argument {
+      type: Any
+      name: "argc"
+    }
+    argument {
+      type: Any
+      name: "argv"
+    }
+    expectedReturnValue {
+      type: Any
+    }
+  }
+}
 ===

@@ -116,6 +116,9 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			if (!tesla_key_matches(&masked, k))
 				continue;
 
+			if (k->tk_mask != t->mask)
+				continue;
+
 			if (inst->ti_state != t->from) {
 				// If the instance matches everything but the
 				// state, so there had better be a transition

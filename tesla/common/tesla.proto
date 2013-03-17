@@ -47,6 +47,12 @@ message AutomatonDescription {
   /** The temporal expression. */
   required Expression expression = 3;
 
+  /** Where the automaton begins: a bound, a place for initialisation. */
+  optional Expression beginning = 6;
+
+  /** Where the automataon ends: a bound, a place for cleanup. */
+  optional Expression end = 7;
+
   /** Program variables referenced by the automaton. */
   repeated Argument argument = 5;
 }

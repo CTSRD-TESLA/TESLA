@@ -88,8 +88,10 @@ private:
 
   Parser(clang::ASTContext& Ctx, Identifier ID = Identifier(),
          AutomatonDescription::Context C = AutomatonDescription::Global,
+         clang::Expr* Begin = NULL, clang::Expr* End = NULL,
          clang::Stmt *Root = NULL, Flags InitialFlags = Flags())
-    : Ctx(Ctx), ID(ID), TeslaContext(C), Root(Root), RootFlags(InitialFlags)
+    : Ctx(Ctx), ID(ID), TeslaContext(C), Beginning(Begin), End(End),
+      Root(Root), RootFlags(InitialFlags)
   {
   }
 
@@ -159,7 +161,9 @@ private:
 
   const Identifier ID;
   const AutomatonDescription::Context TeslaContext;
-  const clang::Stmt *Root;
+  const clang::Expr *Beginning;     //!< Starting point (bound) for automaton.
+  const clang::Expr *End;           //!< End bound for automaton.
+  const clang::Stmt *Root;          //!< Expression describing the automaton.
   const Flags RootFlags;
 
   RefVector References;

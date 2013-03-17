@@ -39,7 +39,7 @@ static void	release(struct object *o) { o->refcount -= 1; }
 int
 perform_operation(int op, struct object *o)
 {
-	TESLA_PERTHREAD(eventually_in_syscall(called(release, o)));
+	TESLA_WITHIN(example_syscall, eventually(called(release, o)));
 
 	return 0;
 }
@@ -48,6 +48,15 @@ perform_operation(int op, struct object *o)
 int
 example_syscall(struct credential *cred, int index, int op)
 {
+	/*
+	 * System call entry is the inital bound of the automaton:
+	 *
+	 * CHECK: ====
+	 * CHECK: tesla_update_state
+	 * CHECK: transitions:  [ (0:0x0 -> 1) ]
+	 * CHECK: ====
+	 */
+
 	struct object *o;
 	int error = get_object(index, &o);
 	if (error != 0)
@@ -58,7 +67,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1) ]
+	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
 	 * CHECK: ====
 	 */
 	perform_operation(op, o);
@@ -66,7 +75,7 @@ example_syscall(struct credential *cred, int index, int op)
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (1:0x1 -> 2) ]
+	 * CHECK: transitions:  [ (2:0x1 -> 3) ]
 	 * CHECK: ====
 	 */
 	release(o);
@@ -75,7 +84,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * Finally, leaving example_syscall() finalises the automaton:
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (2:0x1 -> 3) ]
+	 * CHECK: transitions:  [ (3:0x1 -> 4) ]
 	 * CHECK: ====
 	 */
 	return 0;
