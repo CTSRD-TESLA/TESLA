@@ -414,9 +414,9 @@ void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
    *     lhs and rhs
    *
    * For example, ab `inclusive-or` cd refers to the following automaton:
-   *   = (prefix*(ab) || cd)           | (ab || prefix*(cd))   | (ab || cd)
-   *   = (Ã || cd) | (a || cd)         | (ab || Ã) | (ab || c) | (ab || cd)
-   *   = (cd)      | (a || cd)         | (ab)      | (ab || c) | (ab || cd)
+   *   = (prefix*(ab) || cd)           | (ab || prefix*(cd))         | (ab || cd)
+   *   = (Ã¸ || cd) | (a || cd)         | (ab || Ã¸) | (ab || c)       | (ab || cd)
+   *   = (cd)      | (a || cd)         | (ab)      | (ab || c)       | (ab || cd)
    *   = (cd)      | (acd | cad | cda) | (ab)      | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
    *   = cd        | acd | cad | cda   | ab        | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
    */
