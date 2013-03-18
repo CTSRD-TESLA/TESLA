@@ -304,6 +304,9 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
   assert(From != NULL);
   Type *CurrentType = From->getType();
 
+  if (CurrentType == NewType)
+    return From;
+
   if (!CastInst::isCastable(CurrentType, NewType)) {
     string NewTypeName;
     raw_string_ostream NameOut(NewTypeName);
