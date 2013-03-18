@@ -90,9 +90,6 @@ struct __tesla_event* __tesla_now;
 
 struct __tesla_event* __tesla_optional(__tesla_event*, ...);
 
-/** A repetition of events — this allows globby "?", "*", "+", etc. */
-struct __tesla_event* __tesla_repeat(__tesla_count, __tesla_count, ...);
-
 /** A value that could match a lot of function parameters. Maybe anything? */
 void*		__tesla_any_ptr();
 int		__tesla_any_int();
