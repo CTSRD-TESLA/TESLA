@@ -478,8 +478,8 @@ TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition
 #endif 
 
   TransitionVectors prefixes;
-  // add empty prefix
   SmallVector<Transition*,16> lastPrefix;
+  // add empty prefix
   prefixes.push_back(lastPrefix);
   if (Ts.size() > 1) { // catch corner case where length of Ts is 1
     bool nonEmptyPrefix = false;
@@ -504,7 +504,11 @@ TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition
 
 void NFAParser::CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState) {
   for (auto prefix : prefixes) {
-    CreateParallelAutomaton(prefix, rhs, InitialState, EndState);
+    // Skip the empty prefix because lhs | rhs has already been constructed by 
+    // Parse(const BooleanExpr& Expr, State& Branch) above.
+    if (!prefix.empty()) {
+      CreateParallelAutomaton(prefix, rhs, InitialState, EndState);
+    }
   }
 }
 

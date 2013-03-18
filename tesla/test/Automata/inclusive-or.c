@@ -37,21 +37,17 @@ void ab() {
                           );
   // 0 -- ab() --> 1
   // CHECK: 0 -> [[CALL:[0-9]+]] [ label = "ab()
-  // 1 -- a(x) --> 1
+  // 1 -- a(x) --> 2
   // CHECK: [[CALL]] -> [[A1:[0-9]+]] [ label = "a(x)
   // 1 -- b(y) --> 3
   // CHECK: [[CALL]] -> [[B1:[0-9]+]] [ label = "b(y)
-  // 1 -- b(y) --> 4
-  // CHECK: [[CALL]] -> [[A2:[0-9]+]] [ label = "b(y)
-  // 1 -- a(x) --> 4
-  // CHECK: [[CALL]] -> [[A2]] [ label = "a(x)
   // 1 -- a(x) --> 5
   // CHECK: [[CALL]] -> [[A3:[0-9]+]] [ label = "a(x)
   // 1 -- b(y) --> 6
   // CHECK: [[CALL]] -> [[B3:[0-9]+]] [ label = "b(y)
-  // 2 -- Ã¸ -->43
+  // 2 -- ø --> 4
   // CHECK: [[A1]] -> [[Final:[0-9]+]] [ label = "&#949;
-  // 3 -- Ã --> 4
+  // 3 -- ø --> 4
   // CHECK: [[B1]] -> [[Final]] [ label = "&#949;
   // 5 -- b(y) --> 4
   // CHECK: [[A3]] -> [[Final]] [ label = "b(y)
