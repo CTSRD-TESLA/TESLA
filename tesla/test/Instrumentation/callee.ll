@@ -54,6 +54,20 @@ entry:
 }
 
 
+; This function should only be instrumented on exit.
+; CHECK: define void @void_helper
+define void @void_helper2(i32 %foo) {
+entry:
+  ; CHECK-NOT: call void @__tesla_instrumentation_callee_enter_void_helper2
+  ; CHECK: call void @__tesla_instrumentation_callee_return_void_helper2
+  ret void
+
+  ; Make sure we instrument *every* return.
+  ; CHECK: call void @__tesla_instrumentation_callee_return_void_helper2
+  ret void
+}
+
+
 ; This one should only be instrumented on exit.
 ; CHECK: define i32 @some_helper
 define i32 @some_helper(i32 %foo) {

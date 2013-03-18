@@ -1312,15 +1312,27 @@ expression {
           booleanExpr {
             operation: BE_Xor
             expression {
-              type: NULL_EXPR
-            }
-            expression {
               type: FUNCTION
               function {
                 function {
                   name: "void_helper"
                 }
                 direction: Entry
+                context: Callee
+                argument {
+                  type: Variable
+                  index: 0
+                  name: "o"
+                }
+              }
+            }
+            expression {
+              type: FUNCTION
+              function {
+                function {
+                  name: "void_helper2"
+                }
+                direction: Exit
                 context: Callee
                 argument {
                   type: Variable
