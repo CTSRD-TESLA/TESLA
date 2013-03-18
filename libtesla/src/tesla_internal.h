@@ -290,9 +290,10 @@ void	tesla_class_perthread_destroy(struct tesla_class*);
  * DTrace notifications of various events.
  */
 void	tesla_state_transition_dtrace(struct tesla_class *,
-	    struct tesla_instance *);
+	    struct tesla_instance *, const struct tesla_transitions *,
+	    uint32_t transition_index);
 void	tesla_assert_fail_dtrace(struct tesla_class *,
-	    struct tesla_instance *);
+	    struct tesla_instance *, const struct tesla_transitions *);
 void	tesla_assert_pass_dtrace(struct tesla_class *,
 	    struct tesla_instance *);
 

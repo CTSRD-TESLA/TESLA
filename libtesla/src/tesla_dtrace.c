@@ -44,20 +44,19 @@ SDT_PROBE_DEFINE2(tesla, kernel, assert, fail, fail, "struct tesla_class *",
 SDT_PROBE_DEFINE2(tesla, kernel, assert, pass, pass, "struct tesla_class *",
     "struct tesla_instance *");
 
-/*
- * XXXRW: Several of these functions might want additional state-related
- * arguments -- e.g., next-state for transition, etc.
- */
 void
 tesla_state_transition_dtrace(struct tesla_class *tcp,
-    struct tesla_instance *tip)
+    struct tesla_instance *tip,
+    __unused const struct tesla_transitions *transp,
+    __unused uint32_t transition_index)
 {
 
 	SDT_PROBE(tesla, kernel, , state_transition, tcp, tip, 0, 0, 0);
 }
 
 void
-tesla_assert_fail_dtrace(struct tesla_class *tcp, struct tesla_instance *tip)
+tesla_assert_fail_dtrace(struct tesla_class *tcp, struct tesla_instance *tip,
+    __unused const struct tesla_transitions *transp)
 {
 
 	SDT_PROBE(tesla, kernel, assert, fail, tcp, tip, 0, 0, 0);
@@ -74,7 +73,9 @@ tesla_assert_pass_dtrace(struct tesla_class *tcp, struct tesla_instance *tip)
 
 void
 tesla_state_transition_dtrace(__unused struct tesla_class *tcp,
-    __unused struct tesla_instance *tip)
+    __unused struct tesla_instance *tip,
+    __unused const struct tesla_transitions *transp,
+    __unused uint32_t transition_index)
 {
 
 	assert(0 && "DTrace not implemented in userspace");
@@ -82,7 +83,8 @@ tesla_state_transition_dtrace(__unused struct tesla_class *tcp,
 
 void
 tesla_assert_fail_dtrace(__unused struct tesla_class *tcp,
-    __unused struct tesla_instance *tip)
+    __unused struct tesla_instance *tip,
+    __unused const struct tesla_transitions *transp)
 {
 
 	assert(0 && "DTrace not implemented in userspace");
