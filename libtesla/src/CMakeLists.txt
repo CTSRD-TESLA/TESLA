@@ -9,6 +9,7 @@ add_library(tesla SHARED
 	state-perthread.c
 	store.c
 	tesla_dtrace.c
+	tesla_notification.c
 	update.c
 	util.c
 )

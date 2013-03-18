@@ -59,7 +59,13 @@ tesla_assert_fail_dtrace(struct tesla_class *tcp, struct tesla_instance *tip,
     __unused const struct tesla_transitions *transp)
 {
 
-	SDT_PROBE(tesla, kernel, assert, fail, tcp, tip, 0, 0, 0);
+	if (tip)
+	    SDT_PROBE(tesla, kernel, assert, fail, tcp, tip, 0, 0, 0);
+
+	/* XXXRW:
+	 * 'tip' could be NULL if we failed to match any automaton instances
+	 * to go with a supplied key; perhaps a separate probe?
+	 */
 }
 
 void
