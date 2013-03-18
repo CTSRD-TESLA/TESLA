@@ -7,8 +7,6 @@
  * RUN: clang %ldflags %t.instr.ll -o %t
  * RUN: %t > %t.out
  * RUN: FileCheck -input-file %t.out %s
- *
- * XFAIL: *
  */
 
 #include "tesla-macros.h"

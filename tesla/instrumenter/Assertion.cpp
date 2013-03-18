@@ -159,7 +159,15 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
           "TESLA: assertion references non-existent variable '" + Arg.name()
            + "'; was it defined under '#ifdef TESLA'?");
 
-      Args[Arg.index()] = Cast(V, Arg.name(), IntPtrTy, Builder);
+      Value *Ptr = ValuesInScope[Arg.name() + ".addr"];
+
+      // If LLVM hasn't taken the address of our variable, it's because the
+      // variable *is* an address.
+      if (!Ptr)
+        Ptr = V;
+
+      Value *Val = Builder.CreateLoad(Ptr, "intrumentation_" + Arg.name());
+      Args[Arg.index()] = Cast(Val, Arg.name(), IntPtrTy, Builder);
     }
 
     Builder.CreateCall(InstrFn, Args);
