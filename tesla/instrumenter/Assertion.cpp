@@ -134,11 +134,16 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     for (llvm::Argument& A : Fn->getArgumentList())
       ValuesInScope[A.getName()] = &A;
 
-    for (Instruction& I : *Block)
-      if (StoreInst *Store = dyn_cast<StoreInst>(&I)) {
-        Value *V = Store->getPointerOperand();
-        if (V->hasName())
-          ValuesInScope[V->getName()] = V;
+    for (auto& B : *Fn)
+      for (Instruction& I : B) {
+        if (&I == Assert)
+          break;
+
+        if (StoreInst *Store = dyn_cast<StoreInst>(&I)) {
+          Value *V = Store->getPointerOperand();
+          if (V->hasName())
+            ValuesInScope[V->getName()] = V;
+        }
       }
 
     // Find the arguments to the relevant 'now' instrumentation function.
