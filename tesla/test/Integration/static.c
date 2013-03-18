@@ -67,6 +67,7 @@ main(int argc, char *argv[])
 	 * CHECK: per-thread
 	 * CHECK: transitions:  [ (3:0x0 -> 4) ]
 	 * CHECK: key:          0x0 [ X X X X ]
+	 * CHECK: pass '{{.*}}': {{[0-9]+}}
 	 * CHECK: ====
 	 */
 

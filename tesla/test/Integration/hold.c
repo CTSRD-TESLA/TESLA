@@ -116,6 +116,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
 	 * CHECK: transitions:  [ (3:0x1 -> 4 <clean>) ]
+	 * CHECK: pass '{{.*}}': {{[0-9]+}}
 	 * CHECK: tesla_class_reset
 	 * CHECK: ====
 	 */
