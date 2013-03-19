@@ -216,7 +216,7 @@ string Transition::String() const {
     + ShortLabel()
     + "-->("
     + Twine(To.ID())
-    + (Special.empty() ? "" : "; " + Special)
+    + (Special.empty() ? "" : " " + Special)
     + ")"
   ).str();
 }
