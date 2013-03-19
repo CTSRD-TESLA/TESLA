@@ -93,16 +93,16 @@ inline bool operator==(const FunctionEvent &E1, const FunctionEvent &E2) {
     return false;
 
   if (E1.has_direction())
-    if (!E2.has_direction() || (E1.direction() != E1.direction()))
+    if (!E2.has_direction() || (E1.direction() != E2.direction()))
       return false;
 
   if (E1.has_context())
-    if (!E2.has_context() || (E1.context() != E1.context()))
+    if (!E2.has_context() || (E1.context() != E2.context()))
       return false;
 
   if (E1.has_expectedreturnvalue())
     if (!E2.has_expectedreturnvalue() ||
-        (E1.expectedreturnvalue() != E1.expectedreturnvalue()))
+        (E1.expectedreturnvalue() != E2.expectedreturnvalue()))
       return false;
 
   if (E1.argument_size() != E2.argument_size()) return false;

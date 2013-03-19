@@ -2,7 +2,6 @@
 ;
 ; RUN: tesla instrument -S -tesla-manifest %p/Inputs/missing-exit.tesla %s -o %t.instr.ll
 ; RUN: FileCheck -input-file %t.instr.ll %s
-; XFAIL: *
 
 
 define void @worker(i32 %index) {
