@@ -8,7 +8,7 @@
 define void @worker(i32 %index) {
 entry:
   ; CHECK: call void @__tesla_instrumentation_callee_enter_worker(
-  ; CHECK: call void @__tesla_instrumentation_callee_exit_worker(
+  ; CHECK: call void @__tesla_instrumentation_callee_return_worker(
   ret void
 }
 
