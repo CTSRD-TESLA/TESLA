@@ -71,7 +71,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * CHECK-NOT: update {{[0-9]+}}: 1->2
 	 *
 	 * ERR: TESLA failure
-	 * ERR: no instance found to match key '0x0 [ X X X X ]' for transition(s) [ (3:0x1 -> 4 <clean>) ]
+	 * ERR: No instance matched key '0x0 [ X X X X ]' for transition(s) [ (3:0x1 -> 4 <clean>) ]
 	 */
 	return 0;
 }

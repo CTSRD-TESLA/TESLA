@@ -77,7 +77,7 @@ example_syscall(struct credential *cred, int index, int op)
 
 	/*
 	 * ERR: TESLA failure
-	 * ERR: no instance found to match key '0x1 [ {{[0-9a-f]+}} X X X ]' for transition(s) [ (2:0x1 -> 3) ]
+	 * ERR: No instance matched key '0x1 [ {{[0-9a-f]+}} X X X ]' for transition(s) [ (2:0x1 -> 3) ]
 	 */
 	return perform_operation(op, o);
 }
