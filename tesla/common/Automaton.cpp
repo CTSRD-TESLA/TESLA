@@ -101,14 +101,14 @@ private:
   State* Parse(const FunctionEvent&, State& InitialState, bool, bool);
   State* Parse(const FieldAssignment&, State& InitialState, bool, bool);
   State* SubAutomaton(const Identifier&, State& InitialState, bool, bool);
-  
+
   // Inclusive-Or stuff
   void ConvertIncOrToExcOr(State& InitialState, State& EndState);
   void CalculateReachableTransitionsBetween(const State& InitialState, State& EndState, SmallVector<Transition*,16>& Ts);
   TransitionVectors GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts);
   void CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
   void CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
-  void CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState); 
+  void CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState);
 
   const AutomatonDescription& Automaton;
   const map<Identifier,AutomatonDescription*>* Descriptions;
