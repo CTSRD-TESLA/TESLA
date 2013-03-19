@@ -160,49 +160,5 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
 
 StringRef Manifest::defaultLocation() { return ManifestName; }
 
-
-vector<FunctionEvent> Manifest::FunctionsToInstrument(const Expression& Ex) {
-  vector<FunctionEvent> Events;
-
-  switch (Ex.type()) {
-  case Expression::NULL_EXPR:     // fallthrough
-  case Expression::NOW:           // fallthrough
-  case Expression::FIELD_ASSIGN:
-    break;
-
-  case Expression::FUNCTION:
-    Events.push_back(Ex.function());
-    break;
-
-  case Expression::BOOLEAN_EXPR:
-    for (auto& E : Ex.booleanexpr().expression()) {
-      auto Sub = FunctionsToInstrument(E);
-      Events.insert(Events.end(), Sub.begin(), Sub.end());
-    }
-    break;
-
-  case Expression::SEQUENCE:
-    for (auto& E : Ex.sequence().expression()) {
-      auto Sub = FunctionsToInstrument(E);
-      Events.insert(Events.end(), Sub.begin(), Sub.end());
-    }
-    break;
-
-  case Expression::SUB_AUTOMATON: {
-    auto i = Descriptions.find(Ex.subautomaton());
-    if (i == Descriptions.end())
-      report_fatal_error(
-        "can't find automaton '" + ShortName(Ex.subautomaton()) + "'");
-
-    auto Sub = FunctionsToInstrument(i->second->expression());
-    Events.insert(Events.end(), Sub.begin(), Sub.end());
-    break;
-  }
-
-  }
-
-  return Events;
-}
-
 } // namespace tesla
 

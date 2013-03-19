@@ -104,9 +104,6 @@ private:
 
   const Automaton* FindAutomaton(llvm::StringRef Name, Automaton::Type) const;
 
-  //! Extract all @ref FunctionEvent instances from an @ref Expression.
-  std::vector<FunctionEvent> FunctionsToInstrument(const Expression& Ev);
-
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
   //! The abstract descriptions.
