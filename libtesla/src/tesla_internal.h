@@ -106,33 +106,6 @@ int32_t	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
 int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
 
 
-#ifndef NDEBUG
-
-#define __debug
-
-#ifdef _KERNEL
-#include <sys/systm.h>
-#define DEBUG_PRINT(...) printf(__VA_ARGS__)
-#else
-#include <stdio.h>
-#define DEBUG_PRINT(...) printf(__VA_ARGS__)
-#endif
-#define VERBOSE_PRINT(...) if (verbose_debug()) DEBUG_PRINT(__VA_ARGS__)
-
-/** Are we in (verbose) debug mode? */
-int32_t	verbose_debug(void);
-
-#else // NDEBUG
-
-// When not in debug mode, some values might not get checked.
-#define __debug __unused
-#define DEBUG_PRINT(...)
-#define VERBOSE_PRINT(...)
-
-int32_t	verbose_debug(void) { return 0; }
-
-#endif
-
 #ifndef __unused
 #if __has_attribute(unused)
 #define __unused __attribute__((unused))
@@ -317,6 +290,41 @@ void	tesla_assert_pass_dtrace(struct tesla_class *,
 /*
  * Debug helpers.
  */
+
+#define print(...)	printf(__VA_ARGS__)
+
+#ifdef _KERNEL
+#define error(...)	printf(__VA_ARGS__)
+#else
+#define error(...)	fprintf(stderr, __VA_ARGS__)
+#endif
+
+#ifndef NDEBUG
+
+#define __debug
+
+#ifdef _KERNEL
+#include <sys/systm.h>
+#define DEBUG_PRINT(...) print(__VA_ARGS__)
+#else
+#include <stdio.h>
+#define DEBUG_PRINT(...) print(__VA_ARGS__)
+#endif
+#define VERBOSE_PRINT(...) if (verbose_debug()) DEBUG_PRINT(__VA_ARGS__)
+
+/** Are we in (verbose) debug mode? */
+int32_t	verbose_debug(void);
+
+#else // NDEBUG
+
+// When not in debug mode, some values might not get checked.
+#define __debug __unused
+#define DEBUG_PRINT(...)
+#define VERBOSE_PRINT(...)
+
+int32_t	verbose_debug(void) { return 0; }
+
+#endif
 
 /**
  * Assert that a @ref tesla_instance is an instance of a @ref tesla_class.

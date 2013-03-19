@@ -90,8 +90,6 @@ key_string(char *buffer, size_t len, const struct tesla_key *key)
 
 #ifndef NDEBUG
 
-#define print DEBUG_PRINT
-
 /* TODO: kernel version... probably just say no? */
 int32_t
 verbose_debug()
@@ -171,7 +169,7 @@ print_key(const struct tesla_key *key)
 	int err = key_string(buffer, LEN, key);
 	assert(err == TESLA_SUCCESS);
 
-	printf("%s", buffer);
+	print("%s", buffer);
 }
 
 #endif /* !NDEBUG */
