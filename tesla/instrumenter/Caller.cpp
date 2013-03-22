@@ -87,7 +87,7 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
         bool Init = T->RequiresInit();
         bool Clean = T->RequiresCleanup();
 
-        uint32_t Flags =
+        int Flags =
           (Fork ? TESLA_TRANS_FORK : 0)
           | (Init ? TESLA_TRANS_INIT : 0)
           | (Clean ? TESLA_TRANS_CLEANUP : 0)
@@ -96,8 +96,8 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
         struct tesla_transition Trans = {
           .flags  = Flags,
           .mask   = T->Source().Mask(),
-          .from   = T->Source().ID(),
-          .to     = T->Destination().ID()
+          .from   = (uint32_t)T->Source().ID(),
+          .to     = (uint32_t)T->Destination().ID()
         };
 
         Transitions.push_back(Trans);

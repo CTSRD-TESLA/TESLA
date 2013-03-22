@@ -481,7 +481,7 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder,
                                      llvm::Module& M,
                                      const struct tesla_transition& T) {
 
-  uint32_t Values[] = { T.from, T.mask, T.to, T.flags };
+  uint32_t Values[] = { T.from, T.mask, T.to, (uint32_t)T.flags };
   Type *IntType = Type::getInt32Ty(M.getContext());
 
   vector<Constant*> Elements;
