@@ -37,7 +37,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 
 # LLVM libraries that we need:
-llvm_map_components_to_libraries(LLVM_LIBS bitreader)
+llvm_map_components_to_libraries(LLVM_LIBS bitreader core irreader)
 set(LLVM_LINK_COMPONENTS ${LLVM_TARGETS_TO_BUILD})
 
 # Work out of the LLVM source/build trees if LLVM is not installed.
