@@ -74,6 +74,14 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 	set(LIT_EXTRA
 		--param=extra_include_dirs=${EXECINFO_INCLUDE_DIRS}
 		--param=extra_libs=${EXECINFO_LIBRARY})
+
+else ( ${CMAKE_SYSTEM_NAME} MATCHES Linux )
+	# On some Linux installations, we need to explicitly pass the
+	# -resource-dir flag to Clang tools. The Clang driver handles this
+	# automatically, and we need to figure out why the Clang tooling
+	# framework doesn't. In the meantime, however, this workaround works.
+	set(LIT_EXTRA
+		--param=extra_cflags=-resource-dir:${LLVM_OBJ}/lib/clang/3.3)
 endif()
 
 
