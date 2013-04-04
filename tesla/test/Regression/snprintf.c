@@ -3,9 +3,6 @@
  * RUN: clang %s -o %t
  * RUN: %t > %t.out
  * RUN: FileCheck -input-file %t.out %s
- *
- * I have *no* idea why this fails on my laptop but not other machines:
- * XFAIL: *
  */
 
 #include <stdint.h>
