@@ -56,6 +56,7 @@ using std::tr1::unordered_map;
 using std::tr1::unordered_set;
 #endif
 
+#include <stdio.h>
 #ifndef NDEBUG
 #include <stdlib.h>
 #endif
