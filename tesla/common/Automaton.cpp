@@ -44,7 +44,7 @@
 
 #include <sstream>
 #include <set>
-#if __has_include(<unordered_map>)
+#if __has_include(<unordered_map>) and !defined(__linux__)
 #include <unordered_map>
 #include <unordered_set>
 using std::unordered_map;
