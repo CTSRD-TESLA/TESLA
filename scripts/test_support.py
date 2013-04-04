@@ -17,10 +17,11 @@ else:
 	std_libdirs = [ '/lib', '/usr/lib', '/usr/local/lib' ]
 
 
-def cflags(dirs, defines = []):
+def cflags(dirs, defines = [], extra = []):
 	return ' '.join([
 		' '.join([ '-I %s' % d for d in dirs if d not in std_incdirs ]),
-		' '.join([ '-D %s' % d for d in defines ])
+		' '.join([ '-D %s' % d for d in defines ]),
+		' '.join(extra)
 	])
 
 def ldflags(dirs, libs, extras = []):
