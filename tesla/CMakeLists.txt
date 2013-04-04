@@ -25,12 +25,7 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS tesla.proto)
 
 # Explicitly add /usr/local/share/llvm/cmake to the CMake module path; by default,
 # it seems like AddLLVM wants to find things in the build directory (!).
-exec_program(llvm-config ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${LLVM_PREFIX}/share/llvm/cmake")
-
-# Include LLVM configuration:
-find_package(LLVM REQUIRED)
-include(AddLLVM)
 
 add_definitions(${LLVM_DEFINITIONS})
 include_directories(${LLVM_INCLUDE_DIRS})
@@ -41,8 +36,6 @@ llvm_map_components_to_libraries(LLVM_LIBS bitreader core irreader)
 set(LLVM_LINK_COMPONENTS ${LLVM_TARGETS_TO_BUILD})
 
 # Work out of the LLVM source/build trees if LLVM is not installed.
-exec_program(llvm-config ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
-exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 include_directories("${LLVM_SRC}/include" "${LLVM_OBJ}/include")
 link_directories("${LLVM_OBJ}/lib/")
 

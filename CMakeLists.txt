@@ -6,6 +6,14 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 
+# Include LLVM configuration:
+find_package(LLVM REQUIRED)
+include(AddLLVM)
+
+exec_program(llvm-config ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
+exec_program(llvm-config ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
+exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
+
 # Always build with all warnings and with warning=>error
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
