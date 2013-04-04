@@ -32,7 +32,6 @@
 #ifndef	TESLA_MACROS_H
 #define	TESLA_MACROS_H
 
-#include <limits.h>
 #include <tesla.h>
 
 /*
