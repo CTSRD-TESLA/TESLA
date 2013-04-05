@@ -51,6 +51,14 @@ else ()
   set(LIT_OPTIONS "-qv")
 endif ()
 
+set(EXPORT_XUNIT_XML false CACHE BOOL "Export test results as XUnit XML (requires David's lit patches")
+if (EXPORT_XUNIT_XML)
+  message(STATUS "Will export test results XUnit XML")
+  set(LIT_EXTRA --junit-xml-output=tesla.xml)
+else ()
+  message(STATUS "Will not export test results XUnit XML")
+endif ()
+
 set(TEST_UNDER_VALGRIND false CACHE BOOL "Run tests under Valgrind")
 if (TEST_UNDER_VALGRIND)
   message(STATUS "Tests will be run under Valgrind")
@@ -71,7 +79,7 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 	find_package(ExecInfo REQUIRED)
 	include_directories(${EXECINFO_INCLUDE_DIRS})
 
-	set(LIT_EXTRA
+	set(LIT_EXTRA ${LIT_EXTRA}
 		--param=extra_include_dirs=${EXECINFO_INCLUDE_DIRS}
 		--param=extra_libs=${EXECINFO_LIBRARY})
 
@@ -80,7 +88,7 @@ else ( ${CMAKE_SYSTEM_NAME} MATCHES Linux )
 	# -resource-dir flag to Clang tools. The Clang driver handles this
 	# automatically, and we need to figure out why the Clang tooling
 	# framework doesn't. In the meantime, however, this workaround works.
-	set(LIT_EXTRA
+	set(LIT_EXTRA ${LIT_EXTRA}
 		--param=extra_cflags=-resource-dir:${LLVM_OBJ}/lib/clang/3.3)
 endif()
 
