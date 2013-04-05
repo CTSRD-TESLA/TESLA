@@ -1,0 +1,100 @@
+diff --git a/utils/lit/lit/Test.py b/utils/lit/lit/Test.py
+index 9471e3a..45a6d58 100644
+--- a/utils/lit/lit/Test.py
++++ b/utils/lit/lit/Test.py
+@@ -1,4 +1,5 @@
+ import os
++from xml.sax.saxutils import escape
+ 
+ # Test results.
+ 
+@@ -81,3 +82,15 @@ class Test:
+ 
+     def getExecPath(self):
+         return self.suite.getExecPath(self.path_in_suite)
++    
++    def getJUnitXML(self):
++        xml = "<testcase classname='" + ".".join(self.path_in_suite)
++        xml += "' name='" + '/'.join(self.path_in_suite) + "'"
++        if self.result.isFailure:
++          xml += ">\n\t<failure >\n" + escape(self.output) + "\n\t</failure>"
++          xml += "\n</testcase>"
++        else:
++          xml += "/>"
++        return xml
++
++
+diff --git a/utils/lit/lit/TestRunner.py b/utils/lit/lit/TestRunner.py
+index 8417699..07fb43f 100644
+--- a/utils/lit/lit/TestRunner.py
++++ b/utils/lit/lit/TestRunner.py
+@@ -277,10 +277,7 @@ def executeScript(test, litConfig, tmpBase, commands, cwd):
+         script += '.bat'
+ 
+     # Write script file
+-    mode = 'w'
+-    if litConfig.isWindows and not isWin32CMDEXE:
+-      mode += 'b'  # Avoid CRLFs when writing bash scripts.
+-    f = open(script, mode)
++    f = open(script,'w')
+     if isWin32CMDEXE:
+         f.write('\nif %ERRORLEVEL% NEQ 0 EXIT\n'.join(commands))
+     else:
+diff --git a/utils/lit/lit/main.py b/utils/lit/lit/main.py
+index da961ee..6cd025f 100755
+--- a/utils/lit/lit/main.py
++++ b/utils/lit/lit/main.py
+@@ -235,6 +235,9 @@ def main(builtinParameters = {}):
+     group.add_option("", "--repeat", dest="repeatTests", metavar="N",
+                       help="Repeat tests N times (for timing)",
+                       action="store", default=None, type=int)
++    group.add_option("", "--junit-xml-output", dest="xmlFile",
++                      help=("Write JUnit-compatible XML test reports to the"
++                            " specified file"), default=None)
+     parser.add_option_group(group)
+ 
+     (opts, args) = parser.parse_args()
+@@ -345,6 +348,7 @@ def main(builtinParameters = {}):
+ 
+     startTime = time.time()
+     display = TestingProgressDisplay(opts, len(tests), progressBar)
++
+     provider = TestProvider(tests, opts.maxTime)
+     runTests(opts.numThreads, litConfig, provider, display)
+     display.finish()
+@@ -402,6 +406,35 @@ def main(builtinParameters = {}):
+         N = len(byCode.get(code,[]))
+         if N:
+             print '  %s: %d' % (name,N)
++    if opts.xmlFile:
++        # Collect the tests, indexed by test suite
++        bySuite = {}
++        for t in tests:
++            suite = t.suite.config.name
++            if suite not in bySuite:
++                bySuite[suite] = {
++                                   'passes'   : 0,
++                                   'failures' : 0,
++                                   'tests'    : [] }
++            bySuite[suite]['tests'].append(t)
++            if t.result.isFailure:
++                bySuite[suite]['failures'] += 1
++            else:
++                bySuite[suite]['passes'] += 1
++        xmlFile = open(opts.xmlFile, "w")
++        xmlFile.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n")
++        xmlFile.write("<testsuites>\n")
++        for suiteName in bySuite:
++            s = bySuite[suiteName]
++            xmlFile.write("<testsuite name='" + suiteName + "'")
++            xmlFile.write(" tests='" + str(s['passes'] + s['failures']) + "'")
++            xmlFile.write(" failures='" + str(s['failures']) + "'>\n")
++            for t in s['tests']:
++                xmlFile.write(t.getJUnitXML() + "\n")
++            xmlFile.write("</testsuite>\n")
++        xmlFile.write("</testsuites>")
++        xmlFile.close()
++
+ 
+     # If we encountered any additional errors, exit abnormally.
+     if litConfig.numErrors:
