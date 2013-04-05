@@ -36,5 +36,4 @@ add_custom_target(libtesla-test
 		${LIT_EXTRA}
 	COMMENT "Testing libtesla")
 
-add_dependencies(libtesla-test tesla)
-
+add_dependencies(libtesla-test tesla llvm-triple)

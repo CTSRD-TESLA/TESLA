@@ -7,5 +7,9 @@ add_custom_target(tesla-test
 		${LIT_EXTRA}
 	COMMENT "Testing TESLA")
 
-add_dependencies(tesla-test libtesla-test tesla-analyse tesla-instrument)
-
+add_dependencies(tesla-test
+	libtesla-test
+	llvm-triple
+	tesla-analyse
+	tesla-instrument
+)
