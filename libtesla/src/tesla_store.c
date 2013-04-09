@@ -127,13 +127,11 @@ tesla_store_init(tesla_store *store, uint32_t context,
 	int error = TESLA_SUCCESS;
 	for (uint32_t i = 0; i < classes; i++) {
 		error = tesla_class_init(store->classes + i, context, instances);
-		if (error != TESLA_SUCCESS) break;
-		assert(store->classes[i].tc_table != NULL);
-	}
+		assert(error == TESLA_SUCCESS);
+		if (error != TESLA_SUCCESS)
+			break;
 
-	for (uint32_t i = 0; i < classes; i++) {
-		assert(store->classes[i].tc_table != NULL);
-		assert(store->classes[i].tc_table->tt_length > 0);
+		assert(store->classes[i].tc_scope > 0);
 	}
 
 	return (error);
@@ -162,7 +160,7 @@ tesla_class_get(tesla_store *store, uint32_t id, tesla_class **tclassp,
 
 	tesla_class *tclass = &store->classes[id];
 	assert(tclass != NULL);
-	assert(tclass->tc_table != NULL);
+	assert(tclass->tc_instances != NULL);
 	assert(tclass->tc_scope > 0);
 
 	if (tclass->tc_name == NULL) tclass->tc_name = name;

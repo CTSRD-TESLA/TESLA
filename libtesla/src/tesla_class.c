@@ -60,14 +60,10 @@ tesla_class_init(struct tesla_class *tclass,
 #endif
 
 	tclass->tc_scope = context;
-	tclass->tc_table = tesla_malloc(
-		sizeof(struct tesla_table)
-		+ instances * sizeof(struct tesla_instance)
-	);
-
 	tclass->tc_limit = instances;
-	tclass->tc_table->tt_length = instances;
-	tclass->tc_table->tt_free = instances;
+	tclass->tc_free = instances;
+	tclass->tc_instances =
+		tesla_malloc(instances * sizeof(tclass->tc_instances[0]));
 
 	switch (context) {
 	case TESLA_SCOPE_GLOBAL:
@@ -86,7 +82,7 @@ tesla_class_init(struct tesla_class *tclass,
 void
 tesla_class_free(struct tesla_class *class)
 {
-	tesla_free(class->tc_table);
+	tesla_free(class->tc_instances);
 	tesla_free(class);
 }
 
@@ -100,18 +96,16 @@ tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
 	assert(array != NULL);
 	assert(size != NULL);
 
-	struct tesla_table *table = tclass->tc_table;
-
 	// Assume that any and every instance could match.
-	if (*size < table->tt_length) {
-		*size = table->tt_length;
+	if (*size < tclass->tc_limit) {
+		*size = tclass->tc_limit;
 		return (TESLA_ERROR_ENOMEM);
 	}
 
 	// Copy matches into the array.
 	*size = 0;
-	for (uint32_t i = 0; i < table->tt_length; i++) {
-		struct tesla_instance *inst = table->tt_instances + i;
+	for (uint32_t i = 0; i < tclass->tc_limit; i++) {
+		struct tesla_instance *inst = tclass->tc_instances + i;
 		if (tesla_instance_active(inst)
 		    && tesla_key_matches(pattern, &inst->ti_key)) {
 			array[*size] = inst;
@@ -144,15 +138,11 @@ tesla_instance_new(struct tesla_class *tclass, const struct tesla_key *name,
 	if ((state == 0) && (name->tk_mask == 0))
 		return (TESLA_ERROR_EINVAL);
 
-	struct tesla_table *ttp = tclass->tc_table;
-	assert(ttp != NULL);
-	tesla_assert(ttp->tt_length != 0, ("Uninitialized tesla_table"));
-
-	if (ttp->tt_free == 0)
+	if (tclass->tc_free == 0)
 		return (TESLA_ERROR_ENOMEM);
 
-	for (uint32_t i = 0; i < ttp->tt_length; i++) {
-		struct tesla_instance *inst = &ttp->tt_instances[i];
+	for (uint32_t i = 0; i < tclass->tc_limit; i++) {
+		struct tesla_instance *inst = tclass->tc_instances + i;
 		if (tesla_instance_active(inst))
 			continue;
 
@@ -160,14 +150,14 @@ tesla_instance_new(struct tesla_class *tclass, const struct tesla_key *name,
 		inst->ti_key = *name;
 		inst->ti_state = state;
 
-		ttp->tt_free--;
+		tclass->tc_free--;
 		*out = inst;
-		break;
+
+		return (TESLA_SUCCESS);
 	}
 
-	tesla_assert(*out != NULL, ("no free instances but tt_free was > 0"));
-
-	return (TESLA_SUCCESS);
+	tesla_assert(*out != NULL, ("no free instances but tc_free was > 0"));
+	return (TESLA_ERROR_ENOMEM);
 }
 
 int
@@ -198,9 +188,8 @@ tesla_class_reset(struct tesla_class *c)
 
 	DEBUG_PRINT("tesla_class_reset %s\n", c->tc_name);
 
-	struct tesla_table *t = c->tc_table;
-	bzero(&t->tt_instances, sizeof(struct tesla_instance) * t->tt_length);
-	t->tt_free = t->tt_length;
+	bzero(c->tc_instances, sizeof(c->tc_instances[0]) * c->tc_limit);
+	c->tc_free = c->tc_limit;
 
 	switch (c->tc_scope) {
 	case TESLA_SCOPE_GLOBAL:

@@ -50,7 +50,7 @@ tesla_notify_new_instance(struct tesla_class *tcp,
 	default:
 		/* for the PRINTF action, should this be a non-verbose print? */
 		VERBOSE_PRINT("new    %td: %tx\n",
-		              tip - tcp->tc_table->tt_instances,
+		              tip - tcp->tc_instances,
 		              tip->ti_state);
 
 		/*
@@ -80,8 +80,7 @@ tesla_notify_clone(struct tesla_class *tcp, struct tesla_instance *tip,
 		const struct tesla_transition *t = transp->transitions + index;
 
 		VERBOSE_PRINT("clone  %td:%tx -> %tx\n",
-		              tip - tcp->tc_table->tt_instances,
-		              tip->ti_state, t->to);
+		              tip - tcp->tc_instances, tip->ti_state, t->to);
 
 		if (t->flags & TESLA_TRANS_CLEANUP)
 			tesla_notify_pass(tcp, tip);
@@ -109,8 +108,7 @@ tesla_notify_transition(struct tesla_class *tcp,
 		const struct tesla_transition *t = transp->transitions + index;
 
 		VERBOSE_PRINT("update %td: %tx->%tx\n",
-		              tip - tcp->tc_table->tt_instances,
-		              t->from, t->to);
+		              tip - tcp->tc_instances, t->from, t->to);
 
 		if (t->flags & TESLA_TRANS_CLEANUP)
 			tesla_notify_pass(tcp, tip);
@@ -141,7 +139,7 @@ tesla_notify_assert_fail(struct tesla_class *tcp, struct tesla_instance *tip,
 	SAFE_SPRINTF(next, end,
 		"Instance %td is in state %d\n"
 		"but required to take a transition in ",
-		(tip - tcp->tc_table->tt_instances), tip->ti_state);
+		(tip - tcp->tc_instances), tip->ti_state);
 	assert(next > buffer);
 
 	next = sprint_transitions(next, end, transp);
@@ -212,7 +210,7 @@ tesla_notify_pass(struct tesla_class *tcp, struct tesla_instance *tip)
 
 	default:
 		VERBOSE_PRINT("pass '%s': %td\n", tcp->tc_name,
-		    tip - tcp->tc_table->tt_instances);
+		    tip - tcp->tc_instances);
 		break;
 	}
 }

@@ -122,12 +122,9 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 	assert(instance != NULL);
 	assert(tclass != NULL);
 
-	struct tesla_table *ttp = tclass->tc_table;
-	assert(ttp != NULL);
-
 	int32_t instance_belongs_to_class = 0;
-	for (uint32_t i = 0; i < ttp->tt_length; i++) {
-		if (instance == &ttp->tt_instances[i]) {
+	for (uint32_t i = 0; i < tclass->tc_limit; i++) {
+		if (instance == &tclass->tc_instances[i]) {
 			instance_belongs_to_class = 1;
 			break;
 		}
@@ -160,10 +157,9 @@ print_class(const struct tesla_class *c)
 		default:                     print("UNKNOWN (0x%x)\n", c->tc_action);
 	}
 
-	struct tesla_table *t = c->tc_table;
-	print("  %d/%d instances\n", t->tt_length - t->tt_free, t->tt_length);
-	for (uint32_t i = 0; i < t->tt_length; i++) {
-		struct tesla_instance *inst = &t->tt_instances[i];
+	print("  %d/%d instances\n", c->tc_limit - c->tc_free, c->tc_limit);
+	for (uint32_t i = 0; i < c->tc_limit; i++) {
+		const struct tesla_instance *inst = c->tc_instances + i;
 		if (!tesla_instance_active(inst))
 			continue;
 

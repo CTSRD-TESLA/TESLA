@@ -153,16 +153,6 @@ int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
 
 
 /*
- * Instance table definition, used for both global and per-thread scopes.  A
- * more refined data structure might eventually be used here.
- */
-struct tesla_table {
-	uint32_t		tt_length;
-	uint32_t		tt_free;
-	struct tesla_instance	tt_instances[];
-};
-
-/*
  * Assertion state definition is internal to libtesla so we can change it as
  * we need to.
  */
@@ -173,20 +163,20 @@ struct tesla_class {
 	uint32_t	 tc_limit;	/* Simultaneous automata limit. */
 	uint32_t	 tc_action;	/* What to do on failure. */
 
+	struct tesla_instance	*tc_instances;	/* Instances of this class. */
+	uint32_t		tc_free;	/* Unused instances. */
+
 #ifdef _KERNEL
 	struct mtx		tc_lock;	/* Synchronise tc_table. */
 #else
 	pthread_mutex_t		 tc_lock;	/* Synchronise tc_table. */
 #endif
-
-	struct tesla_table	*tc_table;	/* Table of instances. */
 };
 
 typedef struct tesla_class		tesla_class;
 typedef struct tesla_instance		tesla_instance;
 typedef struct tesla_key		tesla_key;
 typedef struct tesla_store		tesla_store;
-typedef struct tesla_table		tesla_table;
 typedef struct tesla_transition		tesla_transition;
 typedef struct tesla_transitions	tesla_transitions;
 

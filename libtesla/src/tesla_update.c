@@ -80,19 +80,16 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		DEBUG_PRINT("----\n");
 	}
 
-	tesla_table *table = class->tc_table;
-	assert(table->tt_length <= 32);
-
 	// Did we match any instances?
 	bool matched_something = false;
 
 	// Make space for cloning existing instances.
-	tesla_instance clones[table->tt_free];
+	tesla_instance clones[class->tc_free];
 	size_t cloned = 0;
 
 	// Update existing instances, forking/specialising if necessary.
-	for (uint32_t i = 0; i < table->tt_length; i++) {
-		tesla_instance *inst = table->tt_instances + i;
+	for (uint32_t i = 0; i < class->tc_limit; i++) {
+		tesla_instance *inst = class->tc_instances + i;
 		if (!tesla_instance_active(inst))
 			continue;
 
