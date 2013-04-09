@@ -213,7 +213,7 @@ struct tesla_instance {
  *
  * @returns     1 if active, 0 if inactive
  */
-int32_t	tesla_instance_active(struct tesla_instance *i);
+int32_t	tesla_instance_active(const struct tesla_instance *i);
 
 
 /** Clone an existing instance into a new instance. */

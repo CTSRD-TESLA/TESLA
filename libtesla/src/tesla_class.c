@@ -122,7 +122,7 @@ tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
 
 
 int
-tesla_instance_active(struct tesla_instance *i)
+tesla_instance_active(const struct tesla_instance *i)
 {
 	assert(i != NULL);
 
