@@ -47,6 +47,8 @@ tesla_class_init(struct tesla_class *tclass,
                  uint32_t context, uint32_t instances)
 {
 	assert(tclass != NULL);
+	assert(context > 0);
+	assert(instances > 0);
 	// TODO: write a TESLA assertion about locking here.
 
 	tclass->tc_limit = instances;

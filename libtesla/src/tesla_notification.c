@@ -145,6 +145,7 @@ tesla_notify_assert_fail(struct tesla_class *tcp, struct tesla_instance *tip,
 	assert(next > buffer);
 
 	next = sprint_transitions(next, end, transp);
+	assert(next > buffer);
 
 	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
@@ -183,6 +184,7 @@ tesla_notify_match_fail(struct tesla_class *tcp, const struct tesla_key *tkp,
 	next = key_string(next, end, tkp);
 	SAFE_SPRINTF(next, end, "' for transition(s) ");
 	next = sprint_transitions(next, end, transp);
+	assert(next > buffer);
 
 	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:

@@ -116,6 +116,9 @@ int32_t
 tesla_store_init(tesla_store *store, uint32_t context,
                  uint32_t classes, uint32_t instances)
 {
+	assert(classes > 0);
+	assert(instances > 0);
+
 	store->length = classes;
 	store->classes = tesla_malloc(classes * sizeof(tesla_class));
 	if (store->classes == NULL)
@@ -160,6 +163,7 @@ tesla_class_get(tesla_store *store, uint32_t id, tesla_class **tclassp,
 	tesla_class *tclass = &store->classes[id];
 	assert(tclass != NULL);
 	assert(tclass->tc_table != NULL);
+	assert(tclass->tc_scope > 0);
 
 	if (tclass->tc_name == NULL) tclass->tc_name = name;
 	if (tclass->tc_description == NULL)
