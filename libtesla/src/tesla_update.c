@@ -80,7 +80,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		DEBUG_PRINT("----\n");
 	}
 
-	tesla_table *table = class->ts_table;
+	tesla_table *table = class->tc_table;
 	assert(table->tt_length <= 32);
 
 	// Did we match any instances?

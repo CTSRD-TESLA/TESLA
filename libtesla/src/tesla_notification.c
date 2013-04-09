@@ -41,7 +41,7 @@ tesla_notify_new_instance(struct tesla_class *tcp,
     struct tesla_instance *tip)
 {
 
-	switch (tcp->ts_action) {
+	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		/* XXXRW: more fine-grained DTrace probes? */
 		tesla_state_transition_dtrace(tcp, tip, NULL, -1);
@@ -50,7 +50,7 @@ tesla_notify_new_instance(struct tesla_class *tcp,
 	default:
 		/* for the PRINTF action, should this be a non-verbose print? */
 		VERBOSE_PRINT("new    %td: %tx\n",
-		              tip - tcp->ts_table->tt_instances,
+		              tip - tcp->tc_table->tt_instances,
 		              tip->ti_state);
 
 		/*
@@ -67,7 +67,7 @@ tesla_notify_clone(struct tesla_class *tcp, struct tesla_instance *tip,
     const struct tesla_transitions *transp, uint32_t index)
 {
 
-	switch (tcp->ts_action) {
+	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		/* XXXRW: more fine-grained DTrace probes? */
 		tesla_state_transition_dtrace(tcp, tip, transp, index);
@@ -80,7 +80,7 @@ tesla_notify_clone(struct tesla_class *tcp, struct tesla_instance *tip,
 		const struct tesla_transition *t = transp->transitions + index;
 
 		VERBOSE_PRINT("clone  %td:%tx -> %tx\n",
-		              tip - tcp->ts_table->tt_instances,
+		              tip - tcp->tc_table->tt_instances,
 		              tip->ti_state, t->to);
 
 		if (t->flags & TESLA_TRANS_CLEANUP)
@@ -97,7 +97,7 @@ tesla_notify_transition(struct tesla_class *tcp,
     uint32_t index)
 {
 
-	switch (tcp->ts_action) {
+	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		tesla_state_transition_dtrace(tcp, tip, transp, index);
 		return;
@@ -109,7 +109,7 @@ tesla_notify_transition(struct tesla_class *tcp,
 		const struct tesla_transition *t = transp->transitions + index;
 
 		VERBOSE_PRINT("update %td: %tx->%tx\n",
-		              tip - tcp->ts_table->tt_instances,
+		              tip - tcp->tc_table->tt_instances,
 		              t->from, t->to);
 
 		if (t->flags & TESLA_TRANS_CLEANUP)
@@ -127,7 +127,7 @@ tesla_notify_assert_fail(struct tesla_class *tcp, struct tesla_instance *tip,
 	assert(tcp != NULL);
 	assert(tip != NULL);
 
-	if (tcp->ts_action == TESLA_ACTION_DTRACE) {
+	if (tcp->tc_action == TESLA_ACTION_DTRACE) {
 		tesla_assert_fail_dtrace(tcp, tip, transp);
 		return;
 	}
@@ -141,12 +141,12 @@ tesla_notify_assert_fail(struct tesla_class *tcp, struct tesla_instance *tip,
 	SAFE_SPRINTF(next, end,
 		"Instance %td is in state %d\n"
 		"but required to take a transition in ",
-		(tip - tcp->ts_table->tt_instances), tip->ti_state);
+		(tip - tcp->tc_table->tt_instances), tip->ti_state);
 	assert(next > buffer);
 
 	next = sprint_transitions(next, end, transp);
 
-	switch (tcp->ts_action) {
+	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		assert(0 && "handled above");
 		return;
@@ -168,7 +168,7 @@ tesla_notify_match_fail(struct tesla_class *tcp, const struct tesla_key *tkp,
 	assert(tcp != NULL);
 	assert(tkp != NULL);
 
-	if (tcp->ts_action == TESLA_ACTION_DTRACE) {
+	if (tcp->tc_action == TESLA_ACTION_DTRACE) {
 		tesla_assert_fail_dtrace(tcp, NULL, NULL);
 		return;
 	}
@@ -184,7 +184,7 @@ tesla_notify_match_fail(struct tesla_class *tcp, const struct tesla_key *tkp,
 	SAFE_SPRINTF(next, end, "' for transition(s) ");
 	next = sprint_transitions(next, end, transp);
 
-	switch (tcp->ts_action) {
+	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		assert(0 && "handled above");
 		break;
@@ -203,14 +203,14 @@ void
 tesla_notify_pass(struct tesla_class *tcp, struct tesla_instance *tip)
 {
 
-	switch (tcp->ts_action) {
+	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		tesla_assert_pass_dtrace(tcp, tip);
 		return;
 
 	default:
-		VERBOSE_PRINT("pass '%s': %td\n", tcp->ts_name,
-		    tip - tcp->ts_table->tt_instances);
+		VERBOSE_PRINT("pass '%s': %td\n", tcp->tc_name,
+		    tip - tcp->tc_table->tt_instances);
 		break;
 	}
 }
@@ -225,6 +225,6 @@ print_failure_header(const struct tesla_class *tcp)
 	kdb_backtrace();
 #endif
 
-	error("In automaton '%s':\n%s\n", tcp->ts_name, tcp->ts_description);
+	error("In automaton '%s':\n%s\n", tcp->tc_name, tcp->tc_description);
 }
 

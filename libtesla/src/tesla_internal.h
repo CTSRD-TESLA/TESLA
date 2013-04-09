@@ -167,23 +167,19 @@ struct tesla_table {
  * we need to.
  */
 struct tesla_class {
-	const char	*ts_name;	/* Name of the assertion. */
-	const char	*ts_description;/* Description of the assertion. */
-	uint32_t	 ts_scope;	/* Per-thread or global. */
-	uint32_t	 ts_limit;	/* Simultaneous automata limit. */
-	uint32_t	 ts_action;	/* What to do on failure. */
+	const char	*tc_name;	/* Name of the assertion. */
+	const char	*tc_description;/* Description of the assertion. */
+	uint32_t	 tc_scope;	/* Per-thread or global. */
+	uint32_t	 tc_limit;	/* Simultaneous automata limit. */
+	uint32_t	 tc_action;	/* What to do on failure. */
 
-	/*
-	 * State fields if global.  Table must be last field as it uses a
-	 * zero-length array.
-	 */
 #ifdef _KERNEL
-	struct mtx		ts_lock;	/* Synchronise ts_table. */
+	struct mtx		tc_lock;	/* Synchronise tc_table. */
 #else
-	pthread_mutex_t		 ts_lock;	/* Synchronise ts_table. */
+	pthread_mutex_t		 tc_lock;	/* Synchronise tc_table. */
 #endif
 
-	struct tesla_table	*ts_table;	/* Table of instances. */
+	struct tesla_table	*tc_table;	/* Table of instances. */
 };
 
 typedef struct tesla_class		tesla_class;

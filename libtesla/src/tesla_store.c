@@ -125,12 +125,12 @@ tesla_store_init(tesla_store *store, uint32_t context,
 	for (uint32_t i = 0; i < classes; i++) {
 		error = tesla_class_init(store->classes + i, context, instances);
 		if (error != TESLA_SUCCESS) break;
-		assert(store->classes[i].ts_table != NULL);
+		assert(store->classes[i].tc_table != NULL);
 	}
 
 	for (uint32_t i = 0; i < classes; i++) {
-		assert(store->classes[i].ts_table != NULL);
-		assert(store->classes[i].ts_table->tt_length > 0);
+		assert(store->classes[i].tc_table != NULL);
+		assert(store->classes[i].tc_table->tt_length > 0);
 	}
 
 	return (error);
@@ -159,11 +159,11 @@ tesla_class_get(tesla_store *store, uint32_t id, tesla_class **tclassp,
 
 	tesla_class *tclass = &store->classes[id];
 	assert(tclass != NULL);
-	assert(tclass->ts_table != NULL);
+	assert(tclass->tc_table != NULL);
 
-	if (tclass->ts_name == NULL) tclass->ts_name = name;
-	if (tclass->ts_description == NULL)
-		tclass->ts_description = description;
+	if (tclass->tc_name == NULL) tclass->tc_name = name;
+	if (tclass->tc_description == NULL)
+		tclass->tc_description = description;
 
 	tesla_class_acquire(tclass);
 
@@ -173,7 +173,7 @@ tesla_class_get(tesla_store *store, uint32_t id, tesla_class **tclassp,
 
 void
 tesla_class_acquire(tesla_class *class) {
-	switch (class->ts_scope) {
+	switch (class->tc_scope) {
 	case TESLA_SCOPE_GLOBAL:
 		return tesla_class_global_acquire(class);
 

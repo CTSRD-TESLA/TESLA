@@ -49,23 +49,23 @@ tesla_class_init(struct tesla_class *tclass,
 	assert(tclass != NULL);
 	// TODO: write a TESLA assertion about locking here.
 
-	tclass->ts_limit = instances;
+	tclass->tc_limit = instances;
 
 #ifdef _KERNEL
-	tclass->ts_action = TESLA_ACTION_PRINTF;
+	tclass->tc_action = TESLA_ACTION_PRINTF;
 #else
-	tclass->ts_action = TESLA_ACTION_FAILSTOP;
+	tclass->tc_action = TESLA_ACTION_FAILSTOP;
 #endif
 
-	tclass->ts_scope = context;
-	tclass->ts_table = tesla_malloc(
+	tclass->tc_scope = context;
+	tclass->tc_table = tesla_malloc(
 		sizeof(struct tesla_table)
 		+ instances * sizeof(struct tesla_instance)
 	);
 
-	tclass->ts_limit = instances;
-	tclass->ts_table->tt_length = instances;
-	tclass->ts_table->tt_free = instances;
+	tclass->tc_limit = instances;
+	tclass->tc_table->tt_length = instances;
+	tclass->tc_table->tt_free = instances;
 
 	switch (context) {
 	case TESLA_SCOPE_GLOBAL:
@@ -84,7 +84,7 @@ tesla_class_init(struct tesla_class *tclass,
 void
 tesla_class_free(struct tesla_class *class)
 {
-	tesla_free(class->ts_table);
+	tesla_free(class->tc_table);
 	tesla_free(class);
 }
 
@@ -98,7 +98,7 @@ tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
 	assert(array != NULL);
 	assert(size != NULL);
 
-	struct tesla_table *table = tclass->ts_table;
+	struct tesla_table *table = tclass->tc_table;
 
 	// Assume that any and every instance could match.
 	if (*size < table->tt_length) {
@@ -142,7 +142,7 @@ tesla_instance_new(struct tesla_class *tclass, const struct tesla_key *name,
 	if ((state == 0) && (name->tk_mask == 0))
 		return (TESLA_ERROR_EINVAL);
 
-	struct tesla_table *ttp = tclass->ts_table;
+	struct tesla_table *ttp = tclass->tc_table;
 	assert(ttp != NULL);
 	tesla_assert(ttp->tt_length != 0, ("Uninitialized tesla_table"));
 
@@ -178,7 +178,7 @@ tesla_clone(struct tesla_class *tclass, const struct tesla_instance *orig,
 void
 tesla_class_put(struct tesla_class *tsp)
 {
-	switch (tsp->ts_scope) {
+	switch (tsp->tc_scope) {
 	case TESLA_SCOPE_GLOBAL:
 		return tesla_class_global_release(tsp);
 
@@ -194,13 +194,13 @@ void
 tesla_class_reset(struct tesla_class *c)
 {
 
-	DEBUG_PRINT("tesla_class_reset %s\n", c->ts_name);
+	DEBUG_PRINT("tesla_class_reset %s\n", c->tc_name);
 
-	struct tesla_table *t = c->ts_table;
+	struct tesla_table *t = c->tc_table;
 	bzero(&t->tt_instances, sizeof(struct tesla_instance) * t->tt_length);
 	t->tt_free = t->tt_length;
 
-	switch (c->ts_scope) {
+	switch (c->tc_scope) {
 	case TESLA_SCOPE_GLOBAL:
 		return tesla_class_global_release(c);
 

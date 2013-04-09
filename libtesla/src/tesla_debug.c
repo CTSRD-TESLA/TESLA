@@ -122,7 +122,7 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 	assert(instance != NULL);
 	assert(tclass != NULL);
 
-	struct tesla_table *ttp = tclass->ts_table;
+	struct tesla_table *ttp = tclass->tc_table;
 	assert(ttp != NULL);
 
 	int32_t instance_belongs_to_class = 0;
@@ -135,7 +135,7 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 
 	tesla_assert(instance_belongs_to_class,
 		("tesla_instance %x not of class '%s'",
-		 instance, tclass->ts_name)
+		 instance, tclass->tc_name)
 	       );
 }
 
@@ -143,24 +143,24 @@ void
 print_class(const struct tesla_class *c)
 {
 	print("struct tesla_class @ 0x%tx {\n", (intptr_t) c);
-	print("  name:         '%s',\n", c->ts_name);
+	print("  name:         '%s',\n", c->tc_name);
 	print("  description:  '[...]',\n");   // TL;DR
 	print("  scope:        ");
-	switch (c->ts_scope) {
+	switch (c->tc_scope) {
 		case TESLA_SCOPE_PERTHREAD:  print("thread-local\n"); break;
 		case TESLA_SCOPE_GLOBAL:     print("global\n");       break;
-		default:                     print("UNKNOWN (0x%x)\n", c->ts_scope);
+		default:                     print("UNKNOWN (0x%x)\n", c->tc_scope);
 	}
-	print("  limit:        %d\n", c->ts_limit);
+	print("  limit:        %d\n", c->tc_limit);
 	print("  fail action:  ");
-	switch (c->ts_action) {
+	switch (c->tc_action) {
 		case TESLA_ACTION_FAILSTOP:  print("fail-stop\n"); break;
 		case TESLA_ACTION_DTRACE:    print("DTrace probe\n"); break;
 		case TESLA_ACTION_PRINTF:    print("printf()\n"); break;
-		default:                     print("UNKNOWN (0x%x)\n", c->ts_action);
+		default:                     print("UNKNOWN (0x%x)\n", c->tc_action);
 	}
 
-	struct tesla_table *t = c->ts_table;
+	struct tesla_table *t = c->tc_table;
 	print("  %d/%d instances\n", t->tt_length - t->tt_free, t->tt_length);
 	for (uint32_t i = 0; i < t->tt_length; i++) {
 		struct tesla_instance *inst = &t->tt_instances[i];
