@@ -70,7 +70,7 @@ void	tesla_die(const char *event) __attribute__((noreturn));
 /**
  * Clean up a @ref tesla_class.
  */
-void	tesla_class_free(struct tesla_class*);
+void	tesla_class_destroy(struct tesla_class*);
 
 /**
  * Create a new @ref tesla_instance.

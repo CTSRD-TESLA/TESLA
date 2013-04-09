@@ -80,10 +80,18 @@ tesla_class_init(struct tesla_class *tclass,
 
 
 void
-tesla_class_free(struct tesla_class *class)
+tesla_class_destroy(struct tesla_class *class)
 {
 	tesla_free(class->tc_instances);
-	tesla_free(class);
+	switch (class->tc_scope) {
+	case TESLA_SCOPE_GLOBAL:
+		tesla_class_global_destroy(class);
+		break;
+
+	case TESLA_SCOPE_PERTHREAD:
+		tesla_class_perthread_destroy(class);
+		break;
+	}
 }
 
 

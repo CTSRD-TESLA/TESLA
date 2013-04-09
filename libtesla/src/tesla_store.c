@@ -142,7 +142,7 @@ void
 tesla_store_free(tesla_store *store)
 {
 	for (uint32_t i = 0; i < store->length; i++)
-		tesla_class_free(store->classes + i);
+		tesla_class_destroy(store->classes + i);
 
 	tesla_free(store);
 }
