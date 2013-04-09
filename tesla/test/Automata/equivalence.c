@@ -3,7 +3,7 @@
  * text-based serialisation format for protocol buffers. Instead, let's abuse
  * the C preprocessor a little bit:
  *
- * RUN: clang -D TESLA -E %s -o %t.tesla
+ * RUN: clang %cflags -D TESLA -E %s -o %t.tesla
  * RUN: tesla graph %t.tesla -o %t.dot
  * RUN: FileCheck -input-file=%t.dot %s
  */

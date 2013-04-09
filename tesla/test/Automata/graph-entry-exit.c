@@ -3,7 +3,7 @@
  *
  * Commands for llvm-lit:
  *
- * RUN: clang -E -D TESLA_FILE %s -o %t.tesla
+ * RUN: clang -E %cflags -D TESLA_FILE %s -o %t.tesla
  * RUN: tesla graph %t.tesla -o %t.dot
  * RUN: FileCheck -input-file %t.dot %s
  */

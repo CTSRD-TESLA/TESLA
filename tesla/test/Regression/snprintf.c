@@ -1,6 +1,6 @@
 /*
  * Commands for llvm-lit:
- * RUN: clang %s -o %t
+ * RUN: clang %cflags %s -o %t
  * RUN: %t > %t.out
  * RUN: FileCheck -input-file %t.out %s
  *
