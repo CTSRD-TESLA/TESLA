@@ -40,6 +40,7 @@
 
 /** The pthreads key used to identify TESLA data. */
 pthread_key_t	pthread_key(void);
+void		tesla_pthread_destructor(void*);
 #endif
 
 struct tesla_store global_store = { .length = 0 };
@@ -208,7 +209,7 @@ pthread_key()
 	// initialise the key twice.
 	if (key_initialised) return key;
 
-	error = pthread_key_create(&key, NULL);
+	error = pthread_key_create(&key, tesla_pthread_destructor);
 	assert(error == 0 && "failed to create pthread_key_t");
 
 	key_initialised = 1;
@@ -217,6 +218,13 @@ pthread_key()
 	assert(error == 0 && "failed to unlock pthread key mutex");
 
 	return key;
+}
+
+void
+tesla_pthread_destructor(__unused void *x)
+{
+	tesla_store *store = (tesla_store*) x;
+	tesla_store_free(store);
 }
 #endif
 
