@@ -3,11 +3,11 @@
 
 # The location of TESLA outputs (binaries, libraries, etc.).
 # Only needed when we don't install TESLA to /usr/local.
-BUILD_DIR?=../build
+TESLA_BUILD_DIR?=../build
 
 # For our demo handcoded LLVM IR, we need to assign an arch-vendor-OS triple.
 # Normal consumers don't need to do this.
-TRIPLE:=	$(shell ${BUILD_DIR}/tesla/tools/llvm-triple/llvm-triple)
+TRIPLE:=	$(shell ${TESLA_BUILD_DIR}/tesla/tools/llvm-triple/llvm-triple)
 LLC=llc -mtriple=${TRIPLE} -filetype=obj
 
 CC=		clang
@@ -32,7 +32,7 @@ clean:
 	rm -f ${BIN} ${SRCS:.c=.ll} ${OBJS} ${TESLA_ALLFILES}
 
 tesla:
-	cd ${BUILD_DIR} && ninja
+	cd ${TESLA_BUILD_DIR} && ninja
 
 
 #
