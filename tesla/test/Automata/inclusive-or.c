@@ -7,7 +7,7 @@
  * 
  */
 
-#include "Inputs/tesla-macros.h"
+#include "tesla-macros.h"
 
 int	a(int);
 int	b(int);
