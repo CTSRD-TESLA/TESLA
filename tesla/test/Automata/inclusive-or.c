@@ -54,7 +54,7 @@ void ab() {
   // 6 -- a(x) --> 4
   // CHECK: [[B3]] -> [[Final]] [ label = "a(x)
 
-  // CHECK: label = "example.c:30#0"
+  // CHECK: label = "{{example.c:[0-9]+#[0-9]+}}"
 }
 
 // TODO: write this test
