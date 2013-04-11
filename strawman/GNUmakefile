@@ -41,15 +41,7 @@ tesla:
 
 # Just in case TESLA isn't installed to /usr/local:
 CFLAGS+=	-I ../include
-LIBS+=		-L ${BUILD_DIR}/libtesla/src
-
-# For some reason, setting PATH interoperates poorly with the Bourne shell (sh):
-# if we set it to ../build/foo:../build:bar:${PATH}, tesla.mk can only run
-# tools in ../build/foo.
-#
-# Again, none of this is necessary when TESLA is installed in /usr/local.
-SHELL:=bash
-PATH:=	${BUILD_DIR}/tesla/analyser:${BUILD_DIR}/tesla/instrumenter:${BUILD_DIR}/tesla/tools/graph:${PATH}
+LIBS+=		-L ${TESLA_BUILD_DIR}/libtesla/src
 
 include tesla.mk
 
