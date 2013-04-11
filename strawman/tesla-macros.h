@@ -71,7 +71,7 @@
 #define	TESLA_NOW __tesla_now
 
 
-#define	TESLA_STRUCT_AUTOMATON(fn_name)	__tesla_struct_automaton(fn_name)
+#define	TESLA_STRUCT_AUTOMATON(...)	__tesla_struct_automaton(__VA_ARGS__)
 
 #define automaton(name, ...)    __tesla_automaton(name, __VA_ARGS__)
 
