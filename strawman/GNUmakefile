@@ -14,7 +14,7 @@ CC=		clang
 LINK=		clang
 
 REVISION:=	$(shell ./revision.sh)
-CFLAGS+=	-Wall -D TESLA -D REVISION="${REVISION}" \
+CFLAGS+=	-Wall -D REVISION="${REVISION}" \
 		-g -ggdb \
 		-Wno-deprecated-declarations	# DES_set_key() is deprecated
 LIBS+=		-l crypto -l tesla
