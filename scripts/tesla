@@ -17,7 +17,7 @@ if [ ! $1 ]; then
 fi
 
 if [ $TESLA_BUILD_DIR ]; then
-	export PATH="$TESLA_BUILD_DIR/tesla/analyser:$TESLA_BUILD_DIR/tesla/instrumenter:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
+	export PATH="$TESLA_BUILD_DIR/tesla/analyser:$TESLA_BUILD_DIR/tesla/instrumenter:$TESLA_BUILD_DIR/tesla/tools/cat:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
 fi
 
 if [ ! `which tesla-analyse` ]; then
