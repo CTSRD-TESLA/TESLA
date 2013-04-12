@@ -60,6 +60,7 @@ namespace internal {
   class NFAParser;
 }
 
+typedef std::map<Identifier,AutomatonDescription*> AutomataMap;
 
 /**
  * An automata representation of a TESLA assertion.
@@ -145,7 +146,7 @@ public:
    *
    * @param  Desc        where to find definitions of sub-automata
    */
-  NFA* Link(const std::map<Identifier,AutomatonDescription*>& Desc);
+  NFA* Link(const AutomataMap& Desc);
 
 private:
   NFA(size_t id, const AutomatonDescription& A, llvm::StringRef Name,

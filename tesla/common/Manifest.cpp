@@ -111,7 +111,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     return NULL;
   }
 
-  map<Identifier,AutomatonDescription*> Descriptions;
+  AutomataMap Descriptions;
   map<Identifier,AutomataVersions> Automata;
 
   const string& CompleteBuffer = Buffer->getBuffer().str();

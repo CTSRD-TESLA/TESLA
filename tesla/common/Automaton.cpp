@@ -77,7 +77,7 @@ namespace internal {
 class NFAParser {
 public:
   NFAParser(const AutomatonDescription& A,
-            const map<Identifier,AutomatonDescription*>* Descriptions = NULL)
+            const AutomataMap* Descriptions = NULL)
     : Automaton(A), Descriptions(Descriptions), SubAutomataAllowed(true)
   {
   }
@@ -112,7 +112,7 @@ private:
   void CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState);
 
   const AutomatonDescription& Automaton;
-  const map<Identifier,AutomatonDescription*>* Descriptions;
+  const AutomataMap* Descriptions;
 
   bool SubAutomataAllowed;
   StateVector States;
@@ -186,7 +186,7 @@ NFA* NFA::Parse(const AutomatonDescription *A, unsigned int id) {
   return N.take();
 }
 
-NFA* NFA::Link(const map<Identifier,AutomatonDescription*>& Descriptions) {
+NFA* NFA::Link(const AutomataMap& Descriptions) {
   assert(id < 1000);
 
   OwningPtr<NFA> N;

@@ -56,9 +56,7 @@ public:
   Manifest(const Manifest&) LLVM_DELETED_FUNCTION;
   ~Manifest();
 
-  const std::map<Identifier,AutomatonDescription*>& AllAutomata() const {
-    return Descriptions;
-  }
+  const AutomataMap& AllAutomata() const { return Descriptions; }
 
   //! Find the @ref Automaton named by an @ref Identifier.
   const Automaton* FindAutomaton(const Identifier&,
@@ -96,7 +94,7 @@ private:
     DFA *Deterministic;
   };
 
-  Manifest(const std::map<Identifier,AutomatonDescription*>& Descriptions,
+  Manifest(const AutomataMap& Descriptions,
            const std::map<Identifier,AutomataVersions>& Automata)
     : Descriptions(Descriptions), Automata(Automata)
   {
@@ -107,7 +105,7 @@ private:
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
 
   //! The abstract descriptions.
-  std::map<Identifier,AutomatonDescription*> Descriptions;
+  AutomataMap Descriptions;
 
   //! The automata.
   std::map<Identifier,AutomataVersions> Automata;
