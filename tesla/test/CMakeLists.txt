@@ -12,5 +12,6 @@ add_dependencies(tesla-test
 	llvm-triple
 	tesla-analyse
 	tesla-cat
+	tesla-graph
 	tesla-instrument
 )
