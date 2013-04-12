@@ -83,8 +83,8 @@ main(int argc, char *argv[]) {
   }
 
   for (auto i : Manifest->AllAutomata()) {
-    Identifier ID = i.second->identifier();
-    auto *A = Manifest->FindAutomaton(i.second->identifier(), Determinism);
+    Identifier ID = i.first;
+    auto *A = Manifest->FindAutomaton(ID, Determinism);
     assert(A);
 
     out << A->Dot() << "\n\n";
