@@ -10,69 +10,71 @@
 
 
 #ifdef FILE_A
-identifier {
-// CHECK: name: "assertion_a"
-  name: "assertion_a"
-}
-context: Global
-expression {
-  type: FIELD_ASSIGN
-  fieldAssign {
-    type: "tcpcb"
-    index: 5
-    base {
-      type: Variable
-      index: 0
-      name: "tp"
+automaton {
+  identifier {
+  // CHECK: name: "assertion_a"
+    name: "assertion_a"
+  }
+  context: Global
+  expression {
+    type: FIELD_ASSIGN
+    fieldAssign {
+      type: "tcpcb"
+      index: 5
+      base {
+        type: Variable
+        index: 0
+        name: "tp"
+      }
+      operation: SimpleAssign
+      value {
+        type: Constant
+        name: "TCPS_CLOSED"
+        value: 0
+      }
+      fieldName: "t_state"
     }
-    operation: SimpleAssign
-    value {
-      type: Constant
-      name: "TCPS_CLOSED"
-      value: 0
-    }
-    fieldName: "t_state"
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "tp"
   }
 }
-argument {
-  type: Variable
-  index: 0
-  name: "tp"
-}
-===
 #endif
 
 
 #ifdef FILE_B
-identifier {
-// CHECK: name: "assertion_b"
-  name: "assertion_b"
-}
-context: Global
-expression {
-  type: FIELD_ASSIGN
-  fieldAssign {
-    type: "tcpcb"
-    index: 5
-    base {
-      type: Variable
-      index: 0
-      name: "tp"
+automaton {
+  identifier {
+  // CHECK: name: "assertion_b"
+    name: "assertion_b"
+  }
+  context: Global
+  expression {
+    type: FIELD_ASSIGN
+    fieldAssign {
+      type: "tcpcb"
+      index: 5
+      base {
+        type: Variable
+        index: 0
+        name: "tp"
+      }
+      operation: SimpleAssign
+      value {
+        type: Constant
+        name: "TCPS_ESTABLISHED"
+        value: 4
+      }
+      fieldName: "t_state"
     }
-    operation: SimpleAssign
-    value {
-      type: Constant
-      name: "TCPS_ESTABLISHED"
-      value: 4
-    }
-    fieldName: "t_state"
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "tp"
   }
 }
-argument {
-  type: Variable
-  index: 0
-  name: "tp"
-}
-===
 #endif
 

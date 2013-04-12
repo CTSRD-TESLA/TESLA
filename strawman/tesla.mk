@@ -1,6 +1,7 @@
 .SUFFIXES: .c .dot .ll .pdf .tesla
 
 ANALYSE=	tesla analyse
+CAT=		tesla cat
 INSTRUMENT=	tesla instrument -S -verify-each
 GRAPH=		tesla graph
 
@@ -17,7 +18,7 @@ TESLA_OBJS=	${TESLA_IR:.ll=.o}
 OBJS=		${TESLA_OBJS}
 
 .tesla: ${TESLA_FILES}
-	cat $^ > $@
+	${CAT} $^ -o $@
 	# temporary workaround for ClangTool irritant:
 	sed -i.backup "s@`pwd`/@@" .tesla && rm .tesla.backup
 

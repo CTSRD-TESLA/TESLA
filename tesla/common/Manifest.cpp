@@ -111,28 +111,18 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     return NULL;
   }
 
+  OwningPtr<ManifestFile> Protobuf(new ManifestFile);
+  if (!::google::protobuf::TextFormat::ParseFromString(Buffer->getBuffer(),
+                                                       Protobuf.get())) {
+    ErrorStream << "Error parsing TESLA manifest '" << Path << "'\n";
+    return NULL;
+  }
+
   AutomataMap Descriptions;
   map<Identifier,AutomataVersions> Automata;
 
-  const string& CompleteBuffer = Buffer->getBuffer().str();
-
-  // The text file delineates individual automata with the string '==='.
-  for (size_t Pos = 0; Pos < CompleteBuffer.length(); ) {
-    size_t End = CompleteBuffer.find(SEP, Pos + 1);
-    const string& Substr = CompleteBuffer.substr(Pos, End - Pos);
-
-    OwningPtr<AutomatonDescription> A(new AutomatonDescription);
-    if (!::google::protobuf::TextFormat::ParseFromString(Substr, &(*A))) {
-      ErrorStream << "Error parsing TESLA automaton in '" << Path << "'\n";
-
-      for (auto i : Descriptions) delete i.second;
-      return NULL;
-    }
-
-    Identifier ID = A->identifier();
-    Descriptions.insert(std::make_pair(ID, A.take()));
-    Pos = End + SEP.length();
-  }
+  for (auto& A : Protobuf->automaton())
+    Descriptions.insert(std::make_pair(A.identifier(), &A));
 
   int id = 0;
   for (auto i : Descriptions) {
@@ -155,7 +145,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     Automata[i.first] = AutomataVersions(A.take(), Linked, Deterministic);
   }
 
-  return new Manifest(Descriptions, Automata);
+  return new Manifest(Protobuf, Descriptions, Automata);
 }
 
 StringRef Manifest::defaultLocation() { return ManifestName; }

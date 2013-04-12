@@ -94,15 +94,19 @@ private:
     DFA *Deterministic;
   };
 
-  Manifest(const AutomataMap& Descriptions,
+  Manifest(llvm::OwningPtr<ManifestFile>& Protobuf,
+           const AutomataMap& Descriptions,
            const std::map<Identifier,AutomataVersions>& Automata)
-    : Descriptions(Descriptions), Automata(Automata)
+    : Protobuf(Protobuf.take()), Descriptions(Descriptions), Automata(Automata)
   {
   }
 
   const Automaton* FindAutomaton(llvm::StringRef Name, Automaton::Type) const;
 
   static const std::string SEP;   //!< Delineates automata in a TESLA file.
+
+  //! Storage of the protocol buffer.
+  llvm::OwningPtr<ManifestFile> Protobuf;
 
   //! The abstract descriptions.
   AutomataMap Descriptions;

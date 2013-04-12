@@ -1,45 +1,46 @@
-identifier {
-  location {
-    filename: "threading.c"
-    line: 56
-    counter: 0
+automaton {
+  identifier {
+    location {
+      filename: "threading.c"
+      line: 56
+      counter: 0
+    }
   }
-}
-context: ThreadLocal
-expression {
-  type: NULL_EXPR
-}
-argument {
-  type: Variable
-  index: 0
-  name: "obj"
-}
-beginning {
-  type: FUNCTION
-  function {
+  context: ThreadLocal
+  expression {
+    type: NULL_EXPR
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "obj"
+  }
+  beginning {
+    type: FUNCTION
     function {
-      name: "worker"
-    }
-    direction: Entry
-    context: Callee
-    argument {
-      type: Any
-      name: "index"
+      function {
+        name: "worker"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "index"
+      }
     }
   }
-}
-end {
-  type: FUNCTION
-  function {
+  end {
+    type: FUNCTION
     function {
-      name: "worker"
-    }
-    direction: Exit
-    context: Callee
-    argument {
-      type: Any
-      name: "index"
+      function {
+        name: "worker"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "index"
+      }
     }
   }
 }
-===

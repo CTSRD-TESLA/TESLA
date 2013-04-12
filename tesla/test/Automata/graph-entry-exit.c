@@ -9,158 +9,160 @@
  */
 
 #ifdef TESLA_FILE
-identifier {
-  location {
-    filename: "threading.c"
-    line: 56
-    counter: 0
-  }
-}
-context: ThreadLocal
-expression {
-  type: SEQUENCE
-  sequence {
-    expression {
-      type: NULL_EXPR
+automaton {
+  identifier {
+    location {
+      filename: "threading.c"
+      line: 56
+      counter: 0
     }
-    expression {
-      type: FUNCTION
-      function {
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
         function {
-          name: "hold"
-        }
-        direction: Entry
-        context: Callee
-        argument {
-          type: Variable
-          index: 0
-          name: "obj"
+          function {
+            name: "hold"
+          }
+          direction: Entry
+          context: Callee
+          argument {
+            type: Variable
+            index: 0
+            name: "obj"
+          }
         }
       }
-    }
-    expression {
-      type: NOW
-      now {
-        location {
-          filename: "threading.c"
-          line: 56
-          counter: 0
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "threading.c"
+            line: 56
+            counter: 0
+          }
         }
       }
     }
   }
-}
-argument {
-  type: Variable
-  index: 0
-  name: "obj"
-}
-beginning {
-  type: FUNCTION
-  function {
-    // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+  argument {
+    type: Variable
+    index: 0
+    name: "obj"
+  }
+  beginning {
+    type: FUNCTION
     function {
-      name: "worker"
-    }
-    direction: Entry
-    context: Callee
-    argument {
-      type: Any
-      name: "index"
-    }
-  }
-}
-end {
-  type: FUNCTION
-  function {
-    // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
-    function {
-      name: "worker"
-    }
-    direction: Exit
-    context: Callee
-    argument {
-      type: Any
-      name: "index"
-    }
-  }
-}
-===
-identifier {
-  location {
-    filename: "threading.c"
-    line: 57
-    counter: 1
-  }
-}
-context: ThreadLocal
-expression {
-  type: SEQUENCE
-  sequence {
-    expression {
-      type: NULL_EXPR
-    }
-    expression {
-      type: NOW
-      now {
-        location {
-          filename: "threading.c"
-          line: 57
-          counter: 1
-        }
-      }
-    }
-    expression {
-      type: FUNCTION
+      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
       function {
-        function {
-          name: "release"
-        }
-        direction: Entry
-        context: Callee
-        argument {
-          type: Variable
-          index: 0
-          name: "obj"
-        }
+        name: "worker"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "index"
+      }
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+      function {
+        name: "worker"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "index"
       }
     }
   }
 }
-argument {
-  type: Variable
-  index: 0
-  name: "obj"
-}
-beginning {
-  type: FUNCTION
-  function {
-    // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
-    function {
-      name: "worker"
+automaton {
+  identifier {
+    location {
+      filename: "threading.c"
+      line: 57
+      counter: 1
     }
-    direction: Entry
-    context: Callee
-    argument {
-      type: Any
-      name: "index"
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "threading.c"
+            line: 57
+            counter: 1
+          }
+        }
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "release"
+          }
+          direction: Entry
+          context: Callee
+          argument {
+            type: Variable
+            index: 0
+            name: "obj"
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "obj"
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+      function {
+        name: "worker"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "index"
+      }
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+      function {
+        name: "worker"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "index"
+      }
     }
   }
 }
-end {
-  type: FUNCTION
-  function {
-    // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
-    function {
-      name: "worker"
-    }
-    direction: Exit
-    context: Callee
-    argument {
-      type: Any
-      name: "index"
-    }
-  }
-}
-===
 #endif

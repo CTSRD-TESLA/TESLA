@@ -66,11 +66,13 @@ void TeslaConsumer::HandleTranslationUnit(ASTContext &Context) {
   if (Out.has_error())
     report_fatal_error("unable to open '" + OutFile + "': " + ErrorInfo);
 
+  ManifestFile Result;
+  for (const AutomatonDescription *A : Visitor.GetAutomata())
+    *Result.add_automaton() = *A;
+
   string ProtobufText;
-  for (const AutomatonDescription *A : Visitor.GetAutomata()) {
-    google::protobuf::TextFormat::PrintToString(*A, &ProtobufText);
-    Out << ProtobufText << "===\n";
-  }
+  google::protobuf::TextFormat::PrintToString(Result, &ProtobufText);
+  Out << ProtobufText;
 }
 
 
