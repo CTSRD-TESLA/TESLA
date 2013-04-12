@@ -33,11 +33,23 @@
 #include "Parser.h"
 #include "Visitor.h"
 
+#include <clang/AST/ASTContext.h>
+
 using namespace clang;
 using std::string;
 
 
 namespace tesla {
+
+template<class T>
+void ReportError(ASTContext& Ctx, StringRef Message, T *Subject) {
+  DiagnosticsEngine& Diag = Ctx.getDiagnostics();
+  int DiagID = Diag.getCustomDiagID(DiagnosticsEngine::Error,
+                                    ("TESLA: " + Message).str());
+
+  Diag.Report(Subject->getLocStart(), DiagID) << Subject->getSourceRange();
+}
+
 
 TeslaVisitor::TeslaVisitor(llvm::StringRef Filename, ASTContext *Context)
   : Filename(Filename), Context(Context)
@@ -45,24 +57,35 @@ TeslaVisitor::TeslaVisitor(llvm::StringRef Filename, ASTContext *Context)
 }
 
 TeslaVisitor::~TeslaVisitor() {
-  for (AutomatonDescription *A : Automata)
+  for (auto *A : Automata)
     delete A;
+
+  // Don't delete TopLevelAutomata; these Identifier objects are owned by
+  // their respective AutomatonDescription objects.
 }
 
 bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
   FunctionDecl *F = E->getDirectCallee();
   if (!F) return true;
-  if (F->getName().compare(INLINE_ASSERTION) != 0) return true;
 
-  OwningPtr<Parser> P(Parser::AssertionParser(E, *Context));
-  if (!P)
-    return false;
+  StringRef FnName = F->getName();
+  if (!FnName.startswith(TESLA_BASE)) return true;
 
-  OwningPtr<AutomatonDescription> A(P->Parse());
-  if (!A)
-    return false;
+  // TESLA function calls might be inline assertions.
+  if (FnName == INLINE_ASSERTION) {
+    OwningPtr<Parser> P(Parser::AssertionParser(E, *Context));
+    if (!P)
+      return false;
 
-  Automata.push_back(P->Parse());
+    OwningPtr<AutomatonDescription> A(P->Parse());
+    if (!A)
+      return false;
+
+    Roots.push_back(&A->identifier());
+    Automata.push_back(A.take());
+    return true;
+  }
+
   return true;
 }
 

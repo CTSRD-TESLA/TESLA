@@ -131,5 +131,19 @@ automaton {
   }
   // CHECK: label = "example.c:314#42"
 }
+root {
+  location {
+    filename: "example.c"
+    line: 314
+    counter: 42
+  }
+}
+root {
+  location {
+    filename: "example.c"
+    line: 46
+    counter: 0
+  }
+}
 #endif
 

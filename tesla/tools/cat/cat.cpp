@@ -73,6 +73,9 @@ main(int argc, char *argv[]) {
 
     for (auto i : Manifest->AllAutomata())
       *Result.add_automaton() = *i.second;
+
+    for (auto i : Manifest->RootAutomata())
+      *Result.add_root() = *i;
   }
 
   string ProtobufText;

@@ -65,8 +65,8 @@ bool TeslaCalleeInstrumenter::runOnModule(Module &M) {
 
   bool ModifiedIR = false;
 
-  for (auto i : Manifest->AllAutomata()) {
-    auto A = *Manifest->FindAutomaton(i.first);
+  for (auto i : Manifest->RootAutomata()) {
+    auto& A = *Manifest->FindAutomaton(*i);
     for (auto EquivClass : A) {
       assert(!EquivClass.empty());
 

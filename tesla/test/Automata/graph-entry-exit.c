@@ -165,4 +165,18 @@ automaton {
     }
   }
 }
+root {
+  location {
+    filename: "threading.c"
+    line: 56
+    counter: 0
+  }
+}
+root {
+  location {
+    filename: "threading.c"
+    line: 57
+    counter: 1
+  }
+}
 #endif

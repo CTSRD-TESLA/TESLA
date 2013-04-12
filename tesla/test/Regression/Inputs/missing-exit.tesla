@@ -44,3 +44,10 @@ automaton {
     }
   }
 }
+root {
+  location {
+    filename: "threading.c"
+    line: 56
+    counter: 0
+  }
+}

@@ -41,6 +41,9 @@ automaton {
     name: "tp"
   }
 }
+root {
+  name: "assertion_a"
+}
 #endif
 
 
@@ -76,5 +79,18 @@ automaton {
     name: "tp"
   }
 }
+root {
+  name: "assertion_b"
+}
 #endif
+
+/*
+ * CHECK: root {
+ * CHECK-NEXT: name: "assertion_a"
+ * CHECK-NEXT: }
+ *
+ * CHECK: root {
+ * CHECK-NEXT: name: "assertion_b"
+ * CHECK-NEXT: }
+ */
 

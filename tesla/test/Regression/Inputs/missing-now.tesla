@@ -75,3 +75,10 @@ automaton {
     }
   }
 }
+root {
+  location {
+    filename: "/Users/jon/Documents/TESLA/tesla/test/Integration/call.c"
+    line: 62
+    counter: 0
+  }
+}

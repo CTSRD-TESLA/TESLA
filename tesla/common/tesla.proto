@@ -37,6 +37,12 @@ package tesla;
 message ManifestFile {
   /** All of the automata described by the manifest. */
   repeated AutomatonDescription automaton = 1;
+
+  /**
+   * The automata that are actually used in their own right
+   * (as opposed to those that are only included by other automata).
+   */
+  repeated Identifier root = 2;
 }
 
 

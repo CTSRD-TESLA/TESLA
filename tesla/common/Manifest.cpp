@@ -121,11 +121,19 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
   AutomataMap Descriptions;
   map<Identifier,AutomataVersions> Automata;
 
+  // Note the top-level automata that are explicitly named as roots.
+  ArrayRef<const Identifier*> Roots(Protobuf->root().data(),
+                                    Protobuf->root_size());
+
+  for (auto& ID : Protobuf->root())
+    Automata[ID];
+
   for (auto& A : Protobuf->automaton())
-    Descriptions.insert(std::make_pair(A.identifier(), &A));
+    Descriptions[A.identifier()] = &A;
 
   int id = 0;
   for (auto i : Descriptions) {
+    const Identifier& ID = i.first;
     const AutomatonDescription *Descrip = i.second;
 
     OwningPtr<NFA> A(NFA::Parse(Descrip, id++));
@@ -142,10 +150,10 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
 
     NFA *Linked = A->Link(Descriptions);
     DFA *Deterministic = DFA::Convert(Linked);
-    Automata[i.first] = AutomataVersions(A.take(), Linked, Deterministic);
+    Automata[ID] = AutomataVersions(A.take(), Linked, Deterministic);
   }
 
-  return new Manifest(Protobuf, Descriptions, Automata);
+  return new Manifest(Protobuf, Descriptions, Automata, Roots);
 }
 
 StringRef Manifest::defaultLocation() { return ManifestName; }
