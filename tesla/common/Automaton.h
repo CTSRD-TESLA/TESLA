@@ -60,7 +60,7 @@ namespace internal {
   class NFAParser;
 }
 
-typedef std::map<Identifier,AutomatonDescription*> AutomataMap;
+typedef std::map<Identifier,const AutomatonDescription*> AutomataMap;
 
 /**
  * An automata representation of a TESLA assertion.
