@@ -31,6 +31,9 @@
 package tesla;
 
 
+/**
+ * A file that describes TESLA automata.
+ */
 message ManifestFile {
   /** All of the automata described by the manifest. */
   repeated AutomatonDescription automaton = 1;
