@@ -59,12 +59,12 @@ void TeslaConsumer::HandleTranslationUnit(ASTContext &Context) {
   TeslaVisitor Visitor(InFile, &Context);
 
   if (!Visitor.TraverseDecl(Context.getTranslationUnitDecl()))
-    return;
+    report_fatal_error("TESLA: error analysing '" + InFile + "'");
 
   string ErrorInfo;
   llvm::raw_fd_ostream Out(OutFile.str().c_str(), ErrorInfo);
   if (Out.has_error())
-    report_fatal_error("unable to open '" + OutFile + "': " + ErrorInfo);
+    report_fatal_error("TESLA: unable to open '" + OutFile + "': " + ErrorInfo);
 
   ManifestFile Result;
   for (const AutomatonDescription *A : Visitor.GetAutomata())
