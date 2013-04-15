@@ -39,7 +39,7 @@
 namespace tesla {
 
 class AutomatonDescription;
-class Identifier;
+class Usage;
 
 
 class TeslaVisitor : public clang::RecursiveASTVisitor<TeslaVisitor> {
@@ -56,7 +56,7 @@ public:
     return Automata;
   }
 
-  const llvm::ArrayRef<const Identifier*> RootAutomata() const {
+  const llvm::ArrayRef<const Usage*> RootAutomata() const {
     return Roots;
   }
 
@@ -65,7 +65,7 @@ private:
   clang::ASTContext *Context;
 
   llvm::SmallVector<AutomatonDescription*, 2> Automata;
-  llvm::SmallVector<const Identifier*, 2> Roots;
+  llvm::SmallVector<const Usage*, 2> Roots;
 };
 
 } // namespace tesla

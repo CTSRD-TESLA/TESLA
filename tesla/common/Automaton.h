@@ -97,6 +97,7 @@ public:
 
   size_t ID() const { return id; }
   const AutomatonDescription& getAssertion() const { return assertion; }
+  const Usage* Use() const { return use; }
   size_t StateCount() const { return States.size(); }
   size_t TransitionCount() const { return Transitions.size(); }
 
@@ -109,11 +110,13 @@ public:
   TransitionSets::const_iterator end() const  { return Transitions.end(); }
 
 protected:
-  Automaton(size_t id, const AutomatonDescription&, llvm::StringRef Name,
+  Automaton(size_t id, const AutomatonDescription&,
+            const Usage*, llvm::StringRef Name,
             llvm::ArrayRef<State*>, const TransitionSets&);
 
   const size_t id;
-  const AutomatonDescription& assertion;
+  const AutomatonDescription& assertion;  //!< Automaton states.
+  const Usage *use;                       //!< How the automaton is used.
   const std::string name;
 
   StateVector States;
@@ -138,7 +141,7 @@ class NFA : public Automaton {
   friend class DFA;
 
 public:
-  static NFA* Parse(const AutomatonDescription*, unsigned int id);
+  static NFA* Parse(const AutomatonDescription*, const Usage*, unsigned int id);
 
   /**
    * Construct a version of this @ref Automaton with all sub-automata
@@ -149,7 +152,8 @@ public:
   NFA* Link(const AutomataMap& Desc);
 
 private:
-  NFA(size_t id, const AutomatonDescription& A, llvm::StringRef Name,
+  NFA(size_t id, const AutomatonDescription& A,
+      const Usage*, llvm::StringRef Name,
       llvm::ArrayRef<State*>, const TransitionSets&);
 
   friend class internal::NFAParser;
@@ -169,7 +173,8 @@ public:
   bool IsRealisable() const { return true; }
 
 private:
-  DFA(size_t id, AutomatonDescription& A, llvm::StringRef Name,
+  DFA(size_t id, AutomatonDescription& A,
+      const Usage*, llvm::StringRef Name,
       llvm::ArrayRef<State*>, const TransitionSets&);
 };
 

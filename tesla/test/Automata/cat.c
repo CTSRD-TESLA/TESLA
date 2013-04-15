@@ -42,7 +42,9 @@ automaton {
   }
 }
 root {
-  name: "assertion_a"
+  identifier {
+    name: "assertion_a"
+  }
 }
 #endif
 
@@ -80,17 +82,23 @@ automaton {
   }
 }
 root {
-  name: "assertion_b"
+  identifier {
+    name: "assertion_b"
+  }
 }
 #endif
 
 /*
  * CHECK: root {
+ * CHECK-NEXT: identifier {
  * CHECK-NEXT: name: "assertion_a"
+ * CHECK-NEXT: }
  * CHECK-NEXT: }
  *
  * CHECK: root {
+ * CHECK-NEXT: identifier {
  * CHECK-NEXT: name: "assertion_b"
+ * CHECK-NEXT: }
  * CHECK-NEXT: }
  */
 

@@ -1476,68 +1476,88 @@ automaton {
   }
 }
 root {
-  name: "my_tcpcb_assertion"
-}
-root {
-  location {
-    filename: "crypto.c"
-    line: 52
-    counter: 0
+  identifier {
+    name: "my_tcpcb_assertion"
   }
 }
 root {
-  location {
-    filename: "example.c"
-    line: 46
-    counter: 0
+  identifier {
+    location {
+      filename: "crypto.c"
+      line: 52
+      counter: 0
+    }
   }
 }
 root {
-  location {
-    filename: "example.c"
-    line: 49
-    counter: 1
+  identifier {
+    location {
+      filename: "example.c"
+      line: 46
+      counter: 0
+    }
   }
 }
 root {
-  location {
-    filename: "example.c"
-    line: 52
-    counter: 2
+  identifier {
+    location {
+      filename: "example.c"
+      line: 49
+      counter: 1
+    }
   }
 }
 root {
-  location {
-    filename: "example.c"
-    line: 53
-    counter: 3
+  identifier {
+    location {
+      filename: "example.c"
+      line: 52
+      counter: 2
+    }
   }
 }
 root {
-  location {
-    filename: "example.c"
-    line: 54
-    counter: 4
+  identifier {
+    location {
+      filename: "example.c"
+      line: 53
+      counter: 3
+    }
   }
 }
 root {
-  location {
-    filename: "example.c"
-    line: 57
-    counter: 5
+  identifier {
+    location {
+      filename: "example.c"
+      line: 54
+      counter: 4
+    }
   }
 }
 root {
-  location {
-    filename: "example.c"
-    line: 64
-    counter: 6
+  identifier {
+    location {
+      filename: "example.c"
+      line: 57
+      counter: 5
+    }
   }
 }
 root {
-  location {
-    filename: "example.c"
-    line: 79
-    counter: 7
+  identifier {
+    location {
+      filename: "example.c"
+      line: 64
+      counter: 6
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 79
+      counter: 7
+    }
   }
 }

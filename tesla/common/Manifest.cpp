@@ -122,11 +122,10 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
   map<Identifier,AutomataVersions> Automata;
 
   // Note the top-level automata that are explicitly named as roots.
-  ArrayRef<const Identifier*> Roots(Protobuf->root().data(),
-                                    Protobuf->root_size());
-
-  for (auto& ID : Protobuf->root())
-    Automata[ID];
+  ArrayRef<const Usage*> Roots(Protobuf->root().data(), Protobuf->root_size());
+  map<Identifier,const Usage*> Uses;
+  for (auto *U : Roots)
+    Uses[U->identifier()] = U;
 
   for (auto& A : Protobuf->automaton())
     Descriptions[A.identifier()] = &A;
@@ -136,7 +135,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     const Identifier& ID = i.first;
     const AutomatonDescription *Descrip = i.second;
 
-    OwningPtr<NFA> A(NFA::Parse(Descrip, id++));
+    OwningPtr<NFA> A(NFA::Parse(Descrip, Uses[ID], id++));
     if (!A) {
       for (auto i : Automata) {
         auto& Versions = i.second;

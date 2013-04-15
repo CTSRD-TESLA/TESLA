@@ -60,8 +60,8 @@ TeslaVisitor::~TeslaVisitor() {
   for (auto *A : Automata)
     delete A;
 
-  // Don't delete TopLevelAutomata; these Identifier objects are owned by
-  // their respective AutomatonDescription objects.
+  for (auto *R : Roots)
+    delete R;
 }
 
 bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
@@ -77,12 +77,13 @@ bool TeslaVisitor::VisitCallExpr(CallExpr *E) {
     if (!P)
       return false;
 
-    OwningPtr<AutomatonDescription> A(P->Parse());
-    if (!A)
+    OwningPtr<AutomatonDescription> Description;
+    OwningPtr<Usage> Use;
+    if (!P->Parse(Description, Use))
       return false;
 
-    Roots.push_back(&A->identifier());
-    Automata.push_back(A.take());
+    Automata.push_back(Description.take());
+    Roots.push_back(Use.take());
     return true;
   }
 
@@ -116,11 +117,18 @@ bool TeslaVisitor::VisitFunctionDecl(FunctionDecl *F) {
   if (!P)
     return false;
 
-  OwningPtr<AutomatonDescription> A(P->Parse());
-  if (!A)
+  OwningPtr<AutomatonDescription> Description;
+  OwningPtr<Usage> Use;
+  if (!P->Parse(Description, Use))
     return false;
 
-  Automata.push_back(P->Parse());
+  if (Use) {
+    ReportError(*Context,
+                "automaton shouldn't describe its own usage (e.g. context)", F);
+    return false;
+  }
+
+  Automata.push_back(Description.take());
   return true;
 }
 

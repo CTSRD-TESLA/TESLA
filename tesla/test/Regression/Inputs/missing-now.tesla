@@ -35,6 +35,15 @@ automaton {
       }
     }
   }
+}
+root {
+  identifier {
+    location {
+      filename: "/Users/jon/Documents/TESLA/tesla/test/Integration/call.c"
+      line: 62
+      counter: 0
+    }
+  }
   beginning {
     type: FUNCTION
     function {
@@ -73,12 +82,5 @@ automaton {
         type: Any
       }
     }
-  }
-}
-root {
-  location {
-    filename: "/Users/jon/Documents/TESLA/tesla/test/Integration/call.c"
-    line: 62
-    counter: 0
   }
 }

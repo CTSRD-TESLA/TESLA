@@ -70,8 +70,8 @@ void TeslaConsumer::HandleTranslationUnit(ASTContext &Context) {
   for (const AutomatonDescription *A : Visitor.GetAutomata())
     *Result.add_automaton() = *A;
 
-  for (const Identifier *I : Visitor.RootAutomata())
-    *Result.add_root() = *I;
+  for (const Usage *U : Visitor.RootAutomata())
+    *Result.add_root() = *U;
 
   string ProtobufText;
   google::protobuf::TextFormat::PrintToString(Result, &ProtobufText);

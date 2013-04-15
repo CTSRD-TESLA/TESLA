@@ -56,36 +56,6 @@ automaton {
     index: 0
     name: "obj"
   }
-  beginning {
-    type: FUNCTION
-    function {
-      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
-      function {
-        name: "worker"
-      }
-      direction: Entry
-      context: Callee
-      argument {
-        type: Any
-        name: "index"
-      }
-    }
-  }
-  end {
-    type: FUNCTION
-    function {
-      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
-      function {
-        name: "worker"
-      }
-      direction: Exit
-      context: Callee
-      argument {
-        type: Any
-        name: "index"
-      }
-    }
-  }
 }
 automaton {
   identifier {
@@ -134,6 +104,15 @@ automaton {
     index: 0
     name: "obj"
   }
+}
+root {
+  identifier {
+    location {
+      filename: "threading.c"
+      line: 56
+      counter: 0
+    }
+  }
   beginning {
     type: FUNCTION
     function {
@@ -166,17 +145,42 @@ automaton {
   }
 }
 root {
-  location {
-    filename: "threading.c"
-    line: 56
-    counter: 0
+  identifier {
+    location {
+      filename: "threading.c"
+      line: 57
+      counter: 1
+    }
   }
-}
-root {
-  location {
-    filename: "threading.c"
-    line: 57
-    counter: 1
+  beginning {
+    type: FUNCTION
+    function {
+      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+      function {
+        name: "worker"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "index"
+      }
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+      function {
+        name: "worker"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "index"
+      }
+    }
   }
 }
 #endif

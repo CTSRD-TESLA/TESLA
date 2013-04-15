@@ -198,18 +198,21 @@ bool Parser::Parse(AutomatonDescription::Context *Context, Expr *E) {
 }
 
 
-AutomatonDescription* Parser::Parse() {
+bool Parser::Parse(OwningPtr<AutomatonDescription>& Description,
+                   OwningPtr<Usage>& Use) {
   OwningPtr<AutomatonDescription> A(new AutomatonDescription);
-
   *A->mutable_identifier() = ID;
   A->set_context(TeslaContext);
 
-  // Parse the automaton's [beginning,end] bounds.
-  if (Beginning && !Parse(A->mutable_beginning(), Beginning, RootFlags))
-    return NULL;
+  OwningPtr<Usage> U(new Usage);
+  *U->mutable_identifier() = ID;
 
-  if (End && !Parse(A->mutable_end(), End, RootFlags))
-    return NULL;
+  // Parse the automaton's [beginning,end] bounds.
+  if (Beginning && !Parse(U->mutable_beginning(), Beginning, RootFlags))
+    return false;
+
+  if (End && !Parse(U->mutable_end(), End, RootFlags))
+    return false;
 
   // Parse the root: a compound statement or an expression.
   bool Success = false;
@@ -223,14 +226,19 @@ AutomatonDescription* Parser::Parse() {
     ReportError("expected expression or compound statement", Root);
 
   if (!Success)
-    return NULL;
+    return false;
 
   // Keep track of the variables we referenced.
   for (const ValueDecl *D : References)
     if (!Parse(A->add_argument(), D, false, RootFlags))
-      return NULL;
+      return false;
 
-  return A.take();
+  Description.swap(A);
+
+  if (U->has_beginning() || U->has_end())
+    Use.swap(U);
+
+  return true;
 }
 
 

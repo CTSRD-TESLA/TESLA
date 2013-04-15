@@ -15,6 +15,15 @@ automaton {
     index: 0
     name: "obj"
   }
+}
+root {
+  identifier {
+    location {
+      filename: "threading.c"
+      line: 56
+      counter: 0
+    }
+  }
   beginning {
     type: FUNCTION
     function {
@@ -42,12 +51,5 @@ automaton {
         name: "index"
       }
     }
-  }
-}
-root {
-  location {
-    filename: "threading.c"
-    line: 56
-    counter: 0
   }
 }

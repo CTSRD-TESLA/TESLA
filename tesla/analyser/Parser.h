@@ -35,6 +35,7 @@
 #include <tesla.pb.h>
 
 #include <llvm/ADT/APInt.h>
+#include <llvm/ADT/OwningPtr.h>
 
 #include <string>
 #include <vector>
@@ -73,7 +74,16 @@ public:
   //! Create a Parser for an automaton description.
   static Parser* AutomatonParser(clang::FunctionDecl*, clang::ASTContext&);
 
-  AutomatonDescription* Parse();
+  /**
+   * Parse the automaton and its usage.
+   *
+   * @param[out]  Descrip    the automaton description will be stored here
+   * @param[out]  Usage      the usage of the automaton will be stored here
+   *
+   * @return true on success, false on failure
+   */
+  bool Parse(llvm::OwningPtr<AutomatonDescription>& Descrip,
+             llvm::OwningPtr<Usage>& Usage);
 
 
 private:

@@ -77,8 +77,10 @@ namespace internal {
 class NFAParser {
 public:
   NFAParser(const AutomatonDescription& A,
+            const Usage* Use,
             const AutomataMap* Descriptions = NULL)
-    : Automaton(A), Descriptions(Descriptions), SubAutomataAllowed(true)
+    : Automaton(A), Use(Use), Descriptions(Descriptions),
+      SubAutomataAllowed(true)
   {
   }
 
@@ -112,6 +114,7 @@ private:
   void CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState);
 
   const AutomatonDescription& Automaton;
+  const Usage* Use;
   const AutomataMap* Descriptions;
 
   bool SubAutomataAllowed;
@@ -123,10 +126,12 @@ private:
 
 
 // ---- Automaton implementation ----------------------------------------------
-Automaton::Automaton(size_t id, const AutomatonDescription& A, StringRef Name,
+Automaton::Automaton(size_t id, const AutomatonDescription& A,
+                     const Usage *Use, StringRef Name,
                      ArrayRef<State*> S, const TransitionSets& Transitions)
-  : id(id), assertion(A), name(Name), Transitions(Transitions)
+  : id(id), assertion(A), use(Use), name(Name), Transitions(Transitions)
 {
+  assert(!Use || A.identifier() == Use->identifier());
   States.insert(States.begin(), S.begin(), S.end());
 }
 
@@ -178,9 +183,10 @@ string Automaton::Dot() const {
 
 
 // ---- NFA implementation ----------------------------------------------------
-NFA* NFA::Parse(const AutomatonDescription *A, unsigned int id) {
+NFA* NFA::Parse(const AutomatonDescription *A, const Usage *Use,
+                unsigned int id) {
   OwningPtr<NFA> N;
-  internal::NFAParser(*A).Parse(N, id);
+  internal::NFAParser(*A, Use).Parse(N, id);
   assert(N);
 
   return N.take();
@@ -190,7 +196,7 @@ NFA* NFA::Link(const AutomataMap& Descriptions) {
   assert(id < 1000);
 
   OwningPtr<NFA> N;
-  internal::NFAParser(assertion, &Descriptions)
+  internal::NFAParser(assertion, use, &Descriptions)
     .AllowSubAutomata(false)
     .Parse(N, id);
   assert(N);
@@ -198,9 +204,10 @@ NFA* NFA::Link(const AutomataMap& Descriptions) {
   return N.take();
 }
 
-NFA::NFA(size_t id, const AutomatonDescription& A, StringRef Name,
+NFA::NFA(size_t id, const AutomatonDescription& A,
+         const Usage *Use, StringRef Name,
          ArrayRef<State*> S, const TransitionSets& T)
-  : Automaton(id, A, Name, S, T)
+  : Automaton(id, A, Use, Name, S, T)
 {
 }
 
@@ -222,11 +229,11 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   State *Start = State::CreateStartState(States, VariableRefs);
 
   // Parse the automaton entry point, if provided...
-  if (Automaton.has_beginning()) {
-    Start = Parse(Automaton.beginning(), *Start, true);
+  if (Use && Use->has_beginning()) {
+    Start = Parse(Use->beginning(), *Start, true);
     if (!Start) {
       string Str;
-      TextFormat::PrintToString(Automaton.beginning(), &Str);
+      TextFormat::PrintToString(Use->beginning(), &Str);
       report_fatal_error(
         "TESLA: failed to parse automaton 'beginning' event: " + Str);
     }
@@ -239,11 +246,11 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
       "TESLA: failed to parse automaton '" + ShortName(Automaton.identifier()));
 
   // Parse the automaton finalisation point, if provided...
-  if (Automaton.has_end()) {
-    End = Parse(Automaton.end(), *End, false, true);
+  if (Use && Use->has_end()) {
+    End = Parse(Use->end(), *End, false, true);
     if (!End) {
       string Str;
-      TextFormat::PrintToString(Automaton.end(), &Str);
+      TextFormat::PrintToString(Use->end(), &Str);
       report_fatal_error(
         "TESLA: failed to parse automaton 'end' event: " + Str);
     }
@@ -254,7 +261,7 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   string Description;
   TextFormat::PrintToString(Automaton, &Description);
 
-  Out.reset(new NFA(id, Automaton, ShortName(ID), States, Transitions));
+  Out.reset(new NFA(id, Automaton, Use, ShortName(ID), States, Transitions));
 }
 
 State* NFAParser::Parse(const Expression& Expr, State& Start,
@@ -718,7 +725,7 @@ class DFABuilder {
     // folded into a single one.
     DFA *D = new DFA(N->ID(),
                      const_cast<AutomatonDescription&>(N->getAssertion()),
-                     N->Name(), States, Transitions);
+                     N->Use(), N->Name(), States, Transitions);
 #ifndef NDEBUG
     if (getenv("VERBOSE_DEBUG")) {
       fprintf(stderr, "NFA: %s\n", N->String().c_str());
@@ -743,9 +750,9 @@ DFA* DFA::Convert(const NFA* N) {
   return B.ConstructDFA(N);
 }
 
-DFA::DFA(size_t id, AutomatonDescription& A, StringRef Name,
+DFA::DFA(size_t id, AutomatonDescription& A, const Usage* Use, StringRef Name,
          ArrayRef<State*> S, const TransitionSets& T)
-  : Automaton(id, A, Name, S, T)
+  : Automaton(id, A, Use, Name, S, T)
 {
 #ifndef NDEBUG
   for (auto i : T)

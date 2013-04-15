@@ -49,6 +49,7 @@ class AutomatonDescription;
 class FunctionEvent;
 class Identifier;
 class Location;
+class Usage;
 
 /// A description of TESLA instrumentation to perform.
 class Manifest {
@@ -57,7 +58,7 @@ public:
   ~Manifest();
 
   //! Top-level automata (named explicitly in code).
-  llvm::ArrayRef<const Identifier*> RootAutomata() const { return Roots; }
+  llvm::ArrayRef<const Usage*> RootAutomata() const { return Roots; }
 
   //! All automata in the manifest file.
   const AutomataMap& AllAutomata() const { return Descriptions; }
@@ -101,7 +102,7 @@ private:
   Manifest(llvm::OwningPtr<ManifestFile>& Protobuf,
            const AutomataMap& Descriptions,
            const std::map<Identifier,AutomataVersions>& Automata,
-           llvm::ArrayRef<const Identifier*> Roots)
+           llvm::ArrayRef<const Usage*> Roots)
     : Protobuf(Protobuf.take()), Descriptions(Descriptions), Automata(Automata),
       Roots(Roots)
   {
@@ -121,7 +122,7 @@ private:
   std::map<Identifier,AutomataVersions> Automata;
 
   //! Root automata (those named explicitly by the programmer).
-  llvm::ArrayRef<const Identifier*> Roots;
+  llvm::ArrayRef<const Usage*> Roots;
 };
 
 }

@@ -61,7 +61,7 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
   bool ModifiedIR = true;
 
   for (auto i : Manifest->RootAutomata()) {
-    auto& A = *Manifest->FindAutomaton(*i);
+    auto& A = *Manifest->FindAutomaton(i->identifier());
     for (auto EquivClass : A) {
       assert(!EquivClass.empty());
 
