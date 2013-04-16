@@ -14,9 +14,9 @@ exec_program(llvm-config ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
 exec_program(llvm-config ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
 exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 
-# Always build with all warnings and with warning=>error
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+# Always build with all warnings.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 # Default to libc++ if installed.
 find_package(LibCXX)
