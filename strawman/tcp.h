@@ -168,15 +168,16 @@ struct tcpcb {
 	u_int32_t t_ispare[8];		/* 5 UTO, 3 TBD */
 	void	*t_pspare2[4];		/* 4 TBD */
 	u_int64_t _pad[6];		/* 6 TBD (1-2 CC/RTT?) */
-
-#ifdef TESLA
-	TESLA_STRUCT_AUTOMATON(my_tcpcb_assertion);
-#endif
 };
 
 #ifdef __TESLA_ANALYSER__
+automaton(my_tcpcb_assertion, struct tcpcb *tp);
 automaton(active_close, struct tcpcb*);
 automaton(established, struct tcpcb*);
+
+TESLA_STRUCT_AUTOMATON(tcpcp, my_tcpcb_assertion, __tesla_global,
+                       __tesla_call(example_syscall),
+                       __tesla_return(example_syscall));
 
 void	tcp_free(struct tcpcb*);
 

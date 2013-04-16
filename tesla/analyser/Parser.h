@@ -74,6 +74,9 @@ public:
   //! Create a Parser for an automaton description.
   static Parser* AutomatonParser(clang::FunctionDecl*, clang::ASTContext&);
 
+  //! Create a Parser for a struct-automaton mapping.
+  static Parser* MappingParser(clang::FunctionDecl*, clang::ASTContext&);
+
   /**
    * Parse the automaton and its usage.
    *

@@ -117,6 +117,83 @@ Parser* Parser::AutomatonParser(FunctionDecl *F, ASTContext& Ctx) {
 }
 
 
+Parser* Parser::MappingParser(FunctionDecl *F, ASTContext& Ctx) {
+  assert(F != NULL);
+  assert(F->doesThisDeclarationHaveABody());
+
+  OwningPtr<Parser> Bootstrap(new Parser(Ctx));
+
+  auto Body = dyn_cast<CompoundStmt>(F->getBody());
+  if (!Body) {
+    Bootstrap->ReportError("expected a function body (compound statement)", F);
+    return NULL;
+  }
+
+  if (Body->size() != 1) {
+    Bootstrap->ReportError("expected a single statement", F->getBody());
+    return NULL;
+  }
+
+  auto Ret = dyn_cast<ReturnStmt>(Body->body_back());
+  if (!Ret) {
+    Bootstrap->ReportError("expected a return statement", Body->body_back());
+    return NULL;
+  }
+
+  auto Call = dyn_cast<CallExpr>(Ret->getRetValue());
+  if (!Call || !Call->getDirectCallee()
+      || (Call->getDirectCallee()->getName() != AUTOMATON_USES)) {
+    Bootstrap->ReportError("expected call to " + AUTOMATON_USES, Ret);
+    return NULL;
+  }
+
+  Expr* Args[5];
+  const size_t ArgCount = sizeof(Args) / sizeof(Args[0]);
+
+  if (Call->getNumArgs() != ArgCount) {
+    Bootstrap->ReportError(
+      "expected struct name, automaton name, locality, start, end", Call);
+    return NULL;
+  }
+
+  for (size_t i = 0; i < ArgCount; i++)
+    Args[i] = Call->getArg(i)->IgnoreImplicit();
+
+  auto StructName = Bootstrap->ParseStringLiteral(Call->getArg(0));
+  if (StructName.empty()) {
+    Bootstrap->ReportError("expected structure name", Call->getArg(0));
+    return NULL;
+  }
+
+  auto Automaton = Bootstrap->ParseStringLiteral(Call->getArg(1));
+  if (Automaton.empty()) {
+    Bootstrap->ReportError("expected automaton name", Call->getArg(1));
+    return NULL;
+  }
+
+  auto Locality = dyn_cast<DeclRefExpr>(Call->getArg(2)->IgnoreImplicit());
+  if (!Locality) {
+    Bootstrap->ReportError("expected TESLA locality", Call->getArg(2));
+    return NULL;
+  }
+
+  auto Beginning = Call->getArg(3);
+  auto End = Call->getArg(4);
+
+  Identifier ID;
+  ID.set_name(Automaton);
+
+  AutomatonDescription::Context Context;
+  if (!Bootstrap->Parse(&Context, Locality))
+    return NULL;
+
+  Flags RootFlags;
+  RootFlags.FnInstrContext = FunctionEvent::Callee;
+
+  return new Parser(Ctx, ID, Context, Beginning, End, NULL, RootFlags);
+}
+
+
 bool Parser::Parse(Expression *E, const CompoundStmt *C, Flags F) {
   assert(E != NULL);
   assert(C != NULL);
@@ -215,25 +292,28 @@ bool Parser::Parse(OwningPtr<AutomatonDescription>& Description,
     return false;
 
   // Parse the root: a compound statement or an expression.
-  bool Success = false;
-  if (auto *C = dyn_cast<CompoundStmt>(Root))
-    Success = Parse(A->mutable_expression(), C, RootFlags);
+  if (Root) {
+    bool Success = false;
+    if (auto *C = dyn_cast<CompoundStmt>(Root))
+      Success = Parse(A->mutable_expression(), C, RootFlags);
 
-  else if (auto *E = dyn_cast<Expr>(Root))
-    Success = Parse(A->mutable_expression(), E, RootFlags);
+    else if (auto *E = dyn_cast<Expr>(Root))
+      Success = Parse(A->mutable_expression(), E, RootFlags);
 
-  else
-    ReportError("expected expression or compound statement", Root);
+    else
+      ReportError("expected expression or compound statement", Root);
 
-  if (!Success)
-    return false;
+    if (!Success)
+      return false;
+  }
 
   // Keep track of the variables we referenced.
   for (const ValueDecl *D : References)
     if (!Parse(A->add_argument(), D, false, RootFlags))
       return false;
 
-  Description.swap(A);
+  if (A->has_expression())
+    Description.swap(A);
 
   if (U->has_beginning() || U->has_end())
     Use.swap(U);

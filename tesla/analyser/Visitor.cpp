@@ -107,13 +107,22 @@ bool TeslaVisitor::VisitFunctionDecl(FunctionDecl *F) {
   if (!TypeID)
     return true;
 
-  string RetTypeName = TypeID->getName();
+  OwningPtr<Parser> P;
+  StringRef FnName = F->getName();
 
-  if (RetTypeName.compare(AUTOMATON_DESC))
+  // Build a Parser appropriate to what we're parsing.
+  string RetTypeName = TypeID->getName();
+  if (RetTypeName == AUTOMATON_DESC)
+    P.reset(Parser::AutomatonParser(F, *Context));
+
+  else if ((RetTypeName == AUTOMATON_USAGE) && (FnName != AUTOMATON_USES))
+    P.reset(Parser::MappingParser(F, *Context));
+
+  else
     return true;
 
-  // Ok, this is an automaton description; parse it!
-  OwningPtr<Parser> P(Parser::AutomatonParser(F, *Context));
+
+  // Actually parse the function.
   if (!P)
     return false;
 
@@ -122,13 +131,12 @@ bool TeslaVisitor::VisitFunctionDecl(FunctionDecl *F) {
   if (!P->Parse(Description, Use))
     return false;
 
-  if (Use) {
-    ReportError(*Context,
-                "automaton shouldn't describe its own usage (e.g. context)", F);
-    return false;
-  }
+  if (Description)
+    Automata.push_back(Description.take());
 
-  Automata.push_back(Description.take());
+  if (Use)
+    Roots.push_back(Use.take());
+
   return true;
 }
 

@@ -108,14 +108,35 @@ register_t	__tesla_any_register_t();
  */
 
 struct __tesla_automaton_description;
+struct __tesla_automaton_usage;
 
 /** In an explicit automata description, return this to say "we're done". */
 struct __tesla_automaton_description*	__tesla_automaton_done();
 
+inline struct __tesla_automaton_usage*
+__tesla_struct_uses_automaton(const char *struct_name, const char *automaton,
+	__tesla_locality *loc, ...)
+{
+	return 0;
+}
 
-/** Declare an automaton that describes behaviour of this struct. */
-#define	__tesla_struct_automaton(fn_name) \
-	void *__tesla_automaton_struct_uses_##fn_name;
+
+/**
+ * Declare that a struct's behaviour is described by an automaton.
+ *
+ * @param	struct_name	name of the struct that uses the automaton
+ * @param	automaton	reference to the automaton description
+ * @param	loc		a TESLA locality (global, per-thread...)
+ * @param	start		event that kicks off the automaton
+ * @param	end		event that winds up the automaton
+ */
+#define	__tesla_struct_usage(struct_name, automaton, loc, start, end) \
+	struct __tesla_automaton_usage*					\
+	__tesla_struct_automaton_usage_##struct_name##_##automaton() {	\
+		return __tesla_struct_uses_automaton(			\
+			#struct_name, #automaton, loc, start, end);	\
+	}
+
 
 /**
  * Define an automaton to describe a struct's behaviour.
@@ -140,7 +161,7 @@ struct __tesla_automaton_description*	__tesla_automaton_done();
 
 #define __tesla_sequence(...)	1
 
-#define	__tesla_struct_automaton(fn_name)
+#define	__tesla_struct_automaton(...)
 #define	__tesla_automaton(name, ...)
 
 #define	__tesla_call(...)	0
