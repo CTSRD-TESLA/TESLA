@@ -175,11 +175,12 @@ automaton(my_tcpcb_assertion, struct tcpcb *tp);
 automaton(active_close, struct tcpcb*);
 automaton(established, struct tcpcb*);
 
-TESLA_STRUCT_AUTOMATON(tcpcp, my_tcpcb_assertion, __tesla_global,
-                       __tesla_call(example_syscall),
-                       __tesla_return(example_syscall));
-
+void	tcp_init(struct tcpcb*);
 void	tcp_free(struct tcpcb*);
+
+TESLA_STRUCT_AUTOMATON(struct tcpcb *tp, my_tcpcb_assertion, __tesla_global,
+                       called(tcp_init, tp),
+                       returned(tcp_free, tp));
 
 automaton(my_tcpcb_assertion, struct tcpcb *tp)
 {

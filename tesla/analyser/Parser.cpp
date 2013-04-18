@@ -147,38 +147,31 @@ Parser* Parser::MappingParser(FunctionDecl *F, ASTContext& Ctx) {
     return NULL;
   }
 
-  Expr* Args[5];
+  Expr* Args[4];
   const size_t ArgCount = sizeof(Args) / sizeof(Args[0]);
 
   if (Call->getNumArgs() != ArgCount) {
-    Bootstrap->ReportError(
-      "expected struct name, automaton name, locality, start, end", Call);
+    Bootstrap->ReportError("expected automaton, locality, start, end", Call);
     return NULL;
   }
 
   for (size_t i = 0; i < ArgCount; i++)
     Args[i] = Call->getArg(i)->IgnoreImplicit();
 
-  auto StructName = Bootstrap->ParseStringLiteral(Call->getArg(0));
-  if (StructName.empty()) {
-    Bootstrap->ReportError("expected structure name", Call->getArg(0));
-    return NULL;
-  }
-
-  auto Automaton = Bootstrap->ParseStringLiteral(Call->getArg(1));
+  auto Automaton = Bootstrap->ParseStringLiteral(Call->getArg(0));
   if (Automaton.empty()) {
-    Bootstrap->ReportError("expected automaton name", Call->getArg(1));
+    Bootstrap->ReportError("expected automaton name", Call->getArg(0));
     return NULL;
   }
 
-  auto Locality = dyn_cast<DeclRefExpr>(Call->getArg(2)->IgnoreImplicit());
+  auto Locality = dyn_cast<DeclRefExpr>(Call->getArg(1)->IgnoreImplicit());
   if (!Locality) {
-    Bootstrap->ReportError("expected TESLA locality", Call->getArg(2));
+    Bootstrap->ReportError("expected TESLA locality", Call->getArg(1));
     return NULL;
   }
 
-  auto Beginning = Call->getArg(3);
-  auto End = Call->getArg(4);
+  auto Beginning = Call->getArg(2);
+  auto End = Call->getArg(3);
 
   Identifier ID;
   ID.set_name(Automaton);
