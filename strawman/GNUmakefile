@@ -7,7 +7,7 @@ TESLA_BUILD_DIR?=../build
 
 # For our demo handcoded LLVM IR, we need to assign an arch-vendor-OS triple.
 # Normal consumers don't need to do this.
-TRIPLE:=	$(shell ../scripts/tesla get-triple)
+TRIPLE=		$(shell ../scripts/tesla get-triple)
 LLC=llc -mtriple=${TRIPLE} -filetype=obj
 
 CC=		clang
