@@ -32,7 +32,11 @@ clean:
 	rm -f ${BIN} ${SRCS:.c=.ll} ${OBJS} ${TESLA_ALLFILES}
 
 tesla:
-	cd ${TESLA_BUILD_DIR} && ninja
+	@if [ ! -d ${TESLA_BUILD_DIR} ]; then \
+		echo "TESLA_BUILD_DIR ('${TESLA_BUILD_DIR}') not a directory"; \
+		exit 1; \
+	fi
+	ninja -C ${TESLA_BUILD_DIR}
 
 
 #
