@@ -308,6 +308,10 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
     return From;
 
   if (!CastInst::isCastable(CurrentType, NewType)) {
+    string CurrentTypeName;
+    raw_string_ostream CurrentOut(CurrentTypeName);
+    CurrentType->print(CurrentOut);
+
     string NewTypeName;
     raw_string_ostream NameOut(NewTypeName);
     NewType->print(NameOut);
@@ -315,8 +319,8 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
     report_fatal_error(
       "Instrumentation argument "
       + (Name.empty() ? "" : ("'" + Name + "' "))
-      + "cannot be cast to "
-      + NewTypeName
+      + "cannot be cast from '" + CurrentTypeName
+      + "' to '" + NewTypeName + "'"
     );
   }
 
