@@ -18,22 +18,26 @@ if [ ! $1 ]; then
 	exit 1
 fi
 
+TOOL_NAME="tesla-$1"
+shift
+ARGS="$*"
+
+#
+# TESLA_BUILD_DIR takes precidence over PATH.
+#
 if [ $TESLA_BUILD_DIR ]; then
-	export PATH="$TESLA_BUILD_DIR/tesla/analyser:$TESLA_BUILD_DIR/tesla/instrumenter:$TESLA_BUILD_DIR/tesla/tools/cat:$TESLA_BUILD_DIR/tesla/tools/get-triple:$TESLA_BUILD_DIR/tesla/tools/graph:$TESLA_BUILD_DIR/tesla/tools/read:$PATH"
-fi
-
-if [ ! `which tesla-analyse` ]; then
-	echo "Unable to find TESLA tools in current PATH."
-
-	if [ ! $TESLA_BUILD_DIR ]; then
-		echo "Try setting TESLA_BUILD_DIR?"
-	else
-		echo "TESLA_BUILD_DIR ('$TESLA_BUILD_DIR')" \
-			"does not contain TESLA binaries."
+	TOOL=`find $TESLA_BUILD_DIR/tesla -name $TOOL_NAME`
+	if [ ! "$TOOL" ]; then
+		echo "No '$TOOL_NAME' in TESLA_BUILD_DIR ('$TESLA_BUILD_DIR')."
+		exit 1
 	fi
-
-	exit 1
+else
+	TOOL=`which tesla-$TOOL_NAME`
+	if [ ! "$TOOL" ]; then
+		echo "No '$TOOL_NAME' in \$PATH; try setting TESLA_BUILD_DIR?"
+		exit 1
+	fi
 fi
 
-tesla-$*
+$TOOL $ARGS
 
