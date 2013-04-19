@@ -23,7 +23,7 @@ shift
 ARGS="$*"
 
 #
-# TESLA_BUILD_DIR takes precidence over PATH.
+# TESLA_BUILD_DIR takes precedence over PATH.
 #
 if [ $TESLA_BUILD_DIR ]; then
 	TOOL=`find $TESLA_BUILD_DIR/tesla -name $TOOL_NAME`
