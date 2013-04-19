@@ -9,9 +9,9 @@ add_custom_target(tesla-test
 
 add_dependencies(tesla-test
 	libtesla-test
-	llvm-triple
 	tesla-analyse
 	tesla-cat
+	tesla-get-triple
 	tesla-graph
 	tesla-instrument
 )

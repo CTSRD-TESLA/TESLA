@@ -1,4 +1,4 @@
-/** @file  llvm-triple.cpp    Tool to get the host system's default triple. */
+/** @file  get-triple.cpp    Retrieve the host system's default LLVM triple. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
