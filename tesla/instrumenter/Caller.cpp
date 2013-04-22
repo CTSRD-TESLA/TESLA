@@ -54,14 +54,11 @@ TeslaCallerInstrumenter::~TeslaCallerInstrumenter() {
   ::google::protobuf::ShutdownProtobufLibrary();
 }
 
-bool TeslaCallerInstrumenter::doInitialization(Module &M) {
-  OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
-  assert(Manifest);
-
+bool TeslaCallerInstrumenter::doInitialization(Module &Mod) {
   bool ModifiedIR = true;
 
-  for (auto i : Manifest->RootAutomata()) {
-    auto& A = *Manifest->FindAutomaton(i->identifier());
+  for (auto i : M.RootAutomata()) {
+    auto& A = *M.FindAutomaton(i->identifier());
     for (auto EquivClass : A) {
       assert(!EquivClass.empty());
 
@@ -73,11 +70,11 @@ bool TeslaCallerInstrumenter::doInitialization(Module &M) {
       if (FnEvent.context() != FunctionEvent::Caller)
         continue;
 
-      Function *Target = M.getFunction(FnEvent.function().name());
+      Function *Target = Mod.getFunction(FnEvent.function().name());
       if (!Target)
         continue;
 
-      auto *FnInstr = GetOrCreateInstr(M, Target, FnEvent.direction());
+      auto *FnInstr = GetOrCreateInstr(Mod, Target, FnEvent.direction());
 
       std::vector<struct tesla_transition> Transitions;
       for (auto *T : EquivClass) {

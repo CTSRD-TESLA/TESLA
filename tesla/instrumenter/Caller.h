@@ -49,12 +49,13 @@ namespace llvm {
 namespace tesla {
 
 class CallerInstrumentation;
+class Manifest;
 
 /// Instruments function calls in the caller context.
 class TeslaCallerInstrumenter : public llvm::FunctionPass {
 public:
   static char ID;
-  TeslaCallerInstrumenter() : FunctionPass(ID) {}
+  TeslaCallerInstrumenter(const Manifest& M) : FunctionPass(ID), M(M) {}
   ~TeslaCallerInstrumenter();
 
   const char* getPassName() const {
@@ -68,6 +69,9 @@ public:
 private:
   CallerInstrumentation* GetOrCreateInstr(llvm::Module&, llvm::Function*,
                                           FunctionEvent::Direction);
+
+  //! TESLA manifest that describes automata.
+  const Manifest& M;
 
   llvm::StringMap<CallerInstrumentation*> Calls;
   llvm::StringMap<CallerInstrumentation*> Returns;

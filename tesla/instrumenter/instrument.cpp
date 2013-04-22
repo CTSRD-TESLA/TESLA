@@ -16,6 +16,7 @@
 #include "Assertion.h"
 #include "Callee.h"
 #include "Caller.h"
+#include "Manifest.h"
 
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/LLVMContext.h"
@@ -87,6 +88,11 @@ int main(int argc, char **argv) {
 
   SMDiagnostic Err;
 
+  // Load TESLA manifest file.
+  OwningPtr<tesla::Manifest> Manifest(tesla::Manifest::load(llvm::errs()));
+  if (!Manifest)
+    report_fatal_error("unable to load TESLA manifest");
+
   // Load the input module...
   std::auto_ptr<Module> M;
   M.reset(ParseIRFile(InputFilename, Err, Context));
@@ -136,9 +142,9 @@ int main(int argc, char **argv) {
     Passes.add(TD);
 
   // Just add TESLA instrumentation passes.
-  addPass(Passes, new tesla::TeslaAssertionSiteInstrumenter);
-  addPass(Passes, new tesla::TeslaCalleeInstrumenter);
-  addPass(Passes, new tesla::TeslaCallerInstrumenter);
+  addPass(Passes, new tesla::TeslaAssertionSiteInstrumenter(*Manifest));
+  addPass(Passes, new tesla::TeslaCalleeInstrumenter(*Manifest));
+  addPass(Passes, new tesla::TeslaCallerInstrumenter(*Manifest));
 
   // Write bitcode or assembly to the output as the last step...
   if (!NoOutput) {

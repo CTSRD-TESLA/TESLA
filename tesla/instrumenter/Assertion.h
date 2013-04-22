@@ -48,7 +48,7 @@ class Location;
 class TeslaAssertionSiteInstrumenter : public llvm::ModulePass {
 public:
   static char ID;
-  TeslaAssertionSiteInstrumenter() : ModulePass(ID) {}
+  TeslaAssertionSiteInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
   virtual ~TeslaAssertionSiteInstrumenter();
 
   const char* getPassName() const {
@@ -59,7 +59,7 @@ public:
 
 private:
   //! Convert assertion declarations into instrumentation calls.
-  bool ConvertAssertions(std::set<llvm::CallInst*>&, Manifest&, llvm::Module&);
+  bool ConvertAssertions(std::set<llvm::CallInst*>&, llvm::Module&);
 
   //! Add instrumentation for a single @ref NowTransition.
   llvm::Function* CreateInstrumentation(const Automaton&, const NowTransition&,
@@ -70,6 +70,9 @@ private:
    * pseudo-call.
    */
   static void ParseAssertionLocation(Location *Loc, llvm::CallInst*);
+
+  //! TESLA manifest that describes automata.
+  const Manifest& M;
 
   //! The TESLA pseudo-function used to declare assertions.
   llvm::Function *AssertFn = NULL;

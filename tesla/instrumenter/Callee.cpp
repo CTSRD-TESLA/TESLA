@@ -59,14 +59,11 @@ TeslaCalleeInstrumenter::~TeslaCalleeInstrumenter() {
   google::protobuf::ShutdownProtobufLibrary();
 }
 
-bool TeslaCalleeInstrumenter::runOnModule(Module &M) {
-  OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
-  if (!Manifest) return false;
-
+bool TeslaCalleeInstrumenter::runOnModule(Module &Mod) {
   bool ModifiedIR = false;
 
-  for (auto i : Manifest->RootAutomata()) {
-    auto& A = *Manifest->FindAutomaton(i->identifier());
+  for (auto i : M.RootAutomata()) {
+    auto& A = *M.FindAutomaton(i->identifier());
     for (auto EquivClass : A) {
       assert(!EquivClass.empty());
 
@@ -78,13 +75,13 @@ bool TeslaCalleeInstrumenter::runOnModule(Module &M) {
       if (FnEvent.context() != FunctionEvent::Callee)
         continue;
 
-      Function *Target = M.getFunction(FnEvent.function().name());
+      Function *Target = Mod.getFunction(FnEvent.function().name());
 
       // Only handle functions that are defined in this module.
       if (!Target || Target->empty())
         continue;
 
-      auto *FnInstr = GetOrCreateInstr(M, Target, FnEvent.direction());
+      auto *FnInstr = GetOrCreateInstr(Mod, Target, FnEvent.direction());
 
       vector<struct tesla_transition> Transitions;
       for (auto *T : EquivClass) {

@@ -50,12 +50,13 @@ namespace llvm {
 namespace tesla {
 
 class CalleeInstr;
+class Manifest;
 
 /// Instruments function calls in the callee context.
 class TeslaCalleeInstrumenter : public llvm::ModulePass {
 public:
   static char ID;
-  TeslaCalleeInstrumenter() : ModulePass(ID) {}
+  TeslaCalleeInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
   ~TeslaCalleeInstrumenter();
 
   const char* getPassName() const {
@@ -67,6 +68,9 @@ public:
 private:
   CalleeInstr* GetOrCreateInstr(llvm::Module&, llvm::Function*,
                                 FunctionEvent::Direction);
+
+  //! TESLA manifest that describes automata.
+  const Manifest& M;
 
   llvm::StringMap<CalleeInstr*> Entry;
   llvm::StringMap<CalleeInstr*> Exit;

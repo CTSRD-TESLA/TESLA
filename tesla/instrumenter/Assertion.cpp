@@ -73,22 +73,15 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
   for (auto I = AssertFn->use_begin(); I != AssertFn->use_end(); ++I)
     AssertCalls.insert(cast<CallInst>(*I));
 
-
-  // If we do use the TESLA assertion function, we need to match it up with
-  // the information parsed by the TESLA analyser (stored in the Manifest).
-  OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs()));
-  if (!Manifest)
-    report_fatal_error("unable to load TESLA manifest");
-
-  return ConvertAssertions(AssertCalls, *Manifest, M);
+  return ConvertAssertions(AssertCalls, M);
 }
 
 
 bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
-    set<CallInst*>& AssertCalls, Manifest& Manifest, Module& M) {
+    set<CallInst*>& AssertCalls, Module& Mod) {
 
   // Things we'll need later, common to all assertions.
-  Type *IntPtrTy = IntPtrType(M);
+  Type *IntPtrTy = IntPtrType(Mod);
 
   // Convert each assertion into appropriate instrumentation.
   for (auto *Assert : AssertCalls) {
@@ -98,7 +91,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     Location Loc;
     ParseAssertionLocation(&Loc, Assert);
 
-    auto *A = Manifest.FindAutomaton(Loc);
+    auto *A = M.FindAutomaton(Loc);
     assert(A);
 
     // Implement the assertion instrumentation.
@@ -114,7 +107,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
               + "' contains NOW event with location '"
               + ShortName(Now->Location()) + "'");
 
-          if (!(InstrFn = CreateInstrumentation(*A, *Now, M)))
+          if (!(InstrFn = CreateInstrumentation(*A, *Now, Mod)))
             report_fatal_error("error instrumenting NOW event");
 
           NowTrans = Now;
