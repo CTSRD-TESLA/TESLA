@@ -81,11 +81,6 @@ const std::string CALLER            = "caller_";
 const std::string ENTER             = "enter_";
 const std::string EXIT              = "return_";
 
-const std::string CALLEE_ENTER      = INSTR_BASE + CALLEE + ENTER;
-const std::string CALLEE_LEAVE      = INSTR_BASE + CALLEE + EXIT;
-const std::string CALLER_ENTER      = INSTR_BASE + CALLER + ENTER;
-const std::string CALLER_LEAVE      = INSTR_BASE + CALLER + EXIT;
-
 const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 
 /**!
