@@ -12,6 +12,7 @@ add_llvm_executable(tesla-instrument
 	Assertion.cpp
 	Callee.cpp
 	Caller.cpp
+	FieldReference.cpp
 	Instrumentation.cpp
 )
 

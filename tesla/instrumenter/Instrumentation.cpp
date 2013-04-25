@@ -246,6 +246,67 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
 }
 
 
+Function* tesla::StructInstrumentation(Module& Mod,
+                                       Type *ValueType, Type *PtrType,
+                                       StringRef StructTypeName,
+                                       StringRef FieldName,
+                                       bool Store) {
+
+  LLVMContext& Ctx = Mod.getContext();
+
+  string Name = (Twine()
+    + STRUCT_INSTR
+    + (Store ? STORE : LOAD)
+    + StructTypeName
+    + "_"
+    + FieldName
+  ).str();
+
+  string Tag = (Twine()
+    + "[F"
+    + (Store ? "SET" : "GET")
+    + "] "
+  ).str();
+
+  // Two arguments: current value and next value.
+  TypeVector Args;
+  Args.push_back(ValueType);
+  Args.push_back(PtrType);
+
+  Type *Void = Type::getVoidTy(Ctx);
+  FunctionType *InstrType = FunctionType::get(Void, Args, false);
+
+
+  // Find (or build) the instrumentation function.
+  auto *InstrFn = dyn_cast<Function>(Mod.getOrInsertFunction(Name, InstrType));
+  assert(InstrFn != NULL);
+
+  InstrFn->setLinkage(GlobalValue::PrivateLinkage);
+
+  // Invariant: instrumentation blocks should have two exit blocks: one for
+  // normal termination and one for abnormal termination.
+  if (InstrFn->empty()) {
+    auto *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
+    IRBuilder<> Builder(Entry);
+    // TODO: this output is just temporary.
+    CallPrintf(Mod, Builder, Tag + StructTypeName + "." + FieldName,
+               InstrFn);
+
+    auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
+    Builder.CreateBr(Exit);
+    IRBuilder<>(Exit).CreateRetVoid();
+
+    auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
+    IRBuilder<> ErrorHandler(Die);
+    auto *EventName = ErrorHandler.CreateGlobalStringPtr(InstrFn->getName());
+    ErrorHandler.CreateCall(FindDieFn(Mod), EventName);
+    ErrorHandler.CreateRetVoid();
+  }
+
+  return InstrFn;
+}
+
+
 Type* tesla::IntPtrType(Module& M) {
     return DataLayout(&M).getIntPtrType(M.getContext());
 }

@@ -54,6 +54,7 @@ namespace llvm {
 namespace tesla {
 
 class Automaton;
+class FieldAssignTransition;
 class FnTransition;
 
 //! Instrumentation for a function event.
@@ -150,6 +151,13 @@ llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,
                                         FunctionEvent::Direction,
                                         FunctionEvent::CallContext);
 
+//! Find (or create) one struct-field-event instrumentation function.
+llvm::Function* StructInstrumentation(llvm::Module&,
+                                      llvm::Type *ValueType,
+                                      llvm::Type *PtrType,
+                                      llvm::StringRef StructTypeName,
+                                      llvm::StringRef FieldName,
+                                      bool Store);
 }
 
 #endif	/* !TESLA_INSTRUMENTATION_H */

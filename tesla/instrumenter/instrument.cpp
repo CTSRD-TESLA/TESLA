@@ -16,6 +16,7 @@
 #include "Assertion.h"
 #include "Callee.h"
 #include "Caller.h"
+#include "FieldReference.h"
 #include "Manifest.h"
 
 #include "llvm/IR/DataLayout.h"
@@ -145,6 +146,7 @@ int main(int argc, char **argv) {
   addPass(Passes, new tesla::TeslaAssertionSiteInstrumenter(*Manifest));
   addPass(Passes, new tesla::TeslaCalleeInstrumenter(*Manifest));
   addPass(Passes, new tesla::TeslaCallerInstrumenter(*Manifest));
+  addPass(Passes, new tesla::FieldReferenceInstrumenter(*Manifest));
 
   // Write bitcode or assembly to the output as the last step...
   if (!NoOutput) {

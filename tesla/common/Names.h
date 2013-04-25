@@ -44,6 +44,8 @@ class Argument;
 class Identifier;
 class Location;
 
+const std::string LLVM_PTR_ANNOTATION = "llvm.ptr.annotation";
+
 const std::string TESLA_BASE = "__tesla_";
 
 const std::string AUTOMATON         = TESLA_BASE + "automaton_";
@@ -65,6 +67,10 @@ const std::string SEQUENCE          = TESLA_BASE + "sequence";
 const std::string INLINE_ASSERTION  = TESLA_BASE + "inline_assertion";
 
 const std::string INSTR_BASE        = TESLA_BASE + "instrumentation_";
+
+const std::string STRUCT_INSTR      = INSTR_BASE + "struct_field_";
+const std::string LOAD              = "load_";
+const std::string STORE             = "store_";
 
 const std::string CALL              = INSTR_BASE + "call";
 const std::string RETURN            = INSTR_BASE + "return";
