@@ -60,13 +60,23 @@ std::string tesla::ArgString(const Argument* A) {
   }
 }
 
+static std::string ConstantName(const tesla::Argument* A) {
+  assert(A->type() == tesla::Argument::Constant);
+
+  if (A->has_name())
+      return A->name();
+
+  else
+    return Twine(A->value()).str();
+}
+
 std::string tesla::ShortName(const Argument* A) {
   if (A == NULL)
     return "NULL";
 
   switch (A->type()) {
   case Argument::Constant:
-    return A->name();
+    return ConstantName(A);
 
   case Argument::Variable:
     return A->name();
@@ -84,7 +94,7 @@ std::string tesla::DotName(const Argument* A) {
 
   switch (A->type()) {
   case Argument::Constant:
-    return A->name();
+    return ConstantName(A);
 
   case Argument::Variable:
     return A->name();
