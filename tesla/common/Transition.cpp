@@ -256,11 +256,13 @@ string FnTransition::ShortLabel() const {
       << ShortName(&Ev.argument(i))
       << ((i < Ev.argument_size() - 1) ? "," : "");
 
-  ss
-    << "):"
-    << FunctionEvent::Direction_Name(Ev.direction())
-    << ""
-    ;
+  ss << ")";
+
+  if (Ev.has_expectedreturnvalue()) {
+    assert(Ev.direction() == FunctionEvent::Exit);
+    ss << " == " << ShortName(&Ev.expectedreturnvalue());
+  } else
+    ss << ": " << FunctionEvent::Direction_Name(Ev.direction());
 
   return ss.str();
 }
@@ -274,11 +276,16 @@ string FnTransition::DotLabel() const {
       << DotName(&Ev.argument(i))
       << ((i < Ev.argument_size() - 1) ? "," : "");
 
-  ss
-    << ")\\n("
-    << FunctionEvent::Direction_Name(Ev.direction())
-    << ")"
-    ;
+  ss << ")";
+
+  if (Ev.has_expectedreturnvalue()) {
+    assert(Ev.direction() == FunctionEvent::Exit);
+    ss << " == " << DotName(&Ev.expectedreturnvalue());
+  } else
+    ss << "\\n("
+      << FunctionEvent::Direction_Name(Ev.direction())
+      << ")"
+      ;
 
   return ss.str();
 }
