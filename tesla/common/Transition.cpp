@@ -212,9 +212,9 @@ string Transition::String() const {
     ;
 
   return (Twine()
-    + "--"
+    + "--("
     + ShortLabel()
-    + "-->("
+    + ")-->("
     + Twine(To.ID())
     + (Special.empty() ? "" : " " + Special)
     + ")"
