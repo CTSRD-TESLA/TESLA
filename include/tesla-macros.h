@@ -85,10 +85,10 @@
 #define	ANY(int_type)		__tesla_any(int_type)
 
 /** A more programmer-friendly way to write assertions about the past. */
-#define previously(x)    TSEQUENCE(x, TESLA_NOW)
+#define previously(...)    TSEQUENCE(__VA_ARGS__, TESLA_NOW)
 
 /** A more programmer-friendly way to write assertions about the future. */
-#define eventually(x)    TSEQUENCE(TESLA_NOW, x)
+#define eventually(...)    TSEQUENCE(TESLA_NOW, __VA_ARGS__)
 
 #endif	/* !TESLA_MACROS_H */
 
