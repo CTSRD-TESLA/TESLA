@@ -1,0 +1,9 @@
+#!/bin/sh
+
+CFLAGS="$*"
+export CFLAGS
+echo "Compiling demo with CFLAGS '$CFLAGS'..."
+make clean all || exit 1
+
+echo "Running demo..."
+./mac-demo

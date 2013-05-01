@@ -37,6 +37,14 @@
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
+#include "types.h"
+
+#include "fcntl.h"
+#include "file.h"
+#include "mac_framework.h"
+#include "vnode.h"
+
+#if 0
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/fcntl.h>
@@ -743,11 +751,12 @@ vn_read(fp, uio, active_cred, flags, td)
 	}
 	return (error);
 }
+#endif
 
 /*
  * File table vnode write routine.
  */
-static int
+int
 vn_write(fp, uio, active_cred, flags, td)
 	struct file *fp;
 	struct uio *uio;
@@ -757,17 +766,24 @@ vn_write(fp, uio, active_cred, flags, td)
 {
 	struct vnode *vp;
 	struct mount *mp;
+#if 0
 	struct mtx *mtxp;
-	int error, ioflag, lock_flags;
+#endif
+	int error, ioflag;
+#if 0
+	, lock_flags;
 	int advice;
 	off_t offset, start, end;
 
 	KASSERT(uio->uio_td == td, ("uio_td %p is not td %p",
 	    uio->uio_td, td));
 	KASSERT(flags & FOF_OFFSET, ("No FOF_OFFSET"));
+#endif
 	vp = fp->f_vnode;
+#if 0
 	if (vp->v_type == VREG)
 		bwillwrite();
+#endif
 	ioflag = IO_UNIT;
 	if (vp->v_type == VREG && (fp->f_flag & O_APPEND))
 		ioflag |= IO_APPEND;
@@ -775,10 +791,13 @@ vn_write(fp, uio, active_cred, flags, td)
 		ioflag |= IO_NDELAY;
 	if (fp->f_flag & O_DIRECT)
 		ioflag |= IO_DIRECT;
+#if 0
 	if ((fp->f_flag & O_FSYNC) ||
 	    (vp->v_mount && (vp->v_mount->mnt_flag & MNT_SYNCHRONOUS)))
 		ioflag |= IO_SYNC;
+#endif
 	mp = NULL;
+#if 0
 	if (vp->v_type != VCHR &&
 	    (error = vn_start_write(vp, &mp, V_WAIT | PCATCH)) != 0)
 		goto unlock;
@@ -804,16 +823,20 @@ vn_write(fp, uio, active_cred, flags, td)
 		break;
 	}
 	offset = uio->uio_offset;
+#endif
 
 #ifdef MAC
 	error = mac_vnode_check_write(active_cred, fp->f_cred, vp);
 	if (error == 0)
 #endif
+#if 0
 		error = VOP_WRITE(vp, uio, ioflag, fp->f_cred);
 	fp->f_nextoff = uio->uio_offset;
 	VOP_UNLOCK(vp, 0);
+#endif
 	if (vp->v_type != VCHR)
 		vn_finished_write(mp);
+#if 0
 	if (error == 0 && advice == POSIX_FADV_NOREUSE &&
 	    offset != uio->uio_offset) {
 		/*
@@ -865,9 +888,11 @@ vn_write(fp, uio, active_cred, flags, td)
 	}
 	
 unlock:
+#endif
 	return (error);
 }
 
+#if 0
 static const int io_hold_cnt = 16;
 static int vn_io_fault_enable = 1;
 SYSCTL_INT(_debug, OID_AUTO, vn_io_fault_enable, CTLFLAG_RW,
@@ -1955,3 +1980,4 @@ unlock:
 		*off = noff;
 	return (error);
 }
+#endif

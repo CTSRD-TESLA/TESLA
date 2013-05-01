@@ -37,6 +37,24 @@
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
+#include <sys/param.h>
+
+struct thread;
+
+enum	uio_rw { UIO_READ, UIO_WRITE };
+
+/* Segment flag values. */
+enum uio_seg {
+	UIO_USERSPACE,		/* from user data space */
+	UIO_SYSSPACE,		/* from system space */
+	UIO_NOCOPY		/* don't copy, already in object */
+};
+
+#include "audit.h"
+#include "namei.h"
+#include "vnode.h"
+
+#if 0
 #include "opt_capsicum.h"
 #include "opt_kdtrace.h"
 #include "opt_ktrace.h"
@@ -100,6 +118,7 @@ static int lookup_shared = 1;
 SYSCTL_INT(_vfs, OID_AUTO, lookup_shared, CTLFLAG_RW, &lookup_shared, 0,
     "Enables/Disables shared locks for path name translation");
 TUNABLE_INT("vfs.lookup_shared", &lookup_shared);
+#endif
 
 /*
  * Convert a pathname into a pointer to a locked vnode.
@@ -124,13 +143,16 @@ TUNABLE_INT("vfs.lookup_shared", &lookup_shared);
 int
 namei(struct nameidata *ndp)
 {
+#if 0
 	struct filedesc *fdp;	/* pointer to file descriptor state */
 	char *cp;		/* pointer into pathname argument */
 	struct vnode *dp;	/* the directory we are searching */
 	struct iovec aiov;		/* uio for reading symbolic links */
 	struct uio auio;
-	int error, linklen;
+#endif
+	int error = 0;/*, linklen;*/
 	struct componentname *cnp = &ndp->ni_cnd;
+#if 0
 	struct thread *td = cnp->cn_thread;
 	struct proc *p = td->td_proc;
 
@@ -206,6 +228,7 @@ namei(struct nameidata *ndp)
 	FILEDESC_SLOCK(fdp);
 	ndp->ni_rootdir = fdp->fd_rdir;
 	ndp->ni_topdir = fdp->fd_jdir;
+#endif
 
 	/*
 	 * If we are auditing the kernel pathname, save the user pathname.
@@ -214,7 +237,7 @@ namei(struct nameidata *ndp)
 		AUDIT_ARG_UPATH1(td, ndp->ni_dirfd, cnp->cn_pnbuf);
 	if (cnp->cn_flags & AUDITVNODE2)
 		AUDIT_ARG_UPATH2(td, ndp->ni_dirfd, cnp->cn_pnbuf);
-
+#if 0
 	dp = NULL;
 	if (cnp->cn_pnbuf[0] != '/') {
 		if (ndp->ni_startdir != NULL) {
@@ -371,6 +394,7 @@ namei(struct nameidata *ndp)
 		dp = ndp->ni_dvp;
 	}
 	uma_zfree(namei_zone, cnp->cn_pnbuf);
+#endif
 #ifdef DIAGNOSTIC
 	cnp->cn_pnbuf = NULL;
 	cnp->cn_nameptr = NULL;
@@ -378,10 +402,13 @@ namei(struct nameidata *ndp)
 	vput(ndp->ni_vp);
 	ndp->ni_vp = NULL;
 	vrele(ndp->ni_dvp);
+#if 0
 	SDT_PROBE(vfs, namei, lookup, return, error, NULL, 0, 0, 0);
+#endif
 	return (error);
 }
 
+#if 0
 static int
 compute_cn_lkflags(struct mount *mp, int lkflags, int cnflags)
 {
@@ -1219,3 +1246,4 @@ keeporig:
 		bcopy(ptr, buf, len);
 	return (error);
 }
+#endif
