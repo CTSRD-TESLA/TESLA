@@ -55,6 +55,8 @@ ${BASE}: ${OBJ}
 # Combining several TESLA files
 ${BASE}.tesla: vfs_lookup.tesla vfs_vnops.tesla
 	tesla cat $< -o $@
+	# temporary workaround for ClangTool irritant:
+	sed -i.backup "s@`pwd`/@@" ${BASE}.tesla && rm ${BASE}.tesla.backup
 
 # Pretty visualisation (TELSA IR -> GraphViz)
 .tesla.dot:
