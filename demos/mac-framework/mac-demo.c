@@ -11,14 +11,16 @@ main(int argc, char *argv[])
 int
 syscall()
 {
+	struct uio *uio = NULL;
+	struct ucred *user_credential = NULL;
 	int error = 0;
-
-	struct nameidata nd;
-	nd.ni_dirp = "/path/to/something";
 
 	/*
 	 * Arguments to pass to namei:
 	 */
+	struct nameidata nd;
+	nd.ni_dirp = "/path/to/something";
+
 	struct componentname *c = &nd.ni_cnd;
 	c->cn_thread = curthread;
 
@@ -34,5 +36,5 @@ syscall()
 	struct file f;
 	f.f_vnode = nd.ni_vp;
 
-	return vn_write(&f, NULL, NULL, 0, curthread);
+	return vn_write(&f, uio, user_credential, 0, curthread);
 }
