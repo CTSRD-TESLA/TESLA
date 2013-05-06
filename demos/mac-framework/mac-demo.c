@@ -21,7 +21,11 @@ syscall()
 	 */
 	struct componentname *c = &nd.ni_cnd;
 	c->cn_thread = curthread;
-	c->cn_flags = 0;
+
+	/*
+	 * ERROR: neglected to tell namei() to audit its arguments!
+	 */
+	c->cn_flags = 0;//AUDITVNODE1;
 
 	error = namei(&nd);
 	if (error != 0)

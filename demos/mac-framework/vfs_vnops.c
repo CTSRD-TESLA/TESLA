@@ -140,6 +140,12 @@ vn_write(fp, uio, active_cred, flags, td)
 	int flags;
 	struct thread *td;
 {
+#ifdef TESLA
+	TESLA_WITHIN(syscall,
+		previously(called(audit_arg_upath1, td, ANY(int), ANY(ptr)))
+	);
+#endif
+
 	KASSERT(uio->uio_td == td, ("uio_td %p is not td %p",
 	    uio->uio_td, td));
 	KASSERT(flags & FOF_OFFSET, ("No FOF_OFFSET"));
