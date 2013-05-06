@@ -89,6 +89,7 @@ struct vattr;
 struct vnode;
 struct vop_setlabel_args;
 
+#include "acl.h"
 #if 0
 #include <sys/acl.h>			/* XXX acl_type_t */
 #include <sys/types.h>			/* accmode_t */
@@ -132,7 +133,6 @@ void	mac_cred_create_swapper(struct ucred *cred);
 void	mac_cred_destroy(struct ucred *);
 void	mac_cred_init(struct ucred *);
 
-#if 0
 void	mac_devfs_create_device(struct ucred *cred, struct mount *mp,
 	    struct cdev *dev, struct devfs_dirent *de);
 void	mac_devfs_create_directory(struct mount *mp, char *dirname,
@@ -371,7 +371,6 @@ void	mac_sysvshm_destroy(struct shmid_kernel *);
 void	mac_sysvshm_init(struct shmid_kernel *);
 
 void	mac_thread_userret(struct thread *td);
-#endif
 
 int	mac_vnode_associate_extattr(struct mount *mp, struct vnode *vp);
 void	mac_vnode_associate_singlelabel(struct mount *mp, struct vnode *vp);
@@ -381,7 +380,6 @@ int	mac_vnode_check_chdir(struct ucred *cred, struct vnode *dvp);
 int	mac_vnode_check_chroot(struct ucred *cred, struct vnode *dvp);
 int	mac_vnode_check_create(struct ucred *cred, struct vnode *dvp,
 	    struct componentname *cnp, struct vattr *vap);
-#if 0
 int	mac_vnode_check_deleteacl(struct ucred *cred, struct vnode *vp,
 	    acl_type_t type);
 int	mac_vnode_check_deleteextattr(struct ucred *cred, struct vnode *vp,
@@ -392,7 +390,6 @@ int	mac_vnode_check_getacl(struct ucred *cred, struct vnode *vp,
 	    acl_type_t type);
 int	mac_vnode_check_getextattr(struct ucred *cred, struct vnode *vp,
 	    int attrnamespace, const char *name);
-#endif
 int	mac_vnode_check_link(struct ucred *cred, struct vnode *dvp,
 	    struct vnode *vp, struct componentname *cnp);
 int	mac_vnode_check_listextattr(struct ucred *cred, struct vnode *vp,
@@ -416,12 +413,10 @@ int	mac_vnode_check_rename_from(struct ucred *cred, struct vnode *dvp,
 int	mac_vnode_check_rename_to(struct ucred *cred, struct vnode *dvp,
 	    struct vnode *vp, int samedir, struct componentname *cnp);
 int	mac_vnode_check_revoke(struct ucred *cred, struct vnode *vp);
-#if 0
 int	mac_vnode_check_setacl(struct ucred *cred, struct vnode *vp,
 	    acl_type_t type, struct acl *acl);
 int	mac_vnode_check_setextattr(struct ucred *cred, struct vnode *vp,
 	    int attrnamespace, const char *name);
-#endif
 int	mac_vnode_check_setflags(struct ucred *cred, struct vnode *vp,
 	    u_long flags);
 int	mac_vnode_check_setmode(struct ucred *cred, struct vnode *vp,

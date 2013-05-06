@@ -7,12 +7,20 @@ BASE=mac-demo
 
 CC=clang
 
-CFLAGS	+= -D _KERNEL -D MAC -D __BSD_VISIBLE \
+CFLAGS	+= -D _KERNEL -D AUDIT -D MAC -D __BSD_VISIBLE \
 	-Wall -Werror \
 	-g -ggdb \
-	-I ${TESLA_SOURCE_DIR}/include
+	-I include -I ${TESLA_SOURCE_DIR}/include
 
 LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
+
+OBJ=	\
+	helpers.instro \
+	mac-demo.instro \
+	mac_framework.instro \
+	mac_vfs.instro \
+	vfs_lookup.instro \
+	vfs_vnops.instro
 
 RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/3.3
 
@@ -26,8 +34,8 @@ clean:
 #
 # Normal C workflow:
 #
-${BASE}: mac-demo.instro vfs_lookup.instro vfs_vnops.instro
-	${CC} ${LDFLAGS} $< -o $@
+${BASE}: ${OBJ}
+	${CC} ${LDFLAGS} $^ -o $@
 
 .c.ll:
 	${CC} -S -emit-llvm ${CFLAGS} $< -o $@

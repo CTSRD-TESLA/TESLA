@@ -33,6 +33,8 @@
 #ifndef _SYS_FILE_H_
 #define	_SYS_FILE_H_
 
+#include "types.h"
+
 #ifndef _KERNEL
 #include <sys/types.h> /* XXX */
 #include <sys/fcntl.h>

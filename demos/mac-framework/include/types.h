@@ -38,6 +38,8 @@
 #ifndef _SYS_TYPES_H_
 #define	_SYS_TYPES_H_
 
+typedef	unsigned long	intptr_t;
+
 #if 0
 #include <sys/cdefs.h>
 #endif
@@ -87,6 +89,10 @@ typedef	__uint64_t	u_quad_t;	/* quads (deprecated) */
 typedef	__int64_t	quad_t;
 typedef	quad_t *	qaddr_t;
 #endif
+typedef unsigned short uint16_t;
+typedef unsigned uint32_t;
+typedef unsigned long long uint64_t;
+typedef uint64_t u_int64_t;
 
 typedef	char *		caddr_t;	/* core address */
 typedef	const char *	c_caddr_t;	/* core address, pointer to const */
@@ -199,7 +205,7 @@ typedef	__nlink_t	nlink_t;	/* link count */
 #endif
 
 #ifndef _OFF_T_DECLARED
-typedef	long		off_t;		/* file offset */
+typedef	long long		off_t;		/* file offset */
 #define	_OFF_T_DECLARED
 #endif
 
@@ -208,9 +214,9 @@ typedef	int		pid_t;		/* process id */
 #define	_PID_T_DECLARED
 #endif
 
-#if 0
-typedef	__register_t	register_t;
+typedef	long	register_t;
 
+#if 0
 #ifndef _RLIM_T_DECLARED
 typedef	__rlim_t	rlim_t;		/* resource limit */
 #define	_RLIM_T_DECLARED
