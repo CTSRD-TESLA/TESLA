@@ -1,6 +1,6 @@
 .SUFFIXES: .c .dot .ll .pdf .tesla
 .DEFAULT: all
-.SILENT:
+#.SILENT:
 
 BASE=openssl-api
 .PRECIOUS: ${BASE}.dot

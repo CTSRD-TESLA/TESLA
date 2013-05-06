@@ -1,9 +1,19 @@
 #!/bin/sh
 
+LINE="======================================================================"
+
 CFLAGS="$*"
 export CFLAGS
-echo "Compiling demo with CFLAGS '$CFLAGS'..."
-make clean all || exit 1
 
+echo $LINE
+echo "Compiling demo with CFLAGS '$CFLAGS'..."
+echo $LINE
+make clean all || exit 1
+echo $LINE
+echo
+
+echo $LINE
 echo "Running demo..."
+echo $LINE
 ./mac-demo
+echo $LINE

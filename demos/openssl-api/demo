@@ -1,11 +1,20 @@
 #!/bin/sh
 
+LINE="======================================================================"
+
 CFLAGS="$*"
 export CFLAGS
-echo "Compiling demo with CFLAGS '$CFLAGS'..."
-make clean all || exit 1
 
+echo $LINE
+echo "Compiling demo with CFLAGS '$CFLAGS'..."
+echo $LINE
+make clean all || exit 1
+echo $LINE
+echo
+
+echo $LINE
 echo "Running demo..."
+echo $LINE
 
 # 'self-signed' is a self-signed certificate: this should pass.
 ./openssl-api Inputs/self-signed.crt Inputs/self-signed.crt || exit 1
@@ -16,3 +25,4 @@ echo "Running demo..."
 # 'hacked' is not even a valid certificate; it should definitely fail!
 ./openssl-api Inputs/self-signed.crt Inputs/hacked.crt || exit 1
 
+echo $LINE
