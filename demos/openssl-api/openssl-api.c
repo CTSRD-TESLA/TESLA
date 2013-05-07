@@ -205,10 +205,7 @@ use_cert(X509 *cert)
 	/*
 	 * Assert that the certificate has been properly verified.
 	 */
-	TESLA_WITHIN(main, previously(
-		X509_STORE_CTX_init(ANY(ptr), ANY(ptr), cert, ANY(ptr)) == 1,
-		X509_verify_cert(ANY(ptr)) == 1
-	));
+	TESLA_WITHIN(main, previously(X509_verify_cert(ANY(ptr)) == 1));
 #endif
 
 	/*
