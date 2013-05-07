@@ -15,5 +15,5 @@ echo
 echo $LINE
 echo "Running demo..."
 echo $LINE
-./mac-demo
+./audit-demo
 echo $LINE

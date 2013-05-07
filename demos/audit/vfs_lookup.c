@@ -34,7 +34,7 @@
  *	@(#)vfs_lookup.c	8.4 (Berkeley) 2/16/94
  */
 
-#include "mac-demo.h"
+#include "demo.h"
 
 #include <stdio.h>
 #include <string.h>

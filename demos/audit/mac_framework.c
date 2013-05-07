@@ -66,7 +66,7 @@
  * src/sys/security/mac_*.
  */
 
-#include "mac-demo.h"
+#include "demo.h"
 
 #if 0
 #include "opt_kdtrace.h"

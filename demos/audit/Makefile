@@ -2,7 +2,7 @@
 .DEFAULT: all
 #.SILENT:
 
-BASE=mac-demo
+BASE=audit-demo
 .PRECIOUS: ${BASE}.dot
 
 CC=clang
@@ -15,8 +15,8 @@ CFLAGS	+= -D _KERNEL -D AUDIT -D MAC -D __BSD_VISIBLE \
 LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
 
 OBJ=	\
+	${BASE}.instro \
 	helpers.instro \
-	mac-demo.instro \
 	mac_framework.instro \
 	mac_vfs.instro \
 	vfs_lookup.instro \

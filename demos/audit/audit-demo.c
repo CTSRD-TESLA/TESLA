@@ -1,6 +1,4 @@
-#include "mac-demo.h"
-
-#include "file.h"
+#include "demo.h"
 
 int
 main(int argc, char *argv[])

@@ -37,7 +37,7 @@
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
-#include "mac-demo.h"
+#include "demo.h"
 
 #include <stdio.h>
 #include <tesla-macros.h>

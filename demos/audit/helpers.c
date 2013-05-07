@@ -1,4 +1,4 @@
-#include "mac-demo.h"
+#include "demo.h"
 #include <stdio.h>
 
 struct thread *curthread = (struct thread*) 0x42;

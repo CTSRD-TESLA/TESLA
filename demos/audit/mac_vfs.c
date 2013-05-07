@@ -42,7 +42,7 @@
  * SUCH DAMAGE.
  */
 
-#include "mac-demo.h"
+#include "demo.h"
 
 #include "mac_framework.h"
 #include "mac_internal.h"
