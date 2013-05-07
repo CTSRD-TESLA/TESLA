@@ -168,7 +168,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	// Is the transition "special" (e.g. init/cleanup)?
 	for (uint32_t i = 0; i < trans->length; i++) {
 		const tesla_transition *t = trans->transitions + i;
-		if (t->from == 0) {
+		if (t->flags & TESLA_TRANS_INIT) {
 			struct tesla_instance *inst;
 			CHECK(tesla_instance_new, class, key, t->to, &inst);
 			assert(tesla_instance_active(inst));

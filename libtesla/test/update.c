@@ -44,14 +44,14 @@ main(int argc, char **argv)
 
 	// Test the following sequence of automata update events:
 	//
-	// (X,X,X,X): 0->1       fork   (X,X,X,X):0 -> (X,X,X,X):1
+	// (X,X,X,X): 0->1       init   (X,X,X,X):0 -> (X,X,X,X):1
 	// (1,X,X,X): 1->2       fork   (X,X,X,X):1 -> (1,X,X,X):2
 	// (1,2,X,X): 2->3       fork   (1,X,X,X):2 -> (1,2,X,X):3
 	// (1,2,X,X): 3->4       update (1,2,X,X):3 -> (1,2,X,X):4
 	// (2,X,X,X): 1->5       fork   (X,X,X,X):1 -> (2,X,X,X):5
 	// (2,X,X,3): 5->6       fork   (2,X,X,X):5 -> (2,X,X,3):6
 	// (2,X,X,4): 1->7       fork   (X,X,X,X):1 -> (2,X,X,4):7
-	// (3,X,X,X): 0->8       fork   (X,X,X,X):0 -> (3,X,X,X):8
+	// (X,X,X,X): 1->8       fork   (X,X,X,X):1 -> (3,X,X,X):8
 
 	struct tesla_key key;
 
@@ -73,12 +73,12 @@ main(int argc, char **argv)
 	t[0].from = 0;
 	t[0].mask = 0x0;
 	t[0].to = 1;
-	t[0].flags = TESLA_TRANS_FORK;
+	t[0].flags = TESLA_TRANS_INIT;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (0:0x0 -> 1 <fork>) ]
+	 * CHECK:   transitions:    [ (0:0x0 -> 1 <init>) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
 	 * CHECK: ----
@@ -87,6 +87,7 @@ main(int argc, char **argv)
 	 * CHECK: new  0: 1
 	 * CHECK: ----
 	 * CHECK: 1/{{[0-9]+}} instances
+	 * CHECK:   0: state 1, 0x0 [ X X X X ]
 	 * CHECK: ====
 	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
@@ -278,44 +279,42 @@ main(int argc, char **argv)
 	key.tk_mask = 0;
 	t[0].from = 0;
 	t[0].mask = 0x0;
-	t[0].to = 8;
+	t[0].to = 100;
 	t[0].flags = TESLA_TRANS_FORK;
 	t[1].from = 1;
 	t[1].mask = 0x0;
-	t[1].to = 9;
+	t[1].to = 8;
 	t[1].flags = 0;
 	trans.length = 2;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (0:0x0 -> 8 <fork>) (1:0x0 -> 9) ]
+	 * CHECK:   transitions:    [ (0:0x0 -> 100 <fork>) (1:0x0 -> 8) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
 	 * CHECK: ----
 	 * CHECK: 6/{{[0-9]+}} instances
 	 * CHECK: ----
-	 * CHECK: update 0: 1->9
-	 * CHECK: new    6: 8
+	 * CHECK: update 0: 1->8
 	 * CHECK: ----
-	 * CHECK: 7/{{[0-9]+}} instances
+	 * CHECK: 6/{{[0-9]+}} instances
 	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
 
-	assert(count(store, &any) == 7);
+	assert(count(store, &any) == 6);
 	assert(count(store, &one) == 2);
 	assert(count(store, &two) == 3);
 
 	/*
 	 * After all that, we should be left with the following automata:
 	 *
-	 * CHECK: 0: state 9, 0x0 [ X X X X ]
+	 * CHECK: 0: state 8, 0x0 [ X X X X ]
 	 * CHECK: 1: state 2, 0x1 [ 1 X X X ]
 	 * CHECK: 2: state 4, 0x3 [ 1 2 X X ]
 	 * CHECK: 3: state 5, 0x1 [ 2 X X X ]
 	 * CHECK: 4: state 6, 0x9 [ 2 X X 3 ]
 	 * CHECK: 5: state 7, 0x9 [ 2 X X 4 ]
-	 * CHECK: 6: state 8, 0x0 [ X X X X ]
 	 * CHECK: ====
 	 */
 
