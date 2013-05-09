@@ -42,6 +42,131 @@ __FBSDID("$FreeBSD$");
 #include <stdio.h>
 #include <tesla-macros.h>
 
+int
+vn_open(ndp, flagp, cmode, fp)
+	struct nameidata *ndp;
+	int *flagp, cmode;
+	struct file *fp;
+{
+	struct thread *td = ndp->ni_cnd.cn_thread;
+
+	return (vn_open_cred(ndp, flagp, cmode, 0, td->td_ucred, fp));
+}
+
+/*
+ * Common code for vnode open operations via a name lookup.
+ * Lookup the vnode and invoke VOP_CREATE if needed.
+ * Check permissions, and call the VOP_OPEN or VOP_CREATE routine.
+ *
+ * Note that this does NOT free nameidata for the successful case,
+ * due to the NDINIT being done elsewhere.
+ */
+int
+vn_open_cred(struct nameidata *ndp, int *flagp, int cmode, u_int vn_open_flags,
+    struct ucred *cred, struct file *fp)
+{
+	struct vnode *vp;
+	struct mount *mp;
+	struct thread *td = ndp->ni_cnd.cn_thread;
+	struct vattr vat;
+	struct vattr *vap = &vat;
+	int fmode, error;
+
+#if 0
+restart:
+#endif
+	fmode = *flagp;
+	if (fmode & O_CREAT) {
+		ndp->ni_cnd.cn_nameiop = CREATE;
+		ndp->ni_cnd.cn_flags = ISOPEN | LOCKPARENT | LOCKLEAF;
+		if ((fmode & O_EXCL) == 0 && (fmode & O_NOFOLLOW) == 0)
+			ndp->ni_cnd.cn_flags |= FOLLOW;
+		if (!(vn_open_flags & VN_OPEN_NOAUDIT))
+			ndp->ni_cnd.cn_flags |= AUDITVNODE1;
+		if (vn_open_flags & VN_OPEN_NOCAPCHECK)
+			ndp->ni_cnd.cn_flags |= NOCAPCHECK;
+#if 0
+		bwillwrite();
+#endif
+		if ((error = namei(ndp)) != 0)
+			return (error);
+		if (ndp->ni_vp == NULL) {
+			VATTR_NULL(vap);
+			vap->va_type = VREG;
+			vap->va_mode = cmode;
+			if (fmode & O_EXCL)
+				vap->va_vaflags |= VA_EXCLUSIVE;
+			if (vn_start_write(ndp->ni_dvp, &mp, V_NOWAIT) != 0) {
+				NDFREE(ndp, NDF_ONLY_PNBUF);
+				vput(ndp->ni_dvp);
+#if 0
+				if ((error = vn_start_write(NULL, &mp,
+				    V_XSLEEP | PCATCH)) != 0)
+					return (error);
+				goto restart;
+#endif
+			}
+#ifdef MAC
+			error = mac_vnode_check_create(cred, ndp->ni_dvp,
+			    &ndp->ni_cnd, vap);
+			if (error == 0)
+#endif
+			{
+#if 0
+				error = VOP_CREATE(ndp->ni_dvp, &ndp->ni_vp,
+						   &ndp->ni_cnd, vap);
+#endif
+			}
+			vput(ndp->ni_dvp);
+			vn_finished_write(mp);
+			if (error) {
+				NDFREE(ndp, NDF_ONLY_PNBUF);
+				return (error);
+			}
+			fmode &= ~O_TRUNC;
+			vp = ndp->ni_vp;
+		} else {
+			if (ndp->ni_dvp == ndp->ni_vp)
+				vrele(ndp->ni_dvp);
+			else
+				vput(ndp->ni_dvp);
+			ndp->ni_dvp = NULL;
+			vp = ndp->ni_vp;
+			if (fmode & O_EXCL) {
+				error = EEXIST;
+				goto bad;
+			}
+			fmode &= ~O_CREAT;
+		}
+	} else {
+		ndp->ni_cnd.cn_nameiop = LOOKUP;
+		ndp->ni_cnd.cn_flags = ISOPEN |
+		    ((fmode & O_NOFOLLOW) ? NOFOLLOW : FOLLOW) | LOCKLEAF;
+		if (!(fmode & FWRITE))
+			ndp->ni_cnd.cn_flags |= LOCKSHARED;
+#if 0
+		if (!(vn_open_flags & VN_OPEN_NOAUDIT))
+			ndp->ni_cnd.cn_flags |= AUDITVNODE1;
+#endif
+		if (vn_open_flags & VN_OPEN_NOCAPCHECK)
+			ndp->ni_cnd.cn_flags |= NOCAPCHECK;
+		if ((error = namei(ndp)) != 0)
+			return (error);
+		vp = ndp->ni_vp;
+	}
+	error = vn_open_vnode(vp, fmode, cred, td, fp);
+	if (error)
+		goto bad;
+	*flagp = fmode;
+	return (0);
+bad:
+	NDFREE(ndp, NDF_ONLY_PNBUF);
+	vput(vp);
+	*flagp = fmode;
+	ndp->ni_vp = NULL;
+	return (error);
+}
+
 #if 0
 /*
  * File table vnode read routine.
@@ -140,12 +265,6 @@ vn_write(fp, uio, active_cred, flags, td)
 	int flags;
 	struct thread *td;
 {
-#ifdef TESLA
-	TESLA_WITHIN(syscall,
-		previously(called(audit_arg_upath1, td, ANY(int), ANY(ptr)))
-	);
-#endif
-
 	KASSERT(uio->uio_td == td, ("uio_td %p is not td %p",
 	    uio->uio_td, td));
 	KASSERT(flags & FOF_OFFSET, ("No FOF_OFFSET"));

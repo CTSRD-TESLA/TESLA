@@ -20,6 +20,7 @@ OBJ=	\
 	mac_framework.instro \
 	mac_vfs.instro \
 	vfs_lookup.instro \
+	vfs_syscalls.instro \
 	vfs_vnops.instro
 
 RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/3.3
@@ -53,7 +54,7 @@ ${BASE}: ${OBJ}
 	tesla analyse $< -o $@ -- ${CFLAGS} ${RESOURCE_DIR}
 
 # Combining several TESLA files
-${BASE}.tesla: vfs_lookup.tesla vfs_vnops.tesla
+${BASE}.tesla: vfs_lookup.tesla vfs_syscalls.tesla vfs_vnops.tesla
 	tesla cat $^ -o $@
 	# temporary workaround for ClangTool irritant:
 	sed -i.backup "s@`pwd`/@@" ${BASE}.tesla && rm ${BASE}.tesla.backup

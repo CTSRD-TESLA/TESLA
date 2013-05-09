@@ -1,51 +1,59 @@
 #include "demo.h"
+#include <err.h>
 
-static void abort2(void);
 
 int
 main(int argc, char *argv[])
 {
-	return syscall();
-}
+#ifdef AUDIT
+	curthread->td_pflags = TDP_AUDITREC;
+#endif
 
-int
-syscall()
-{
 	int there_is_a_fatal_error = 1;
 
 	if (there_is_a_fatal_error)
-		abort2();
+		return syscall(abort, "demo.core");
 
-	return 0;
+	return syscall(open, "/path/to/something");
 }
 
-static void
-abort2()
+int
+syscall(enum syscall_t s, void *arg)
 {
-	struct uio *uio = NULL;
-	struct ucred *user_credential = NULL;
-	int error = 0;
+	switch (s) {
+	case abort: {
+		struct uio *uio = NULL;
+		struct ucred *user_credential = NULL;
+		int error = 0;
 
-	/*
-	 * Arguments to pass to namei:
-	 */
-	struct nameidata nd;
-	nd.ni_dirp = "/path/to/coredump";
+		/*
+		 * Arguments to pass to namei:
+		 */
+		struct nameidata nd;
+		nd.ni_dirp = arg;
 
-	struct componentname *c = &nd.ni_cnd;
-	c->cn_thread = curthread;
+		struct componentname *c = &nd.ni_cnd;
+		c->cn_thread = curthread;
 
-	/*
-	 * ERROR: neglected to tell namei() to audit its arguments!
-	 */
-	c->cn_flags = 0;//AUDITVNODE1;
+		/*
+		 * ERROR: neglected to tell namei() to audit its arguments!
+		 */
+		c->cn_flags = 0;//AUDITVNODE1;
 
-	error = namei(&nd);
-	if (error != 0)
-		return;
+		error = namei(&nd);
+		if (error != 0)
+			return (error);
 
-	struct file f;
-	f.f_vnode = nd.ni_vp;
+		struct file f;
+		f.f_vnode = nd.ni_vp;
 
-	vn_write(&f, uio, user_credential, 0, curthread);
+		return vn_write(&f, uio, user_credential, 0, curthread);
+	}
+
+	case open:
+		return kern_open(curthread, arg, UIO_USERSPACE, 0, 0);
+
+	default:
+		err(-1, "unhandled system call ID %d", s);
+	}
 }

@@ -180,11 +180,11 @@ typedef	__ino_t		ino_t;		/* inode number */
 typedef	__key_t		key_t;		/* IPC key (for Sys V IPC) */
 #define	_KEY_T_DECLARED
 #endif
+#endif
 
 #ifndef _LWPID_T_DECLARED
-typedef	__lwpid_t	lwpid_t;	/* Thread ID (a.k.a. LWP) */
+typedef	int	lwpid_t;	/* Thread ID (a.k.a. LWP) */
 #define	_LWPID_T_DECLARED
-#endif
 #endif
 
 #ifndef _MODE_T_DECLARED

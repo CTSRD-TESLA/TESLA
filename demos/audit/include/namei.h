@@ -64,10 +64,8 @@ struct nameidata {
 	 * Arguments to namei/lookup.
 	 */
 	const	char *ni_dirp;		/* pathname pointer */
-#if 0
 	enum	uio_seg ni_segflg;	/* location of pathname */
 	cap_rights_t ni_rightsneeded;	/* rights required to look up vnode */
-#endif
 	/*
 	 * Arguments to lookup.
 	 */
@@ -79,9 +77,7 @@ struct nameidata {
 	/*
 	 * Results: returned from namei
 	 */
-#if 0
 	cap_rights_t ni_baserights;	/* rights the *at base has (or -1) */
-#endif
 	/*
 	 * Results: returned from/manipulated by lookup
 	 */
@@ -168,7 +164,6 @@ struct nameidata {
 #define	NDINIT_ATVP(ndp, op, flags, segflg, namep, vp, td)		\
 	NDINIT_ALL(ndp, op, flags, segflg, namep, AT_FDCWD, vp, 0, td)
 
-#if 0
 static __inline void
 NDINIT_ALL(struct nameidata *ndp,
 	u_long op, u_long flags,
@@ -190,7 +185,6 @@ NDINIT_ALL(struct nameidata *ndp,
 	ndp->ni_baserights = 0;
 	ndp->ni_cnd.cn_thread = td;
 }
-#endif
 
 #define NDF_NO_DVP_RELE		0x00000001
 #define NDF_NO_DVP_UNLOCK	0x00000002
