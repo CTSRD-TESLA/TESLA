@@ -98,8 +98,27 @@ else ( ${CMAKE_SYSTEM_NAME} MATCHES Linux )
 		--param=extra_cflags=-resource-dir:${LLVM_OBJ}/lib/clang/3.3)
 endif()
 
+#
+# Look for the issetugid() function:
+#
+include(CheckFunctionExists)
+check_function_exists(issetugid HAVE_ISSETUGID)
 
-include_directories("${CMAKE_SOURCE_DIR}/include")
+
+#
+# Put discovered configuration information into config.h:
+#
+configure_file(cmake/config.h.in include/config.h)
+
+
+#
+# Global include directories for all of TESLA:
+#
+include_directories(
+	include                          # [lib]tesla.h
+	${CMAKE_BINARY_DIR}/include      # config.h
+)
+
 
 add_subdirectory(libtesla)
 add_subdirectory(tesla)

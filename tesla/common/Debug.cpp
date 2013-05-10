@@ -29,6 +29,8 @@
  * SUCH DAMAGE.
  */
 
+#include "config.h"
+
 #include "Debug.h"
 
 #include <fnmatch.h>
@@ -38,12 +40,14 @@ using namespace llvm;
 
 
 bool tesla::debugging(StringRef Name) {
+#ifdef HAVE_ISSETUGID
   /*
    * Debugging paths could be more vulnerable to format string problems
    * than other code; don't allow when running setuid or setgid.
    */
   if (issetugid())
     return 0;
+#endif
 
   std::string env(getenv("TESLA_DEBUG"));
 

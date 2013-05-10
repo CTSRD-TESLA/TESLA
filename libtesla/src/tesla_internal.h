@@ -33,6 +33,8 @@
 #ifndef TESLA_INTERNAL_H
 #define	TESLA_INTERNAL_H
 
+#include "config.h"
+
 #ifdef _KERNEL
 #include "opt_kdb.h"
 #include <sys/param.h>

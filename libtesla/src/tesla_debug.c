@@ -110,12 +110,14 @@ key_string(char *buffer, const char *end, const struct tesla_key *key)
 int32_t
 debugging(const char *name)
 {
+#ifdef HAVE_ISSETUGID
 	/*
 	 * Debugging paths could be more vulnerable to format string problems
 	 * than other code; don't allow when running setuid or setgid.
 	 */
 	if (issetugid())
 		return 0;
+#endif
 
 	const char *env = getenv("TESLA_DEBUG");
 
