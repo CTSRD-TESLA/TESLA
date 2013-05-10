@@ -32,11 +32,19 @@
 #include "Debug.h"
 
 #include <fnmatch.h>
+#include <unistd.h>
 
 using namespace llvm;
 
 
 bool tesla::debugging(StringRef Name) {
+  /*
+   * Debugging paths could be more vulnerable to format string problems
+   * than other code; don't allow when running setuid or setgid.
+   */
+  if (issetugid())
+    return 0;
+
   std::string env(getenv("TESLA_DEBUG"));
 
   // If TESLA_DEBUG isn't set, we don't do any debug printing.

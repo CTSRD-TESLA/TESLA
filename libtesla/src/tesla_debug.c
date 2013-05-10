@@ -36,6 +36,7 @@
 #ifndef _KERNEL
 #include <fnmatch.h>
 #include <stdlib.h>
+#include <unistd.h>
 #endif
 
 void
@@ -109,6 +110,13 @@ key_string(char *buffer, const char *end, const struct tesla_key *key)
 int32_t
 debugging(const char *name)
 {
+	/*
+	 * Debugging paths could be more vulnerable to format string problems
+	 * than other code; don't allow when running setuid or setgid.
+	 */
+	if (issetugid())
+		return 0;
+
 	const char *env = getenv("TESLA_DEBUG");
 
 	/* If TESLA_DEBUG is not set, we're definitely not debugging. */
