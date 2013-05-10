@@ -5,6 +5,7 @@ target_link_libraries(TeslaProto ${PROTOBUF_LIBRARY})
 
 add_library(TeslaCommon
   Automaton.cpp
+  Debug.cpp
   Manifest.cpp
   Names.cpp
   State.cpp

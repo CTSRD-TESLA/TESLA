@@ -49,9 +49,8 @@ tesla_notify_new_instance(struct tesla_class *tcp,
 
 	default:
 		/* for the PRINTF action, should this be a non-verbose print? */
-		VERBOSE_PRINT("new    %td: %tx\n",
-		              tip - tcp->tc_instances,
-		              tip->ti_state);
+		DEBUG(libtesla.instance.new, "new    %td: %tx\n",
+			tip - tcp->tc_instances, tip->ti_state);
 
 		/*
 		 * XXXJA: convince self that we can never "pass" an assertion
@@ -79,8 +78,8 @@ tesla_notify_clone(struct tesla_class *tcp, struct tesla_instance *tip,
 		assert(index < transp->length);
 		const struct tesla_transition *t = transp->transitions + index;
 
-		VERBOSE_PRINT("clone  %td:%tx -> %tx\n",
-		              tip - tcp->tc_instances, tip->ti_state, t->to);
+		DEBUG(libtesla.instance.clone, "clone  %td:%tx -> %tx\n",
+			tip - tcp->tc_instances, tip->ti_state, t->to);
 
 		if (t->flags & TESLA_TRANS_CLEANUP)
 			tesla_notify_pass(tcp, tip);
@@ -107,8 +106,8 @@ tesla_notify_transition(struct tesla_class *tcp,
 		assert(index < transp->length);
 		const struct tesla_transition *t = transp->transitions + index;
 
-		VERBOSE_PRINT("update %td: %tx->%tx\n",
-		              tip - tcp->tc_instances, t->from, t->to);
+		DEBUG(libtesla.state.transition, "update %td: %tx->%tx\n",
+			tip - tcp->tc_instances, t->from, t->to);
 
 		if (t->flags & TESLA_TRANS_CLEANUP)
 			tesla_notify_pass(tcp, tip);
@@ -209,8 +208,9 @@ tesla_notify_pass(struct tesla_class *tcp, struct tesla_instance *tip)
 		return;
 
 	default:
-		VERBOSE_PRINT("pass '%s': %td\n", tcp->tc_name,
-		    tip - tcp->tc_instances);
+		DEBUG(libtesla.instance.success,
+			"pass '%s': %td\n", tcp->tc_name,
+			tip - tcp->tc_instances);
 		break;
 	}
 }

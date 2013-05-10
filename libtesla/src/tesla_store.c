@@ -142,7 +142,7 @@ tesla_store_init(tesla_store *store, uint32_t context,
 void
 tesla_store_free(tesla_store *store)
 {
-	DEBUG_PRINT("tesla_store_free %tx\n", store);
+	DEBUG(libtesla.store.free, "tesla_store_free %tx\n", store);
 
 	for (uint32_t i = 0; i < store->length; i++)
 		tesla_class_destroy(store->classes + i);

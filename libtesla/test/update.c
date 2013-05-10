@@ -31,6 +31,8 @@ const int id = 0;
 const char name[] = "demo class";
 const char descrip[] = "a demonstration class of automata";
 
+#define PRINT(...) DEBUG(libtesla.test.update, __VA_ARGS__)
+
 int
 main(int argc, char **argv)
 {
@@ -67,8 +69,8 @@ main(int argc, char **argv)
 		two = { .tk_mask = 1, .tk_keys[0] = 2 }
 		;
 
-	VERBOSE_PRINT(
-		"(X,X,X,X): 0->1       new    (X,X,X,X):1\n");
+	PRINT("(X,X,X,X): 0->1       new    (X,X,X,X):1\n");
+
 	key.tk_mask = 0;
 	t[0].from = 0;
 	t[0].mask = 0x0;
@@ -95,8 +97,7 @@ main(int argc, char **argv)
 	assert(count(store, &one) == 0);
 	assert(count(store, &two) == 0);
 
-	VERBOSE_PRINT(
-		"(1,X,X,X): 1->2       fork   (X,X,X,X):1 -> (1,X,X,X):2\n");
+	PRINT("(1,X,X,X): 1->2       fork   (X,X,X,X):1 -> (1,X,X,X):2\n");
 	key.tk_mask = 1;
 	key.tk_keys[0] = 1;
 	t[0].from = 1;
@@ -124,8 +125,7 @@ main(int argc, char **argv)
 	assert(count(store, &one) == 1);
 	assert(count(store, &two) == 0);
 
-	VERBOSE_PRINT(
-		"(1,2,X,X): 2->3       fork   (1,X,X,X):2 -> (1,2,X,X):3\n");
+	PRINT("(1,2,X,X): 2->3       fork   (1,X,X,X):2 -> (1,2,X,X):3\n");
 	key.tk_mask = 3;
 	key.tk_keys[0] = 1;
 	key.tk_keys[1] = 2;
@@ -154,8 +154,7 @@ main(int argc, char **argv)
 	assert(count(store, &one) == 2);
 	assert(count(store, &two) == 0);
 
-	VERBOSE_PRINT(
-		"(1,2,X,X): 3->4       update (1,2,X,X):3 -> (1,2,X,X):4\n");
+	PRINT("(1,2,X,X): 3->4       update (1,2,X,X):3 -> (1,2,X,X):4\n");
 	key.tk_mask = 3;
 	key.tk_keys[0] = 1;
 	key.tk_keys[1] = 2;
@@ -184,8 +183,7 @@ main(int argc, char **argv)
 	assert(count(store, &one) == 2);
 	assert(count(store, &two) == 0);
 
-	VERBOSE_PRINT(
-		"(2,X,X,X): 1->5       fork   (X,X,X,X):1 -> (2,X,X,X):5\n");
+	PRINT("(2,X,X,X): 1->5       fork   (X,X,X,X):1 -> (2,X,X,X):5\n");
 	key.tk_mask = 1;
 	key.tk_keys[0] = 2;
 	t[0].from = 1;
@@ -213,8 +211,7 @@ main(int argc, char **argv)
 	assert(count(store, &one) == 2);
 	assert(count(store, &two) == 1);
 
-	VERBOSE_PRINT(
-		"(2,X,X,3): 5->6       fork   (2,X,X,X):5 -> (2,X,X,3):6\n");
+	PRINT("(2,X,X,3): 5->6       fork   (2,X,X,X):5 -> (2,X,X,3):6\n");
 	key.tk_mask = 9;
 	key.tk_keys[0] = 2;
 	key.tk_keys[3] = 3;
@@ -243,8 +240,7 @@ main(int argc, char **argv)
 	assert(count(store, &one) == 2);
 	assert(count(store, &two) == 2);
 
-	VERBOSE_PRINT(
-		"(2,X,X,4): 1->7       fork   (X,X,X,X):1 -> (2,X,X,4):7\n");
+	PRINT("(2,X,X,4): 1->7       fork   (X,X,X,X):1 -> (2,X,X,4):7\n");
 	key.tk_mask = 9;
 	key.tk_keys[0] = 2;
 	key.tk_keys[3] = 4;
@@ -274,8 +270,7 @@ main(int argc, char **argv)
 	assert(count(store, &two) == 3);
 
 	// (X,X,X,X): 0->8       fork   (X,X,X,X):0 -> (X,X,X,X):8
-	VERBOSE_PRINT(
-		"(X,X,X,X): 0->8       fork   (X,X,X,X):0 -> (X,X,X,X):8\n");
+	PRINT("(X,X,X,X): 0->8       fork   (X,X,X,X):0 -> (X,X,X,X):8\n");
 	key.tk_mask = 0;
 	t[0].from = 0;
 	t[0].mask = 0x0;

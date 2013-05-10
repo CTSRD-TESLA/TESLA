@@ -194,7 +194,7 @@ void
 tesla_class_reset(struct tesla_class *c)
 {
 
-	DEBUG_PRINT("tesla_class_reset %s\n", c->tc_name);
+	DEBUG(libtesla.class.reset, "tesla_class_reset %s\n", c->tc_name);
 
 	bzero(c->tc_instances, sizeof(c->tc_instances[0]) * c->tc_limit);
 	c->tc_free = c->tc_limit;

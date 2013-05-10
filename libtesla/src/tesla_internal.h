@@ -307,24 +307,23 @@ void	tesla_assert_pass_dtrace(struct tesla_class *,
 
 #ifdef _KERNEL
 #include <sys/systm.h>
-#define DEBUG_PRINT(...) print(__VA_ARGS__)
 #else
 #include <stdio.h>
-#define DEBUG_PRINT(...) print(__VA_ARGS__)
 #endif
-#define VERBOSE_PRINT(...) if (verbose_debug()) DEBUG_PRINT(__VA_ARGS__)
 
 /** Are we in (verbose) debug mode? */
-int32_t	verbose_debug(void);
+int32_t	debugging(const char*);
+
+#define DEBUG(dclass, ...) \
+	if (debugging(#dclass)) printf(__VA_ARGS__)
 
 #else // NDEBUG
 
 // When not in debug mode, some values might not get checked.
 #define __debug __unused
-#define DEBUG_PRINT(...)
-#define VERBOSE_PRINT(...)
 
-int32_t	verbose_debug(void) { return 0; }
+#define DEBUG(...)
+int32_t	debugging(const char*) { return 0; }
 
 #endif
 

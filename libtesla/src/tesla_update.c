@@ -40,44 +40,46 @@
 #define	CHECK(fn, ...) do { \
 	int err = fn(__VA_ARGS__); \
 	if (err != TESLA_SUCCESS) { \
-		DEBUG_PRINT("error in " #fn ": %s\n", tesla_strerror(err)); \
+		PRINT("error in " #fn ": %s\n", tesla_strerror(err)); \
 		return (err); \
 	} \
 } while(0)
+
+#define PRINT(...) DEBUG(libtesla.state.update, __VA_ARGS__)
 
 int32_t
 tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	const struct tesla_key *key, const char *name, const char *description,
 	const struct tesla_transitions *trans)
 {
-	if (verbose_debug()) {
-		DEBUG_PRINT("\n====\n%s()\n", __func__);
-		DEBUG_PRINT("  context:      %s\n",
+	if (debugging("libtesla.state.update")) {
+		PRINT("\n====\n%s()\n", __func__);
+		PRINT("  context:      %s\n",
 		            (tesla_context == TESLA_SCOPE_GLOBAL
 			     ? "global"
 			     : "per-thread"));
-		DEBUG_PRINT("  class:        %d ('%s')\n", class_id, name);
+		PRINT("  class:        %d ('%s')\n", class_id, name);
 
-		DEBUG_PRINT("  transitions:  ");
+		PRINT("  transitions:  ");
 		print_transitions(trans);
-		DEBUG_PRINT("\n");
-		DEBUG_PRINT("  key:          ");
+		PRINT("\n");
+		PRINT("  key:          ");
 		print_key(key);
-		DEBUG_PRINT("\n----\n");
+		PRINT("\n----\n");
 	}
 
 	struct tesla_store *store;
 	CHECK(tesla_store_get, tesla_context, TESLA_MAX_CLASSES,
 	    TESLA_MAX_INSTANCES, &store);
-	VERBOSE_PRINT("store: 0x%tx", (intptr_t) store);
-	VERBOSE_PRINT("\n----\n");
+	PRINT("store: 0x%tx", (intptr_t) store);
+	PRINT("\n----\n");
 
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
 
-	if (verbose_debug()) {
+	if (debugging("libtesla.state.update")) {
 		print_class(class);
-		DEBUG_PRINT("----\n");
+		PRINT("----\n");
 	}
 
 	// Did we match any instances?
@@ -182,10 +184,10 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		}
 	}
 
-	if (verbose_debug()) {
-		DEBUG_PRINT("----\n");
+	if (debugging("libtesla.state.update")) {
+		PRINT("----\n");
 		print_class(class);
-		DEBUG_PRINT("\n====\n\n");
+		PRINT("\n====\n\n");
 	}
 
 	if (!matched_something)

@@ -34,6 +34,7 @@
 #include "tesla_internal.h"
 
 #ifndef _KERNEL
+#include <fnmatch.h>
 #include <stdlib.h>
 #endif
 
@@ -106,14 +107,21 @@ key_string(char *buffer, const char *end, const struct tesla_key *key)
 
 /* TODO: kernel version... probably just say no? */
 int32_t
-verbose_debug()
+debugging(const char *name)
 {
-	static int32_t mode = -1;
+	const char *env = getenv("TESLA_DEBUG");
 
-	if (mode == -1)
-		mode = (getenv("VERBOSE_DEBUG") != NULL);
+	/* If TESLA_DEBUG is not set, we're definitely not debugging. */
+	if (env == NULL)
+		return 0;
 
-	return mode;
+	/* Allow e.g. 'libtesla' to match 'libtesla.foo'. */
+	size_t envlen = strnlen(env, 100);
+	if ((strncmp(env, name, envlen) == 0) && (name[envlen] == '.'))
+		return 1;
+
+	/* Otherwise, use fnmatch's normal star-matching. */
+	return (fnmatch(env, name, 0) == 0);
 }
 
 void

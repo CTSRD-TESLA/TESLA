@@ -30,6 +30,7 @@
  */
 
 #include "Automaton.h"
+#include "Debug.h"
 #include "Names.h"
 #include "State.h"
 #include "Transition.h"
@@ -411,18 +412,17 @@ string stringifyTransitionVectors(TransitionVectors& TVs) {
 
 void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or"))
     errs() << "Converting inclusive-or to exclusive-or\n";
-  }
-#endif  
-  /* 
+#endif
+  /*
    * X `inclusive-or` Y is computed as:
    * (prefix*(X) || Y) | (X || prefix*(Y)) | (X || Y)
    * where
    *   X and Y are sequences of transitions
-   *   prefix*(X) is the set of sets of transition prefixes of X 
+   *   prefix*(X) is the set of sets of transition prefixes of X
    *     (This is equivalent to the powerset of X minus X itself.)
-   *   || is the parallel operator that allow possible interleavings of the 
+   *   || is the parallel operator that allow possible interleavings of the
    *     lhs and rhs
    *
    * For example, ab `inclusive-or` cd refers to the following automaton:
@@ -439,11 +439,11 @@ void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
   Transition *RhsFirstT = *(TI+1);
 
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or")) {
     errs() << "Lhs: " << LhsFirstT->String() << "\n";
     errs() << "Rhs: " << RhsFirstT->String() << "\n";
   }
-#endif 
+#endif
 
   lhs.push_back(LhsFirstT);
   rhs.push_back(RhsFirstT);
@@ -451,11 +451,11 @@ void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
   CalculateReachableTransitionsBetween(RhsFirstT->Destination(), EndState, rhs);
 
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or")) {
     errs() << "Calculated reachable transitions for lhs: " << stringifyTransitionVector(lhs) << "\n";
     errs() << "Calculated reachable transitions for rhs: " << stringifyTransitionVector(rhs) << "\n";
   }
-#endif 
+#endif
 
   // End is already the result of lhs | rhs
   // We need to add to this:
@@ -480,10 +480,9 @@ void NFAParser::CalculateReachableTransitionsBetween(const State& Start, State& 
 
 TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts) {
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or"))
     errs() << "Generating transition prefixes of " << stringifyTransitionVector(Ts) << "\n";
-  }
-#endif 
+#endif
 
   TransitionVectors prefixes;
   SmallVector<Transition*,16> lastPrefix;
@@ -502,9 +501,8 @@ TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition
   }
 
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or"))
     errs() << "Computed prefixes: " << stringifyTransitionVectors(prefixes) << "\n";
-  }
 #endif
 
   return prefixes;
@@ -512,7 +510,7 @@ TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition
 
 void NFAParser::CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState) {
   for (auto prefix : prefixes) {
-    // Skip the empty prefix because lhs | rhs has already been constructed by 
+    // Skip the empty prefix because lhs | rhs has already been constructed by
     // Parse(const BooleanExpr& Expr, State& Branch) above.
     if (!prefix.empty()) {
       CreateParallelAutomaton(prefix, rhs, InitialState, EndState);
@@ -522,7 +520,7 @@ void NFAParser::CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<
 
 // Compute the automaton for lhs || rhs (where || is the parallel operator)
 void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState) {
-  /* 
+  /*
    * We build the automaton recursively by repeatedly decomposing lhs || rhs,
    * until it cannot be decomposed any further.
    * For example, ab || cd can be decomposed as follows:
@@ -533,9 +531,8 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
    *            = abcd | acbd | acdb             | cabd | cadb | cdab
    */
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or"))
     errs() << "Entering CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
-  }
 #endif
 
   if (lhs.empty()) {
@@ -553,7 +550,7 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
     SmallVector<Transition*,16> lhsCopy = lhs;
     lhsCopy.erase(lhsCopy.begin()); // TODO: use a more efficient data structure (deque?)
     CreateParallelAutomaton(lhsCopy, rhs, *LhsFirstTNewDest, EndState);
-    
+
     // c (ab || d)
     Transition *RhsFirstT = rhs.front();
     State *RhsFirstTNewDest = State::Create(States);
@@ -564,25 +561,22 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
   }
 
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or"))
     errs() << "Exiting CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
-  }
 #endif
 }
 
 void NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState) {
   State* CurrSource = &InitialState;
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or"))
     errs() << "Creating copy of transition chain: " << stringifyTransitionVector(chain) << "\n";
-  }
 #endif
   for (auto TI=chain.begin(), TE=chain.end()-1; TI != TE; TI++) {
     Transition* T = *TI;
 #ifndef NDEBUG
-  if (getenv("VERBOSE_DEBUG")) {
+  if (debugging("tesla.automata.inclusive_or"))
     errs() << "Creating copy of transition: " << T->String() << "\n";
-  }
 #endif
     State* TDest = State::Create(States);
     Transition::Copy(*CurrSource, *TDest, T, Transitions);
@@ -727,7 +721,7 @@ class DFABuilder {
                      const_cast<AutomatonDescription&>(N->getAssertion()),
                      N->Use(), N->Name(), States, Transitions);
 #ifndef NDEBUG
-    if (getenv("VERBOSE_DEBUG")) {
+    if (debugging("tesla.automata.dfa")) {
       fprintf(stderr, "NFA: %s\n", N->String().c_str());
       // Construct the DFA object
       fprintf(stderr, "DFA: %s\n", D->String().c_str());
