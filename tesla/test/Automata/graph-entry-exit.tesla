@@ -1,9 +1,10 @@
+/* vim: set syntax=proto: */
 /*
  * Abuse the C preprocessor to produce a .tesla file that we can graph.
  *
  * Commands for llvm-lit:
  *
- * RUN: clang -E %cflags -D TESLA_FILE %s -o %t.tesla
+ * RUN: cpp -DTESLA_FILE %s %t.tesla
  * RUN: tesla graph %t.tesla -o %t.dot
  * RUN: FileCheck -input-file %t.dot %s
  */
@@ -116,7 +117,9 @@ root {
   beginning {
     type: FUNCTION
     function {
-      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+      /*
+       * CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+       */
       function {
         name: "worker"
       }
@@ -131,7 +134,9 @@ root {
   end {
     type: FUNCTION
     function {
-      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+      /*
+       * CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+       */
       function {
         name: "worker"
       }
@@ -155,7 +160,9 @@ root {
   beginning {
     type: FUNCTION
     function {
-      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+      /*
+       * CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+       */
       function {
         name: "worker"
       }
@@ -170,7 +177,9 @@ root {
   end {
     type: FUNCTION
     function {
-      // CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+      /*
+       * CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+       */
       function {
         name: "worker"
       }

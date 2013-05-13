@@ -1,16 +1,19 @@
+/* vim: set syntax=proto: */
 /**
  * We can't include comments directly in a .tesla file because it's a
  * text-based serialisation format for protocol buffers. Instead, let's abuse
  * the C preprocessor a little bit:
  *
- * RUN: clang %cflags -D TESLA -E %s -o %t.tesla
+ * RUN: cpp -P -DTESLA %s %t.tesla
  * RUN: tesla graph %t.tesla -o %t.dot
  * RUN: FileCheck -input-file=%t.dot %s
  */
 
 #ifdef TESLA
 automaton {
-  // CHECK: digraph automaton_{{[0-9]+}}
+  /*
+   * CHECK: digraph automaton_{{[0-9]+}}
+   */
   identifier {
     location {
       filename: "example.c"
@@ -22,8 +25,10 @@ automaton {
   expression {
     type: SEQUENCE
     sequence {
-      // CHECK: 0 [ label = "state 0\n([[ANY:&#[0-9]+;]],[[ANY:&#[0-9]+;]])" ];
-      // CHECK: 0 -> 1 [ label = "example_syscall([[ANY]],[[ANY]],[[ANY]])
+      /*
+       * CHECK: 0 [ label = "state 0\n([[ANY:&#[0-9]+;]],[[ANY:&#[0-9]+;]])" ];
+       * CHECK: 0 -> 1 [ label = "example_syscall([[ANY]],[[ANY]],[[ANY]])
+       */
       expression {
         type: FUNCTION
         function {
@@ -46,8 +51,10 @@ automaton {
           }
         }
       }
-      // CHECK: 1 [ label = "state 1\n([[ANY]],[[ANY]])" ];
-      // CHECK: 1 -> 2 [ label = "security_check([[ANY]],o,[[ANY]])
+      /*
+       * CHECK: 1 [ label = "state 1\n([[ANY]],[[ANY]])" ];
+       * CHECK: 1 -> 2 [ label = "security_check([[ANY]],o,[[ANY]])
+       */
       expression {
         type: FUNCTION
         function {
@@ -74,9 +81,12 @@ automaton {
           }
         }
       }
-      // After that transition, we know about one referenced variable:
-      // CHECK: 2 [ label = "state 2\n(o,[[ANY]])" ];
-      // CHECK: 2 -> 3 [ label = "security_check([[ANY]],o,op)
+      /*
+       * After that transition, we know about one referenced variable:
+       *
+       * CHECK: 2 [ label = "state 2\n(o,[[ANY]])" ];
+       * CHECK: 2 -> 3 [ label = "security_check([[ANY]],o,op)
+       */
       expression {
         type: FUNCTION
         function {
@@ -105,8 +115,10 @@ automaton {
           }
         }
       }
-      // CHECK: 3 [ label = "state 3\n(o,op)" ];
-      // CHECK: 3 -> 4 [ label = "NOW"
+      /*
+       * CHECK: 3 [ label = "state 3\n(o,op)" ];
+       * CHECK: 3 -> 4 [ label = "NOW"
+       */
       expression {
         type: NOW
         now {
@@ -129,7 +141,9 @@ automaton {
     index: 1
     name: "op"
   }
-  // CHECK: label = "example.c:314#42"
+  /*
+   * CHECK: label = "example.c:314#42"
+   */
 }
 root {
   identifier {

@@ -1,9 +1,10 @@
-/*
+/* vim: set syntax=proto: */
+/**
  * Test that tesla-cat can put multiple .tesla files together.
  *
  * Commands for llvm-lit (abusing the C preprocessor a bit):
- * RUN: clang -E -D FILE_A %s -o %t.a.tesla
- * RUN: clang -E -D FILE_B %s -o %t.b.tesla
+ * RUN: cpp -P -DFILE_A %s %t.a.tesla
+ * RUN: cpp -P -DFILE_B %s %t.b.tesla
  * RUN: tesla cat %t.a.tesla %t.b.tesla -o %t.tesla
  * RUN: FileCheck %s -input-file %t.tesla
  */
@@ -12,7 +13,9 @@
 #ifdef FILE_A
 automaton {
   identifier {
-  // CHECK: name: "assertion_a"
+  /*
+   * CHECK: name: "assertion_a"
+   */
     name: "assertion_a"
   }
   context: Global
@@ -52,7 +55,9 @@ root {
 #ifdef FILE_B
 automaton {
   identifier {
-  // CHECK: name: "assertion_b"
+  /*
+   * CHECK: name: "assertion_b"
+   */
     name: "assertion_b"
   }
   context: Global
