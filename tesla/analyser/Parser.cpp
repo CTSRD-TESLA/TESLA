@@ -78,6 +78,7 @@ Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
   Flags RootFlags;
   RootFlags.FnInstrContext = FunctionEvent::Callee;
   RootFlags.OrOperator = BooleanExpr::BE_Or;
+  RootFlags.StrictMode = false;
 
   return new Parser(Ctx, ID, TeslaContext, Beginning, End, Expression, RootFlags);
 }
@@ -112,6 +113,7 @@ Parser* Parser::AutomatonParser(FunctionDecl *F, ASTContext& Ctx) {
   Flags RootFlags;
   RootFlags.FnInstrContext = FunctionEvent::Callee;
   RootFlags.OrOperator = BooleanExpr::BE_Xor;
+  RootFlags.StrictMode = true;
 
   return new Parser(Ctx, ID, Context, NULL, NULL, F->getBody(), RootFlags);
 }
@@ -449,12 +451,14 @@ bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
   assert(Fun != NULL);
 
   auto Parse = llvm::StringSwitch<CallParser>(Fun->getName())
-    .Case("__tesla_call",     &Parser::ParseFunctionCall)
-    .Case("__tesla_return",   &Parser::ParseFunctionReturn)
-    .Case("__tesla_callee",   &Parser::ParseCallee)
-    .Case("__tesla_caller",   &Parser::ParseCaller)
-    .Case("__tesla_sequence", &Parser::ParseSequence)
-    .Case("__tesla_optional", &Parser::ParseOptional)
+    .Case("__tesla_call",         &Parser::ParseFunctionCall)
+    .Case("__tesla_return",       &Parser::ParseFunctionReturn)
+    .Case("__tesla_callee",       &Parser::ParseCallee)
+    .Case("__tesla_caller",       &Parser::ParseCaller)
+    .Case("__tesla_strict",       &Parser::ParseStrictMode)
+    .Case("__tesla_conditional",  &Parser::ParseConditional)
+    .Case("__tesla_sequence",     &Parser::ParseSequence)
+    .Case("__tesla_optional",     &Parser::ParseOptional)
     .Default(NULL);
 
   if (Parse == NULL) {
@@ -493,6 +497,7 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
 
   FunctionEvent *FnEvent = E->mutable_function();
   FnEvent->set_context(F.FnInstrContext);
+  FnEvent->set_strict(F.StrictMode);
 
   // Since we might care about the return value, we must instrument exiting
   // the function rather than entering it.
@@ -543,6 +548,7 @@ bool Parser::ParseFunctionCall(Expression *E, const CallExpr *Call, Flags F) {
 
   FunctionEvent *FnEvent = E->mutable_function();
   FnEvent->set_direction(FunctionEvent::Entry);
+  FnEvent->set_strict(F.StrictMode);
 
   return ParseFunctionPredicate(FnEvent, Call, false, F);
 }
@@ -554,6 +560,7 @@ bool Parser::ParseFunctionReturn(Expression *E, const CallExpr *Call, Flags F) {
 
   FunctionEvent *FnEvent = E->mutable_function();
   FnEvent->set_direction(FunctionEvent::Exit);
+  FnEvent->set_strict(F.StrictMode);
 
   return ParseFunctionPredicate(FnEvent, Call, true, F);
 }
@@ -582,6 +589,34 @@ bool Parser::ParseCaller(Expression *E, const clang::CallExpr *Call, Flags F) {
     return false;
   }
 
+  return CheckIgnore(Call->getArg(0))
+         && Parse(E, Call->getArg(1), F);
+}
+
+
+bool Parser::ParseStrictMode(Expression *E, const clang::CallExpr *Call,
+                             Flags F) {
+
+  if (Call->getNumArgs() != 2) {
+    ReportError("expected two arguments: __tesla_ignore, expression", Call);
+    return false;
+  }
+
+  F.StrictMode = true;
+  return CheckIgnore(Call->getArg(0))
+         && Parse(E, Call->getArg(1), F);
+}
+
+
+bool Parser::ParseConditional(Expression *E, const clang::CallExpr *Call,
+                              Flags F) {
+
+  if (Call->getNumArgs() != 2) {
+    ReportError("expected two arguments: __tesla_ignore, expression", Call);
+    return false;
+  }
+
+  F.StrictMode = false;
   return CheckIgnore(Call->getArg(0))
          && Parse(E, Call->getArg(1), F);
 }
@@ -653,6 +688,7 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
 
   E->set_type(Expression::FIELD_ASSIGN);
   FieldAssignment *A = E->mutable_fieldassign();
+  A->set_strict(F.StrictMode);
 
   switch (O->getOpcode()) {
   default:

@@ -84,6 +84,26 @@ struct __tesla_event* __tesla_callee(__tesla_event*, ...);
 /** Function events inside this predicate refer to the caller context. */
 struct __tesla_event* __tesla_caller(__tesla_event*, ...);
 
+/**
+ * Events named in this predicate should only occur exactly as described.
+ *
+ * This is the default behaviour for explicit automata representations.
+ */
+struct __tesla_event* __tesla_strict(__tesla_event*, ...);
+
+/**
+ * Events named in this predicate must occur as described <i>if</i> the
+ * execution trace includes a NOW event; otherwise, any number of non-NOW
+ * events can occur in any order.
+ *
+ * For instance, if the assertion names the VOP_WRITE() event, we don't want
+ * to preclude the use of VOP_WRITE() in code paths that don't include this
+ * assertion's NOW event.
+ *
+ * This is the default behaviour for inline assertions.
+ */
+struct __tesla_event* __tesla_conditional(__tesla_event*, ...);
+
 
 /** Nothing to see here, move along... */
 struct __tesla_event* __tesla_ignore;

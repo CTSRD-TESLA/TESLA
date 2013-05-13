@@ -75,7 +75,11 @@ example_syscall(struct credential *cred, int index, int op)
 	 * CHECK-NOT: update [[ID]]
 	 *
 	 * ERR: TESLA failure
-	 * ERR: No instance matched key '0x0 [ X X X X ]' for transition(s) [ ({{[0-9]+}}:0x1 -> {{[0-9]+}}:0x1 <clean>) ]
+	 * ERR: Instance {{[0-9]+}} is in state {{[0-9]+}}
+	 * ERR: but required to take a transition in [
+	 * ERR:     ({{[0-9]+}}:0x0 -> [[FINAL:[0-9]+]]:0x1)
+	 * ERR:     ({{[0-9]+}}:0x1 -> [[FINAL]]:0x1 <clean>)
+	 * ERR: ]
 	 */
 	return 0;
 }

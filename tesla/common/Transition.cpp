@@ -29,6 +29,7 @@
  * SUCH DAMAGE.
  */
 
+#include "Protocol.h"
 #include "State.h"
 #include "Transition.h"
 
@@ -62,17 +63,22 @@ void Transition::Create(State& From, State& To, const NowEvent& Ev,
 }
 
 void Transition::Create(State& From, State& To, const FunctionEvent& Ev,
-                        TransitionSets& Transitions, bool Init, bool Cleanup) {
+                        TransitionSets& Transitions, bool Init, bool Cleanup,
+                        bool OutOfScope) {
 
-  OwningPtr<Transition> T(new FnTransition(From, To, Ev, Init, Cleanup));
+  OwningPtr<Transition> T(
+    new FnTransition(From, To, Ev, Init, Cleanup, OutOfScope));
+
   Register(T, From, To, Transitions);
 }
 
 void Transition::Create(State& From, State& To, const FieldAssignment& A,
-                        TransitionSets& Transitions, bool Init, bool Cleanup) {
+                        TransitionSets& Transitions, bool Init, bool Cleanup,
+                        bool OutOfScope) {
 
-  OwningPtr<Transition> T(new FieldAssignTransition(From, To, A,
-                                                    Init, Cleanup));
+  OwningPtr<Transition> T(
+    new FieldAssignTransition(From, To, A, Init, Cleanup, OutOfScope));
+
   Register(T, From, To, Transitions);
 }
 
@@ -87,17 +93,22 @@ void Transition::CreateSubAutomaton(State& From, State& To,
 }
 
 void Transition::Copy(State &From, State& To, const Transition* Other,
-                   TransitionSets& Transitions) {
+                      TransitionSets& Transitions, bool OutOfScope) {
 
   OwningPtr<Transition> New;
   bool Init = Other->RequiresInit();
   bool Cleanup = Other->RequiresCleanup();
 
+  OutOfScope |= Other->OutOfScope;
+  assert(!Init || !OutOfScope);
+
   switch (Other->getKind()) {
   case Null:
+    assert(!OutOfScope);
     return;
 
   case Now: {
+    assert(!OutOfScope);
     auto O = cast<NowTransition>(Other);
     New.reset(new NowTransition(From, To, O->Ev, O->Refs, Init, Cleanup));
     break;
@@ -105,15 +116,17 @@ void Transition::Copy(State &From, State& To, const Transition* Other,
 
   case Fn:
     New.reset(new FnTransition(From, To, cast<FnTransition>(Other)->Ev,
-                               Init, Cleanup));
+                               Init, Cleanup, OutOfScope));
     break;
 
   case FieldAssign:
-    New.reset(new FieldAssignTransition(From, To,
-                  cast<FieldAssignTransition>(Other)->Assign, Init, Cleanup));
+    New.reset(new FieldAssignTransition(
+                  From, To, cast<FieldAssignTransition>(Other)->Assign,
+                  Init, Cleanup, OutOfScope));
     break;
 
   case SubAutomaton:
+    assert(!OutOfScope);
     New.reset(new SubAutomatonTransition(From, To,
                   cast<SubAutomatonTransition>(Other)->ID, Init, Cleanup));
     break;
@@ -128,12 +141,17 @@ void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
 
   Append(T, Transitions);
 
-  // Update the state we're pointing to with the references it should
-  // know about thus far in the execution of the automaton.
-  OwningArrayPtr<const Argument*> Args;
-  ReferenceVector Ref;
-  T->ReferencesThusFar(Args, Ref);
-  To.UpdateReferences(Ref);
+  if (!T->OutOfScope) {
+    // We should never try to update the start state's references.
+    assert(To.ID() != 0);
+
+    // Update the state we're pointing to with the references it should
+    // know about thus far in the execution of the automaton.
+    OwningArrayPtr<const Argument*> Args;
+    ReferenceVector Ref;
+    T->ReferencesThusFar(Args, Ref);
+    To.UpdateReferences(Ref);
+  }
 
   From.AddTransition(T);
 }
@@ -160,20 +178,6 @@ void Transition::Append(const OwningPtr<Transition>& Tr,
 void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
                                    ReferenceVector& Ref) const {
 
-#ifndef NDEBUG
-  // Automata instances are named by a tuple of variables they refererence.
-  // In early states, these references may be unbound (or NULL), but all states
-  // should have the same number of variables.
-  {
-    size_t MyArguments = 0;
-    for (auto Arg : this->Arguments())
-      if (Arg->type() == Argument::Variable)
-        MyArguments++;
-
-    assert(!From.References().empty() || (MyArguments == 0));
-  }
-#endif
-
   // Put this transition's *variable* references in var-index order.
   SmallVector<const Argument*, 4> MyRefs;
   for (auto Arg : this->Arguments())
@@ -188,7 +192,6 @@ void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
 
   auto& FromRefs = From.References();
   const size_t Size = FromRefs.size();
-  assert(MyRefs.size() <= Size);
 
   auto Arguments = new const Argument*[Size];
   for (size_t i = 0; i < Size; i++) {
@@ -207,7 +210,37 @@ void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
 }
 
 
+SmallVector<const Argument*,4> Transition::NewArguments() const {
+  auto OldArgs(From.References());
+  auto TransArgs(Arguments());
+
+  SmallVector<const Argument*,4> NewArgs(TransArgs.size());
+  for (size_t i = 0; i < NewArgs.size(); i++)
+    if ((OldArgs.size() <= i) || (OldArgs[i] == NULL))
+      NewArgs[i] = TransArgs[i];
+
+  return NewArgs;
+}
+
+
+int Transition::NewArgMask() const {
+  auto NewArgs(NewArguments());
+  int Mask = 0;
+
+  for (int i = 0; i < NewArgs.size(); i++)
+    if (NewArgs[i] != NULL)
+      Mask += (1 << i);
+
+  return Mask;
+}
+
+
 string Transition::String() const {
+  string NewArgs;
+  for (auto A : NewArguments())
+    if (A != NULL)
+      NewArgs += " " + ShortName(A);
+
   string Special =
     string(RequiresInit() ? "<<init>>" : "")
     + (RequiresCleanup() ? "<<cleanup>>" : "")
@@ -216,6 +249,7 @@ string Transition::String() const {
   return (Twine()
     + "--("
     + ShortLabel()
+    + (NewArgs.empty() ? "" : ":" + NewArgs)
     + (Special.empty() ? "" : " " + Special)
     + ")-->("
     + Twine(To.ID())
@@ -295,8 +329,9 @@ string FnTransition::DotLabel() const {
 
 FieldAssignTransition::FieldAssignTransition(const State& From, const State& To,
                                              const FieldAssignment& A,
-                                             bool Init, bool Cleanup)
-  : Transition(From, To, Init, Cleanup), Assign(A),
+                                             bool Init, bool Cleanup,
+                                             bool OutOfScope)
+  : Transition(From, To, Init, Cleanup, OutOfScope), Assign(A),
     ReferencedVariables(new const Argument*[2]),
     Refs(ReferencedVariables.get(), 2)
 {

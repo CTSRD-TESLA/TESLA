@@ -98,87 +98,56 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	size_t cloned = 0;
 	struct clone_info {
 		tesla_instance *old;
-		tesla_instance new;
 		const tesla_transition *transition;
 	} clones[class->tc_free];
 
-	// Update existing instances, forking/specialising if necessary.
+	// Iterate over existing instances, figure out what to do with each.
 	for (uint32_t i = 0; i < class->tc_limit; i++) {
 		tesla_instance *inst = class->tc_instances + i;
-		if (!tesla_instance_active(inst))
-			continue;
 
-		// Is this instance required to take a transition?
-		bool transition_required = false;
+		const tesla_transition *trigger = NULL;
+		enum tesla_action_t action =
+			tesla_action(inst, pattern, trans, &trigger);
 
-		// Has this instance actually taken a transition?
-		bool transition_taken = false;
+		switch (action) {
+		case FAIL:
+			tesla_notify_assert_fail(class, inst, trans);
+			break;
 
-		for (uint32_t j = 0; j < trans->length; j++) {
-			tesla_transition *t = trans->transitions + j;
-			const tesla_key *inst_key = &inst->ti_key;
+		case IGNORE:
+			break;
 
-			// Check whether or not the instance matches the
-			// provided key, masked by what the transition says to
-			// expect from its 'previous' state.
-			tesla_key masked = *pattern;
-			masked.tk_mask &= t->from_mask;
-
-			if (!tesla_key_matches(&masked, inst_key))
-				continue;
-
-			if (inst_key->tk_mask != t->from_mask)
-				continue;
-
-			if (inst->ti_state != t->from) {
-				// If the instance matches everything but the
-				// state, so there had better be a transition
-				// somewhere in 'trans' that can be taken!
-				if (inst_key->tk_mask == masked.tk_mask)
-					transition_required = true;
-
-				continue;
-			}
-
-			// The match has succeeded: we are either going to
-			// update or clone an existing state.
-			transition_taken = true;
+		case UPDATE:
+			tesla_notify_transition(class, inst, trigger);
+			inst->ti_state = trigger->to;
 			matched_something = true;
+			break;
 
-			if (t->flags & TESLA_TRANS_CLEANUP)
-				cleanup_required = true;
-
-			// If the keys just match, just update the state.
-			if (SUBSET(pattern->tk_mask, inst_key->tk_mask)) {
-				tesla_notify_transition(class, inst, t);
-
-				inst->ti_state = t->to;
-				break;
-			}
-
-			// If the keys weren't an exact match, we need to fork
-			// a new (more specific) automaton instance.
+		case FORK: {
 			struct clone_info *clone = clones + cloned++;
 			clone->old = inst;
-			clone->new = *inst;
-			clone->new.ti_state = t->to;
-
-			CHECK(tesla_key_union, &clone->new.ti_key, pattern);
-
-			clone->transition = t;
+			clone->transition = trigger;
+			matched_something = true;
 			break;
 		}
+		}
 
-		if (transition_required && !transition_taken)
-			tesla_notify_assert_fail(class, inst, trans);
+		if (trigger && (trigger->flags & TESLA_TRANS_CLEANUP))
+			cleanup_required = true;
 	}
 
 	// Move any clones into the class.
 	for (size_t i = 0; i < cloned; i++) {
 		struct clone_info *c = clones + i;
 		struct tesla_instance *clone;
+		CHECK(tesla_clone, class, c->old, &clone);
 
-		CHECK(tesla_clone, class, &c->new, &clone);
+		tesla_key new_name = *pattern;
+		new_name.tk_mask &= c->transition->to_mask;
+		CHECK(tesla_key_union, &clone->ti_key, &new_name);
+
+		clone->ti_state = c->transition->to;
+
 		tesla_notify_clone(class, c->old, clone, c->transition);
 	}
 

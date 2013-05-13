@@ -160,6 +160,9 @@ message FunctionEvent {
 
   /** If set, the return value that we expect / care about. */
   optional Argument expectedReturnValue = 5;
+
+  /** If set, this event should only occur as described by the automaton. */
+  optional bool strict = 6 [ default = true ];
 }
 
 /** A function that can be instrumented. */
@@ -197,6 +200,9 @@ message FieldAssignment {
 
   /** The value being assigned. */
   required Argument value = 5;
+
+  /** If set, this event should only occur as described by the automaton. */
+  optional bool strict = 7 [ default = true ];
 }
 
 /** An argument to a function. */

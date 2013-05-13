@@ -60,13 +60,15 @@
 #define	TESLA_PERTHREAD(...)	TESLA_ASSERT(__tesla_perthread, __VA_ARGS__)
 
 /** A strictly-ordered sequence of events. */
-#define	TSEQUENCE(...)	__tesla_sequence(__tesla_ignore, __VA_ARGS__)
+#define	TSEQUENCE(...)		__tesla_sequence(__tesla_ignore, __VA_ARGS__)
 
-#define	called(...)	__tesla_call(__VA_ARGS__)
-#define	returned(...)	__tesla_return(__VA_ARGS__)
+#define	called(...)		__tesla_call(__VA_ARGS__)
+#define	returned(...)		__tesla_return(__VA_ARGS__)
 
-#define	callee(...)	__tesla_callee(__tesla_ignore, __VA_ARGS__)
-#define	caller(...)	__tesla_caller(__tesla_ignore, __VA_ARGS__)
+#define	callee(...)		__tesla_callee(__tesla_ignore, __VA_ARGS__)
+#define	caller(...)		__tesla_caller(__tesla_ignore, __VA_ARGS__)
+#define	strict(...)		__tesla_strict(__tesla_ignore, __VA_ARGS__)
+#define	conditional(...)	__tesla_conditional(__tesla_ignore, __VA_ARGS__)
 
 #define	TESLA_NOW __tesla_now
 

@@ -92,11 +92,17 @@ public:
 private:
   class Flags {
   public:
-    //! Default to callee-context instrumentation.
+    //! Callee- or caller-context instrumentation of functions.
     FunctionEvent::CallContext FnInstrContext;
 
-    //! Default to inclusive-or.
+    //! Interpret boolean 'or' as inclusive or exclusive.
     BooleanExpr::Operation OrOperator;
+
+    /**
+     * TESLA 'strict' mode: the automaton describes all uses of the
+     * events it names.
+     */
+    bool StrictMode;
   };
 
   Parser(clang::ASTContext& Ctx, Identifier ID = Identifier(),
@@ -133,6 +139,8 @@ private:
   bool ParseFunctionReturn(Expression*, const clang::CallExpr*, Flags);
   bool ParseCallee(Expression*, const clang::CallExpr*, Flags);
   bool ParseCaller(Expression*, const clang::CallExpr*, Flags);
+  bool ParseStrictMode(Expression*, const clang::CallExpr*, Flags);
+  bool ParseConditional(Expression*, const clang::CallExpr*, Flags);
   bool ParseOptional(Expression*, const clang::CallExpr*, Flags);
   bool ParseSequence(Expression*, const clang::CallExpr*, Flags);
 

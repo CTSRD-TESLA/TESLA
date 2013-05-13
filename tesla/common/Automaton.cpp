@@ -119,6 +119,7 @@ private:
   const AutomataMap* Descriptions;
 
   bool SubAutomataAllowed;
+  State* Start;
   StateVector States;
   TransitionSets Transitions;
 };
@@ -227,7 +228,7 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
     if (A.type() == Argument::Variable)
       VariableRefs++;
 
-  State *Start = State::CreateStartState(States, VariableRefs);
+  Start = State::CreateStartState(States, VariableRefs);
 
   // Parse the automaton entry point, if provided...
   if (Use && Use->has_beginning()) {
@@ -251,6 +252,31 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
       string Str;
       TextFormat::PrintToString(Use->end(), &Str);
       panic("failed to parse automaton 'end' event: " + Str);
+    }
+  }
+
+  // Handle out-of-scope events: if we observe one, we it should cause us to
+  // stay in the post-initialisation state.
+  vector<const Transition*> OutOfScope;
+  for (const TEquivalenceClass& C : Transitions) {
+    auto *Head = *C.begin();
+    if (!Head->IsStrict() && !Head->RequiresInit())
+      OutOfScope.push_back(Head);
+  }
+
+  for (auto *T : OutOfScope) {
+    State& Destination = *(T->RequiresCleanup() ? End : Start);
+
+    switch (T->getKind()) {
+    case Transition::Now:   // fall through
+    case Transition::Null:  // fall through
+    case Transition::SubAutomaton:
+      break;
+
+    case Transition::FieldAssign:   // fall through
+    case Transition::Fn:
+      Transition::Copy(*Start, Destination, T, Transitions, true);
+      break;
     }
   }
 

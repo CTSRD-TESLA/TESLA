@@ -52,7 +52,6 @@ class Identifier;
 class Location;
 class NowEvent;
 
-typedef llvm::ArrayRef<const Argument*> ReferenceVector;
 typedef llvm::MutableArrayRef<const Argument*> MutableReferenceVector;
 
 //! A set of TESLA transitions that are considered equivalent.
@@ -82,11 +81,37 @@ public:
   static void Create(State& From, State& To, TransitionSets& Transitions,
                      bool Init = false, bool Cleanup = false);
 
+  /**
+   * Create a @ref FunctionEvent transition.
+   *
+   * @param[in,out]   From         The state to transition from; will be given
+   *                               ownership of the new transition.
+   * @param[in]       To           The state to transition to.
+   * @param[out]      Transitions  A place to record the new transition.
+   * @param[in]       Init         Transition triggers class initialisation.
+   * @param[in]       Cleanup      Transition triggers class cleanup.
+   * @param[in]       OutOfScope   The transition is out of a conditional
+   *                               automaton's scope.
+   */
   static void Create(State& From, State& To, const FunctionEvent&,
-                     TransitionSets&, bool Init, bool Cleanup);
+                     TransitionSets&, bool Init, bool Cleanup,
+                     bool OutOfScope = false);
 
+  /**
+   * Create a @ref FieldAssignment transition.
+   *
+   * @param[in,out]   From         The state to transition from; will be given
+   *                               ownership of the new transition.
+   * @param[in]       To           The state to transition to.
+   * @param[out]      Transitions  A place to record the new transition.
+   * @param[in]       Init         Transition triggers class initialisation.
+   * @param[in]       Cleanup      Transition triggers class cleanup.
+   * @param[in]       OutOfScope   The transition is out of a conditional
+   *                               automaton's scope.
+   */
   static void Create(State& From, State& To, const FieldAssignment&,
-                     TransitionSets&, bool Init, bool Cleanup);
+                     TransitionSets&, bool Init, bool Cleanup,
+                     bool OutOfScope = false);
 
   static void Create(State& From, State& To, const NowEvent&,
                      const AutomatonDescription&, TransitionSets&,
@@ -100,7 +125,7 @@ public:
   /// transition type as the copied transition.  This is used when constructing
   /// DFA transitions from NFA transitions.
   static void Copy(State &From, State& To, const Transition* Other,
-                   TransitionSets &);
+                   TransitionSets &, bool OutOfScope = false);
 
   virtual ~Transition() {}
 
@@ -108,7 +133,7 @@ public:
   const State& Destination() const { return To; }
 
   /// Does this transition consume and produce the same symbols as another?
-  bool EquivalentTo(const Transition &T) const { return Equiv(T); }
+  virtual bool EquivalentTo(const Transition &T) const = 0;
 
   //! This transition triggers initialisation of its TESLA automata class.
   bool RequiresInit() const { return Init; }
@@ -116,9 +141,17 @@ public:
   //! This transition triggers cleanup of its TESLA automata class.
   bool RequiresCleanup() const { return Cleanup; }
 
+  //! This transition can only occur as described in an automaton.
+  virtual bool IsStrict() const { return false; }
+
   //! Arguments referenced by this transition.
   virtual const ReferenceVector Arguments() const = 0;
 
+  //! Arguments newly referenced by this transition (unknown to previous state).
+  llvm::SmallVector<const Argument*,4> NewArguments() const;
+
+  //! A bitmask representing the arguments newly referenced by this transition.
+  int NewArgMask() const;
 
   /**
    * The references known at the point this transition occurs.
@@ -141,6 +174,8 @@ public:
   virtual std::string String() const;
   virtual std::string Dot() const;
 
+  bool InScope() const { return !OutOfScope; }
+
   //! Information for LLVM's RTTI (isa<>, cast<>, etc.).
   enum TransitionKind { Null, Now, Fn, FieldAssign, SubAutomaton };
   virtual TransitionKind getKind() const = 0;
@@ -151,19 +186,23 @@ protected:
 
   static void Append(const llvm::OwningPtr<Transition>&, TransitionSets&);
 
-  Transition(const State& From, const State& To, bool Init, bool Cleanup)
-    : From(From), To(To), Init(Init), Cleanup(Cleanup)
+  Transition(const State& From, const State& To, bool Init, bool Cleanup,
+             bool OutOfScope)
+    : From(From), To(To), Init(Init), Cleanup(Cleanup && !OutOfScope),
+      OutOfScope(OutOfScope)
   {
+    // An out-of-scope event cannot cause initialisation.
+    assert(!Init || !OutOfScope);
   }
-
-  virtual bool Equiv(const Transition&) const = 0;
-
 
   const State& From;
   const State& To;
 
   bool Init;            //!< This transition triggers initialisation.
   bool Cleanup;         //!< This transition triggers cleanup.
+
+  //!< This transition is not named by the (conditional) TESLA automaton.
+  const bool OutOfScope;
 };
 
 
@@ -188,13 +227,13 @@ public:
   virtual TransitionKind getKind() const { return Null; };
 
 protected:
-  virtual bool Equiv(const Transition &T) const {
+  virtual bool EquivalentTo(const Transition &T) const {
     return T.getKind() == Null;
   }
 
 private:
   NullTransition(const State& From, const State& To, bool Init, bool Cleanup)
-    : Transition(From, To, Init, Cleanup) {}
+    : Transition(From, To, Init, Cleanup, false) {}
 
   friend class Transition;
 };
@@ -223,14 +262,14 @@ public:
   virtual TransitionKind getKind() const { return Now; };
 
 protected:
-  virtual bool Equiv(const Transition &T) const {
+  virtual bool EquivalentTo(const Transition &T) const {
     return T.getKind() == Now;
   }
 
 private:
   NowTransition(const State& From, const State& To, const NowEvent& Ev,
                 const ReferenceVector& Refs, bool Init, bool Cleanup)
-    : Transition(From, To, Init, Cleanup), Ev(Ev), Refs(Refs)
+    : Transition(From, To, Init, Cleanup, false), Ev(Ev), Refs(Refs)
   {
   }
 
@@ -250,6 +289,7 @@ public:
 
   const FunctionEvent& FnEvent() const { return Ev; }
   const ReferenceVector Arguments() const;
+  bool IsStrict() const { return Ev.strict(); }
 
   bool EquivalentExpression(const Transition* Other) const {
     auto *T = llvm::dyn_cast<FnTransition>(Other);
@@ -265,15 +305,15 @@ public:
   virtual TransitionKind getKind() const { return Fn; };
 
 protected:
-  virtual bool Equiv(const Transition &T) const {
+  virtual bool EquivalentTo(const Transition &T) const {
     return (T.getKind() == Fn) &&
         (Ev == llvm::cast<FnTransition>(&T)->FnEvent());
   }
 
 private:
   FnTransition(const State& From, const State& To, const FunctionEvent& Ev,
-               bool Init, bool Cleanup)
-    : Transition(From, To, Init, Cleanup), Ev(Ev) {}
+               bool Init, bool Cleanup, bool OutOfScope)
+    : Transition(From, To, Init, Cleanup, OutOfScope), Ev(Ev) {}
 
   const FunctionEvent& Ev;
 
@@ -290,6 +330,7 @@ public:
 
   const ReferenceVector Arguments() const { return Refs; }
   const FieldAssignment& Assignment() const { return Assign; }
+  bool IsStrict() const { return Assign.strict(); }
 
   bool EquivalentExpression(const Transition* Other) const {
     auto *T = llvm::dyn_cast<FieldAssignTransition>(Other);
@@ -305,14 +346,15 @@ public:
   virtual TransitionKind getKind() const { return FieldAssign; };
 
 protected:
-  virtual bool Equiv(const Transition &T) const {
+  virtual bool EquivalentTo(const Transition &T) const {
     return (T.getKind() == FieldAssign) &&
         (Assign == llvm::cast<FieldAssignTransition>(&T)->Assignment());
   }
 
 private:
   FieldAssignTransition(const State& From, const State& To,
-                        const FieldAssignment& A, bool Init, bool Cleanup);
+                        const FieldAssignment& A, bool Init, bool Cleanup,
+                        bool OutOfScope);
 
   static const char *OpString(FieldAssignment::AssignType);
 
@@ -349,7 +391,7 @@ public:
   virtual TransitionKind getKind() const { return SubAutomaton; };
 
 protected:
-  virtual bool Equiv(const Transition &T) const {
+  virtual bool EquivalentTo(const Transition &T) const {
     return (T.getKind() == SubAutomaton) &&
         (ID == llvm::cast<SubAutomatonTransition>(&T)->ID);
   }
@@ -357,7 +399,7 @@ protected:
 private:
   SubAutomatonTransition(const State& From, const State& To,
                          const Identifier& ID, bool Init, bool Cleanup)
-    : Transition(From, To, Init, Cleanup), ID(ID) {}
+    : Transition(From, To, Init, Cleanup, false), ID(ID) {}
 
   const Identifier& ID;
 
