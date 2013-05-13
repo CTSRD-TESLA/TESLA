@@ -49,9 +49,13 @@ bool tesla::debugging(StringRef Name) {
     return 0;
 #endif
 
-  std::string env(getenv("TESLA_DEBUG"));
-
   // If TESLA_DEBUG isn't set, we don't do any debug printing.
+  const char *rawEnv = getenv("TESLA_DEBUG");
+  if (rawEnv == NULL)
+    return false;
+
+  // Also don't print anything if TESLA_DEBUG is set to the empty string.
+  std::string env(rawEnv);
   if (env.empty())
     return false;
 
