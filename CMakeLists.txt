@@ -41,10 +41,6 @@ if (USE_LIBCXX)
   include_directories(${LIBCXX_INCLUDE_DIRS})
 endif ()
 
-# Set -D DEBUG on debug builds, in addition to the CMake default of setting
-# -D NDEBUG for release builds and assuming debug mode otherwise.
-set_directory_properties(PROPERTIES COMPILE_DEFINITIONS_DEBUG DEBUG)
-
 #
 # Set up some variables to control the testing framework:
 #
