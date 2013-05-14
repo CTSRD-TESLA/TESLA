@@ -214,9 +214,9 @@ string Transition::String() const {
   return (Twine()
     + "--("
     + ShortLabel()
+    + (Special.empty() ? "" : " " + Special)
     + ")-->("
     + Twine(To.ID())
-    + (Special.empty() ? "" : " " + Special)
     + ")"
   ).str();
 }
