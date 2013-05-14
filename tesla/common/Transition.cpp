@@ -143,7 +143,7 @@ void Transition::Append(const OwningPtr<Transition>& Tr,
 
   const Transition *T = Tr.get();
 
-  for (auto Set : Transitions)
+  for (auto& Set : Transitions)
     if ((*Set.begin())->EquivalentExpression(T)) {
       Set.insert(T);
       return;
