@@ -548,9 +548,9 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,
     | (T.RequiresCleanup()        ? TESLA_TRANS_CLEANUP   : 0);
 
   uint32_t Values[] = {
-    T.Source().ID(),
+    (uint32_t) T.Source().ID(),
     T.Source().Mask(),
-    T.Destination().ID(),
+    (uint32_t) T.Destination().ID(),
     Flags
   };
 
