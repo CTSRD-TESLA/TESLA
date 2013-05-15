@@ -45,6 +45,7 @@
 	} \
 } while(0)
 
+#define	DEBUG_NAME	"libtesla.state.update"
 #define PRINT(...) DEBUG(libtesla.state.update, __VA_ARGS__)
 
 int32_t
@@ -52,35 +53,29 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	const struct tesla_key *key, const char *name, const char *description,
 	const struct tesla_transitions *trans)
 {
-	if (debugging("libtesla.state.update")) {
-		PRINT("\n====\n%s()\n", __func__);
-		PRINT("  context:      %s\n",
-		            (tesla_context == TESLA_SCOPE_GLOBAL
-			     ? "global"
-			     : "per-thread"));
-		PRINT("  class:        %d ('%s')\n", class_id, name);
+	PRINT("\n====\n%s()\n", __func__);
+	PRINT("  context:      %s\n",
+	            (tesla_context == TESLA_SCOPE_GLOBAL
+		     ? "global"
+		     : "per-thread"));
+	PRINT("  class:        %d ('%s')\n", class_id, name);
 
-		PRINT("  transitions:  ");
-		print_transitions(trans);
-		PRINT("\n");
-		PRINT("  key:          ");
-		print_key(key);
-		PRINT("\n----\n");
-	}
+	PRINT("  transitions:  ");
+	print_transitions(DEBUG_NAME, trans);
+	PRINT("\n");
+	PRINT("  key:          ");
+	print_key(DEBUG_NAME, key);
+	PRINT("\n----\n");
 
 	struct tesla_store *store;
 	CHECK(tesla_store_get, tesla_context, TESLA_MAX_CLASSES,
 	    TESLA_MAX_INSTANCES, &store);
-	PRINT("store: 0x%tx", (intptr_t) store);
-	PRINT("\n----\n");
+	PRINT("store: 0x%tx\n", (intptr_t) store);
 
 	struct tesla_class *class;
 	CHECK(tesla_class_get, store, class_id, &class, name, description);
 
-	if (debugging("libtesla.state.update")) {
-		print_class(class);
-		PRINT("----\n");
-	}
+	print_class(class);
 
 	// Did we match any instances?
 	bool matched_something = false;
@@ -187,11 +182,8 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		}
 	}
 
-	if (debugging("libtesla.state.update")) {
-		PRINT("----\n");
-		print_class(class);
-		PRINT("\n====\n\n");
-	}
+	print_class(class);
+	PRINT("\n====\n\n");
 
 	if (!matched_something)
 		tesla_notify_match_fail(class, key, trans);

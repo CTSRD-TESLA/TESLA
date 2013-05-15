@@ -40,8 +40,11 @@
 #endif
 
 void
-print_transitions(const struct tesla_transitions *transp)
+print_transitions(const char *debug, const struct tesla_transitions *transp)
 {
+	if (!debugging(debug))
+		return;
+
 	char buffer[1024];
 	char *end = buffer + sizeof(buffer);
 
@@ -157,6 +160,11 @@ assert_instanceof(struct tesla_instance *instance, struct tesla_class *tclass)
 void
 print_class(const struct tesla_class *c)
 {
+	static const char *DEBUG_NAME = "libtesla.class.state";
+	if (!debugging(DEBUG_NAME))
+		return;
+
+	print("----\n");
 	print("struct tesla_class @ 0x%tx {\n", (intptr_t) c);
 	print("  name:         '%s',\n", c->tc_name);
 	print("  description:  '[...]',\n");   // TL;DR
@@ -182,15 +190,19 @@ print_class(const struct tesla_class *c)
 			continue;
 
 		print("    %2u: state %d, ", i, inst->ti_state);
-		print_key(&inst->ti_key);
+		print_key(DEBUG_NAME, &inst->ti_key);
 		print("\n");
 	}
 	print("}\n");
+	print("----\n");
 }
 
 void
-print_key(const struct tesla_key *key)
+print_key(const char *debug_name, const struct tesla_key *key)
 {
+	if (!debugging(debug_name))
+		return;
+
 	static const size_t LEN = 15 * TESLA_KEY_SIZE + 10;
 	char buffer[LEN];
 	char *end = buffer + LEN;

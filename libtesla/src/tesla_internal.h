@@ -344,13 +344,13 @@ void	assert_instanceof(struct tesla_instance *i, struct tesla_class *tclass);
 char*	key_string(char *buffer, const char *end, const struct tesla_key *);
 
 /** Print a @ref tesla_key to stderr. */
-void	print_key(const struct tesla_key *key);
+void	print_key(const char *debug_name, const struct tesla_key *key);
 
 /** Print a @ref tesla_class to stderr. */
 void	print_class(const struct tesla_class*);
 
 /** Print a human-readable version of @ref tesla_transitions. */
-void	print_transitions(const struct tesla_transitions *);
+void	print_transitions(const char *debug, const struct tesla_transitions *);
 
 /** Print a human-readable version of @ref tesla_transitions into a buffer. */
 char*	sprint_transitions(char *buffer, const char *end,
