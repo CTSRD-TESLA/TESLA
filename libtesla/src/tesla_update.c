@@ -53,6 +53,16 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	const struct tesla_key *key, const char *name, const char *description,
 	const struct tesla_transitions *trans)
 {
+	if (debugging(DEBUG_NAME)) {
+		/* We should never see with multiple <<init>> transitions. */
+		int init_count = 0;
+		for (uint32_t i = 0; i < trans->length; i++)
+			if (trans->transitions[i].flags & TESLA_TRANS_INIT)
+				init_count++;
+
+		assert(init_count < 2);
+	}
+
 	PRINT("\n====\n%s()\n", __func__);
 	PRINT("  context:      %s\n",
 	            (tesla_context == TESLA_SCOPE_GLOBAL
