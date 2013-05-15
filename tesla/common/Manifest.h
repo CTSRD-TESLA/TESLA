@@ -64,15 +64,14 @@ public:
   const AutomataMap& AllAutomata() const { return Descriptions; }
 
   //! Find the @ref Automaton named by an @ref Identifier.
-  const Automaton* FindAutomaton(const Identifier&,
-      Automaton::Type = Automaton::Deterministic) const;
+  const Automaton* FindAutomaton(const Identifier&) const;
 
   //! Find the @ref Automaton defined at a @ref Location.
-  const Automaton* FindAutomaton(const Location&,
-      Automaton::Type = Automaton::Deterministic) const;
+  const Automaton* FindAutomaton(const Location&) const;
 
   //! Load a @ref Manifest from a named file.
   static Manifest* load(llvm::raw_ostream& Err,
+                        Automaton::Type = Automaton::Deterministic,
                         llvm::StringRef Path = defaultLocation());
 
   /*!
@@ -83,25 +82,9 @@ public:
   static llvm::StringRef defaultLocation();
 
 private:
-  class AutomataVersions {
-  public:
-    AutomataVersions() : Unlinked(NULL), Linked(NULL), Deterministic(NULL) {}
-    AutomataVersions(NFA *U, NFA *L, DFA *D)
-      : Unlinked(U), Linked(L), Deterministic(D)
-    {
-      assert(U != NULL);
-      assert(L != NULL);
-      assert(D != NULL);
-    }
-
-    NFA *Unlinked;
-    NFA *Linked;
-    DFA *Deterministic;
-  };
-
   Manifest(llvm::OwningPtr<ManifestFile>& Protobuf,
            const AutomataMap& Descriptions,
-           const std::map<Identifier,AutomataVersions>& Automata,
+           const std::map<Identifier,const Automaton*>& Automata,
            llvm::ArrayRef<const Usage*> Roots)
     : Protobuf(Protobuf.take()), Descriptions(Descriptions), Automata(Automata),
       Roots(Roots)
@@ -119,7 +102,7 @@ private:
   AutomataMap Descriptions;
 
   //! The automata.
-  std::map<Identifier,AutomataVersions> Automata;
+  std::map<Identifier,const Automaton*> Automata;
 
   //! Root automata (those named explicitly by the programmer).
   llvm::ArrayRef<const Usage*> Roots;

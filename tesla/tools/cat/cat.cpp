@@ -65,7 +65,9 @@ main(int argc, char *argv[]) {
   ManifestFile Result;
 
   for (auto& Filename : InputFiles) {
-    OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs(), Filename));
+    OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs(),
+                                                Automaton::Unlinked,
+                                                Filename));
     if (!Manifest) {
       err << "Unable to read manifest '" << Filename << "'\n";
       return 1;

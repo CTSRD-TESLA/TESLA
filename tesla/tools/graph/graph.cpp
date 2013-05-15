@@ -76,7 +76,9 @@ main(int argc, char *argv[]) {
   raw_ostream& out = UseFile ? *outfile : llvm::outs();
   auto& err = llvm::errs();
 
-  OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs(), ManifestName));
+  OwningPtr<Manifest> Manifest(
+    Manifest::load(llvm::errs(), Determinism, ManifestName));
+
   if (!Manifest) {
     err << "Unable to read manifest '" << ManifestName << "'\n";
     return false;
@@ -84,7 +86,7 @@ main(int argc, char *argv[]) {
 
   for (auto i : Manifest->AllAutomata()) {
     Identifier ID = i.first;
-    auto *A = Manifest->FindAutomaton(ID, Determinism);
+    auto *A = Manifest->FindAutomaton(ID);
     assert(A);
 
     out << A->Dot() << "\n\n";

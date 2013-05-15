@@ -62,42 +62,29 @@ const string Manifest::SEP = "===\n";
 
 
 Manifest::~Manifest() {
-  for (auto i : Automata) {
-    delete i.second.Unlinked;
-    delete i.second.Linked;
-    delete i.second.Deterministic;
-  }
+  for (auto i : Automata)
+    delete i.second;
 }
 
-const Automaton* Manifest::FindAutomaton(const Identifier& ID,
-                                         Automaton::Type T) const {
-
+const Automaton* Manifest::FindAutomaton(const Identifier& ID) const {
   auto i = Automata.find(ID);
   if (i == Automata.end())
     report_fatal_error(
       "TESLA manifest does not contain assertion " + ShortName(ID));
 
-  auto& Versions = i->second;
-
-  switch (T) {
-  case Automaton::Unlinked:       return Versions.Unlinked;
-  case Automaton::Linked:         return Versions.Linked;
-  case Automaton::Deterministic:  return Versions.Deterministic;
-  }
+  return i->second;
 }
 
-const Automaton* Manifest::FindAutomaton(const Location& Loc,
-                                         Automaton::Type T) const {
-
+const Automaton* Manifest::FindAutomaton(const Location& Loc) const {
   Identifier ID;
   *ID.mutable_location() = Loc;
 
-  return FindAutomaton(ID, T);
+  return FindAutomaton(ID);
 }
 
 
 Manifest*
-Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
+Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
   llvm::SourceMgr SM;
   OwningPtr<MemoryBuffer> Buffer;
 
@@ -119,7 +106,7 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
   }
 
   AutomataMap Descriptions;
-  map<Identifier,AutomataVersions> Automata;
+  map<Identifier,const Automaton*> Automata;
 
   // Note the top-level automata that are explicitly named as roots.
   ArrayRef<const Usage*> Roots(Protobuf->root().data(), Protobuf->root_size());
@@ -135,21 +122,29 @@ Manifest::load(raw_ostream& ErrorStream, StringRef Path) {
     const Identifier& ID = i.first;
     const AutomatonDescription *Descrip = i.second;
 
-    OwningPtr<NFA> A(NFA::Parse(Descrip, Uses[ID], id++));
-    if (!A) {
-      for (auto i : Automata) {
-        auto& Versions = i.second;
-        delete Versions.Unlinked;
-        delete Versions.Linked;
-        delete Versions.Deterministic;
-      }
+    OwningPtr<NFA> N(NFA::Parse(Descrip, Uses[ID], id++));
+    if (!N) {
+      for (auto i : Automata) delete i.second;
       for (auto i : Descriptions) delete i.second;
       return NULL;
     }
 
-    NFA *Linked = A->Link(Descriptions);
-    DFA *Deterministic = DFA::Convert(Linked);
-    Automata[ID] = AutomataVersions(A.take(), Linked, Deterministic);
+    OwningPtr<Automaton> Result;
+
+    if (T == Automaton::Unlinked)
+      Result.reset(N.take());
+
+    else {
+      N.reset(N->Link(Descriptions));
+
+      if (T == Automaton::Linked)
+        Result.reset(N.take());
+
+      else
+        Result.reset(DFA::Convert(N.get()));
+    }
+
+    Automata[ID] = Result.take();
   }
 
   return new Manifest(Protobuf, Descriptions, Automata, Roots);

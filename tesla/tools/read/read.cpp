@@ -76,8 +76,8 @@ main(int argc, char *argv[]) {
 
   OwningPtr<Manifest> Manifest(
     ManifestName.empty()
-      ? Manifest::load(llvm::errs())
-      : Manifest::load(llvm::errs(), ManifestName));
+      ? Manifest::load(llvm::errs(), Determinism)
+      : Manifest::load(llvm::errs(), Determinism, ManifestName));
 
   if (!Manifest) {
     err << "Unable to read manifest '" << ManifestName << "'\n";
@@ -89,7 +89,7 @@ main(int argc, char *argv[]) {
     for (auto i : Manifest->AllAutomata()) {
       auto ID = i.first;
 
-      auto *A = Manifest->FindAutomaton(ID, Determinism);
+      auto *A = Manifest->FindAutomaton(ID);
       out << A->String() << "\n\n";
     }
     break;
