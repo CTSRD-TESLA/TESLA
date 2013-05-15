@@ -4,7 +4,7 @@
  * RUN: tesla analyse %s -o %t.tesla -- %cflags -D TESLA
  * RUN: clang -S -emit-llvm %cflags %s -o %t.ll
  * RUN: tesla instrument -S -tesla-manifest %t.tesla %t.ll -o %t.instr.ll
- * RUN: clang %cflags %ldflags %t.instr.ll -o %t
+ * RUN: clang %ldflags %t.instr.ll -o %t
  * RUN: %t > %t.out
  * RUN: FileCheck -input-file %t.out %s
  */
