@@ -37,6 +37,8 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 
+#include "Transition.h"
+
 #include "tesla.pb.h"
 #include <libtesla.h>
 
@@ -56,12 +58,13 @@ namespace tesla {
 class Automaton;
 class FieldAssignTransition;
 class FnTransition;
+class Transition;
 
 //! Instrumentation for a function event.
 class FnInstrumentation {
 public:
   void AppendInstrumentation(const Automaton&, const FunctionEvent&,
-                             llvm::ArrayRef<struct tesla_transition>);
+                             TEquivalenceClass&);
 
 protected:
   FnInstrumentation(llvm::Module& M, const llvm::Function *TargetFn,

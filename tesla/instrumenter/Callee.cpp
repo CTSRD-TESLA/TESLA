@@ -80,33 +80,9 @@ bool TeslaCalleeInstrumenter::runOnModule(Module &Mod) {
       if (!Target || Target->empty())
         continue;
 
-      auto *FnInstr = GetOrCreateInstr(Mod, Target, FnEvent.direction());
+      GetOrCreateInstr(Mod, Target, FnEvent.direction())
+        ->AppendInstrumentation(A, FnEvent, EquivClass);
 
-      vector<struct tesla_transition> Transitions;
-      for (auto *T : EquivClass) {
-        assert(Head->EquivalentExpression(T) && "not an equivalence class!");
-
-        bool Fork = T->Source().RequiresFork();
-        bool Init = T->RequiresInit();
-        bool Clean = T->RequiresCleanup();
-
-        int Flags =
-          (Fork ? TESLA_TRANS_FORK : 0)
-          | (Init ? TESLA_TRANS_INIT : 0)
-          | (Clean ? TESLA_TRANS_CLEANUP : 0)
-          ;
-
-        struct tesla_transition Trans = {
-          .flags  = Flags,
-          .mask   = T->Source().Mask(),
-          .from   = (uint32_t)T->Source().ID(),
-          .to     = (uint32_t)T->Destination().ID()
-        };
-
-        Transitions.push_back(Trans);
-      }
-
-      FnInstr->AppendInstrumentation(A, FnEvent, Transitions);
       ModifiedIR = true;
     }
   }

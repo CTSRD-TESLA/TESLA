@@ -55,8 +55,11 @@ class NowEvent;
 typedef llvm::ArrayRef<const Argument*> ReferenceVector;
 typedef llvm::MutableArrayRef<const Argument*> MutableReferenceVector;
 
-//! Sets of transitions whose TESLA events are equivalent (equivalence classes).
-typedef std::vector<llvm::SmallPtrSet<const Transition*,4> > TransitionSets;
+//! A set of TESLA transitions that are considered equivalent.
+typedef llvm::SmallPtrSet<const Transition*,4> TEquivalenceClass;
+
+//! Sets of transition equivalence classes.
+typedef std::vector<TEquivalenceClass> TransitionSets;
 
 typedef llvm::SmallVector<llvm::SmallVector<Transition*, 16>, 4> TransitionVectors;
 

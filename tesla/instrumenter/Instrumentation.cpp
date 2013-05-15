@@ -58,12 +58,10 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           FunctionEvent FnEventDescription);
 
 //! Construct a single @ref tesla_transition.
-Constant* ConstructTransition(IRBuilder<>&, Module&,
-                              const struct tesla_transition&);
+Constant* ConstructTransition(IRBuilder<>&, Module&, const Transition&);
 
 //! Construct a @ref tesla_transitions from several @ref tesla_transition.
-Constant* ConstructTransitions(IRBuilder<>&, Module&,
-                               ArrayRef<struct tesla_transition>);
+Constant* ConstructTransitions(IRBuilder<>&, Module&, TEquivalenceClass&);
 
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
@@ -75,8 +73,7 @@ BasicBlock *FindBlock(StringRef Name, Function& Fn) {
 }
 
 void FnInstrumentation::AppendInstrumentation(
-    const Automaton& A, const FunctionEvent& Ev,
-    ArrayRef<struct tesla_transition> Transitions) {
+    const Automaton& A, const FunctionEvent& Ev, TEquivalenceClass& Trans) {
 
   LLVMContext& Ctx = TargetFn->getContext();
 
@@ -124,7 +121,7 @@ void FnInstrumentation::AppendInstrumentation(
   Args.push_back(ConstructKey(Builder, M, InstrFn->getArgumentList(), Ev));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
   Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-  Args.push_back(ConstructTransitions(Builder, M, Transitions));
+  Args.push_back(ConstructTransitions(Builder, M, Trans));
 
   Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
   assert(Args.size() == UpdateStateFn->arg_size());
@@ -542,11 +539,21 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder,
   return ConstantStruct::get(TransitionType(M), Elements);
 }
 
-Constant* tesla::ConstructTransition(IRBuilder<>& Builder,
-                                     llvm::Module& M,
-                                     const struct tesla_transition& T) {
+Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,
+                                     const Transition& T) {
 
-  uint32_t Values[] = { T.from, T.mask, T.to, (uint32_t)T.flags };
+  uint32_t Flags =
+      (T.Source().RequiresFork()  ? TESLA_TRANS_FORK      : 0)
+    | (T.RequiresInit()           ? TESLA_TRANS_INIT      : 0)
+    | (T.RequiresCleanup()        ? TESLA_TRANS_CLEANUP   : 0);
+
+  uint32_t Values[] = {
+    T.Source().ID(),
+    T.Source().Mask(),
+    T.Destination().ID(),
+    Flags
+  };
+
   Type *IntType = Type::getInt32Ty(M.getContext());
 
   vector<Constant*> Elements;
@@ -557,11 +564,11 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder,
 }
 
 Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
-                                      ArrayRef<struct tesla_transition> Tr) {
+                                      TEquivalenceClass& Tr) {
 
   vector<Constant*> Transitions;
-  for (auto& T : Tr)
-    Transitions.push_back(ConstructTransition(Builder, M, T));
+  for (auto T : Tr)
+    Transitions.push_back(ConstructTransition(Builder, M, *T));
 
   return ConstructTransitions(Builder, M, Transitions);
 }
