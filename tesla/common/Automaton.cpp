@@ -694,7 +694,7 @@ class DFABuilder {
           // Find the other transitions from this state that are equivalent to this one.
           auto DTI = TI;
           for (++DTI ; DTI!=TE ; ++DTI) {
-            if ((*DTI)->IsEquivalent(*T)) {
+            if ((*DTI)->EquivalentTo(*T)) {
               assert(FinishedTransitions.count(*DTI) == 0);
               FinishedTransitions.insert(*DTI);
               collectFrontier(Destinations, &(*DTI)->Destination(), Start);
@@ -703,7 +703,7 @@ class DFABuilder {
           auto DSI = SI;
           for (++DSI ; DSI!=SE ; ++DSI)
             for (Transition *DT : *N->States[*DSI]) {
-            if (DT->IsEquivalent(*T)) {
+            if (DT->EquivalentTo(*T)) {
               assert(FinishedTransitions.count(DT) == 0);
               FinishedTransitions.insert(DT);
               collectFrontier(Destinations, &DT->Destination(), Start);

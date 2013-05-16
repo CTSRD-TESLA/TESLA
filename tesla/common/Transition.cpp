@@ -143,11 +143,13 @@ void Transition::Append(const OwningPtr<Transition>& Tr,
 
   const Transition *T = Tr.get();
 
-  for (auto& Set : Transitions)
-    if ((*Set.begin())->EquivalentExpression(T)) {
+  for (auto& Set : Transitions) {
+    auto *Head = *Set.begin();
+    if (T->EquivalentTo(*Head)) {
       Set.insert(T);
       return;
     }
+  }
 
   SmallPtrSet<const Transition*, 4> New;
   New.insert(T);

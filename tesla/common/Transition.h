@@ -107,6 +107,9 @@ public:
   const State& Source() const { return From; }
   const State& Destination() const { return To; }
 
+  /// Does this transition consume and produce the same symbols as another?
+  bool EquivalentTo(const Transition &T) const { return Equiv(T); }
+
   //! This transition triggers initialisation of its TESLA automata class.
   bool RequiresInit() const { return Init; }
 
@@ -116,13 +119,6 @@ public:
   //! Arguments referenced by this transition.
   virtual const ReferenceVector Arguments() const = 0;
 
-  /**
-   * Whether or not another @ref Transition's expression equivalent to mine.
-   *
-   * This is not the same as @ref #IsEquivalent(), which also takes 'from'
-   * and 'to' states into account.
-   */
-  virtual bool EquivalentExpression(const Transition*) const = 0;
 
   /**
    * The references known at the point this transition occurs.
@@ -148,9 +144,6 @@ public:
   //! Information for LLVM's RTTI (isa<>, cast<>, etc.).
   enum TransitionKind { Null, Now, Fn, FieldAssign, SubAutomaton };
   virtual TransitionKind getKind() const = 0;
-  /// Is this transition one that will be triggered with the same events, but
-  //with a different target node.
-  virtual bool IsEquivalent(const Transition &T) const = 0;
 
 protected:
   static void Register(llvm::OwningPtr<Transition>&, State& From, State& To,
@@ -162,6 +155,8 @@ protected:
     : From(From), To(To), Init(Init), Cleanup(Cleanup)
   {
   }
+
+  virtual bool Equiv(const Transition&) const = 0;
 
 
   const State& From;
@@ -192,7 +187,8 @@ public:
   }
   virtual TransitionKind getKind() const { return Null; };
 
-  virtual bool IsEquivalent(const Transition &T) const {
+protected:
+  virtual bool Equiv(const Transition &T) const {
     return T.getKind() == Null;
   }
 
@@ -226,7 +222,8 @@ public:
   }
   virtual TransitionKind getKind() const { return Now; };
 
-  virtual bool IsEquivalent(const Transition &T) const {
+protected:
+  virtual bool Equiv(const Transition &T) const {
     return T.getKind() == Now;
   }
 
@@ -267,7 +264,8 @@ public:
 
   virtual TransitionKind getKind() const { return Fn; };
 
-  virtual bool IsEquivalent(const Transition &T) const {
+protected:
+  virtual bool Equiv(const Transition &T) const {
     return (T.getKind() == Fn) &&
         (Ev == llvm::cast<FnTransition>(&T)->FnEvent());
   }
@@ -306,7 +304,8 @@ public:
 
   virtual TransitionKind getKind() const { return FieldAssign; };
 
-  virtual bool IsEquivalent(const Transition &T) const {
+protected:
+  virtual bool Equiv(const Transition &T) const {
     return (T.getKind() == FieldAssign) &&
         (Assign == llvm::cast<FieldAssignTransition>(&T)->Assignment());
   }
@@ -349,7 +348,8 @@ public:
 
   virtual TransitionKind getKind() const { return SubAutomaton; };
 
-  virtual bool IsEquivalent(const Transition &T) const {
+protected:
+  virtual bool Equiv(const Transition &T) const {
     return (T.getKind() == SubAutomaton) &&
         (ID == llvm::cast<SubAutomatonTransition>(&T)->ID);
   }
