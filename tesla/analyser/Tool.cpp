@@ -38,7 +38,6 @@
 #include "clang/Tooling/Tooling.h"
 
 #include "llvm/Support/PrettyStackTrace.h"
-#include "llvm/Support/Signals.h"
 
 #include <google/protobuf/text_format.h>
 
@@ -61,7 +60,6 @@ cl::list<string> SourcePaths(
 
 
 int main(int argc, const char **argv) {
-  sys::PrintStackTraceOnErrorSignal();
   llvm::PrettyStackTraceProgram X(argc, argv);
 
   // Add a preprocessor definition to indicate we're doing TESLA parsing.

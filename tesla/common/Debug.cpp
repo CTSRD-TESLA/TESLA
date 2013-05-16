@@ -68,3 +68,19 @@ bool tesla::debugging(StringRef Name) {
   // Use fnmatch()'s normal wildcard expansion.
   return (fnmatch(env.c_str(), Name.str().c_str(), 0) == 0);
 }
+
+#ifndef NDEBUG
+#include <llvm/Support/Signals.h>
+
+namespace {
+
+class StaticDebugInit {
+public:
+  StaticDebugInit() {
+    sys::PrintStackTraceOnErrorSignal();
+  }
+
+} DebugInit;
+
+}
+#endif
