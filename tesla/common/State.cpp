@@ -121,7 +121,7 @@ uint32_t State::Mask() const {
 
 string State::String() const {
   std::stringstream ss;
-  ss << "state " << id << " " << InstanceName(true) << ":";
+  ss << "state " << id << " " << InstanceName(Refs, true) << ":";
 
   for (const auto& I : Transitions) {
     const Transition& T = *I;
@@ -136,27 +136,10 @@ string State::Dot() const {
     Twine(ID())
     + " [ label = \""
     + "state " + Twine(ID())
-    + "\\n" + InstanceName(false) + "\""
+    + "\\n" + InstanceName(Refs, false) + "\""
     + (IsAcceptingState() ? ", shape = doublecircle" : "")
     + " ];"
   ).str();
-}
-
-string State::InstanceName(bool PlainAscii) const {
-  std::stringstream InstanceName;
-
-  InstanceName << "(";
-
-  for (auto i = Refs.begin(); i != Refs.end(); ) {
-    InstanceName << (PlainAscii ? ShortName(*i) : DotName(*i));
-
-    if (++i != Refs.end())
-      InstanceName << ",";
-  }
-
-  InstanceName << ")";
-
-  return InstanceName.str();
 }
 
 } // namespace tesla

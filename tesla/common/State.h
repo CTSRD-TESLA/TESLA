@@ -88,8 +88,6 @@ private:
   {
   }
 
-  std::string InstanceName(bool PlainAscii) const;
-
   const size_t id;
   const bool start;
   const bool accept;

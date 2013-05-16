@@ -34,6 +34,7 @@
 
 #include "Protocol.h"
 
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
 
 #include <string>
@@ -43,6 +44,8 @@ namespace tesla {
 class Argument;
 class Identifier;
 class Location;
+
+typedef llvm::ArrayRef<const Argument*> ReferenceVector;
 
 const std::string LLVM_PTR_ANNOTATION = "llvm.ptr.annotation";
 
@@ -114,6 +117,9 @@ std::string ShortName(const Identifier&);
 
 //! Convert an @ref Location into a short, human-readable name.
 std::string ShortName(const Location&);
+
+//! Convert the name of an automata instance.
+std::string InstanceName(const ReferenceVector&, bool PlainAscii);
 
 } /* namespace tesla */
 

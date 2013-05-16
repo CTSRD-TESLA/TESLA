@@ -35,6 +35,7 @@
 #include "llvm/ADT/Twine.h"
 
 #include <string>
+#include <sstream>
 
 using llvm::Twine;
 
@@ -121,3 +122,20 @@ std::string tesla::ShortName(const Location& Loc) {
   ).str();
 }
 
+std::string tesla::InstanceName(const ReferenceVector& Refs, bool PlainAscii) {
+
+  std::stringstream InstanceName;
+
+  InstanceName << "(";
+
+  for (auto i = Refs.begin(); i != Refs.end(); ) {
+    InstanceName << (PlainAscii ? ShortName(*i) : DotName(*i));
+
+    if (++i != Refs.end())
+      InstanceName << ",";
+  }
+
+  InstanceName << ")";
+
+  return InstanceName.str();
+}
