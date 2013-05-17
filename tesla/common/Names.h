@@ -124,4 +124,3 @@ std::string InstanceName(const ReferenceVector&, bool PlainAscii);
 } /* namespace tesla */
 
 #endif
-
