@@ -34,8 +34,12 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
-	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
+	 * CHECK: context:      per-thread
+	 * CHECK: class:        0 ('[[NAME:.*]]')
+	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]] <init>) ]
 	 * CHECK: key:          0x0 [ X X X X ]
+	 * CHECK: ----
+	 * CHECK: new [[AUTOMATON_ID:[0-9]]]: [[INIT]]
 	 * CHECK: ====
 	 */
 
@@ -53,8 +57,10 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
-	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: ([[INIT]]:0x0 -> [[FOO:[0-9]+]])
 	 * CHECK: key:          0x7 [ 4 [[IP:[0-9a-f]+]] [[SP:[0-9a-f]+]] X ]
+	 * CHECK: ----
+	 * CHECK: clone [[AUTOMATON_ID]]:[[INIT]] -> [[CLONE:[0-9]+]]
 	 * CHECK: ====
 	 */
 
@@ -65,8 +71,11 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
-	 * CHECK: transitions:  [ (2:0x7 -> 3) ]
+	 * CHECK: ([[FOO]]:0x7 -> [[NOW:[0-9]+]])
 	 * CHECK: key:          0x7 [ 4 [[IP]] [[SP]] X ]
+	 * CHECK: ----
+	 * TODO: make a clone output the new automaton's ID
+	 * CHECK: update {{[0-9]+}}: [[FOO]]->[[NOW]]
 	 * CHECK: ====
 	 */
 	TESLA_WITHIN(main, previously(foo(i, ip, sp) == 0));
@@ -76,8 +85,13 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
-	 * CHECK: transitions:  [ (3:0x7 -> 4 <clean>) ]
+	 * CHECK: transitions:  [ ([[NOW]]:0x7 -> [[FINAL:[0-9]+]] <clean>) ]
 	 * CHECK: key:          0x0 [ X X X X ]
+	 * CHECK: ----
+	 * TODO: look for 'update'; currently we do 'clone'!
+	 * CHECKx: update {{[0-9]+}}: [[NOW]]->[[FINAL]]
+	 * CHECK: pass '[[NAME]]': 1
+	 * CHECK: tesla_class_reset
 	 * CHECK: ====
 	 */
 
