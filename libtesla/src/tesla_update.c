@@ -144,7 +144,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			// If the keys just match (and we haven't been explictly
 			// instructed to fork), just update the state.
 			if (!(t->flags & TESLA_TRANS_FORK)
-			    && key->tk_mask == k->tk_mask) {
+			    && SUBSET(key->tk_mask, k->tk_mask)) {
 				tesla_notify_transition(class, inst, trans, j);
 
 				inst->ti_state = t->to;

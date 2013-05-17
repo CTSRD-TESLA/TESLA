@@ -88,9 +88,8 @@ main(int argc, char *argv[])
 	 * CHECK: transitions:  [ ([[NOW]]:0x7 -> [[FINAL:[0-9]+]] <clean>) ]
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ----
-	 * TODO: look for 'update'; currently we do 'clone'!
-	 * CHECK: clone [[CLONE]]:[[NOW]] -> [[NEWCLONE:[0-9]+]]:[[FINAL]]
-	 * CHECK: pass '[[NAME]]': [[NEWCLONE]]
+	 * CHECK: update [[CLONE]]: [[NOW]]->[[FINAL]]
+	 * CHECK: pass '[[NAME]]': [[CLONE]]
 	 * CHECK: tesla_class_reset
 	 * CHECK: ====
 	 */
