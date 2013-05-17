@@ -62,14 +62,15 @@ tesla_notify_new_instance(struct tesla_class *tcp,
 }
 
 void
-tesla_notify_clone(struct tesla_class *tcp, struct tesla_instance *tip,
+tesla_notify_clone(struct tesla_class *tcp,
+    struct tesla_instance *old_instance, struct tesla_instance *new_instance,
     const struct tesla_transitions *transp, uint32_t index)
 {
 
 	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		/* XXXRW: more fine-grained DTrace probes? */
-		tesla_state_transition_dtrace(tcp, tip, transp, index);
+		tesla_state_transition_dtrace(tcp, new_instance, transp, index);
 		return;
 
 	default: {
@@ -77,11 +78,12 @@ tesla_notify_clone(struct tesla_class *tcp, struct tesla_instance *tip,
 		assert(index < transp->length);
 		const struct tesla_transition *t = transp->transitions + index;
 
-		DEBUG(libtesla.instance.clone, "clone  %td:%tx -> %tx\n",
-			tip - tcp->tc_instances, tip->ti_state, t->to);
+		DEBUG(libtesla.instance.clone, "clone  %td:%tx -> %td:%tx\n",
+			old_instance - tcp->tc_instances, t->from,
+			new_instance - tcp->tc_instances, t->to);
 
 		if (t->flags & TESLA_TRANS_CLEANUP)
-			tesla_notify_pass(tcp, tip);
+			tesla_notify_pass(tcp, new_instance);
 
 		break;
 	}

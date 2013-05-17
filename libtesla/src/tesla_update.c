@@ -91,8 +91,12 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	bool matched_something = false;
 
 	// Make space for cloning existing instances.
-	tesla_instance clones[class->tc_free];
 	size_t cloned = 0;
+	struct clone_info {
+		tesla_instance *old;
+		tesla_instance new;
+		size_t transition_index;
+	} clones[class->tc_free];
 
 	// Update existing instances, forking/specialising if necessary.
 	for (uint32_t i = 0; i < class->tc_limit; i++) {
@@ -149,13 +153,14 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 			// If the keys weren't an exact match, we need to fork
 			// a new (more specific) automaton instance.
-			tesla_notify_clone(class, inst, trans, j);
+			struct clone_info *clone = clones + cloned++;
+			clone->old = inst;
+			clone->new = *inst;
+			clone->new.ti_state = t->to;
 
-			struct tesla_instance *clone = clones + cloned++;
-			*clone = *inst;
-			clone->ti_state = t->to;
+			CHECK(tesla_key_union, &clone->new.ti_key, key);
 
-			CHECK(tesla_key_union, &clone->ti_key, key);
+			clone->transition_index = j;
 			break;
 		}
 
@@ -166,12 +171,14 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			tesla_notify_assert_fail(class, inst, trans);
 	}
 
-	// Move any clones into the instance.
+	// Move any clones into the class.
 	for (size_t i = 0; i < cloned; i++) {
-		struct tesla_instance *clone = clones + i;
+		struct clone_info *c = clones + i;
 		struct tesla_instance *copied_in_place;
 
-		CHECK(tesla_clone, class, clone, &copied_in_place);
+		CHECK(tesla_clone, class, &c->new, &copied_in_place);
+		tesla_notify_clone(class, c->old, copied_in_place, trans,
+			c->transition_index);
 	}
 
 

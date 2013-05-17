@@ -260,7 +260,8 @@ void	tesla_notify_transition(struct tesla_class *, struct tesla_instance *,
     const struct tesla_transitions *, uint32_t index);
 
 /** An exisiting @ref tesla_instance has been cloned because of an event. */
-void	tesla_notify_clone(struct tesla_class *, struct tesla_instance *,
+void	tesla_notify_clone(struct tesla_class *,
+    struct tesla_instance *old_instance, struct tesla_instance *new_instance,
     const struct tesla_transitions *, uint32_t index);
 
 /** A @ref tesla_instance was unable to take any of a set of transitions. */

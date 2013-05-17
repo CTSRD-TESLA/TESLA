@@ -60,7 +60,7 @@ main(int argc, char *argv[])
 	 * CHECK: ([[INIT]]:0x0 -> [[FOO:[0-9]+]])
 	 * CHECK: key:          0x7 [ 4 [[IP:[0-9a-f]+]] [[SP:[0-9a-f]+]] X ]
 	 * CHECK: ----
-	 * CHECK: clone [[AUTOMATON_ID]]:[[INIT]] -> [[CLONE:[0-9]+]]
+	 * CHECK: clone [[AUTOMATON_ID]]:[[INIT]] -> [[CLONE:[0-9]+]]:[[FOO]]
 	 * CHECK: ====
 	 */
 
@@ -89,8 +89,8 @@ main(int argc, char *argv[])
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ----
 	 * TODO: look for 'update'; currently we do 'clone'!
-	 * CHECKx: update {{[0-9]+}}: [[NOW]]->[[FINAL]]
-	 * CHECK: pass '[[NAME]]': 1
+	 * CHECK: clone [[CLONE]]:[[NOW]] -> [[NEWCLONE:[0-9]+]]:[[FINAL]]
+	 * CHECK: pass '[[NAME]]': [[NEWCLONE]]
 	 * CHECK: tesla_class_reset
 	 * CHECK: ====
 	 */

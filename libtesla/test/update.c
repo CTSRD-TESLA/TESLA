@@ -114,7 +114,7 @@ main(int argc, char **argv)
 	 * CHECK: ----
 	 * CHECK: 1/{{[0-9]+}} instances
 	 * CHECK: ----
-	 * CHECK: clone  0:1 -> 2
+	 * CHECK: clone  0:1 -> 1:2
 	 * CHECK: ----
 	 * CHECK: 2/{{[0-9]+}} instances
 	 * CHECK: ====
@@ -143,7 +143,7 @@ main(int argc, char **argv)
 	 * CHECK: ----
 	 * CHECK: 2/{{[0-9]+}} instances
 	 * CHECK: ----
-	 * CHECK: clone  1:2 -> 3
+	 * CHECK: clone  1:2 -> 2:3
 	 * CHECK: ----
 	 * CHECK: 3/{{[0-9]+}} instances
 	 * CHECK: ====
@@ -200,7 +200,7 @@ main(int argc, char **argv)
 	 * CHECK: ----
 	 * CHECK: 3/{{[0-9]+}} instances
 	 * CHECK: ----
-	 * CHECK: clone  0:1 -> 5
+	 * CHECK: clone  0:1 -> 3:5
 	 * CHECK: ----
 	 * CHECK: 4/{{[0-9]+}} instances
 	 * CHECK: ====
@@ -229,7 +229,7 @@ main(int argc, char **argv)
 	 * CHECK: ----
 	 * CHECK: 4/{{[0-9]+}} instances
 	 * CHECK: ----
-	 * CHECK: clone  3:5 -> 6
+	 * CHECK: clone  3:5 -> 4:6
 	 * CHECK: ----
 	 * CHECK: 5/{{[0-9]+}} instances
 	 * CHECK: ====
@@ -258,7 +258,7 @@ main(int argc, char **argv)
 	 * CHECK: ----
 	 * CHECK: 5/{{[0-9]+}} instances
 	 * CHECK: ----
-	 * CHECK: clone  0:1 -> 7
+	 * CHECK: clone  0:1 -> 5:7
 	 * CHECK: ----
 	 * CHECK: 6/{{[0-9]+}} instances
 	 * CHECK: ====
