@@ -5,7 +5,7 @@
  * RUN: clang -S -emit-llvm %cflags %s -o %t.ll
  * RUN: tesla instrument -tesla-manifest %t.tesla %t.ll -o %t.instr.ll
  * RUN: clang %ldflags %t.instr.ll -o %t
- * RUN: %t > %t.out
+ * RUN: %t | tee %t.out
  * RUN: FileCheck -input-file %t.out %s
  */
 
