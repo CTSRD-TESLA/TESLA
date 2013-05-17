@@ -73,7 +73,6 @@ tesla_notify_clone(struct tesla_class *tcp, struct tesla_instance *tip,
 		return;
 
 	default: {
-		/* for the PRINTF action, should this be a non-verbose print? */
 		assert(index >= 0);
 		assert(index < transp->length);
 		const struct tesla_transition *t = transp->transitions + index;
@@ -101,7 +100,6 @@ tesla_notify_transition(struct tesla_class *tcp,
 		return;
 
 	default: {
-		/* for the PRINTF action, should this be a non-verbose print? */
 		assert(index >= 0);
 		assert(index < transp->length);
 		const struct tesla_transition *t = transp->transitions + index;
