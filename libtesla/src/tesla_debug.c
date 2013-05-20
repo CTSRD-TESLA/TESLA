@@ -71,9 +71,6 @@ sprint_transitions(char *buffer, const char *end,
 		SAFE_SPRINTF(c, end, "0x%tx", t->mask);
 		SAFE_SPRINTF(c, end, " -> %d", t->to);
 
-		if (t->flags & TESLA_TRANS_FORK)
-			SAFE_SPRINTF(c, end, " <fork>");
-
 		if (t->flags & TESLA_TRANS_INIT)
 			SAFE_SPRINTF(c, end, " <init>");
 

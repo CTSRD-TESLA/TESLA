@@ -69,7 +69,6 @@ struct tesla_transition {
 	int		flags;
 };
 
-#define	TESLA_TRANS_FORK	0x01	/* Always fork on this transition. */
 #define	TESLA_TRANS_INIT	0x02	/* May need to initialise the class. */
 #define	TESLA_TRANS_CLEANUP	0x04	/* Clean up the class now. */
 

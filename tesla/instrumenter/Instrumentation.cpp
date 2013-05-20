@@ -543,8 +543,7 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,
                                      const Transition& T) {
 
   uint32_t Flags =
-      (T.Source().RequiresFork()  ? TESLA_TRANS_FORK      : 0)
-    | (T.RequiresInit()           ? TESLA_TRANS_INIT      : 0)
+      (T.RequiresInit()           ? TESLA_TRANS_INIT      : 0)
     | (T.RequiresCleanup()        ? TESLA_TRANS_CLEANUP   : 0);
 
   uint32_t Values[] = {

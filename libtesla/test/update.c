@@ -275,7 +275,7 @@ main(int argc, char **argv)
 	t[0].from = 0;
 	t[0].mask = 0x0;
 	t[0].to = 100;
-	t[0].flags = TESLA_TRANS_FORK;
+	t[0].flags = 0;
 	t[1].from = 1;
 	t[1].mask = 0x0;
 	t[1].to = 8;
@@ -289,7 +289,7 @@ main(int argc, char **argv)
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   (0:0x0 -> 100 <fork>) (1:0x0 -> 8) (8:0x0 -> 8)
+	 * CHECK:   (0:0x0 -> 100) (1:0x0 -> 8) (8:0x0 -> 8)
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
