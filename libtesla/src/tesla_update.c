@@ -50,7 +50,8 @@
 
 int32_t
 tesla_update_state(uint32_t tesla_context, uint32_t class_id,
-	const struct tesla_key *key, const char *name, const char *description,
+	const struct tesla_key *pattern,
+	const char *name, const char *description,
 	const struct tesla_transitions *trans)
 {
 	if (debugging(DEBUG_NAME)) {
@@ -74,7 +75,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	print_transitions(DEBUG_NAME, trans);
 	PRINT("\n");
 	PRINT("  key:          ");
-	print_key(DEBUG_NAME, key);
+	print_key(DEBUG_NAME, pattern);
 	PRINT("\n----\n");
 
 	struct tesla_store *store;
@@ -115,25 +116,25 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 		for (uint32_t j = 0; j < trans->length; j++) {
 			tesla_transition *t = trans->transitions + j;
-			const tesla_key *k = &inst->ti_key;
+			const tesla_key *inst_key = &inst->ti_key;
 
 			// Check whether or not the instance matches the
 			// provided key, masked by what the transition says to
 			// expect from its 'previous' state.
-			tesla_key masked = *key;
+			tesla_key masked = *pattern;
 			masked.tk_mask &= t->mask;
 
-			if (!tesla_key_matches(&masked, k))
+			if (!tesla_key_matches(&masked, inst_key))
 				continue;
 
-			if (k->tk_mask != t->mask)
+			if (inst_key->tk_mask != t->mask)
 				continue;
 
 			if (inst->ti_state != t->from) {
 				// If the instance matches everything but the
 				// state, so there had better be a transition
 				// somewhere in 'trans' that can be taken!
-				if (k->tk_mask == masked.tk_mask)
+				if (inst_key->tk_mask == masked.tk_mask)
 					transition_required = true;
 
 				continue;
@@ -148,7 +149,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 				cleanup_required = true;
 
 			// If the keys just match, just update the state.
-			if (SUBSET(key->tk_mask, k->tk_mask)) {
+			if (SUBSET(pattern->tk_mask, inst_key->tk_mask)) {
 				tesla_notify_transition(class, inst, trans, j);
 
 				inst->ti_state = t->to;
@@ -162,7 +163,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			clone->new = *inst;
 			clone->new.ti_state = t->to;
 
-			CHECK(tesla_key_union, &clone->new.ti_key, key);
+			CHECK(tesla_key_union, &clone->new.ti_key, pattern);
 
 			clone->transition_index = j;
 			break;
@@ -188,7 +189,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		const tesla_transition *t = trans->transitions + i;
 		if (t->flags & TESLA_TRANS_INIT) {
 			struct tesla_instance *inst;
-			CHECK(tesla_instance_new, class, key, t->to, &inst);
+			CHECK(tesla_instance_new, class, pattern, t->to, &inst);
 			assert(tesla_instance_active(inst));
 
 			matched_something = true;
@@ -204,7 +205,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	PRINT("\n====\n\n");
 
 	if (!matched_something)
-		tesla_notify_match_fail(class, key, trans);
+		tesla_notify_match_fail(class, pattern, trans);
 
 	tesla_class_put(class);
 
