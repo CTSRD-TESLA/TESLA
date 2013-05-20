@@ -41,6 +41,43 @@
 #endif
 
 void
+print_transition(const char *debug, const struct tesla_transition *t)
+{
+	if (!debugging(debug))
+		return;
+
+	char buffer[1024];
+	char *end = buffer + sizeof(buffer);
+
+	sprint_transition(buffer, end, t);
+	print("%s", buffer);
+}
+
+char*
+sprint_transition(char *buf, const char *end, const struct tesla_transition *t)
+{
+	char *c = buf;
+
+	/* Note: On at least one Mac, combining the following
+	 *       into a single snprintf() causes the wrong thing
+	 *       to be printed (instead of t->mask, we get an address!).
+	 */
+	SAFE_SPRINTF(c, end, "(%d:", t->from);
+	SAFE_SPRINTF(c, end, "0x%tx", t->mask);
+	SAFE_SPRINTF(c, end, " -> %d", t->to);
+
+	if (t->flags & TESLA_TRANS_INIT)
+		SAFE_SPRINTF(c, end, " <init>");
+
+	if (t->flags & TESLA_TRANS_CLEANUP)
+		SAFE_SPRINTF(c, end, " <clean>");
+
+	SAFE_SPRINTF(c, end, ") ");
+
+	return c;
+}
+
+void
 print_transitions(const char *debug, const struct tesla_transitions *transp)
 {
 	if (!debugging(debug))
@@ -61,25 +98,8 @@ sprint_transitions(char *buffer, const char *end,
 
 	SAFE_SPRINTF(c, end, "[ ");
 
-	for (size_t i = 0; i < tp->length; i++) {
-		const tesla_transition *t = tp->transitions + i;
-
-		/* Note: On at least one Mac, combining the following
-		 *       into a single snprintf() causes the wrong thing
-		 *       to be printed (instead of t->mask, we get an address!).
-		 */
-		SAFE_SPRINTF(c, end, "(%d:", t->from);
-		SAFE_SPRINTF(c, end, "0x%tx", t->mask);
-		SAFE_SPRINTF(c, end, " -> %d", t->to);
-
-		if (t->flags & TESLA_TRANS_INIT)
-			SAFE_SPRINTF(c, end, " <init>");
-
-		if (t->flags & TESLA_TRANS_CLEANUP)
-			SAFE_SPRINTF(c, end, " <clean>");
-
-		SAFE_SPRINTF(c, end, ") ");
-	}
+	for (size_t i = 0; i < tp->length; i++)
+		c = sprint_transition(c, end, tp->transitions + i);
 
 	SAFE_SPRINTF(c, end, "]");
 

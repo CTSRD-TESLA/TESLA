@@ -350,6 +350,13 @@ void	print_key(const char *debug_name, const struct tesla_key *key);
 /** Print a @ref tesla_class to stderr. */
 void	print_class(const struct tesla_class*);
 
+/** Print a human-readable version of a @ref tesla_transition. */
+void	print_transition(const char *debug, const struct tesla_transition *);
+
+/** Print a human-readable version of a @ref tesla_transition into a buffer. */
+char*	sprint_transition(char *buffer, const char *end,
+    const struct tesla_transition *);
+
 /** Print a human-readable version of @ref tesla_transitions. */
 void	print_transitions(const char *debug, const struct tesla_transitions *);
 
