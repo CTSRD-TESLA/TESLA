@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
-	 * CHECK: transitions:  [ ([[NOW]]:0x7 -> [[FINAL:[0-9]+]] <clean>) ]
+	 * CHECK: transitions: {{.* }}([[NOW]]:0x7 -> [[FINAL:[0-9]+]] <clean>)
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ----
 	 * CHECK: update [[CLONE]]: [[NOW]]->[[FINAL]]

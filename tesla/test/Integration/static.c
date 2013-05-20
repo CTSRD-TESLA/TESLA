@@ -23,7 +23,7 @@ main(int argc, char *argv[])
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
 	 * CHECK: per-thread
-	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
+	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]] <init>) ]
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ====
 	 */
@@ -35,7 +35,7 @@ main(int argc, char *argv[])
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
 	 * CHECK: per-thread
-	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: transitions:  {{.*}} ([[INIT]]:0x0 -> [[FOO:[0-9]+]])
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ====
 	 */
@@ -47,7 +47,7 @@ main(int argc, char *argv[])
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
 	 * CHECK: per-thread
-	 * CHECK: transitions:  [ (2:0x0 -> 3) ]
+	 * CHECK: transitions:  {{.*}} ([[FOO]]:0x0 -> [[NOW:[0-9]+]])
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ====
 	 */
@@ -65,7 +65,7 @@ main(int argc, char *argv[])
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
 	 * CHECK: per-thread
-	 * CHECK: transitions:  [ (3:0x0 -> 4) ]
+	 * CHECK: transitions:  {{.*}} ([[NOW]]:0x0 -> [[FINAL:[0-9]+]])
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: pass '{{.*}}': {{[0-9]+}}
 	 * CHECK: ====

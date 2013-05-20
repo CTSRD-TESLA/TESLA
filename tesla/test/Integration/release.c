@@ -53,7 +53,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
+	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]] <init>) ]
 	 * CHECK: ====
 	 */
 
@@ -67,7 +67,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: transitions: {{.*}} ([[INIT]]:0x0 -> [[OP:[0-9]+]])
 	 * CHECK: ====
 	 */
 	perform_operation(op, o);
@@ -75,7 +75,7 @@ example_syscall(struct credential *cred, int index, int op)
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: (2:0x1 -> 3)
+	 * CHECK: transitions: {{.*}} ([[OP]]:0x1 -> [[REL:[0-9]+]])
 	 * CHECK: ====
 	 */
 	release(o);
@@ -84,7 +84,8 @@ example_syscall(struct credential *cred, int index, int op)
 	 * Finally, leaving example_syscall() finalises the automaton:
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: (3:0x1 -> 4 <clean>)
+	 * CHECK: transitions: {{.*}} ([[REL]]:0x1 -> [[FINAL:[0-9]+]] <clean>)
+	 * CHECK: update {{[0-9]}}: [[REL]]->[[FINAL]]
 	 * CHECK: pass '{{.*}}': {{[0-9]+}}
 	 * CHECK: tesla_class_reset
 	 * CHECK: ====

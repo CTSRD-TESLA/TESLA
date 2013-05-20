@@ -52,12 +52,20 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
+	 * CHECK: class:        0 ('[[CLASS0:.*]]')
+	 * CHECK: transitions:  [ (0:0x0 -> [[INIT0:[0-9]+]] <init>) ]
+	 * CHECK: ----
+	 * CHECK: new [[ID0:[0-9]+]]
+	 * CHECK: ----
 	 * CHECK: ====
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1 <init>) ]
+	 * CHECK: class:        1 ('[[CLASS1:.*]]')
+	 * CHECK: transitions:  [ (0:0x0 -> [[INIT1:[0-9]+]] <init>) ]
+	 * CHECK: ----
+	 * CHECK: new [[ID1:[0-9]+]]
+	 * CHECK: ----
 	 * CHECK: ====
 	 */
 
@@ -68,12 +76,20 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: class:        0 ('[[CLASS0]]')
+	 * CHECK: transitions:  {{.*}} ([[INIT0]]:0x0 -> [[OBJ0:[0-9]+]])
+	 * CHECK: ----
+	 * CHECK: clone [[ID0]]:[[INIT0]] -> [[ID00:[0-9]+]]:[[OBJ0]]
+	 * CHECK: ----
 	 * CHECK: ====
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: class:        1 ('[[CLASS1]]')
+	 * CHECK: transitions:  {{.*}} ([[INIT1]]:0x0 -> [[OBJ1:[0-9]+]])
+	 * CHECK: ----
+	 * CHECK: clone [[ID1]]:[[INIT1]] -> [[ID10:[0-9]+]]:[[OBJ1]]
+	 * CHECK: ----
 	 * CHECK: ====
 	 */
 	int error = get_object(index, &o);
@@ -83,12 +99,20 @@ example_syscall(struct credential *cred, int index, int op)
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: class:        0 ('[[CLASS0]]')
+	 * CHECK: transitions:  {{.*}} ([[INIT0]]:0x0 -> [[OBJ0]])
+	 * CHECK: ----
+	 * CHECK: clone [[ID0]]:[[INIT0]] -> [[ID01:[0-9]+]]:[[OBJ0]]
+	 * CHECK: ----
 	 * CHECK: ====
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (1:0x0 -> 2) ]
+	 * CHECK: class:        1 ('[[CLASS1]]')
+	 * CHECK: transitions:  {{.*}} ([[INIT1]]:0x0 -> [[OBJ1]])
+	 * CHECK: ----
+	 * CHECK: clone [[ID1]]:[[INIT1]] -> [[ID11:[0-9]+]]:[[OBJ1]]
+	 * CHECK: ----
 	 * CHECK: ====
 	 */
 	error = get_object(index + 1, &o);
@@ -100,12 +124,22 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (2:0x1 -> 3) ]
+	 * CHECK: class:        0 ('[[CLASS0]]')
+	 * CHECK: transitions:  {{.*}} ([[OBJ0]]:0x1 -> [[OP0:[0-9]+]]) ]
+	 * CHECK: ----
+	 * CHECK-NOT: update [[ID00]]: [[OBJ0]]->[[OP0]]
+	 * CHECK:     update [[ID01]]: [[OBJ0]]->[[OP0]]
+	 * CHECK: ----
 	 * CHECK: ====
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (2:0x1 -> 3) ]
+	 * CHECK: class:        1 ('[[CLASS1]]')
+	 * CHECK: transitions:  {{.*}} ([[OBJ1]]:0x1 -> [[OP1:[0-9]+]]) ]
+	 * CHECK: ----
+	 * CHECK-NOT: update [[ID10]]: [[OBJ1]]->[[OP1]]
+	 * CHECK:     update [[ID11]]: [[OBJ1]]->[[OP1]]
+	 * CHECK: ----
 	 * CHECK: ====
 	 */
 	return perform_operation(op, o);
@@ -115,9 +149,32 @@ example_syscall(struct credential *cred, int index, int op)
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (3:0x1 -> 4 <clean>) ]
-	 * CHECK: pass '{{.*}}': {{[0-9]+}}
+	 * CHECK: class:        0 ('[[CLASS0]]')
+	 * CHECK: transitions:  {{.*}} ([[OP0]]:0x1 -> [[FIN0:[0-9]+]] <clean>)
+	 * CHECK: ----
+	 * CHECK: ----
+	 * CHECK: ----
+	 * CHECK-NOT: fail
+	 * CHECK: pass '[[CLASS0]]': [[ID01]]
+	 * CHECK-NOT: fail
 	 * CHECK: tesla_class_reset
+	 * CHECK: ----
+	 * CHECK: ----
+	 * CHECK: ====
+	 *
+	 * CHECK: ====
+	 * CHECK: tesla_update_state
+	 * CHECK: class:        1 ('[[CLASS1]]')
+	 * CHECK: transitions:  {{.*}} ([[OP1]]:0x1 -> [[FIN1:[0-9]+]] <clean>)
+	 * CHECK: ----
+	 * CHECK: ----
+	 * CHECK: ----
+	 * CHECK-NOT: fail
+	 * CHECK: pass '[[CLASS1]]': [[ID11]]
+	 * CHECK-NOT: fail
+	 * CHECK: tesla_class_reset
+	 * CHECK: ----
+	 * CHECK: ----
 	 * CHECK: ====
 	 */
 }
