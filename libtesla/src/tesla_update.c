@@ -168,10 +168,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			break;
 		}
 
-		if (transition_taken)
-			break;
-
-		if (transition_required)
+		if (transition_required && !transition_taken)
 			tesla_notify_assert_fail(class, inst, trans);
 	}
 
