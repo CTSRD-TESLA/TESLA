@@ -13,7 +13,7 @@
  *
  * Commands for llvm-lit:
  * RUN: clang %cflags %ldflags %s -o %t
- * RUN: %t > %t.out
+ * RUN: %t | tee %t.out
  * RUN: FileCheck --input-file=%t.out %s
  */
 
