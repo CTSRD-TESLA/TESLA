@@ -10,12 +10,11 @@
  */
 
 #include "tesla_internal.h"
+#include "test_helpers.h"
 
 #include <assert.h>
 #include <err.h>
 #include <stdio.h>
-
-#include "helpers.h"
 
 
 /** Some automata instances to look up (of more than one class). */

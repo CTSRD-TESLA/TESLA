@@ -11,7 +11,7 @@
 #include <err.h>
 #include <stdio.h>
 
-#include "helpers.h"
+#include "test_helpers.h"
 
 #define CREATE_AUTOMATA_INSTANCE(class, instance, key0, key1, key2) { \
 	struct tesla_key key; \

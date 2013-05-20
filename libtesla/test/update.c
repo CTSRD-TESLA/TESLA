@@ -18,12 +18,11 @@
  */
 
 #include "tesla_internal.h"
+#include "test_helpers.h"
 
 #include <assert.h>
 #include <err.h>
 #include <stdio.h>
-
-#include "helpers.h"
 
 int	count(struct tesla_store*, const struct tesla_key*);
 

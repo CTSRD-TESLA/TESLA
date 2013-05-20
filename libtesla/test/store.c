@@ -8,12 +8,11 @@
  */
 
 #include "tesla_internal.h"
+#include "test_helpers.h"
 
 #include <assert.h>
 #include <err.h>
 #include <stdio.h>
-
-#include "helpers.h"
 
 
 static void	check_store(struct tesla_store*);
