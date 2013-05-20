@@ -90,6 +90,9 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	// Did we match any instances?
 	bool matched_something = false;
 
+	// When we're done, do we need to clean up the class?
+	bool cleanup_required = false;
+
 	// Make space for cloning existing instances.
 	size_t cloned = 0;
 	struct clone_info {
@@ -141,6 +144,9 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			transition_taken = true;
 			matched_something = true;
 
+			if (t->flags & TESLA_TRANS_CLEANUP)
+				cleanup_required = true;
+
 			// If the keys just match (and we haven't been explictly
 			// instructed to fork), just update the state.
 			if (!(t->flags & TESLA_TRANS_FORK)
@@ -182,7 +188,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	}
 
 
-	// Is the transition "special" (e.g. init/cleanup)?
+	// Does this transition cause class instance initialisation?
 	for (uint32_t i = 0; i < trans->length; i++) {
 		const tesla_transition *t = trans->transitions + i;
 		if (t->flags & TESLA_TRANS_INIT) {
@@ -193,11 +199,11 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			matched_something = true;
 			tesla_notify_new_instance(class, inst);
 		}
-
-		if (t->flags & TESLA_TRANS_CLEANUP) {
-			tesla_class_reset(class);
-		}
 	}
+
+	// Does it cause class cleanup?
+	if (cleanup_required)
+		tesla_class_reset(class);
 
 	print_class(class);
 	PRINT("\n====\n\n");
