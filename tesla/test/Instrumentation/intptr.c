@@ -74,7 +74,6 @@ main(int argc, char *argv[])
 	 * CHECK: ([[FOO]]:0x7 -> [[NOW:[0-9]+]])
 	 * CHECK: key:          0x7 [ 4 [[IP]] [[SP]] X ]
 	 * CHECK: ----
-	 * TODO: make a clone output the new automaton's ID
 	 * CHECK: update {{[0-9]+}}: [[FOO]]->[[NOW]]
 	 * CHECK: ====
 	 */
