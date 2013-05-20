@@ -110,7 +110,7 @@ main(int argc, char **argv)
 	 * CHECK:   context:        global
 	 * CHECK:   transitions:    [ (1:0x0 -> 2) ]
 	 * CHECK: ----
-	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
 	 * CHECK: 1/{{[0-9]+}} instances
 	 * CHECK: ----
@@ -139,7 +139,7 @@ main(int argc, char **argv)
 	 * CHECK:   context:        global
 	 * CHECK:   transitions:    [ (2:0x1 -> 3) ]
 	 * CHECK: ----
-	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
 	 * CHECK: 2/{{[0-9]+}} instances
 	 * CHECK: ----
@@ -168,7 +168,7 @@ main(int argc, char **argv)
 	 * CHECK:   context:        global
 	 * CHECK:   transitions:    [ (3:0x3 -> 4) ]
 	 * CHECK: ----
-	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
 	 * CHECK: 3/{{[0-9]+}} instances
 	 * CHECK: ----
@@ -196,7 +196,7 @@ main(int argc, char **argv)
 	 * CHECK:   context:        global
 	 * CHECK:   transitions:    [ (1:0x0 -> 5) ]
 	 * CHECK: ----
-	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
 	 * CHECK: 3/{{[0-9]+}} instances
 	 * CHECK: ----
@@ -225,7 +225,7 @@ main(int argc, char **argv)
 	 * CHECK:   context:        global
 	 * CHECK:   transitions:    [ (5:0x1 -> 6) ]
 	 * CHECK: ----
-	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
 	 * CHECK: 4/{{[0-9]+}} instances
 	 * CHECK: ----
@@ -254,7 +254,7 @@ main(int argc, char **argv)
 	 * CHECK:   context:        global
 	 * CHECK:   transitions:    [ (1:0x0 -> 7) ]
 	 * CHECK: ----
-	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
 	 * CHECK: 5/{{[0-9]+}} instances
 	 * CHECK: ----
@@ -291,7 +291,7 @@ main(int argc, char **argv)
 	 * CHECK:   context:        global
 	 * CHECK:   (0:0x0 -> 100 <fork>) (1:0x0 -> 8) (8:0x0 -> 8)
 	 * CHECK: ----
-	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
+	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
 	 * CHECK: 6/{{[0-9]+}} instances
 	 * CHECK: ----
