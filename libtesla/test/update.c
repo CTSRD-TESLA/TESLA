@@ -57,7 +57,7 @@ main(int argc, char **argv)
 
 	struct tesla_key key;
 
-	struct tesla_transition t[2];
+	struct tesla_transition t[3];
 	struct tesla_transitions trans = {
 		.length = 1,
 		.transitions = t
@@ -280,12 +280,16 @@ main(int argc, char **argv)
 	t[1].mask = 0x0;
 	t[1].to = 8;
 	t[1].flags = 0;
-	trans.length = 2;
+	t[2].from = 8;
+	t[2].mask = 0x0;
+	t[2].to = 8;
+	t[2].flags = 0;
+	trans.length = 3;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (0:0x0 -> 100 <fork>) (1:0x0 -> 8) ]
+	 * CHECK:   (0:0x0 -> 100 <fork>) (1:0x0 -> 8) (8:0x0 -> 8)
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
 	 * CHECK: ----
