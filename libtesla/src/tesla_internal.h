@@ -104,6 +104,37 @@ int32_t	tesla_clone(struct tesla_class*, const struct tesla_instance *orig,
 int32_t	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
 	    struct tesla_instance **array, uint32_t *size);
 
+/** Actions that can be taken by @ref tesla_update_state. */
+enum tesla_action_t {
+	/** The instance's state should be updated. */
+	UPDATE,
+
+	/** The instance should be copied to a new instance. */
+	FORK,
+
+	/** The instance is irrelevant to the given transitions. */
+	IGNORE,
+
+	/** The instance matches, but there are no valid transitions for it. */
+	FAIL,
+
+	/**
+	 * There is an error in TESLA itself (e.g., the instance has a mask
+	 * that is invalid for its state). Treat like an assertion failure.
+	 */
+	PANIC
+};
+
+/**
+ * What is the correct action to perform on a given @ref tesla_instance to
+ * satisfy a set of @ref tesla_transitions?
+ *
+ * @param[out]   trigger    the @ref tesla_transition that triggered the action
+ */
+enum tesla_action_t	tesla_action(const struct tesla_instance*,
+	    const struct tesla_key*, const struct tesla_transitions*,
+	    const struct tesla_transition** trigger);
+
 /** Copy new entries from @ref source into @ref dest. */
 int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
 

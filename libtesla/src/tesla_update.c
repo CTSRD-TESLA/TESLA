@@ -212,3 +212,85 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	return (TESLA_SUCCESS);
 }
 
+enum tesla_action_t
+tesla_action(const tesla_instance *inst, const tesla_key *pattern,
+	const tesla_transitions *trans, const tesla_transition* *trigger)
+{
+	assert(trigger != NULL);
+
+	if (!tesla_instance_active(inst))
+		return IGNORE;
+
+	/*
+	 * We allowed to ignore this instance if its name doesn't match
+	 * any of the given transitions.
+	 */
+	bool ignore = true;
+
+	for (size_t i = 0; i < trans->length; i++) {
+		const tesla_transition *t = trans->transitions + i;
+
+		if (t->from == inst->ti_state) {
+			/*
+			 * Sanity check: does the transition (or the instance)
+			 *               have the wrong mask value?
+			 */
+			if (inst->ti_key.tk_mask != t->mask)
+				return PANIC;
+
+			/*
+			 * If the instance's current (masked) name matches the
+			 * pattern exactly, we simply need to update the
+			 * instance's state.
+			 */
+			tesla_key masked_name = inst->ti_key;
+			masked_name.tk_mask &= pattern->tk_mask;
+
+			if (tesla_key_matches(pattern, &masked_name)) {
+				*trigger = t;
+				return UPDATE;
+			}
+
+			/*
+			 * Otherwise, the instance's name may be a subset of
+			 * the pattern: it may match the pattern as masked
+			 * by the transition's mask.
+			 */
+			tesla_key masked_pattern = *pattern;
+			masked_pattern.tk_mask &= t->mask;
+
+			if (tesla_key_matches(&masked_pattern, &inst->ti_key)) {
+				/*
+				 * If so, we need to fork a more-specific
+				 * instance from this too-general one.
+				 */
+				*trigger = t;
+				return FORK;
+			}
+
+			/*
+			 * If we are in the right state but don't match on
+			 * the pattern, even with a mask, move on to the
+			 * next transition.
+			 */
+			continue;
+		}
+
+		/*
+		 * We are not in the correct state for this transition, so
+		 * we can't take it.
+		 *
+		 * If we match the pattern, however, it means that *some*
+		 * transition must match; we are no longer allowed to ignore
+		 * this instance.
+		 */
+		if (tesla_key_matches(pattern, &inst->ti_key))
+			ignore = false;
+	}
+
+	if (ignore)
+		return IGNORE;
+
+	else
+		return FAIL;
+}
