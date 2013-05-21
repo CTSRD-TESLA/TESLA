@@ -156,14 +156,6 @@ main(int argc, char **argv)
 	log_action(inst, event_data, t);
 
 	/*
-	 * Instance: (*,*):1
-	 * CHECK: PANIC
-	 */
-	inst.ti_key.tk_mask = 0;
-	inst.ti_state = 1;
-	log_action(inst, event_data, t);
-
-	/*
 	 * Instance: (*,*):4
 	 * CHECK: FAIL
 	 */
@@ -244,7 +236,6 @@ action_str(enum tesla_action_t action)
 	case FORK:    return "FORK";
 	case IGNORE:  return "IGNORE";
 	case FAIL:    return "FAIL";
-	case PANIC:   return "PANIC";
 	default:      return "<<invalid action>>";
 	}
 }

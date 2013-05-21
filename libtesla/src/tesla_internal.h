@@ -116,13 +116,7 @@ enum tesla_action_t {
 	IGNORE,
 
 	/** The instance matches, but there are no valid transitions for it. */
-	FAIL,
-
-	/**
-	 * There is an error in TESLA itself (e.g., the instance has a mask
-	 * that is invalid for its state). Treat like an assertion failure.
-	 */
-	PANIC
+	FAIL
 };
 
 /**

@@ -236,7 +236,9 @@ tesla_action(const tesla_instance *inst, const tesla_key *pattern,
 			 *               have the wrong mask value?
 			 */
 			if (inst->ti_key.tk_mask != t->mask)
-				return PANIC;
+				tesla_panic("instance in state %d has mask %x;"
+				            " expected %x", inst->ti_state,
+				            inst->ti_key.tk_mask, t->mask);
 
 			/*
 			 * If the instance's current (masked) name matches the
