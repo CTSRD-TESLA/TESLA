@@ -176,11 +176,10 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	// Move any clones into the class.
 	for (size_t i = 0; i < cloned; i++) {
 		struct clone_info *c = clones + i;
-		struct tesla_instance *copied_in_place;
+		struct tesla_instance *clone;
 
-		CHECK(tesla_clone, class, &c->new, &copied_in_place);
-		tesla_notify_clone(class, c->old, copied_in_place,
-			c->transition);
+		CHECK(tesla_clone, class, &c->new, &clone);
+		tesla_notify_clone(class, c->old, clone, c->transition);
 	}
 
 
