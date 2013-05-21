@@ -260,6 +260,13 @@ main(int argc, char **argv)
 	 * CHECK: clone  0:1 -> 5:7
 	 * CHECK: ----
 	 * CHECK: 6/{{[0-9]+}} instances
+	 * CHECK: 0: state 1, 0x0 [ X X X X ]
+	 * CHECK: 1: state 2, 0x1 [ 1 X X X ]
+	 * CHECK: 2: state 4, 0x3 [ 1 2 X X ]
+	 * CHECK: 3: state 5, 0x1 [ 2 X X X ]
+	 * CHECK: 4: state 6, 0x9 [ 2 X X 3 ]
+	 * CHECK: 5: state 7, 0x9 [ 2 X X 4 ]
+	 * CHECK: ----
 	 * CHECK: ====
 	 */
 	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
