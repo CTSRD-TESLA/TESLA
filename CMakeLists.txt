@@ -95,10 +95,11 @@ else ( ${CMAKE_SYSTEM_NAME} MATCHES Linux )
 endif()
 
 #
-# Look for the issetugid() function:
+# Check for functions that don't exist on every platform:
 #
 include(CheckFunctionExists)
 check_function_exists(issetugid HAVE_ISSETUGID)
+check_function_exists(strnlen HAVE_STRNLEN)
 
 
 #

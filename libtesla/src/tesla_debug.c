@@ -32,6 +32,7 @@
  */
 
 #include "tesla_internal.h"
+#include "tesla_strnlen.h"
 
 #ifndef _KERNEL
 #include <fnmatch.h>
