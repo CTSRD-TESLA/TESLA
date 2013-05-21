@@ -36,7 +36,7 @@ main(int argc, char *argv[])
 	 * CHECK: tesla_update_state()
 	 * CHECK: context:      per-thread
 	 * CHECK: class:        0 ('[[NAME:.*]]')
-	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]] <init>) ]
+	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]]:0x0 <init>) ]
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ----
 	 * CHECK: new [[AUTOMATON_ID:[0-9]]]: [[INIT]]
@@ -57,7 +57,7 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
-	 * CHECK: ([[INIT]]:0x0 -> [[FOO:[0-9]+]])
+	 * CHECK: ([[INIT]]:0x0 -> [[FOO:[0-9]+]]:0x7)
 	 * CHECK: key:          0x7 [ 4 [[IP:[0-9a-f]+]] [[SP:[0-9a-f]+]] X ]
 	 * CHECK: ----
 	 * CHECK: clone [[AUTOMATON_ID]]:[[INIT]] -> [[CLONE:[0-9]+]]:[[FOO]]
@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
-	 * CHECK: ([[FOO]]:0x7 -> [[NOW:[0-9]+]])
+	 * CHECK: ([[FOO]]:0x7 -> [[NOW:[0-9]+]]:0x7)
 	 * CHECK: key:          0x7 [ 4 [[IP]] [[SP]] X ]
 	 * CHECK: ----
 	 * CHECK: update {{[0-9]+}}: [[FOO]]->[[NOW]]
@@ -84,7 +84,7 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
-	 * CHECK: transitions: {{.* }}([[NOW]]:0x7 -> [[FINAL:[0-9]+]] <clean>)
+	 * CHECK: transit{{.* }}([[NOW]]:0x7 -> [[FINAL:[0-9]+]]:0x7 <clean>)
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ----
 	 * CHECK: update [[CLONE]]: [[NOW]]->[[FINAL]]

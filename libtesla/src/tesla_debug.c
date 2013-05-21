@@ -63,8 +63,9 @@ sprint_transition(char *buf, const char *end, const struct tesla_transition *t)
 	 *       to be printed (instead of t->mask, we get an address!).
 	 */
 	SAFE_SPRINTF(c, end, "(%d:", t->from);
-	SAFE_SPRINTF(c, end, "0x%tx", t->mask);
-	SAFE_SPRINTF(c, end, " -> %d", t->to);
+	SAFE_SPRINTF(c, end, "0x%tx", t->from_mask);
+	SAFE_SPRINTF(c, end, " -> %d:", t->to);
+	SAFE_SPRINTF(c, end, "0x%tx", t->to_mask);
 
 	if (t->flags & TESLA_TRANS_INIT)
 		SAFE_SPRINTF(c, end, " <init>");

@@ -41,27 +41,30 @@ main(int argc, char **argv)
 
 	/*
 	 * For the first round of tests, use the name (x,*) and the transitions:
-	 * [ (1:0x0 -> 2), (3:0x1 -> 4), (5:0x3 -> 6) ]
+	 * [ (1:0x0 -> 2:0x1), (3:0x1 -> 4:0x1), (5:0x3 -> 6:0x3) ]
 	 */
 	event_data.tk_mask = 1;
 	event_data.tk_keys[0] = x;
 
 	t.length = 3;
 
-	t.transitions[0].from  = 1;
-	t.transitions[0].mask  = 0;
-	t.transitions[0].to    = 2;
-	t.transitions[0].flags = 0;
+	t.transitions[0].from       = 1;
+	t.transitions[0].from_mask  = 0;
+	t.transitions[0].to         = 2;
+	t.transitions[0].to_mask    = 1;
+	t.transitions[0].flags      = 0;
 
-	t.transitions[1].from  = 3;
-	t.transitions[1].mask  = 1;
-	t.transitions[1].to    = 4;
-	t.transitions[1].flags = 0;
+	t.transitions[1].from       = 3;
+	t.transitions[1].from_mask  = 1;
+	t.transitions[1].to         = 4;
+	t.transitions[1].to_mask    = 1;
+	t.transitions[1].flags      = 0;
 
-	t.transitions[2].from  = 5;
-	t.transitions[2].mask  = 3;
-	t.transitions[2].to    = 6;
-	t.transitions[2].flags = 0;
+	t.transitions[2].from       = 5;
+	t.transitions[2].from_mask  = 3;
+	t.transitions[2].to         = 6;
+	t.transitions[2].to_mask    = 3;
+	t.transitions[2].flags      = 0;
 
 	print_key(DEBUG_NAME, &event_data);
 	PRINT(" : ");
@@ -70,7 +73,7 @@ main(int argc, char **argv)
 
 	/*
 	 * Instance: (*,*):1
-	 * CHECK: FORK (1:0x0 -> 2)
+	 * CHECK: FORK (1:0x0 -> 2:0x1)
 	 */
 	inst.ti_key.tk_mask = 0;
 	inst.ti_state = 1;
@@ -115,21 +118,23 @@ main(int argc, char **argv)
 
 	/*
 	 * For the second round, use the name (*,*) and the transitions:
-	 * [ (1:0x1 -> 9), (6:0x3 -> 9) ]
+	 * [ (1:0x1 -> 9:0x1), (6:0x3 -> 9:0x3) ]
 	 */
 	event_data.tk_mask = 0;
 
 	t.length = 2;
 
-	t.transitions[0].from  = 1;
-	t.transitions[0].mask  = 1;
-	t.transitions[0].to    = 9;
-	t.transitions[0].flags = 0;
+	t.transitions[0].from       = 1;
+	t.transitions[0].from_mask  = 1;
+	t.transitions[0].to         = 9;
+	t.transitions[0].to_mask    = 1;
+	t.transitions[0].flags      = 0;
 
-	t.transitions[1].from  = 6;
-	t.transitions[1].mask  = 3;
-	t.transitions[1].to    = 9;
-	t.transitions[1].flags = 0;
+	t.transitions[1].from       = 6;
+	t.transitions[1].from_mask  = 3;
+	t.transitions[1].to         = 9;
+	t.transitions[1].to_mask    = 3;
+	t.transitions[1].flags      = 0;
 
 	PRINT("\n");
 	print_key(DEBUG_NAME, &event_data);
@@ -175,7 +180,7 @@ main(int argc, char **argv)
 
 	/*
 	 * Next, we use the name (x,y) and the transitions:
-	 * [ (1:0x0 -> 2), (2:0x0 -> 3) ]
+	 * [ (1:0x0 -> 2:0x1), (2:0x0 -> 3:0x0) ]
 	 */
 	event_data.tk_mask = 3;
 	event_data.tk_keys[0] = x;
@@ -183,15 +188,17 @@ main(int argc, char **argv)
 
 	t.length = 2;
 
-	t.transitions[0].from  = 1;
-	t.transitions[0].mask  = 0;
-	t.transitions[0].to    = 2;
-	t.transitions[0].flags = 0;
+	t.transitions[0].from       = 1;
+	t.transitions[0].from_mask  = 0;
+	t.transitions[0].to         = 2;
+	t.transitions[0].to_mask    = 1;
+	t.transitions[0].flags      = 0;
 
-	t.transitions[1].from  = 2;
-	t.transitions[1].mask  = 0;
-	t.transitions[1].to    = 3;
-	t.transitions[1].flags = 0;
+	t.transitions[1].from       = 2;
+	t.transitions[1].from_mask  = 0;
+	t.transitions[1].to         = 3;
+	t.transitions[1].to_mask    = 0;
+	t.transitions[1].flags      = 0;
 
 	PRINT("\n");
 	print_key(DEBUG_NAME, &event_data);
@@ -201,7 +208,7 @@ main(int argc, char **argv)
 
 	/*
 	 * Instance: (*,*):1
-	 * CHECK: FORK (1:0x0 -> 2)
+	 * CHECK: FORK (1:0x0 -> 2:0x1)
 	 */
 	inst.ti_key.tk_mask = 0;
 	inst.ti_state = 1;
@@ -209,7 +216,7 @@ main(int argc, char **argv)
 
 	/*
 	 * Instance: (*,*):2
-	 * CHECK: FORK (2:0x0 -> 3)
+	 * CHECK: UPDATE (2:0x0 -> 3:0x0)
 	 */
 	inst.ti_key.tk_mask = 0;
 	inst.ti_state = 2;

@@ -51,7 +51,7 @@ main(int argc, char *argv[])
 	 * INSTR: call i32 @tesla_update_state({{.*}}[[TSET]]
 	 *
 	 * TESLA: ====
-	 * TESLA: ([[INIT]]:0x0 -> [[FOO:[0-9]+]]) ({{[0-9]+}}:0x0 ->
+	 * TESLA: ([[INIT]]:0x0 -> [[FOO:[0-9]+]]:0x0) ({{[0-9]+}}:0x0 ->
 	 * TESLA: ----
 	 * TESLA: ----
 	 * TESLA: update 0: [[INIT]]->[[FOO]]
@@ -63,7 +63,7 @@ main(int argc, char *argv[])
 
 	/*
 	 * TESLA: ====
-	 * TESLA: transitions:  [ ([[FOO]]:0x0 -> [[NOW:[0-9]+]]) ]
+	 * TESLA: transitions:  [ ([[FOO]]:0x0 -> [[NOW:[0-9]+]]:0x0) ]
 	 * TESLA: ----
 	 * TESLA: ----
 	 * TESLA: ----
@@ -81,7 +81,9 @@ main(int argc, char *argv[])
 
 	/*
 	 * TESLA: ====
-	 * TESLA: ([[INIT]]:0x0 -> [[FOO]]) {{.*}}([[NOW]]:0x0 -> [[F2:[0-9]+]])
+	 * TESLA: transitions:
+	 * TESLA: ([[INIT]]:0x0 -> [[FOO]]:0x0)
+	 * TESLA: ([[NOW]]:0x0 -> [[F2:[0-9]+]]:0x0)
 	 * TESLA: ----
 	 * TESLA: update 0: [[NOW]]->[[F2]]
 	 * TESLA: ----

@@ -71,14 +71,15 @@ main(int argc, char **argv)
 
 	key.tk_mask = 0;
 	t[0].from = 0;
-	t[0].mask = 0x0;
+	t[0].from_mask = 0x0;
 	t[0].to = 1;
+	t[0].to_mask = 0x0;
 	t[0].flags = TESLA_TRANS_INIT;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (0:0x0 -> 1 <init>) ]
+	 * CHECK:   transitions:    [ (0:0x0 -> 1:0x0 <init>) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE:store: 0x[0-9a-f]+]]
 	 * CHECK: ----
@@ -99,14 +100,15 @@ main(int argc, char **argv)
 	key.tk_mask = 1;
 	key.tk_keys[0] = 1;
 	t[0].from = 1;
-	t[0].mask = 0x0;
+	t[0].from_mask = 0x0;
 	t[0].to = 2;
+	t[0].to_mask = 0x1;
 	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (1:0x0 -> 2) ]
+	 * CHECK:   transitions:    [ (1:0x0 -> 2:0x1) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
@@ -128,14 +130,15 @@ main(int argc, char **argv)
 	key.tk_keys[0] = 1;
 	key.tk_keys[1] = 2;
 	t[0].from = 2;
-	t[0].mask = 0x1;
+	t[0].from_mask = 0x1;
 	t[0].to = 3;
+	t[0].to_mask = 0x3;
 	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (2:0x1 -> 3) ]
+	 * CHECK:   transitions:    [ (2:0x1 -> 3:0x3) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
@@ -157,14 +160,15 @@ main(int argc, char **argv)
 	key.tk_keys[0] = 1;
 	key.tk_keys[1] = 2;
 	t[0].from = 3;
-	t[0].mask = 0x3;
+	t[0].from_mask = 0x3;
 	t[0].to = 4;
+	t[0].to_mask = 0x3;
 	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (3:0x3 -> 4) ]
+	 * CHECK:   transitions:    [ (3:0x3 -> 4:0x3) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
@@ -185,14 +189,15 @@ main(int argc, char **argv)
 	key.tk_mask = 1;
 	key.tk_keys[0] = 2;
 	t[0].from = 1;
-	t[0].mask = 0;
+	t[0].from_mask = 0;
 	t[0].to = 5;
+	t[0].to_mask = 0x1;
 	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (1:0x0 -> 5) ]
+	 * CHECK:   transitions:    [ (1:0x0 -> 5:0x1) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
@@ -214,14 +219,15 @@ main(int argc, char **argv)
 	key.tk_keys[0] = 2;
 	key.tk_keys[3] = 3;
 	t[0].from = 5;
-	t[0].mask = 0x1;
+	t[0].from_mask = 0x1;
 	t[0].to = 6;
+	t[0].to_mask = 0x9;
 	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (5:0x1 -> 6) ]
+	 * CHECK:   transitions:    [ (5:0x1 -> 6:0x9) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----
@@ -243,14 +249,15 @@ main(int argc, char **argv)
 	key.tk_keys[0] = 2;
 	key.tk_keys[3] = 4;
 	t[0].from = 1;
-	t[0].mask = 0x0;
+	t[0].from_mask = 0x0;
 	t[0].to = 7;
+	t[0].to_mask = 0x9;
 	t[0].flags = 0;
 	/*
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK:   context:        global
-	 * CHECK:   transitions:    [ (1:0x0 -> 7) ]
+	 * CHECK:   transitions:    [ (1:0x0 -> 7:0x9) ]
 	 * CHECK: ----
 	 * CHECK: [[GLOBAL_STORE]]
 	 * CHECK: ----

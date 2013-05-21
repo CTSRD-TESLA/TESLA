@@ -122,12 +122,12 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 			// provided key, masked by what the transition says to
 			// expect from its 'previous' state.
 			tesla_key masked = *pattern;
-			masked.tk_mask &= t->mask;
+			masked.tk_mask &= t->from_mask;
 
 			if (!tesla_key_matches(&masked, inst_key))
 				continue;
 
-			if (inst_key->tk_mask != t->mask)
+			if (inst_key->tk_mask != t->from_mask)
 				continue;
 
 			if (inst->ti_state != t->from) {
@@ -212,7 +212,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 }
 
 enum tesla_action_t
-tesla_action(const tesla_instance *inst, const tesla_key *pattern,
+tesla_action(const tesla_instance *inst, const tesla_key *event_data,
 	const tesla_transitions *trans, const tesla_transition* *trigger)
 {
 	assert(trigger != NULL);
@@ -230,43 +230,48 @@ tesla_action(const tesla_instance *inst, const tesla_key *pattern,
 		const tesla_transition *t = trans->transitions + i;
 
 		if (t->from == inst->ti_state) {
-			/*
-			 * Sanity check: does the transition (or the instance)
-			 *               have the wrong mask value?
-			 */
-			if (inst->ti_key.tk_mask != t->mask)
-				tesla_panic("instance in state %d has mask %x;"
-				            " expected %x", inst->ti_state,
-				            inst->ti_key.tk_mask, t->mask);
+			assert(inst->ti_key.tk_mask == t->from_mask);
+			assert(SUBSET(t->from_mask, t->to_mask));
 
 			/*
-			 * If the instance's current (masked) name matches the
-			 * pattern exactly, we simply need to update the
-			 * instance's state.
+			 * We need to match events against a pattern based on
+			 * data from the event, but ignoring parts that are
+			 * extraneous to this transition.
+			 *
+			 * For instance, if the event is 'foo(x,y) == z', we
+			 * know what the values of x, y and z are, but the
+			 * transition in question may only care about x and z:
+			 * 'foo(x,*) == z'.
 			 */
-			tesla_key masked_name = inst->ti_key;
-			masked_name.tk_mask &= pattern->tk_mask;
-
-			if (tesla_key_matches(pattern, &masked_name)) {
-				*trigger = t;
-				return UPDATE;
-			}
+			tesla_key pattern = *event_data;
+			pattern.tk_mask &= t->from_mask;
 
 			/*
-			 * Otherwise, the instance's name may be a subset of
-			 * the pattern: it may match the pattern as masked
-			 * by the transition's mask.
+			 * Does the transition cause key data to be added
+			 * to the instance's name?
 			 */
-			tesla_key masked_pattern = *pattern;
-			masked_pattern.tk_mask &= t->mask;
-
-			if (tesla_key_matches(&masked_pattern, &inst->ti_key)) {
+			if (t->from_mask == t->to_mask) {
 				/*
-				 * If so, we need to fork a more-specific
-				 * instance from this too-general one.
+				 * No: just just update the instance
+				 *     if its (masked) name matches.
 				 */
-				*trigger = t;
-				return FORK;
+				tesla_key masked_name = inst->ti_key;
+				masked_name.tk_mask &= pattern.tk_mask;
+
+				if (tesla_key_matches(&pattern, &masked_name)) {
+					*trigger = t;
+					return UPDATE;
+				}
+
+			} else {
+				/*
+				 * Yes: we need to fork the generic instance
+				 *      into a more specific one.
+				 */
+				if (tesla_key_matches(&pattern, &inst->ti_key)) {
+					*trigger = t;
+					return FORK;
+				}
 			}
 
 			/*
@@ -285,7 +290,7 @@ tesla_action(const tesla_instance *inst, const tesla_key *pattern,
 		 * transition must match; we are no longer allowed to ignore
 		 * this instance.
 		 */
-		if (tesla_key_matches(pattern, &inst->ti_key))
+		if (tesla_key_matches(event_data, &inst->ti_key))
 			ignore = false;
 	}
 

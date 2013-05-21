@@ -320,6 +320,7 @@ StructType* tesla::TransitionType(Module& M) {
                             IntType,  // from state
                             IntType,  // mask on from's name
                             IntType,  // to state
+                            IntType,  // mask on to's name
                             IntType,  // explicit instruction to fork
                             NULL);
 }
@@ -530,14 +531,15 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,
     (uint32_t) T.Source().ID(),
     T.Source().Mask(),
     (uint32_t) T.Destination().ID(),
+    T.Destination().Mask(),
     Flags
   };
 
   Type *IntType = Type::getInt32Ty(M.getContext());
 
   vector<Constant*> Elements;
-  for (size_t i = 0; i < 4; i++)
-    Elements.push_back(ConstantInt::get(IntType, Values[i]));
+  for (auto Val : Values)
+    Elements.push_back(ConstantInt::get(IntType, Val));
 
   return ConstantStruct::get(TransitionType(M), Elements);
 }

@@ -60,10 +60,13 @@ struct tesla_transition {
 	uint32_t	from;
 
 	/** The mask of the state we're moving from. */
-	uint32_t	mask;
+	uint32_t	from_mask;
 
 	/** The state we are moving to. */
 	uint32_t	to;
+
+	/** A mask of the keys that the 'to' state should have set. */
+	uint32_t	to_mask;
 
 	/** Things we may need to do on this transition. */
 	int		flags;
