@@ -257,12 +257,12 @@ void	tesla_notify_new_instance(struct tesla_class *,
 
 /** A @ref tesla_instance has taken an expected transition. */
 void	tesla_notify_transition(struct tesla_class *, struct tesla_instance *,
-    const struct tesla_transitions *, uint32_t index);
+    const struct tesla_transition*);
 
 /** An exisiting @ref tesla_instance has been cloned because of an event. */
 void	tesla_notify_clone(struct tesla_class *,
     struct tesla_instance *old_instance, struct tesla_instance *new_instance,
-    const struct tesla_transitions *, uint32_t index);
+    const struct tesla_transition*);
 
 /** A @ref tesla_instance was unable to take any of a set of transitions. */
 void	tesla_notify_assert_fail(struct tesla_class *, struct tesla_instance *,
@@ -279,8 +279,7 @@ void	tesla_notify_pass(struct tesla_class *, struct tesla_instance *);
  * DTrace notifications of various events.
  */
 void	tesla_state_transition_dtrace(struct tesla_class *,
-	    struct tesla_instance *, const struct tesla_transitions *,
-	    uint32_t transition_index);
+	    struct tesla_instance *, const struct tesla_transition *);
 void	tesla_assert_fail_dtrace(struct tesla_class *,
 	    struct tesla_instance *, const struct tesla_transitions *);
 void	tesla_assert_pass_dtrace(struct tesla_class *,

@@ -44,7 +44,7 @@ tesla_notify_new_instance(struct tesla_class *tcp,
 	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		/* XXXRW: more fine-grained DTrace probes? */
-		tesla_state_transition_dtrace(tcp, tip, NULL, -1);
+		tesla_state_transition_dtrace(tcp, tip, NULL);
 		return;
 
 	default:
@@ -64,25 +64,21 @@ tesla_notify_new_instance(struct tesla_class *tcp,
 void
 tesla_notify_clone(struct tesla_class *tcp,
     struct tesla_instance *old_instance, struct tesla_instance *new_instance,
-    const struct tesla_transitions *transp, uint32_t index)
+    const struct tesla_transition *transp)
 {
 
 	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
 		/* XXXRW: more fine-grained DTrace probes? */
-		tesla_state_transition_dtrace(tcp, new_instance, transp, index);
+		tesla_state_transition_dtrace(tcp, new_instance, transp);
 		return;
 
 	default: {
-		assert(index >= 0);
-		assert(index < transp->length);
-		const struct tesla_transition *t = transp->transitions + index;
-
 		DEBUG(libtesla.instance.clone, "clone  %td:%tx -> %td:%tx\n",
-			old_instance - tcp->tc_instances, t->from,
-			new_instance - tcp->tc_instances, t->to);
+			old_instance - tcp->tc_instances, transp->from,
+			new_instance - tcp->tc_instances, transp->to);
 
-		if (t->flags & TESLA_TRANS_CLEANUP)
+		if (transp->flags & TESLA_TRANS_CLEANUP)
 			tesla_notify_pass(tcp, new_instance);
 
 		break;
@@ -92,24 +88,19 @@ tesla_notify_clone(struct tesla_class *tcp,
 
 void
 tesla_notify_transition(struct tesla_class *tcp,
-    struct tesla_instance *tip, const struct tesla_transitions *transp,
-    uint32_t index)
+    struct tesla_instance *tip, const struct tesla_transition *transp)
 {
 
 	switch (tcp->tc_action) {
 	case TESLA_ACTION_DTRACE:
-		tesla_state_transition_dtrace(tcp, tip, transp, index);
+		tesla_state_transition_dtrace(tcp, tip, transp);
 		return;
 
 	default: {
-		assert(index >= 0);
-		assert(index < transp->length);
-		const struct tesla_transition *t = transp->transitions + index;
-
 		DEBUG(libtesla.state.transition, "update %td: %tx->%tx\n",
-			tip - tcp->tc_instances, t->from, t->to);
+			tip - tcp->tc_instances, transp->from, transp->to);
 
-		if (t->flags & TESLA_TRANS_CLEANUP)
+		if (transp->flags & TESLA_TRANS_CLEANUP)
 			tesla_notify_pass(tcp, tip);
 
 		break;

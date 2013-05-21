@@ -99,7 +99,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 	struct clone_info {
 		tesla_instance *old;
 		tesla_instance new;
-		size_t transition_index;
+		const tesla_transition *transition;
 	} clones[class->tc_free];
 
 	// Update existing instances, forking/specialising if necessary.
@@ -150,7 +150,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 			// If the keys just match, just update the state.
 			if (SUBSET(pattern->tk_mask, inst_key->tk_mask)) {
-				tesla_notify_transition(class, inst, trans, j);
+				tesla_notify_transition(class, inst, t);
 
 				inst->ti_state = t->to;
 				break;
@@ -165,7 +165,7 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 
 			CHECK(tesla_key_union, &clone->new.ti_key, pattern);
 
-			clone->transition_index = j;
+			clone->transition = t;
 			break;
 		}
 
@@ -179,8 +179,8 @@ tesla_update_state(uint32_t tesla_context, uint32_t class_id,
 		struct tesla_instance *copied_in_place;
 
 		CHECK(tesla_clone, class, &c->new, &copied_in_place);
-		tesla_notify_clone(class, c->old, copied_in_place, trans,
-			c->transition_index);
+		tesla_notify_clone(class, c->old, copied_in_place,
+			c->transition);
 	}
 
 
