@@ -252,7 +252,7 @@ action_str(enum tesla_action_t action)
 void
 log_action(tesla_instance inst, tesla_key event_data, tesla_transitions t)
 {
-	tesla_transition *trigger = NULL;
+	const tesla_transition *trigger = NULL;
 	enum tesla_action_t action =
 		tesla_action(&inst, &event_data, &t, &trigger);
 
