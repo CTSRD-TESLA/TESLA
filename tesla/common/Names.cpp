@@ -73,7 +73,7 @@ static std::string ConstantName(const tesla::Argument* A) {
 
 std::string tesla::ShortName(const Argument* A) {
   if (A == NULL)
-    return "NULL";
+    return "X";
 
   switch (A->type()) {
   case Argument::Constant:
