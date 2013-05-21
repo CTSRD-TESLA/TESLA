@@ -32,6 +32,7 @@
 #include <libtesla.h>
 
 #include "Automaton.h"
+#include "Debug.h"
 #include "Instrumentation.h"
 #include "Names.h"
 #include "State.h"
@@ -68,8 +69,8 @@ BasicBlock *FindBlock(StringRef Name, Function& Fn) {
     if (B.getName() == Name)
       return &B;
 
-  report_fatal_error("TESLA instrumentation function '"
-                      + Fn.getName() + "' has no '" + Name + "' block");
+  panic("instrumentation function '" + Fn.getName()
+         + "' has no '" + Name + "' block");
 }
 
 void FnInstrumentation::AppendInstrumentation(
@@ -374,7 +375,7 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
     raw_string_ostream NameOut(NewTypeName);
     NewType->print(NameOut);
 
-    report_fatal_error(
+    panic(
       "Instrumentation argument "
       + (Name.empty() ? "" : ("'" + Name + "' "))
       + "cannot be cast from '" + CurrentTypeName
@@ -460,7 +461,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   const size_t TotalArgs = FnEvent.argument_size() + (HaveRetVal ? 1 : 0);
 
   if (InstrArgs.size() != TotalArgs)
-    report_fatal_error(
+    panic(
       "instrumentation for '" + FnEvent.function().name() + "' takes "
       + Twine(InstrArgs.size())
       + " arguments but description in manifest provides "

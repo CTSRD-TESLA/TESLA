@@ -29,6 +29,7 @@
  */
 
 #include "AST.h"
+#include "Debug.h"
 
 #include "llvm/Support/CommandLine.h"
 
@@ -79,7 +80,7 @@ int main(int argc, const char **argv) {
     FixedCompilationDatabase::loadFromCommandLine(argc, argv));
 
   if (!Compilations)
-    report_fatal_error(
+    panic(
         "Need compilation options, e.g. tesla-analyser foo.c -- -I ../include");
 
   cl::ParseCommandLineOptions(argc, argv);

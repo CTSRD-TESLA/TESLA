@@ -235,16 +235,14 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
     if (!Start) {
       string Str;
       TextFormat::PrintToString(Use->beginning(), &Str);
-      report_fatal_error(
-        "TESLA: failed to parse automaton 'beginning' event: " + Str);
+      panic("failed to parse automaton 'beginning' event: " + Str);
     }
   }
 
   // Parse the main automaton itself.
   State *End = Parse(Automaton.expression(), *Start);
   if (!End)
-    report_fatal_error(
-      "TESLA: failed to parse automaton '" + ShortName(Automaton.identifier()));
+    panic("failed to parse automaton '" + ShortName(Automaton.identifier()));
 
   // Parse the automaton finalisation point, if provided...
   if (Use && Use->has_end()) {
@@ -252,8 +250,7 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
     if (!End) {
       string Str;
       TextFormat::PrintToString(Use->end(), &Str);
-      report_fatal_error(
-        "TESLA: failed to parse automaton 'end' event: " + Str);
+      panic("failed to parse automaton 'end' event: " + Str);
     }
   }
 
@@ -271,28 +268,28 @@ State* NFAParser::Parse(const Expression& Expr, State& Start,
   switch (Expr.type()) {
   case Expression::BOOLEAN_EXPR:
     if (Init)
-      report_fatal_error("boolean expression cannot do initialisation");
+      panic("boolean expression cannot do initialisation");
 
     if (Cleanup)
-      report_fatal_error("boolean expression cannot do cleanup");
+      panic("boolean expression cannot do cleanup");
 
     return Parse(Expr.booleanexpr(), Start);
 
   case Expression::SEQUENCE:
     if (Init)
-      report_fatal_error("sequence transition cannot do initialisation");
+      panic("sequence transition cannot do initialisation");
 
     if (Cleanup)
-      report_fatal_error("sequence transition cannot do cleanup");
+      panic("sequence transition cannot do cleanup");
 
     return Parse(Expr.sequence(), Start);
 
   case Expression::NULL_EXPR:
     if (Init)
-      report_fatal_error("epsilon transition cannot do initialisation");
+      panic("epsilon transition cannot do initialisation");
 
     if (Cleanup)
-      report_fatal_error("epsilon transition cannot do cleanup");
+      panic("epsilon transition cannot do cleanup");
 
     return &Start;
 
@@ -315,7 +312,7 @@ State* NFAParser::Parse(const Expression& Expr, State& Start,
       const Identifier& ID = Expr.subautomaton();
       auto i = Descriptions->find(ID);
       if (i == Descriptions->end())
-        report_fatal_error("subautomaton '" + ShortName(ID) + "' not defined");
+        panic("subautomaton '" + ShortName(ID) + "' not defined");
 
       return Parse(i->second->expression(), Start);
     }

@@ -31,6 +31,7 @@
 
 #include "tesla.pb.h"
 
+#include "Debug.h"
 #include "Manifest.h"
 #include "Names.h"
 
@@ -69,8 +70,7 @@ Manifest::~Manifest() {
 const Automaton* Manifest::FindAutomaton(const Identifier& ID) const {
   auto i = Automata.find(ID);
   if (i == Automata.end())
-    report_fatal_error(
-      "TESLA manifest does not contain assertion " + ShortName(ID));
+    panic("TESLA manifest does not contain assertion " + ShortName(ID));
 
   return i->second;
 }

@@ -28,6 +28,7 @@
  * SUCH DAMAGE.
  */
 
+#include "Debug.h"
 #include "FieldReference.h"
 #include "Instrumentation.h"
 #include "Manifest.h"
@@ -172,7 +173,7 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
         auto *Cast = dyn_cast<CastInst>(U);
         if (!Cast) {
           U->dump();
-          report_fatal_error("TESLA: annotation user not a bitcast", false);
+          panic("annotation user not a bitcast", false);
         }
 
         for (auto k = Cast->use_begin(); k != Cast->use_end(); k++) {
@@ -184,8 +185,7 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
 
           else {
             k->dump();
-            report_fatal_error(
-              "TESLA: expected load or store with annotated value", false);
+            panic("expected load or store with annotated value", false);
           }
         }
       }

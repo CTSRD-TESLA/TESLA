@@ -31,6 +31,7 @@
 
 #include "Assertion.h"
 #include "Automaton.h"
+#include "Debug.h"
 #include "Instrumentation.h"
 #include "Manifest.h"
 #include "Names.h"
@@ -102,21 +103,19 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
       for (const Transition *T : i)
         if (auto Now = dyn_cast<NowTransition>(T)) {
           if (Now->Location() != Loc)
-            report_fatal_error(
-              "TESLA: automaton '" + ShortName(Loc)
+            panic("automaton '" + ShortName(Loc)
               + "' contains NOW event with location '"
               + ShortName(Now->Location()) + "'");
 
           if (!(InstrFn = CreateInstrumentation(*A, *Now, Mod)))
-            report_fatal_error("error instrumenting NOW event");
+            panic("error instrumenting NOW event");
 
           NowTrans = Now;
           break;
         }
 
     if (!NowTrans)
-      report_fatal_error(
-        "TESLA: automaton '" + ShortName(Loc) + "' contains no NOW event");
+      panic("automaton '" + ShortName(Loc) + "' contains no NOW event");
 
     // Record named values that might be passed to instrumentation, such as
     // function parameters and StoreInst results in the current BasicBlock.
@@ -148,8 +147,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     for (const Argument& Arg : Descrip.argument()) {
       Value *V = ValuesInScope[Arg.name()];
       if (V == NULL)
-        report_fatal_error(
-          "TESLA: assertion references non-existent variable '" + Arg.name()
+        panic("assertion references non-existent variable '" + Arg.name()
            + "'; was it defined under '#ifdef TESLA'?");
 
       Value *Ptr = ValuesInScope[Arg.name() + ".addr"];
@@ -257,7 +255,7 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
   assert(Call->getCalledFunction()->getName() == INLINE_ASSERTION);
 
   if (Call->getNumArgOperands() < 3)
-    report_fatal_error("TESLA assertion must have at least 3 arguments");
+    panic("TESLA assertion must have at least 3 arguments");
 
   // The filename should be a global variable.
   GlobalVariable *NameVar =
@@ -267,7 +265,7 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
   if (!NameVar ||
       !(A = dyn_cast_or_null<ConstantDataArray>(NameVar->getInitializer()))) {
     Call->dump();
-    report_fatal_error("unable to parse filename from TESLA assertion");
+    panic("unable to parse filename from TESLA assertion");
   }
 
   *Loc->mutable_filename() = A->getAsString();
@@ -277,7 +275,7 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
   ConstantInt *Line = dyn_cast<ConstantInt>(Call->getOperand(1));
   if (!Line) {
     Call->getOperand(1)->dump();
-    report_fatal_error("assertion line must be a constant int");
+    panic("assertion line must be a constant int");
   }
 
   Loc->set_line(Line->getLimitedValue(INT_MAX));
@@ -285,7 +283,7 @@ void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
   ConstantInt *Count = dyn_cast<ConstantInt>(Call->getOperand(2));
   if (!Count) {
     Call->getOperand(2)->dump();
-    report_fatal_error("assertion count must be a constant int");
+    panic("assertion count must be a constant int");
   }
 
   Loc->set_counter(Count->getLimitedValue(INT_MAX));

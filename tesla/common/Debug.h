@@ -33,10 +33,14 @@
 #define TESLA_DEBUG_H
 
 #include <llvm/ADT/StringRef.h>
+#include <llvm/ADT/Twine.h>
 
 namespace tesla {
 
 bool debugging(llvm::StringRef TeslaModuleName);
+
+LLVM_ATTRIBUTE_NORETURN
+void panic(llvm::Twine Message, bool PrintStackTrace = true);
 
 } // namespace tesla
 

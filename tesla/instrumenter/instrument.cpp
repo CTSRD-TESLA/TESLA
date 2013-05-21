@@ -16,6 +16,7 @@
 #include "Assertion.h"
 #include "Callee.h"
 #include "Caller.h"
+#include "Debug.h"
 #include "FieldReference.h"
 #include "Manifest.h"
 
@@ -90,7 +91,7 @@ int main(int argc, char **argv) {
   // Load TESLA manifest file.
   OwningPtr<tesla::Manifest> Manifest(tesla::Manifest::load(llvm::errs()));
   if (!Manifest)
-    report_fatal_error("unable to load TESLA manifest");
+    tesla::panic("unable to load TESLA manifest");
 
   // Load the input module...
   std::auto_ptr<Module> M;
