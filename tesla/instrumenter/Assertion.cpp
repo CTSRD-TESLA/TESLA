@@ -218,13 +218,8 @@ Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
   ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
   ErrorHandler.CreateRetVoid();
 
-  Constant* TransArray[] = {
-    ConstructTransition(Builder, M,
-                        T.Source().ID(), T.Source().Mask(),
-                        T.Destination().ID())
-  };
-  ArrayRef<Constant*> TransRef(TransArray,
-                               sizeof(TransArray) / sizeof(Constant*));
+  Constant* Trans = ConstructTransition(Builder, M, T);
+  ArrayRef<Constant*> TransRef(&Trans, 1);
 
   std::vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));

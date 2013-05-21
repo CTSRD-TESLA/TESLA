@@ -58,9 +58,6 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
-//! Construct a single @ref tesla_transition.
-Constant* ConstructTransition(IRBuilder<>&, Module&, const Transition&);
-
 //! Construct a @ref tesla_transitions from several @ref tesla_transition.
 Constant* ConstructTransitions(IRBuilder<>&, Module&, TEquivalenceClass&);
 
@@ -520,24 +517,6 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   Builder.CreateStore(ConstantInt::get(IntTy, KeyMask), Mask);
 
   return Key;
-}
-
-Constant* tesla::ConstructTransition(IRBuilder<>& Builder,
-                                     llvm::Module& M,
-                                     uint32_t From, uint32_t Mask,
-                                     uint32_t To, bool AlwaysFork,
-                                     bool Begin, bool End) {
-
-  assert(From != To);
-
-  uint32_t Values[] = { From, Mask, To, AlwaysFork };
-  Type *IntType = Type::getInt32Ty(M.getContext());
-
-  vector<Constant*> Elements;
-  for (size_t i = 0; i < 4; i++)
-    Elements.push_back(ConstantInt::get(IntType, Values[i]));
-
-  return ConstantStruct::get(TransitionType(M), Elements);
 }
 
 Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,

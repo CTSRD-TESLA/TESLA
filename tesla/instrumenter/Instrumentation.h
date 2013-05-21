@@ -141,9 +141,7 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
 
 //! Construct a single @ref tesla_transition.
 llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
-                                    uint32_t From, uint32_t Mask,
-                                    uint32_t To, bool AlwaysFork = false,
-                                    bool Begin = false, bool End = false);
+                                    const Transition&);
 
 //! Construct a @ref tesla_transitions (a set of @ref tesla_transition objects).
 llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
