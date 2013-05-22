@@ -26,8 +26,8 @@ automaton {
     type: SEQUENCE
     sequence {
       /*
-       * CHECK: 0 [ label = "state 0\n([[ANY:&#[0-9]+;]],[[ANY:&#[0-9]+;]])" ];
-       * CHECK: 0 -> 1 [ label = "example_syscall([[ANY]],[[ANY]],[[ANY]])
+       * CHECK-DAG: 0 [ label = "state 0\n([[ANY:&#[0-9]+;]],[[ANY:&#[0-9]+;]])" ];
+       * CHECK-DAG: 0 -> 1 [ label = "example_syscall([[ANY]],[[ANY]],[[ANY]])
        */
       expression {
         type: FUNCTION
@@ -52,8 +52,8 @@ automaton {
         }
       }
       /*
-       * CHECK: 1 [ label = "state 1\n([[ANY]],[[ANY]])" ];
-       * CHECK: 1 -> 2 [ label = "security_check([[ANY]],o,[[ANY]])
+       * CHECK-DAG: 1 [ label = "state 1\n([[ANY]],[[ANY]])" ];
+       * CHECK-DAG: 1 -> 2 [ label = "security_check([[ANY]],o,[[ANY]])
        */
       expression {
         type: FUNCTION
@@ -84,8 +84,8 @@ automaton {
       /*
        * After that transition, we know about one referenced variable:
        *
-       * CHECK: 2 [ label = "state 2\n(o,[[ANY]])" ];
-       * CHECK: 2 -> 3 [ label = "security_check([[ANY]],o,op)
+       * CHECK-DAG: 2 [ label = "state 2\n(o,[[ANY]])" ];
+       * CHECK-DAG: 2 -> 3 [ label = "security_check([[ANY]],o,op)
        */
       expression {
         type: FUNCTION
@@ -116,8 +116,8 @@ automaton {
         }
       }
       /*
-       * CHECK: 3 [ label = "state 3\n(o,op)" ];
-       * CHECK: 3 -> 4 [ label = "NOW"
+       * CHECK-DAG: 3 [ label = "state 3\n(o,op)" ];
+       * CHECK-DAG: 3 -> 4 [ label = "NOW"
        */
       expression {
         type: NOW

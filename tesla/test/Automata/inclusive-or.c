@@ -35,23 +35,23 @@ void ab() {
                            b(y)==0
                           );
   // 0 -- ab() --> 1
-  // CHECK: 0 -> [[CALL:[0-9]+]] [ label = "ab()
+  // CHECK-DAG: 0 -> [[CALL:[0-9]+]] [ label = "ab()
   // 1 -- a(x) --> 2
-  // CHECK: [[CALL]] -> [[A1:[0-9]+]] [ label = "a(x)
+  // CHECK-DAG: [[CALL]] -> [[A1:[0-9]+]] [ label = "a(x)
   // 1 -- b(y) --> 3
-  // CHECK: [[CALL]] -> [[B1:[0-9]+]] [ label = "b(y)
+  // CHECK-DAG: [[CALL]] -> [[B1:[0-9]+]] [ label = "b(y)
   // 1 -- a(x) --> 5
-  // CHECK: [[CALL]] -> [[A3:[0-9]+]] [ label = "a(x)
+  // CHECK-DAG: [[CALL]] -> [[A3:[0-9]+]] [ label = "a(x)
   // 1 -- b(y) --> 6
-  // CHECK: [[CALL]] -> [[B3:[0-9]+]] [ label = "b(y)
+  // CHECK-DAG: [[CALL]] -> [[B3:[0-9]+]] [ label = "b(y)
   // 2 -- ø --> 4
-  // CHECK: [[A1]] -> [[Final:[0-9]+]] [ label = "&#949;
+  // CHECK-DAG: [[A1]] -> [[Final:[0-9]+]] [ label = "&#949;
   // 3 -- ø --> 4
-  // CHECK: [[B1]] -> [[Final]] [ label = "&#949;
+  // CHECK-DAG: [[B1]] -> [[Final]] [ label = "&#949;
   // 5 -- b(y) --> 4
-  // CHECK: [[A3]] -> [[Final]] [ label = "b(y)
+  // CHECK-DAG: [[A3]] -> [[Final]] [ label = "b(y)
   // 6 -- a(x) --> 4
-  // CHECK: [[B3]] -> [[Final]] [ label = "a(x)
+  // CHECK-DAG: [[B3]] -> [[Final]] [ label = "a(x)
 
   // CHECK: label = "{{example.c:[0-9]+#[0-9]+}}"
 }
