@@ -172,7 +172,6 @@ public:
   virtual std::string DotLabel() const = 0;
 
   virtual std::string String() const;
-  virtual std::string Dot() const;
 
   bool InScope() const { return !OutOfScope; }
 

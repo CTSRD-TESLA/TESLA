@@ -167,19 +167,43 @@ string Automaton::Dot() const {
   ss << "\tnode [ shape = circle ];\n";
 
   for (State *S : States) {
-    ss << "\n\t" << S->Dot() << "\n";
+    ss << "\t" << S->Dot() << "\n";
   }
 
   int i = 0;
   for (auto EquivalenceClass : Transitions) {
     string color = ("\"/dark28/" + Twine(i++ % 8 + 1) + "\"").str();
-    ss << "edge [ color = " << color << ", fontcolor = " << color << " ];\n";
+    auto *Head = *EquivalenceClass.begin();
+
+    ss
+      << "\n\t#\n"
+      << "\t# " << Head->ShortLabel() << "\n"
+      << "\t#\n"
+      << "\tedge [ "
+      << "color = " << color << ", "
+      << "fontcolor = " << color << ",\n\t\t"
+      << "label = \"" << Head->DotLabel();
+
+    if (Head->RequiresInit())
+      ss << "\\n&laquo;init&raquo;";
+
+    if (Head->RequiresCleanup())
+      ss << "\\n&laquo;cleanup&raquo;";
+
+    ss
+      << "\""
+      << " ];\n";
 
     for (auto *T : EquivalenceClass)
-      ss << T->Dot();
+      ss
+        << "\t" << T->Source().ID() << " -> " << T->Destination().ID() << ";\n"
+        ;
   }
 
   ss
+    << "\n\t#\n"
+    << "\t# Footer:\n"
+    << "\t#\n"
     << "\tlabel = \"" << Name() << "\";\n"
     << "\tlabelloc = top;\n"
     << "\tlabeljust = left;\n"

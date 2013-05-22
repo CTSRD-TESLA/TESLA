@@ -257,24 +257,6 @@ string Transition::String() const {
   ).str();
 }
 
-string Transition::Dot() const {
-  string Special =
-    string(RequiresInit() ? "&laquo;init&raquo;" : "")
-    + (RequiresCleanup() ? "&laquo;cleanup&raquo;" : "")
-    ;
-
-  return (Twine()
-    + "\t"
-    + Twine(Source().ID())
-    + " -> "
-    + Twine(Destination().ID())
-    + " [ label = \""
-    + DotLabel()
-    + (Special.empty() ? "" : "\\n" + Special)
-    + "\" ];\n"
-  ).str();
-}
-
 
 const ReferenceVector FnTransition::Arguments() const {
   const Argument* const *Args = Ev.argument().data();
