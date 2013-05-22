@@ -275,6 +275,11 @@ vn_write(fp, uio, active_cred, flags, td)
 	/*
 	 * interpret flags, etc.
 	 */
+#ifdef TESLA
+	TESLA_WITHIN(syscall, eventually(
+		called(audit_arg_upath1, td, ANY(int), ANY(ptr))
+	));
+#endif
 
 #ifdef MAC
 	error = mac_vnode_check_write(active_cred, fp->f_cred, vp);
