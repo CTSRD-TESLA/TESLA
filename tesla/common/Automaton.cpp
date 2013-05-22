@@ -168,8 +168,14 @@ string Automaton::Dot() const {
 
   for (State *S : States) {
     ss << "\n\t" << S->Dot() << "\n";
+  }
 
-    for (auto *T : *S)
+  int i = 0;
+  for (auto EquivalenceClass : Transitions) {
+    string color = ("\"/dark28/" + Twine(i++ % 8 + 1) + "\"").str();
+    ss << "edge [ color = " << color << ", fontcolor = " << color << " ];\n";
+
+    for (auto *T : EquivalenceClass)
       ss << T->Dot();
   }
 
