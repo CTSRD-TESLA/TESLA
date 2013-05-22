@@ -118,7 +118,7 @@ root {
     type: FUNCTION
     function {
       /*
-       * CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+       * CHECK: label = "worker{{.*}}Entry
        */
       function {
         name: "worker"
@@ -135,7 +135,7 @@ root {
     type: FUNCTION
     function {
       /*
-       * CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+       * CHECK: label = "worker{{.*}}Exit
        */
       function {
         name: "worker"
@@ -161,7 +161,7 @@ root {
     type: FUNCTION
     function {
       /*
-       * CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Entry
+       * CHECK: label = "worker{{.*}}Entry
        */
       function {
         name: "worker"
@@ -178,7 +178,7 @@ root {
     type: FUNCTION
     function {
       /*
-       * CHECK: {{[0-9]+}} -> {{[0-9]+}} [ label = "worker{{.*}}Exit
+       * CHECK: label = "worker{{.*}}Exit
        */
       function {
         name: "worker"
