@@ -176,9 +176,9 @@ string Automaton::Dot() const {
     auto *Head = *EquivalenceClass.begin();
 
     ss
-      << "\n\t#\n"
-      << "\t# " << Head->ShortLabel() << "\n"
-      << "\t#\n"
+      << "\n\t/*\n"
+      << "\t * " << Head->ShortLabel() << "\n"
+      << "\t */\n"
       << "\tedge [ "
       << "color = " << color << ", "
       << "fontcolor = " << color << ",\n\t\t"
@@ -201,9 +201,9 @@ string Automaton::Dot() const {
   }
 
   ss
-    << "\n\t#\n"
-    << "\t# Footer:\n"
-    << "\t#\n"
+    << "\n\t/*\n"
+    << "\t * Footer:\n"
+    << "\t */\n"
     << "\tlabel = \"" << Name() << "\";\n"
     << "\tlabelloc = top;\n"
     << "\tlabeljust = left;\n"
