@@ -26,12 +26,12 @@ void ab() {
    */
   // CHECK: digraph automaton_{{[0-9]+}}
   int x, y;
-  __tesla_inline_assertion("example.c", __LINE__, __COUNTER__, 
-                           __tesla_perthread, 
-                           called(ab), 
-                           returned(ab), 
-                           a(x)==0 
-                           || 
+  __tesla_inline_assertion("example.c", __LINE__, __COUNTER__,
+                           __tesla_perthread,
+                           called(ab),
+                           returned(ab),
+                           a(x)==0
+                           ||
                            b(y)==0
                           );
   // 0 -- ab() --> 1
@@ -64,7 +64,7 @@ void abcd() {
    *
    * = (prefix*(ab) || cd)         | (ab || prefix*(cd))          | (ab || cd)
    * = (Ã || cd) | (a || cd)       | (ab || c)       | (ab || Ã¸) | (ab || cd)
-   * = 
+   * =
    * = cd        | acd | cad | cda | abc | acb | cab | ab         | a (b || cd)        | c (ab || d)
    * = cd        | acd | cad | cda | abc | acb | cab | ab         | abcd | acbd | acdb | cabd | cadb | cdab
    */
@@ -82,4 +82,3 @@ void abcd() {
                            )
   );*/
 }
-
