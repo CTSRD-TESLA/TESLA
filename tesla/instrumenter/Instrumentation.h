@@ -126,14 +126,13 @@ llvm::Value* Cast(llvm::Value *From, llvm::StringRef Name,
                   llvm::Type *NewType, llvm::IRBuilder<>&);
 
 /*!
- * Create a BasicBlock that passes values to printf.
+ * Initialise the instrumentation function's preamble.
  *
- *
- *
- * TODO: remove this once we do more meaningful instrumentation.
+ * For instance, we might like to insert a (conditional) printf that describes
+ * the event being interpreted.
  */
-llvm::Value* CallPrintf(llvm::Module& Mod, llvm::IRBuilder<>& Builder,
-                        const llvm::Twine& Prefix, llvm::Function *F);
+llvm::BasicBlock* CreateInstrPreamble(llvm::Module& Mod, llvm::Function *F,
+                                      const llvm::Twine& Prefix);
 
 //! Map a set of values into a @ref tesla_key.
 llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,

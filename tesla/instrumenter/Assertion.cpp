@@ -199,9 +199,7 @@ Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
 
   string Message = ("[NOW]  automaton " + Twine(A.ID())).str();
 
-  BasicBlock *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
-  IRBuilder<> Builder(Entry);
-  CallPrintf(M, Builder, Message, InstrFn);
+  IRBuilder<> Builder(CreateInstrPreamble(M, InstrFn, Message));
 
   Type *IntType = Type::getInt32Ty(Ctx);
   Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);

@@ -160,6 +160,17 @@ Function* Printf(Module& Mod) {
   return Printf;
 }
 
+/// Find (or create) tesla_debugging() declaration.
+Function* TeslaDebugging(Module& Mod) {
+  auto& Ctx = Mod.getContext();
+
+  FunctionType *FnType = FunctionType::get(
+    IntegerType::get(Ctx, 32),                          // return: int32
+    PointerType::getUnqual(IntegerType::get(Ctx, 8)));  // debug name: char*
+
+  return cast<Function>(Mod.getOrInsertFunction("tesla_debugging", FnType));
+}
+
 const char* Format(Type *T) {
     if (T->isPointerTy()) return " 0x%llx";
     if (T->isIntegerTy()) return " %d";
@@ -218,13 +229,9 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
   // Invariant: instrumentation blocks should have two exit blocks: one for
   // normal termination and one for abnormal termination.
   if (InstrFn->empty()) {
-    auto *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
-    IRBuilder<> Builder(Entry);
-    // TODO: this output is just temporary.
-    CallPrintf(Mod, Builder, Tag + Subject.getName(), InstrFn);
-
+    auto *Entry = CreateInstrPreamble(Mod, InstrFn, Tag + Subject.getName());
     auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
-    Builder.CreateBr(Exit);
+    IRBuilder<>(Entry).CreateBr(Exit);
     IRBuilder<>(Exit).CreateRetVoid();
 
     auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
@@ -278,14 +285,11 @@ Function* tesla::StructInstrumentation(Module& Mod,
   // Invariant: instrumentation blocks should have two exit blocks: one for
   // normal termination and one for abnormal termination.
   if (InstrFn->empty()) {
-    auto *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
-    IRBuilder<> Builder(Entry);
-    // TODO: this output is just temporary.
-    CallPrintf(Mod, Builder, Tag + StructTypeName + "." + FieldName,
-               InstrFn);
+    auto *Entry =
+      CreateInstrPreamble(Mod, InstrFn, Tag + StructTypeName + "." + FieldName);
 
     auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
-    Builder.CreateBr(Exit);
+    IRBuilder<>(Entry).CreateBr(Exit);
     IRBuilder<>(Exit).CreateRetVoid();
 
     auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
@@ -338,8 +342,29 @@ StructType* tesla::TransitionSetType(Module& M) {
                             NULL);
 }
 
-Value* tesla::CallPrintf(Module& Mod, IRBuilder<>& Builder,
-                         const Twine& Prefix, Function *F) {
+BasicBlock* tesla::CreateInstrPreamble(Module& Mod, Function *F,
+                                       const Twine& Prefix) {
+
+  auto& Ctx = Mod.getContext();
+
+  auto *Preamble = BasicBlock::Create(Ctx, "preamble", F);
+  auto *PrintBB = BasicBlock::Create(Ctx, "printf", F);
+  auto *Entry = BasicBlock::Create(Ctx, "entry", F);
+
+  IRBuilder<> Builder(Preamble);
+
+  // Only print if TESLA_DEBUG indicates that we want output.
+  // TODO: allow printf() to be disabled at compile time, too.
+  Value *DebugName = Mod.getGlobalVariable("debug_name", true);
+  if (!DebugName)
+    DebugName = Builder.CreateGlobalStringPtr("tesla.events", "debug_name");
+
+  Value *Debugging = Builder.CreateCall(TeslaDebugging(Mod), DebugName);
+
+  Constant *Zero = ConstantInt::get(IntegerType::get(Ctx, 32), 0);
+  Debugging = Builder.CreateICmpNE(Debugging, Zero);
+
+  Builder.CreateCondBr(Debugging, PrintBB, Entry);
 
   string FormatStr(Prefix.str());
   for (auto& Arg : F->getArgumentList()) FormatStr += Format(Arg.getType());
@@ -348,7 +373,11 @@ Value* tesla::CallPrintf(Module& Mod, IRBuilder<>& Builder,
   ArgVector PrintfArgs(1, Builder.CreateGlobalStringPtr(FormatStr));
   for (auto& Arg : F->getArgumentList()) PrintfArgs.push_back(&Arg);
 
-  return Builder.CreateCall(Printf(Mod), PrintfArgs);
+  IRBuilder<> PrintBuilder(PrintBB);
+  PrintBuilder.CreateCall(Printf(Mod), PrintfArgs);
+  PrintBuilder.CreateBr(Entry);
+
+  return Entry;
 }
 
 
