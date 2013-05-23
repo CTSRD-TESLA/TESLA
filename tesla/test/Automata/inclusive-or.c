@@ -23,37 +23,42 @@ void ab() {
    * = (prefix*(a) || b) | (a || prefix*(b)) | (a || b)
    * = (Ã¸ || b          | (a || Ã¸          | (a || b)
    * = b                 | a                 | ab | ba
+   *
+   * CHECK: digraph automaton_{{[0-9]+}}
    */
-  // CHECK: digraph automaton_{{[0-9]+}}
   int x, y;
-  __tesla_inline_assertion("example.c", __LINE__, __COUNTER__,
-                           __tesla_perthread,
-                           called(ab),
-                           returned(ab),
-                           a(x)==0
-                           ||
-                           b(y)==0
-                          );
-  // 0 -- ab() --> 1
-  // CHECK-DAG: 0 -> [[CALL:[0-9]+]] [ label = "ab()
-  // 1 -- a(x) --> 2
-  // CHECK-DAG: [[CALL]] -> [[A1:[0-9]+]] [ label = "a(x)
-  // 1 -- b(y) --> 3
-  // CHECK-DAG: [[CALL]] -> [[B1:[0-9]+]] [ label = "b(y)
-  // 1 -- a(x) --> 5
-  // CHECK-DAG: [[CALL]] -> [[A3:[0-9]+]] [ label = "a(x)
-  // 1 -- b(y) --> 6
-  // CHECK-DAG: [[CALL]] -> [[B3:[0-9]+]] [ label = "b(y)
-  // 2 -- ø --> 4
-  // CHECK-DAG: [[A1]] -> [[Final:[0-9]+]] [ label = "&#949;
-  // 3 -- ø --> 4
-  // CHECK-DAG: [[B1]] -> [[Final]] [ label = "&#949;
-  // 5 -- b(y) --> 4
-  // CHECK-DAG: [[A3]] -> [[Final]] [ label = "b(y)
-  // 6 -- a(x) --> 4
-  // CHECK-DAG: [[B3]] -> [[Final]] [ label = "a(x)
+  TESLA_PERTHREAD(strict(called(ab)), strict(returned(ab)),
+                  strict(a(x) == 0 || b(y) == 0));
 
-  // CHECK: label = "{{example.c:[0-9]+#[0-9]+}}"
+  /*
+   * Transitions, grouped into equivalence classes:
+   *
+   * ab(): 0->1
+   * CHECK: label = "ab(){{.*}}Entry{{.*}}init{{.*}}
+   * CHECK: 0 -> [[CALL:[0-9]+]]
+   *
+   * a(x): [ 1->2, 1->5, 6->4 ]
+   * CHECK: label = "a(x)
+   * CHECK: [[CALL]] -> [[A1:[0-9]+]]
+   * CHECK: [[CALL]] -> [[A2:[0-9]+]]
+   * CHECK: [[B2:[0-9]+]] -> [[Final:[0-9]+]]
+   *
+   * b(y): [ 1->3, 1->6, 5->4 ]
+   * CHECK: label = "b(y)
+   * CHECK: [[CALL]] -> [[B1:[0-9]+]]
+   * CHECK: [[A2]] -> [[Final]]
+   * CHECK: [[CALL]] -> [[B2]]
+   *
+   * ø: [ 2->4, 3->4 ]
+   * CHECK: label = "[[EPSILON:&#[0-9a-f]+;]]"
+   * CHECK-DAG: [[A1]] -> [[Final]]
+   * CHECK-DAG: [[B1]] -> [[Final]]
+   */
+
+  /*
+   * Graph footer:
+   * CHECK: label = "{{.*inclusive-or.c:[0-9]+#[0-9]+}}"
+   */
 }
 
 // TODO: write this test
