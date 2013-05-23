@@ -769,14 +769,37 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
     Arg->set_type(Argument::Constant);
     Arg->set_value(ConstValue.getSExtValue());
 
+    // Find an appropriate string representation for the value.
     SourceLocation Loc = P->getLocStart();
-    if (Loc.isMacroID())
-      *Arg->mutable_name() =
-        Lexer::getImmediateMacroName(Loc, Ctx.getSourceManager(),
-                                     Ctx.getLangOpts());
+    if (Loc.isMacroID()) {
+      //
+      // The constant's SourceLocation is within a macro; check if the macro
+      // represents the value itself (e.g. #define FOO 1) or if a literal
+      // happens to be written within a macro (e.g. TSEQUENCE(foo(12))).
+      //
+      // TODO(JA): understand and/or fix this:
+      // For reasons I don't understand, the most straightforward tests like
+      // SM.isAtStartOfImmediateMacroExpansion(Loc) or (Loc == SpellingLoc)
+      // don't tell us what we want to know: is the IntegerLiteral's value
+      // written in the same place as its spelling (within the code)?
+      //
+      // These two SouceLocation objects always seem to have different opaque
+      // internal values, but in the case we care about (where the value is
+      // actually given as a #defined macro), they point to the same raw
+      // character data from the relevant source file.
+      //
+      auto& SM = Ctx.getSourceManager();
 
-    else
-      *Arg->mutable_name() = ("0x" + ConstValue.toString(16));
+      const char *RawCharData = SM.getCharacterData(Loc);
+      const char *SpellingCharData = SM.getCharacterData(
+        SM.getSLocEntry(SM.getFileID(Loc))
+          .getExpansion()
+          .getSpellingLoc());
+
+      if (RawCharData == SpellingCharData)
+        *Arg->mutable_name() =
+          Lexer::getImmediateMacroName(Loc, SM, Ctx.getLangOpts());
+    }
 
   } else {
     ReportError("Invalid argument to function within TESLA assertion", P);
