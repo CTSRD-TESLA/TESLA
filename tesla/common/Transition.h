@@ -118,8 +118,7 @@ public:
                      bool Init, bool Cleanup);
 
   static void CreateSubAutomaton(State& From, State& To,
-                                 const Identifier&, TransitionSets&,
-                                 bool Init, bool Cleanup);
+                                 const Identifier&, TransitionSets&);
 
   /// Creates a transition between the specified states, with the same
   /// transition type as the copied transition.  This is used when constructing
@@ -397,8 +396,8 @@ protected:
 
 private:
   SubAutomatonTransition(const State& From, const State& To,
-                         const Identifier& ID, bool Init, bool Cleanup)
-    : Transition(From, To, Init, Cleanup, false), ID(ID) {}
+                         const Identifier& ID)
+    : Transition(From, To, false, false, false), ID(ID) {}
 
   const Identifier& ID;
 

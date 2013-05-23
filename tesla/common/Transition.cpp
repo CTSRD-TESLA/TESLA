@@ -84,11 +84,9 @@ void Transition::Create(State& From, State& To, const FieldAssignment& A,
 
 void Transition::CreateSubAutomaton(State& From, State& To,
                                     const Identifier& ID,
-                                    TransitionSets& Transitions,
-                                    bool Init, bool Cleanup) {
+                                    TransitionSets& Transitions) {
 
-  OwningPtr<Transition> T(new SubAutomatonTransition(From, To, ID,
-                                                     Init, Cleanup));
+  OwningPtr<Transition> T(new SubAutomatonTransition(From, To, ID));
   Register(T, From, To, Transitions);
 }
 
@@ -128,7 +126,7 @@ void Transition::Copy(State &From, State& To, const Transition* Other,
   case SubAutomaton:
     assert(!OutOfScope);
     New.reset(new SubAutomatonTransition(From, To,
-                  cast<SubAutomatonTransition>(Other)->ID, Init, Cleanup));
+                  cast<SubAutomatonTransition>(Other)->ID));
     break;
   }
 

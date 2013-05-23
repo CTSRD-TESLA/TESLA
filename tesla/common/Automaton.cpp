@@ -104,7 +104,7 @@ private:
   State* Parse(const NowEvent&, State& InitialState, bool, bool);
   State* Parse(const FunctionEvent&, State& InitialState, bool, bool);
   State* Parse(const FieldAssignment&, State& InitialState, bool, bool);
-  State* SubAutomaton(const Identifier&, State& InitialState, bool, bool);
+  State* SubAutomaton(const Identifier&, State& InitialState);
 
   // Inclusive-Or stuff
   void ConvertIncOrToExcOr(State& InitialState, State& EndState);
@@ -366,8 +366,14 @@ State* NFAParser::Parse(const Expression& Expr, State& Start,
     return Parse(Expr.fieldassign(), Start, Init, Cleanup);
 
   case Expression::SUB_AUTOMATON:
+    if (Init)
+      panic("sub-automaton transition cannot do initialisation");
+
+    if (Cleanup)
+      panic("sub-automaton transition cannot do cleanup");
+
     if (SubAutomataAllowed)
-      return SubAutomaton(Expr.subautomaton(), Start, Init, Cleanup);
+      return SubAutomaton(Expr.subautomaton(), Start);
 
     else {
       // If sub-automata are not allowed, find and parse the sub's definition.
@@ -442,11 +448,9 @@ State* NFAParser::Parse(const FieldAssignment& Assign, State& From,
   return Final;
 }
 
-State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState,
-                               bool Init, bool Cleanup) {
+State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState) {
   State *Final = State::Create(States);
-  Transition::CreateSubAutomaton(InitialState, *Final, ID, Transitions,
-                                 Init, Cleanup);
+  Transition::CreateSubAutomaton(InitialState, *Final, ID, Transitions);
   return Final;
 }
 
