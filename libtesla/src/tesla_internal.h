@@ -339,10 +339,10 @@ void	tesla_assert_pass_dtrace(struct tesla_class *,
 #endif
 
 /** Are we in (verbose) debug mode? */
-int32_t	debugging(const char*);
+int32_t	tesla_debugging(const char*);
 
 #define DEBUG(dclass, ...) \
-	if (debugging(#dclass)) printf(__VA_ARGS__)
+	if (tesla_debugging(#dclass)) printf(__VA_ARGS__)
 
 #else // NDEBUG
 
@@ -350,7 +350,7 @@ int32_t	debugging(const char*);
 #define __debug __unused
 
 #define DEBUG(...)
-int32_t	debugging(const char*) { return 0; }
+int32_t	tesla_debugging(const char*) { return 0; }
 
 #endif
 

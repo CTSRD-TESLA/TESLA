@@ -43,7 +43,7 @@
 void
 print_transition(const char *debug, const struct tesla_transition *t)
 {
-	if (!debugging(debug))
+	if (!tesla_debugging(debug))
 		return;
 
 	char buffer[1024];
@@ -81,7 +81,7 @@ sprint_transition(char *buf, const char *end, const struct tesla_transition *t)
 void
 print_transitions(const char *debug, const struct tesla_transitions *transp)
 {
-	if (!debugging(debug))
+	if (!tesla_debugging(debug))
 		return;
 
 	char buffer[1024];
@@ -130,7 +130,7 @@ key_string(char *buffer, const char *end, const struct tesla_key *key)
 
 /* TODO: kernel version... probably just say no? */
 int32_t
-debugging(const char *name)
+tesla_debugging(const char *name)
 {
 #ifdef HAVE_ISSETUGID
 	/*
@@ -180,7 +180,7 @@ void
 print_class(const struct tesla_class *c)
 {
 	static const char *DEBUG_NAME = "libtesla.class.state";
-	if (!debugging(DEBUG_NAME))
+	if (!tesla_debugging(DEBUG_NAME))
 		return;
 
 	print("----\n");
@@ -219,7 +219,7 @@ print_class(const struct tesla_class *c)
 void
 print_key(const char *debug_name, const struct tesla_key *key)
 {
-	if (!debugging(debug_name))
+	if (!tesla_debugging(debug_name))
 		return;
 
 	static const size_t LEN = 15 * TESLA_KEY_SIZE + 10;
