@@ -120,6 +120,8 @@ main(int argc, char **argv)
 	 * For the second round, use the name (*,*) and the transitions:
 	 * [ (1:0x1 -> 9:0x1), (6:0x3 -> 9:0x3) ]
 	 */
+	event_data.tk_keys[0] = 0xBEEF;
+	event_data.tk_keys[1] = 0xF00D;
 	event_data.tk_mask = 0;
 
 	t.length = 2;
@@ -174,7 +176,7 @@ main(int argc, char **argv)
 	 */
 	inst.ti_key.tk_mask = 3;
 	inst.ti_key.tk_keys[0] = x;
-	inst.ti_key.tk_keys[0] = y;
+	inst.ti_key.tk_keys[1] = y;
 	inst.ti_state = 6;
 	log_action(inst, event_data, t);
 
