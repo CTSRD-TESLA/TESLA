@@ -30,6 +30,8 @@
 
 #include "llvm/Pass.h"
 
+#include "Transition.h"
+
 #include <set>
 
 
@@ -62,7 +64,8 @@ private:
   bool ConvertAssertions(std::set<llvm::CallInst*>&, llvm::Module&);
 
   //! Add instrumentation for a single @ref NowTransition.
-  llvm::Function* CreateInstrumentation(const Automaton&, const NowTransition&,
+  llvm::Function* CreateInstrumentation(const Automaton&,
+                                        const TEquivalenceClass&,
                                         llvm::Module&);
 
   /**

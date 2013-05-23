@@ -58,9 +58,6 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
-//! Construct a @ref tesla_transitions from several @ref tesla_transition.
-Constant* ConstructTransitions(IRBuilder<>&, Module&, TEquivalenceClass&);
-
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
     if (B.getName() == Name)
@@ -545,18 +542,14 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,
 }
 
 Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
-                                      TEquivalenceClass& Tr) {
+                                      const TEquivalenceClass& Tr) {
 
+  // First convert each individual transition into an llvm::Constant*.
   vector<Constant*> Transitions;
   for (auto T : Tr)
     Transitions.push_back(ConstructTransition(Builder, M, *T));
 
-  return ConstructTransitions(Builder, M, Transitions);
-}
-
-Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
-                                      ArrayRef<Constant*> Transitions) {
-
+  // Put them all into a global struct tesla_transitions.
   static StructType *T = TransitionSetType(M);
 
   Type *IntType = Type::getInt32Ty(M.getContext());
@@ -570,6 +563,7 @@ Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
                                    ConstantArray::get(ArrayT, Transitions),
                                    "transition_array");
 
+  // Create a global variable that points to this structure.
   Constant *ArrayPtr = ConstantExpr::getInBoundsGetElementPtr(Array, Zeroes);
 
   Constant *TransitionsInit = ConstantStruct::get(T, Count, ArrayPtr, NULL);

@@ -143,9 +143,9 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
 llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
                                     const Transition&);
 
-//! Construct a @ref tesla_transitions (a set of @ref tesla_transition objects).
+//! Construct a @ref tesla_transitions for a @ref TEquivalenceClass.
 llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
-                                     llvm::ArrayRef<llvm::Constant*>);
+                                     const TEquivalenceClass&);
 
 //! Find (or create) one function-event instrumentation function.
 llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,

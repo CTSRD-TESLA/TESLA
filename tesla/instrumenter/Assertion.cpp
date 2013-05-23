@@ -99,20 +99,22 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
     const NowTransition *NowTrans = NULL;
     Function *InstrFn;
 
-    for (auto i : *A)
-      for (const Transition *T : i)
-        if (auto Now = dyn_cast<NowTransition>(T)) {
-          if (Now->Location() != Loc)
-            panic("automaton '" + ShortName(Loc)
-              + "' contains NOW event with location '"
-              + ShortName(Now->Location()) + "'");
+    for (auto EquivClass : *A) {
+      auto *Head = *EquivClass.begin();
+      NowTrans = dyn_cast<NowTransition>(Head);
+      if (!NowTrans)
+        continue;
 
-          if (!(InstrFn = CreateInstrumentation(*A, *Now, Mod)))
-            panic("error instrumenting NOW event");
+      if (NowTrans->Location() != Loc)
+        panic("automaton '" + ShortName(Loc)
+          + "' contains NOW event with location '"
+          + ShortName(NowTrans->Location()) + "'");
 
-          NowTrans = Now;
-          break;
-        }
+      if (!(InstrFn = CreateInstrumentation(*A, EquivClass, Mod)))
+        panic("error instrumenting NOW event");
+
+      break;
+    }
 
     if (!NowTrans)
       panic("automaton '" + ShortName(Loc) + "' contains no NOW event");
@@ -177,7 +179,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
 
 
 Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
-    const Automaton& A, const NowTransition& T, Module& M) {
+    const Automaton& A, const TEquivalenceClass& Eq, Module& M) {
 
   const AutomatonDescription& Descrip = A.getAssertion();
   LLVMContext& Ctx = M.getContext();
@@ -218,16 +220,13 @@ Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
   ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
   ErrorHandler.CreateRetVoid();
 
-  Constant* Trans = ConstructTransition(Builder, M, T);
-  ArrayRef<Constant*> TransRef(&Trans, 1);
-
   std::vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
   Args.push_back(ConstantInt::get(IntType, A.ID()));
   Args.push_back(ConstructKey(Builder, M, InstrArgs));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
   Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-  Args.push_back(ConstructTransitions(Builder, M, TransRef));
+  Args.push_back(ConstructTransitions(Builder, M, Eq));
 
   Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
   assert(Args.size() == UpdateStateFn->arg_size());
