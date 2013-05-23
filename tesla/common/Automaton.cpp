@@ -775,12 +775,31 @@ class DFABuilder {
                      N->Use(), N->Name(), States, Transitions);
 #ifndef NDEBUG
     if (debugging("tesla.automata.dfa")) {
-      fprintf(stderr, "NFA: %s\n", N->String().c_str());
-      // Construct the DFA object
-      fprintf(stderr, "DFA: %s\n", D->String().c_str());
+      llvm::errs()
+        << "DFA conversion results:\n"
+        << "> NFA: " << N->String() << "\n"
+        << "> DFA: " << D->String() << "\n"
+        << ">>  DFA state map:\n"
+        ;
       dumpStateMap();
+
+      llvm::errs() << ">>  DFA transition equivalence classes:\n";
+    }
+
+    std::set<const Transition*> EquivClassRepresentatives;
+    for (auto EquivClass : Transitions) {
+      auto *Rep = *EquivClass.begin();
+      if (debugging("tesla.automata.dfa"))
+        llvm::errs() << "    " << Rep->String() << "\n";
+
+      for (auto C : EquivClassRepresentatives) {
+        assert(!Rep->EquivalentTo(*C));
+      }
+
+      EquivClassRepresentatives.insert(Rep);
     }
 #endif
+
     return D;
   }
 
