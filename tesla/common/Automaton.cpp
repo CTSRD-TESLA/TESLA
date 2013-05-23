@@ -163,6 +163,9 @@ string Automaton::String() const {
 string Automaton::Dot() const {
   stringstream ss;
   ss
+    << "/*\n"
+    << " * " << Name() << "\n"
+    << " */\n"
     << "digraph automaton_" << id << " {\n"
     << "\tnode [ fontname = \"Monospace\", shape = circle ];\n"
     << "\tedge [ fontname = \"Monospace\" ];\n"
