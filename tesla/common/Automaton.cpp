@@ -162,9 +162,12 @@ string Automaton::String() const {
 
 string Automaton::Dot() const {
   stringstream ss;
-  ss << "digraph automaton_" << id << " {\n";
-
-  ss << "\tnode [ shape = circle ];\n";
+  ss
+    << "digraph automaton_" << id << " {\n"
+    << "\tnode [ fontname = \"Monospace\", shape = circle ];\n"
+    << "\tedge [ fontname = \"Monospace\" ];\n"
+    << "\n"
+    ;
 
   for (State *S : States) {
     ss << "\t" << S->Dot() << "\n";
@@ -204,6 +207,7 @@ string Automaton::Dot() const {
     << "\n\t/*\n"
     << "\t * Footer:\n"
     << "\t */\n"
+    << "\tfontname = \"Monospace\";\n"
     << "\tlabel = \"" << Name() << "\";\n"
     << "\tlabelloc = top;\n"
     << "\tlabeljust = left;\n"
