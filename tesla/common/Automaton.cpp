@@ -475,10 +475,9 @@ string stringifyTransitionVectors(TransitionVectors& TVs) {
 }
 
 void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or"))
-    errs() << "Converting inclusive-or to exclusive-or\n";
-#endif
+  debugs("tesla.automata.inclusive_or")
+    << "Converting inclusive-or to exclusive-or\n";
+
   /*
    * X `inclusive-or` Y is computed as:
    * (prefix*(X) || Y) | (X || prefix*(Y)) | (X || Y)
@@ -502,24 +501,22 @@ void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
   Transition *LhsFirstT = *TI;
   Transition *RhsFirstT = *(TI+1);
 
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or")) {
-    errs() << "Lhs: " << LhsFirstT->String() << "\n";
-    errs() << "Rhs: " << RhsFirstT->String() << "\n";
-  }
-#endif
+  debugs("tesla.automata.inclusive_or")
+    << "Lhs: " << LhsFirstT->String() << "\n"
+    << "Rhs: " << RhsFirstT->String() << "\n"
+    ;
 
   lhs.push_back(LhsFirstT);
   rhs.push_back(RhsFirstT);
   CalculateReachableTransitionsBetween(LhsFirstT->Destination(), EndState, lhs);
   CalculateReachableTransitionsBetween(RhsFirstT->Destination(), EndState, rhs);
 
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or")) {
-    errs() << "Calculated reachable transitions for lhs: " << stringifyTransitionVector(lhs) << "\n";
-    errs() << "Calculated reachable transitions for rhs: " << stringifyTransitionVector(rhs) << "\n";
-  }
-#endif
+  debugs("tesla.automata.inclusive_or")
+    << "Calculated reachable transitions for lhs: "
+    << stringifyTransitionVector(lhs) << "\n"
+    << "Calculated reachable transitions for rhs: "
+    << stringifyTransitionVector(rhs) << "\n"
+    ;
 
   // End is already the result of lhs | rhs
   // We need to add to this:
@@ -543,10 +540,11 @@ void NFAParser::CalculateReachableTransitionsBetween(const State& Start, State& 
 }
 
 TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts) {
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or"))
-    errs() << "Generating transition prefixes of " << stringifyTransitionVector(Ts) << "\n";
-#endif
+
+  debugs("tesla.automata.inclusive_or")
+    << "Generating transition prefixes of "
+    << stringifyTransitionVector(Ts) << "\n"
+    ;
 
   TransitionVectors prefixes;
   SmallVector<Transition*,16> lastPrefix;
@@ -564,10 +562,8 @@ TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition
     }
   }
 
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or"))
-    errs() << "Computed prefixes: " << stringifyTransitionVectors(prefixes) << "\n";
-#endif
+  debugs("tesla.automata.inclusive_or")
+    << "Computed prefixes: " << stringifyTransitionVectors(prefixes) << "\n";
 
   return prefixes;
 }
@@ -594,10 +590,12 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
    *            = a ( bcd | cbd | cdb )          | c ( abd | adb | dab )
    *            = abcd | acbd | acdb             | cabd | cadb | cdab
    */
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or"))
-    errs() << "Entering CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
-#endif
+
+  debugs("tesla.automata.inclusive_or")
+    << "Entering CreateParallelAutomaton("
+    << stringifyTransitionVector(lhs) << ","
+    << stringifyTransitionVector(rhs) << ")\n"
+    ;
 
   if (lhs.empty()) {
     CreateTransitionChainCopy(rhs, InitialState, EndState);
@@ -624,24 +622,26 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
     CreateParallelAutomaton(lhs, rhsCopy, *RhsFirstTNewDest, EndState);
   }
 
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or"))
-    errs() << "Exiting CreateParallelAutomaton(" << stringifyTransitionVector(lhs) << "," << stringifyTransitionVector(rhs) << ")\n";
-#endif
+  debugs("tesla.automata.inclusive_or")
+    << "Exiting CreateParallelAutomaton("
+    << stringifyTransitionVector(lhs) << ","
+    << stringifyTransitionVector(rhs) << ")\n"
+    ;
 }
 
 void NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState) {
   State* CurrSource = &InitialState;
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or"))
-    errs() << "Creating copy of transition chain: " << stringifyTransitionVector(chain) << "\n";
-#endif
+
+  debugs("tesla.automata.inclusive_or")
+    << "Creating copy of transition chain: "
+    << stringifyTransitionVector(chain) << "\n"
+    ;
+
   for (auto TI=chain.begin(), TE=chain.end()-1; TI != TE; TI++) {
     Transition* T = *TI;
-#ifndef NDEBUG
-  if (debugging("tesla.automata.inclusive_or"))
-    errs() << "Creating copy of transition: " << T->String() << "\n";
-#endif
+    debugs("tesla.automata.inclusive_or")
+      << "Creating copy of transition: " << T->String() << "\n";
+
     State* TDest = State::Create(States);
     Transition::Copy(*CurrSource, *TDest, T, Transitions);
     CurrSource = TDest;
@@ -651,11 +651,11 @@ void NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, St
 }
 
 typedef std::set<unsigned> NFAState;
-void dump(const NFAState &S) {
-  for (unsigned i : S) {
-    fprintf(stderr, "%d ", i);
-  }
-  fprintf(stderr, "\n");
+raw_ostream& operator << (raw_ostream& Out, const NFAState& S) {
+  for (unsigned i : S)
+    Out << i << " ";
+  Out << "\n";
+  return Out;
 }
 struct NFAStateHash
 {
@@ -664,6 +664,12 @@ struct NFAStateHash
     return *S.begin();
   }
 };
+
+raw_ostream& operator << (
+  raw_ostream& Out, const unordered_map<NFAState, State*, NFAStateHash>& M) {
+  for (auto I : M) Out << (I.second->ID()) << " = " << I.first;
+  return Out;
+}
 
 class DFABuilder {
   /// The NFA state sets that we've seen so far and their corresponding DFA
@@ -717,12 +723,6 @@ class DFABuilder {
     bool Final = false;
     collectFrontier(NStates, S, Start, Final);
     return stateForNFAStates(NStates, Start, Final);
-  }
-  void dumpStateMap() {
-    for (auto I : DFAStates) {
-      fprintf(stderr, "%d = ", (int)I.second->ID());
-      dump(I.first);
-    }
   }
 
   public:
@@ -792,24 +792,21 @@ class DFABuilder {
     DFA *D = new DFA(N->ID(),
                      const_cast<AutomatonDescription&>(N->getAssertion()),
                      N->Use(), N->Name(), States, Transitions);
-#ifndef NDEBUG
-    if (debugging("tesla.automata.dfa")) {
-      llvm::errs()
+
+    debugs("tesla.automata.dfa")
         << "DFA conversion results:\n"
         << "> NFA: " << N->String() << "\n"
         << "> DFA: " << D->String() << "\n"
         << ">>  DFA state map:\n"
+        << DFAStates
+        << ">>  DFA transition equivalence classes:\n"
         ;
-      dumpStateMap();
 
-      llvm::errs() << ">>  DFA transition equivalence classes:\n";
-    }
-
+#ifndef NDEBUG
     std::set<const Transition*> EquivClassRepresentatives;
     for (auto EquivClass : Transitions) {
       auto *Rep = *EquivClass.begin();
-      if (debugging("tesla.automata.dfa"))
-        llvm::errs() << "    " << Rep->String() << "\n";
+      debugs("tesla.automata.dfa") << "    " << Rep->String() << "\n";
 
       for (auto C : EquivClassRepresentatives) {
         assert(!Rep->EquivalentTo(*C));

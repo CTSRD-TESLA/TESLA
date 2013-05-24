@@ -34,6 +34,7 @@
 #include "Debug.h"
 
 #include <llvm/ADT/Twine.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <fnmatch.h>
 #include <stdlib.h>
@@ -42,7 +43,7 @@
 using namespace llvm;
 
 
-bool tesla::debugging(StringRef Name) {
+static bool debugging(StringRef Name) {
 #ifdef HAVE_ISSETUGID
   /*
    * Debugging paths could be more vulnerable to format string problems
@@ -74,6 +75,18 @@ bool tesla::debugging(StringRef Name) {
 
 void tesla::panic(Twine Message, bool PrintStackTrace) {
   report_fatal_error("TESLA: " + Message, PrintStackTrace);
+}
+
+raw_ostream& tesla::debugs(StringRef DebugModuleName) {
+#ifndef NDEBUG
+  if (debugging(DebugModuleName)) {
+    static raw_ostream& ErrStream = llvm::errs();
+    return ErrStream;
+  }
+#endif
+
+  static raw_null_ostream NullStream;
+  return NullStream;
 }
 
 #ifndef NDEBUG

@@ -35,9 +35,13 @@
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Twine.h>
 
+namespace llvm {
+  class raw_ostream;
+}
+
 namespace tesla {
 
-bool debugging(llvm::StringRef TeslaModuleName);
+llvm::raw_ostream& debugs(llvm::StringRef DebugModuleName = "tesla");
 
 LLVM_ATTRIBUTE_NORETURN
 void panic(llvm::Twine Message, bool PrintStackTrace = true);
