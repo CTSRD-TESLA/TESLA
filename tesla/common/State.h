@@ -58,11 +58,8 @@ public:
    */
   static State* CreateStartState(StateVector& States, unsigned int RefSize);
 
-  //! Create the final, accepting @ref State for an @ref Automaton.
-  static State* CreateFinalState(StateVector& States);
-
-  //! Create a non-initial @ref State.
-  static State* Create(StateVector&);
+  //! Create a @ref State.
+  static State* Create(StateVector&, bool Accepting = false);
 
   ~State();
 

@@ -41,8 +41,8 @@ using std::string;
 
 namespace tesla {
 
-State* State::Create(StateVector& States) {
-  State *New = new State(States.size());
+State* State::Create(StateVector& States, bool Accepting) {
+  State *New = new State(States.size(), false, Accepting);
   States.push_back(New);
   return New;
 }
@@ -55,12 +55,6 @@ State* State::CreateStartState(StateVector& States, unsigned int RefSize) {
   bzero(NullStore.get(), RefSize * sizeof(NullStore[0]));
   New->UpdateReferences(ReferenceVector(NullStore.get(), RefSize));
 
-  return New;
-}
-
-State* State::CreateFinalState(StateVector& States) {
-  State *New = new State(States.size(), false, true);
-  States.push_back(New);
   return New;
 }
 

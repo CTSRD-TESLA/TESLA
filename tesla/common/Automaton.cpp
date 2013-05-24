@@ -428,7 +428,7 @@ State* NFAParser::Parse(const Sequence& Seq, State& Start) {
 
 State* NFAParser::Parse(const NowEvent& now, State& InitialState,
                         bool Init, bool Cleanup) {
-  State *Final = State::Create(States);
+  State *Final = State::Create(States, Cleanup);
   Transition::Create(InitialState, *Final, now, Automaton, Transitions,
                      Init, Cleanup);
   return Final;
@@ -436,14 +436,14 @@ State* NFAParser::Parse(const NowEvent& now, State& InitialState,
 
 State* NFAParser::Parse(const FunctionEvent& Ev, State& From,
                         bool Init, bool Cleanup) {
-  State *Final = State::Create(States);
+  State *Final = State::Create(States, Cleanup);
   Transition::Create(From, *Final, Ev, Transitions, Init, Cleanup);
   return Final;
 }
 
 State* NFAParser::Parse(const FieldAssignment& Assign, State& From,
                         bool Init, bool Cleanup) {
-  State *Final = State::Create(States);
+  State *Final = State::Create(States, Cleanup);
   Transition::Create(From, *Final, Assign, Transitions, Init, Cleanup);
   return Final;
 }
@@ -672,35 +672,39 @@ class DFABuilder {
   /// The NFA states that we've completely built.
   unordered_set<unsigned> FinishedStates;
   /// States that have been created, but not yet emitted
-  llvm::SmallVector<std::pair<NFAState, bool>, 16> UnfinishedStates;
+  llvm::SmallVector<
+    std::pair<NFAState, std::pair<bool,bool> >, 16> UnfinishedStates;
   StateVector States;
   TransitionSets Transitions;
   /// Collect the set of NFA states that correspond to a single DFA state (i.e.
   /// all of the states that are reachable from the input state via epsilon
   /// transitions)
-  void collectFrontier(NFAState& N, const State* S, bool& Start) {
+  void collectFrontier(NFAState& N, const State* S, bool& Start, bool& Final) {
     N.insert(S->ID());
     Start |= S->IsStartState();
+    Final |= S->IsAcceptingState();
     for (Transition *T : *S)
       if (T->getKind() == Transition::Null)
         collectFrontier(N, &T->Destination());
   }
 
   void collectFrontier(NFAState& N, const State* S) {
-    bool B = true;
-    collectFrontier(N, S, B);
+    bool Start = true;
+    bool Final = true;
+    collectFrontier(N, S, Start, Final);
   }
-  State *stateForNFAStates(NFAState& NStates, bool Start) {
+  State *stateForNFAStates(NFAState& NStates, bool Start, bool Final) {
     auto Existing = DFAStates.find(NStates);
     if (Existing != DFAStates.end()) 
       return Existing->second;
 
     State *DS = Start
       ? State::CreateStartState(States, RefCount)
-      : State::Create(States);
+      : State::Create(States, Final);
 
     DFAStates.insert(std::make_pair(NStates, DS));
-    UnfinishedStates.push_back(std::make_pair(NStates, Start));
+    UnfinishedStates.push_back(
+      std::make_pair(NStates, std::make_pair(Start, Final)));
     return DS;
   }
 
@@ -710,8 +714,9 @@ class DFABuilder {
 
     NFAState NStates;
     bool Start = false;
-    collectFrontier(NStates, S, Start);
-    return stateForNFAStates(NStates, Start);
+    bool Final = false;
+    collectFrontier(NStates, S, Start, Final);
+    return stateForNFAStates(NStates, Start, Final);
   }
   void dumpStateMap() {
     for (auto I : DFAStates) {
@@ -724,17 +729,19 @@ class DFABuilder {
   /// Public interface to this class.  Constructs a DFA from the provided NFA.
   DFA *ConstructDFA(const NFA *N) {
     assert(N != NULL);
-    // We can't reuse these currently.  
+    // We can't reuse these currently.
     assert(States.empty());
     // The set of DFA states that correspond to the current location
     NFAState CurrentState;
     stateForNFAState(N->States.front());
     while (!UnfinishedStates.empty()) {
       CurrentState = UnfinishedStates.back().first;
-      bool Start = UnfinishedStates.back().second;
+      auto StartFinal = UnfinishedStates.back().second;
+      bool Start = StartFinal.first;
+      bool Final = StartFinal.second;
       UnfinishedStates.pop_back();
       // Find the NFA states that correspond to the current state.
-      State *DS = stateForNFAStates(CurrentState, Start);
+      State *DS = stateForNFAStates(CurrentState, Start, Final);
       if (FinishedStates.find(DS->ID()) != FinishedStates.end())
         continue;
       FinishedStates.insert(DS->ID());
@@ -747,13 +754,14 @@ class DFABuilder {
         unsigned I = *SI;
         State *NState = N->States[I];
         Start = false;
+        Final = false;
         for (auto TI=NState->begin(), TE=NState->end() ; TI!=TE ; ++TI) {
           Transition *T = *TI;
           if (T->getKind() == Transition::Null) continue;
           assert(T->IsRealisable());
           if (FinishedTransitions.count(T) != 0) continue;
           NFAState Destinations;
-          collectFrontier(Destinations, &T->Destination(), Start);
+          collectFrontier(Destinations, &T->Destination(), Start, Final);
           FinishedTransitions.insert(T);
           // Find the other transitions from this state that are equivalent to this one.
           auto DTI = TI;
@@ -761,7 +769,7 @@ class DFABuilder {
             if ((*DTI)->EquivalentTo(*T)) {
               assert(FinishedTransitions.count(*DTI) == 0);
               FinishedTransitions.insert(*DTI);
-              collectFrontier(Destinations, &(*DTI)->Destination(), Start);
+              collectFrontier(Destinations, &(*DTI)->Destination(), Start, Final);
             }
           }
           auto DSI = SI;
@@ -770,11 +778,11 @@ class DFABuilder {
             if (DT->EquivalentTo(*T)) {
               assert(FinishedTransitions.count(DT) == 0);
               FinishedTransitions.insert(DT);
-              collectFrontier(Destinations, &DT->Destination(), Start);
+              collectFrontier(Destinations, &DT->Destination(), Start, Final);
             }
           }
 
-          State *Dest = stateForNFAStates(Destinations, Start);
+          State *Dest = stateForNFAStates(Destinations, Start, Final);
           Transition::Copy(*DS, *Dest, T, Transitions);
         }
       }
