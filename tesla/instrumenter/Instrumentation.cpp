@@ -264,6 +264,15 @@ Function* tesla::StructInstrumentation(Module& Mod,
   // Ensure that the name doesn't include a NULL terminator.
   Name.resize(strnlen(Name.c_str(), Name.length()));
 
+  // The function may already exist...
+  //
+  // Note: getOrInsertFunction() doesn't seem to return an existing version
+  //       of this function; perhaps it's because of the private linkage?
+  Function *InstrFn = dyn_cast_or_null<Function>(Mod.getFunction(Name));
+  if (InstrFn)
+    return InstrFn;
+
+  // The instrumentation function does not exist; we need to build it.
 
   // Two arguments: current value and next value.
   TypeVector Args;
@@ -273,11 +282,7 @@ Function* tesla::StructInstrumentation(Module& Mod,
   Type *Void = Type::getVoidTy(Ctx);
   FunctionType *InstrType = FunctionType::get(Void, Args, false);
 
-
-  // Find (or build) the instrumentation function.
-  auto *InstrFn = dyn_cast<Function>(Mod.getOrInsertFunction(Name, InstrType));
-  assert(InstrFn != NULL);
-
+  InstrFn = dyn_cast<Function>(Mod.getOrInsertFunction(Name, InstrType));
   InstrFn->setLinkage(GlobalValue::PrivateLinkage);
 
   // Invariant: instrumentation blocks should have two exit blocks: one for
