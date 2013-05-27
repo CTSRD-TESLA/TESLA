@@ -94,7 +94,12 @@ public:
   StringRef getStructName() const { return StructName; }
   StringRef getFieldName() const { return FieldName; }
   string completeFieldName() const {
-    return (StructName + "." + FieldName).str();
+    string Complete = (StructName + "." + FieldName).str();
+
+    // Remove trailing NULL character.
+    Complete.resize(strnlen(Complete.c_str(), Complete.length()));
+
+    return Complete;
   }
 
   Value::use_iterator begin() { return Call->use_begin(); }
@@ -121,8 +126,7 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
   //
   // First, find all struct fields that we want to instrument.
   //
-  std::multimap<string,const FieldAssignTransition*,less_ignoring_null<string> >
-    ToInstrument;
+  std::multimap<string,const FieldAssignTransition*> ToInstrument;
 
   for (auto *Root : M.RootAutomata()) {
     for (auto Transitions : *M.FindAutomaton(Root->identifier())) {

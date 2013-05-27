@@ -261,6 +261,9 @@ Function* tesla::StructInstrumentation(Module& Mod,
     + FieldName
   ).str();
 
+  // Ensure that the name doesn't include a NULL terminator.
+  Name.resize(strnlen(Name.c_str(), Name.length()));
+
   string Tag = (Twine()
     + "[F"
     + (Store ? "SET" : "GET")
