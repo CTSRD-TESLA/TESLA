@@ -53,6 +53,7 @@ using std::string;
 namespace tesla {
 
 char FieldReferenceInstrumenter::ID = 0;
+raw_ostream& debug = debugs("tesla.instrumentation.field_assign");
 
 /** An annotation applied by LLVM to a pointer. */
 class PtrAnnotation {
@@ -121,6 +122,12 @@ private:
 
 
 bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
+  debug
+    << "===================================================================\n"
+    << __PRETTY_FUNCTION__ << "\n"
+    << "-------------------------------------------------------------------\n"
+    << "module: " << Mod.getModuleIdentifier() << "\n";
+
   this->Mod = &Mod;
 
   //
@@ -141,6 +148,15 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
       }
     }
   }
+
+  debug << "field references to instrument (if seen):\n";
+  for (auto i : ToInstrument)
+    debug << "  (" << i.first << " -> " << i.second << ")\n";
+
+  debug
+    << "-------------------------------------------------------------------\n"
+    << "looking for field references...\n"
+    ;
 
   //
   // Then, iterate through all uses of the LLVM pointer annotation and look
@@ -181,6 +197,10 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
         }
 
         for (auto k = Cast->use_begin(); k != Cast->use_end(); k++) {
+          debug << Annotation->completeFieldName() << ": ";
+          k->print(debug);
+          debug << "\n";
+
           if (auto *Load = dyn_cast<LoadInst>(*k))
             Loads.insert(std::make_pair(Load, FieldName));
 
@@ -220,6 +240,10 @@ bool FieldReferenceInstrumenter::InstrumentLoad(
 
 bool FieldReferenceInstrumenter::InstrumentStore(
     StoreInst *Store, StringRef StructType, StringRef FieldName) {
+
+  debug << "instrumenting: ";
+  Store->print(debug);
+  debug << "\n";
 
   assert(Store->getNumOperands() > 1);
   Value *Val = Store->getOperand(0);
