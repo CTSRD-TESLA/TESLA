@@ -109,6 +109,9 @@ llvm::StructType* TransitionSetType(llvm::Module&);
 llvm::Constant* TeslaContext(AutomatonDescription::Context Context,
                              llvm::LLVMContext& Ctx);
 
+/*! Find a @ref BasicBlock within a @ref Function. */
+llvm::BasicBlock* FindBlock(llvm::StringRef Name, llvm::Function&);
+
 /*! Find the libtesla function @ref tesla_update_state. */
 llvm::Function* FindStateUpdateFn(llvm::Module&,
                                   llvm::Type *IntType);
