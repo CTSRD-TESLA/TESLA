@@ -179,19 +179,22 @@ __tesla_struct_uses_automaton(const char *automaton,
 #define	__tesla_global		((struct __tesla_locality*) 0)
 #define	__tesla_perthread	((struct __tesla_locality*) 0)
 
-#define __tesla_sequence(...)	1
+#define __tesla_sequence(...)		1
 
 #define	__tesla_struct_automaton(...)
 #define	__tesla_automaton(name, ...)
 
-#define	__tesla_call(...)	0
-#define	__tesla_return(...)	0
+#define	__tesla_call(...)		0
+#define	__tesla_return(...)		0
 
-#define	__tesla_callee(...)	0
-#define	__tesla_caller(...)	0
+#define	__tesla_callee(...)		0
+#define	__tesla_caller(...)		0
 
-#define	__tesla_optional(...)	0
-#define	__tesla_any(...)	0
+#define	__tesla_optional(...)		0
+#define	__tesla_any(...)		0
+
+#define	__tesla_strict(...)		0
+#define	__tesla_conditional(...)	0
 
 #endif	/* __TESLA_ANALYSER__ */
 
