@@ -49,9 +49,11 @@ namespace clang {
   class DeclRefExpr;
   class Expr;
   class FunctionDecl;
+  class MemberExpr;
   class SourceLocation;
   class SourceRange;
   class Stmt;
+  class UnaryOperator;
   class ValueDecl;
 }
 
@@ -122,11 +124,13 @@ private:
   bool Parse(Expression*, const clang::BinaryOperator*, Flags);
   bool Parse(Expression*, const clang::CallExpr*, Flags);
   bool Parse(Expression*, const clang::DeclRefExpr*, Flags);
+  bool Parse(Expression*, const clang::UnaryOperator*, Flags);
 
   bool Parse(FunctionRef*, const clang::FunctionDecl*, Flags);
   bool Parse(Argument*, const clang::Expr*, Flags);
   bool Parse(Argument*, const clang::ValueDecl*, bool AllowAny, Flags);
 
+  bool ParseStructField(FieldAssignment*, const clang::MemberExpr*, Flags);
   bool ParseSubAutomaton(Expression*, const clang::CallExpr*, Flags);
   bool ParsePredicate(Expression*, const clang::CallExpr*, Flags);
 

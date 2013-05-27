@@ -335,6 +335,9 @@ bool Parser::Parse(Expression *Ex, const Expr *E, Flags F) {
   if (auto DRE = dyn_cast<DeclRefExpr>(E))
     return Parse(Ex, DRE, F);
 
+  if (auto U = dyn_cast<UnaryOperator>(E))
+    return Parse(Ex, U, F);
+
   ReportError("unsupported TESLA expression", E);
   return false;
 }
@@ -423,6 +426,46 @@ bool Parser::Parse(Expression *E, const DeclRefExpr *Ref, Flags F) {
 
   ReportError("unsupported reference", Ref);
   return false;
+}
+
+
+bool Parser::Parse(Expression *E, const UnaryOperator *U, Flags F) {
+  U->dump();
+
+  // We only support unary operators in struct field expressions (for now).
+  E->set_type(Expression::FIELD_ASSIGN);
+  FieldAssignment *A = E->mutable_fieldassign();
+  A->set_strict(F.StrictMode);
+
+  // Since we're parsing an expression, rather than an argument, we don't
+  // care about pre- vs postfix.
+  switch(U->getOpcode()) {
+  case UO_PreInc:   // fall through
+  case UO_PostInc:
+    A->set_operation(FieldAssignment::PlusEqual);
+    break;
+
+  case UO_PreDec:   // fall through
+  case UO_PostDec:
+    A->set_operation(FieldAssignment::MinusEqual);
+    break;
+
+  default:
+    ReportError("unsupported unary operator", U);
+    return false;
+  }
+
+  auto *RHS = A->mutable_value();
+  RHS->set_type(Argument::Constant);
+  RHS->set_value(1);
+
+  auto ME = dyn_cast<MemberExpr>(U->getSubExpr());
+  if (!ME) {
+    ReportError("expected struct member", U->getSubExpr());
+    return false;
+  }
+
+  return ParseStructField(A, ME, F);
 }
 
 
@@ -706,30 +749,36 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
     return false;
   }
 
+  return ParseStructField(A, LHS, F)
+      && Parse(A->mutable_value(), O->getRHS(), F);
+}
+
+
+bool Parser::ParseStructField(FieldAssignment *A, const MemberExpr *ME,
+                              Flags F) {
   auto *Base =
-    dyn_cast<DeclRefExpr>(LHS->getBase()->IgnoreImpCasts())->getDecl();
+    dyn_cast<DeclRefExpr>(ME->getBase()->IgnoreImpCasts())->getDecl();
 
   auto *BasePtrType = dyn_cast<PointerType>(Base->getType());
 
   auto *BaseType = BasePtrType->getPointeeType()->getAsStructureType();
   if (!BaseType) {
-    ReportError("base of assignment LHS not a struct type", Base);
+    ReportError("base of assignment ME not a struct type", Base);
     return false;
   }
 
   A->set_type(BaseType->getDecl()->getName());
 
-  auto *Member = dyn_cast<FieldDecl>(LHS->getMemberDecl());
+  auto *Member = dyn_cast<FieldDecl>(ME->getMemberDecl());
   if (!Member) {
-    ReportError("struct member is not a FieldDecl", LHS);
+    ReportError("struct member is not a FieldDecl", ME);
     return false;
   }
 
   A->set_index(Member->getFieldIndex());
   A->set_fieldname(Member->getName());
 
-  return Parse(A->mutable_base(), Base, false, F)
-      && Parse(A->mutable_value(), O->getRHS(), F);
+  return Parse(A->mutable_base(), Base, false, F);
 }
 
 
