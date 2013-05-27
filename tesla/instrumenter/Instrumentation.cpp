@@ -85,7 +85,6 @@ void FnInstrumentation::AppendInstrumentation(
 
   // We may need to check constant values (e.g. return values).
   // TODO: check constants besides the return value!
-  BasicBlock *FirstPatternMatcher = NULL;
   if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
 
     const Argument &Arg = Ev.expectedreturnvalue();
@@ -94,8 +93,6 @@ void FnInstrumentation::AppendInstrumentation(
                                        InstrFn, Instr);
 
       Instr->replaceAllUsesWith(Match);
-      if (!FirstPatternMatcher)
-        FirstPatternMatcher = Match;
 
       IRBuilder<> Matcher(Match);
       Value *ReturnVal = --(InstrFn->arg_end());
