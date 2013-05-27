@@ -264,11 +264,6 @@ Function* tesla::StructInstrumentation(Module& Mod,
   // Ensure that the name doesn't include a NULL terminator.
   Name.resize(strnlen(Name.c_str(), Name.length()));
 
-  string Tag = (Twine()
-    + "[F"
-    + (Store ? "SET" : "GET")
-    + "] "
-  ).str();
 
   // Two arguments: current value and next value.
   TypeVector Args;
@@ -288,6 +283,8 @@ Function* tesla::StructInstrumentation(Module& Mod,
   // Invariant: instrumentation blocks should have two exit blocks: one for
   // normal termination and one for abnormal termination.
   if (InstrFn->empty()) {
+    // Debug printf should start with [FGET] or [FSET].
+    string Tag = (Twine() + "[F" + (Store ? "SET" : "GET") + "] ").str();
     auto *Entry =
       CreateInstrPreamble(Mod, InstrFn, Tag + StructTypeName + "." + FieldName);
 
