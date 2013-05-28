@@ -52,7 +52,6 @@ automaton {
           }
           expectedReturnValue {
             type: Constant
-            name: "since"
             value: 1
           }
         }
@@ -160,7 +159,6 @@ automaton {
                           operation: SimpleAssign
                           value {
                             type: Constant
-                            name: "optional"
                             value: 0
                           }
                           fieldName: "t_state"
@@ -211,7 +209,6 @@ automaton {
                           operation: SimpleAssign
                           value {
                             type: Constant
-                            name: "optional"
                             value: 2
                           }
                           fieldName: "t_state"
@@ -242,7 +239,6 @@ automaton {
                               operation: SimpleAssign
                               value {
                                 type: Constant
-                                name: "TSEQUENCE"
                                 value: 3
                               }
                               fieldName: "t_state"
@@ -573,7 +569,6 @@ automaton {
                       operation: SimpleAssign
                       value {
                         type: Constant
-                        name: "optional"
                         value: 0
                       }
                       fieldName: "t_state"
@@ -665,7 +660,6 @@ automaton {
           }
           expectedReturnValue {
             type: Constant
-            name: "since"
             value: 0
           }
         }
@@ -1013,7 +1007,6 @@ automaton {
           operation: PlusEqual
           value {
             type: Constant
-            name: "since"
             value: 1
           }
           fieldName: "refcount"
@@ -1098,7 +1091,6 @@ automaton {
               }
               expectedReturnValue {
                 type: Constant
-                name: "since"
                 value: 0
               }
             }
@@ -1148,7 +1140,6 @@ automaton {
               }
               expectedReturnValue {
                 type: Constant
-                name: "since"
                 value: 0
               }
             }
@@ -1250,7 +1241,6 @@ automaton {
               }
               expectedReturnValue {
                 type: Constant
-                name: "TSEQUENCE"
                 value: 0
               }
             }
@@ -1278,7 +1268,6 @@ automaton {
               }
               expectedReturnValue {
                 type: Constant
-                name: "TSEQUENCE"
                 value: 0
               }
             }
@@ -1302,7 +1291,6 @@ automaton {
                   }
                   expectedReturnValue {
                     type: Constant
-                    name: "TSEQUENCE"
                     value: 0
                   }
                 }
@@ -1430,7 +1418,6 @@ automaton {
               }
               expectedReturnValue {
                 type: Constant
-                name: "TSEQUENCE"
                 value: 0
               }
             }
