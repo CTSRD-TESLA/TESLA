@@ -28,16 +28,23 @@
  * SUCH DAMAGE.
  */
 
-#include "llvm/Pass.h"
+#include <llvm/ADT/StringMap.h>
+#include <llvm/Pass.h>
+#include <map>
+
+#include "Transition.h"
 
 namespace llvm {
+  class Function;
   class LoadInst;
   class StoreInst;
+  class Value;
 }
 
 namespace tesla {
 
-class FieldAssignTransition;
+class Automaton;
+class FieldInstrumentation;
 class Manifest;
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
@@ -47,15 +54,24 @@ public:
   FieldReferenceInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
   const char* getPassName() const { return "field reference instrumenter"; }
 
+  ~FieldReferenceInstrumenter();
+
   virtual bool runOnModule(llvm::Module &M);
 
 private:
-  bool InstrumentLoad(llvm::LoadInst*, llvm::StringRef, llvm::StringRef);
-  bool InstrumentStore(llvm::StoreInst*, llvm::StringRef, llvm::StringRef);
+  void BuildInstrumentation(const Automaton&);
+  FieldInstrumentation *GetInstr(const Automaton&, const TEquivalenceClass&);
+
+  void AppendInstrumentation(llvm::Function*, const Automaton&,
+                             const FieldAssignment&, TEquivalenceClass&);
+
+  bool InstrumentLoad(llvm::LoadInst*, FieldInstrumentation*);
+  bool InstrumentStore(llvm::StoreInst*, FieldInstrumentation*);
 
   //! TESLA manifest that describes automata.
   const Manifest& M;
   llvm::Module *Mod;
+  llvm::StringMap<FieldInstrumentation*> Instrumentation;
 };
 
 }

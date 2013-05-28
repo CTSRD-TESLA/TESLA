@@ -68,10 +68,18 @@ int main(int argc, char *argv[]) {
 
 /*
  * CHECK: define private [[STORE]]_field0(i64, i64*){{.*}} {
+ * CHECK: "[[FILENAME]]:{{[0-9]+}}#{{[0-9]+}}:instr":
+ * CHECK:   [[UPDATE_STATE:call i32 @tesla_update_state]]
  * CHECK: }
  */
 
 /*
  * CHECK: define private [[STORE]]_field1(i32, i32*){{.*}} {
+ * CHECK: "[[FILENAME]]:{{[0-9]+}}#{{[0-9]+}}:instr":
+ * CHECK:   [[UPDATE_STATE]]
+ * CHECK: "[[FILENAME]]:{{[0-9]+}}#{{[0-9]+}}:instr":
+ * CHECK:   [[UPDATE_STATE]]
+ * CHECK: "[[FILENAME]]:{{[0-9]+}}#{{[0-9]+}}:instr":
+ * CHECK:   [[UPDATE_STATE]]
  * CHECK: }
  */

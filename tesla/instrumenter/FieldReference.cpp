@@ -28,6 +28,7 @@
  * SUCH DAMAGE.
  */
 
+#include "Annotations.h"
 #include "Debug.h"
 #include "FieldReference.h"
 #include "Instrumentation.h"
@@ -55,70 +56,41 @@ namespace tesla {
 char FieldReferenceInstrumenter::ID = 0;
 raw_ostream& debug = debugs("tesla.instrumentation.field_assign");
 
-/** An annotation applied by LLVM to a pointer. */
-class PtrAnnotation {
+
+/** Instrumentation for a struct field assignment. */
+class FieldInstrumentation {
 public:
-  virtual ~PtrAnnotation() {}
+  void AppendInstrumentation();
 
-  enum AnnotationKind { AK_RawAnnotation, AK_FieldAnnotation };
-  virtual AnnotationKind getKind() const { return AK_RawAnnotation; }
-  static bool classof(const PtrAnnotation *P) { return true; }
-
-  static PtrAnnotation* Interpret(User*);
-  StringRef getName() const { return Name; }
-  const Value* getValue() const { return Call; }
-
-protected:
-  PtrAnnotation(CallInst *Call, const Value *PtrArg, StringRef Name,
-                StringRef Filename, APInt Line)
-    : Call(Call), PtrArg(PtrArg), Name(Name), Filename(Filename), Line(Line)
-  {
+  std::string CompleteFieldName() const {
+    return (Type->getName() + "." + FieldName).str();
   }
 
-  static StringRef ExtractStringConstant(const Value *V);
+  Function* getTarget() const { return InstrFn; }
 
-  CallInst *Call;
-  const Value *PtrArg;
-  const StringRef Name;
-  const StringRef Filename;
-  const APInt Line;
-};
-
-/** An annotation applied by LLVM to a structure field access. */
-class FieldAnnotation : public PtrAnnotation {
-public:
-  virtual AnnotationKind getKind() const { return AK_FieldAnnotation; }
-  static bool classof(const PtrAnnotation *P) {
-    return (P->getKind() == AK_FieldAnnotation);
-  }
-
-  StringRef getStructName() const { return StructName; }
-  StringRef getFieldName() const { return FieldName; }
-  string completeFieldName() const {
-    string Complete = (StructName + "." + FieldName).str();
-
-    // Remove trailing NULL character.
-    Complete.resize(strnlen(Complete.c_str(), Complete.length()));
-
-    return Complete;
-  }
-
-  Value::use_iterator begin() { return Call->use_begin(); }
-  Value::use_iterator end() { return Call->use_end(); }
-
-  FieldAnnotation(CallInst *Call, const Value *PtrArg,
-                  StringRef StructName, StringRef FieldName,
-                  StringRef Filename, APInt Line)
-    : PtrAnnotation(Call, PtrArg, (StructName + "." + FieldName).str(),
-                    Filename, Line),
-      StructName(StructName), FieldName(FieldName)
+  FieldInstrumentation(Function *InstrFn, const Automaton& A,
+                       const FieldAssignment& Protobuf,
+                       const TEquivalenceClass& Trans, const StructType *T,
+                       const StringRef FieldName)
+    : InstrFn(InstrFn), A(A), Protobuf(Protobuf), Trans(Trans),
+      Type(T), FieldName(FieldName)
   {
   }
 
 private:
-  const StringRef StructName;
+  Function *InstrFn;
+  const Automaton& A;
+  const FieldAssignment& Protobuf;
+  const TEquivalenceClass& Trans;
+  const StructType *Type;
   const StringRef FieldName;
 };
+
+
+FieldReferenceInstrumenter::~FieldReferenceInstrumenter() {
+  for (auto& i : Instrumentation)
+    delete i.second;
+}
 
 
 bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
@@ -126,32 +98,22 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
     << "===================================================================\n"
     << __PRETTY_FUNCTION__ << "\n"
     << "-------------------------------------------------------------------\n"
-    << "module: " << Mod.getModuleIdentifier() << "\n";
+    << "module:                    " << Mod.getModuleIdentifier() << "\n";
 
   this->Mod = &Mod;
 
   //
   // First, find all struct fields that we want to instrument.
   //
-  std::multimap<string,const FieldAssignTransition*> ToInstrument;
+  for (auto *Root : M.RootAutomata())
+    BuildInstrumentation(*M.FindAutomaton(Root->identifier()));
 
-  for (auto *Root : M.RootAutomata()) {
-    for (auto Transitions : *M.FindAutomaton(Root->identifier())) {
-      const Transition *Head = *Transitions.begin();
-      if (auto FieldAssign = dyn_cast<FieldAssignTransition>(Head)) {
-        auto& Protobuf = FieldAssign->Assignment();
-        auto StructName = Protobuf.type();
-        auto FieldName = Protobuf.fieldname();
-
-        string Key = StructName + "." + FieldName;
-        ToInstrument.insert(std::make_pair(Key, FieldAssign));
-      }
-    }
+  debug << "instrumentation:\n";
+  for (auto& i : Instrumentation) {
+    debug << "  " << i.getKey() << " -> ";
+    i.getValue()->getTarget()->getType()->print(debug);
+    debug << "\n";
   }
-
-  debug << "field references to instrument (if seen):\n";
-  for (auto i : ToInstrument)
-    debug << "  (" << i.first << " -> " << i.second << ")\n";
 
   debug
     << "-------------------------------------------------------------------\n"
@@ -162,8 +124,8 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
   // Then, iterate through all uses of the LLVM pointer annotation and look
   // for structure accesses.
   //
-  std::map<LoadInst*,std::pair<StringRef,StringRef> > Loads;
-  std::map<StoreInst*,std::pair<StringRef,StringRef> > Stores;
+  std::map<LoadInst*,FieldInstrumentation*> Loads;
+  std::map<StoreInst*,FieldInstrumentation*> Stores;
 
   //
   // Look through all of the functions that start with llvm.ptr.annotation.
@@ -182,12 +144,10 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
       if (!Annotation)
         continue;
 
-      auto j = ToInstrument.find(Annotation->completeFieldName());
-      if (j == ToInstrument.end())
-        continue;
-
-      auto FieldName = std::make_pair(Annotation->getStructName(),
-                                      Annotation->getFieldName());
+      auto Name = Annotation->completeFieldName();
+      auto *Instr = Instrumentation[Name];
+      if (Instr == NULL)
+        panic("no instrumentation found for '" + Name + "'");
 
       for (User *U : *Annotation) {
         auto *Cast = dyn_cast<CastInst>(U);
@@ -197,15 +157,11 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
         }
 
         for (auto k = Cast->use_begin(); k != Cast->use_end(); k++) {
-          debug << Annotation->completeFieldName() << ": ";
-          k->print(debug);
-          debug << "\n";
-
           if (auto *Load = dyn_cast<LoadInst>(*k))
-            Loads.insert(std::make_pair(Load, FieldName));
+            Loads.insert(std::make_pair(Load, Instr));
 
           else if (auto *Store = dyn_cast<StoreInst>(*k))
-            Stores.insert(std::make_pair(Store, FieldName));
+            Stores.insert(std::make_pair(Store, Instr));
 
           else {
             k->dump();
@@ -217,17 +173,53 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
   }
 
   for (auto i : Loads)
-    InstrumentLoad(i.first, i.second.first, i.second.second);
+    InstrumentLoad(i.first, i.second);
 
   for (auto i : Stores)
-    InstrumentStore(i.first, i.second.first, i.second.second);
+    InstrumentStore(i.first, i.second);
 
   return true;
 }
 
 
+void FieldReferenceInstrumenter::BuildInstrumentation(const Automaton& A) {
+  for (auto& Transitions : A)
+    GetInstr(A, Transitions);
+}
+
+
+FieldInstrumentation* FieldReferenceInstrumenter::GetInstr(
+    const Automaton& A, const TEquivalenceClass& Trans) {
+
+  auto *Head = dyn_cast<FieldAssignTransition>(*Trans.begin());
+  if (!Head)      // ignore other kinds of transitions
+    return NULL;
+
+  debug << Head->String() << "\n";
+  auto& Protobuf = Head->Assignment();
+  auto StructName = Protobuf.type();
+  auto FieldName = Protobuf.fieldname();
+  string FullName = StructName + "." + FieldName;
+
+  auto Existing = Instrumentation.find(FullName);
+  if (Existing != Instrumentation.end())
+    return Existing->second;
+
+  StructType *T = Mod->getTypeByName("struct." + StructName);
+  if (!T)         // ignore structs that aren't used by this module
+    return NULL;
+
+  Function *InstrFn = StructInstrumentation(*Mod, T, Protobuf, true);
+
+  auto *Instr = new FieldInstrumentation(InstrFn, A, Protobuf, Trans,
+                                         T, FieldName);
+  Instrumentation[FullName] = Instr;
+  return Instr;
+}
+
+
 bool FieldReferenceInstrumenter::InstrumentLoad(
-    LoadInst *Load, StringRef StructType, StringRef FieldName) {
+    LoadInst*, FieldInstrumentation*) {
 
   //
   // We don't actually instrument loads yet: we can't describe such references
@@ -239,7 +231,10 @@ bool FieldReferenceInstrumenter::InstrumentLoad(
 
 
 bool FieldReferenceInstrumenter::InstrumentStore(
-    StoreInst *Store, StringRef StructType, StringRef FieldName) {
+    StoreInst *Store, FieldInstrumentation *Instr) {
+
+  assert(Store != NULL);
+  assert(Instr != NULL);
 
   debug << "instrumenting: ";
   Store->print(debug);
@@ -249,53 +244,140 @@ bool FieldReferenceInstrumenter::InstrumentStore(
   Value *Val = Store->getOperand(0);
   Value *Ptr = Store->getOperand(1);
 
-  Function *InstrFn = StructInstrumentation(
-    *Mod, Val->getType(), Ptr->getType(), StructType, FieldName, true);
-  assert(InstrFn);
+  // Find the struct pointer this field was derived from.
+  Value *V = Ptr;
+  Value *StructPtr = NULL;
+
+  do {
+    User *U = dyn_cast<User>(V);
+    if (!U) {
+      V->print(debug);
+      debug << " is not a User!\n";
+      panic("expected a User");
+    }
+
+    assert(U->getNumOperands() > 0);
+    V = U->getOperand(0);
+
+    auto *PointerTy = dyn_cast<PointerType>(V->getType());
+    if (PointerTy && PointerTy->getElementType()->isStructTy())
+      StructPtr = V;
+
+  } while (StructPtr == NULL);
 
   std::vector<Value*> Args;
+  Args.push_back(StructPtr);
   Args.push_back(Val);
   Args.push_back(Ptr);
 
   IRBuilder<> Builder(Store);
-  Builder.CreateCall(InstrFn, Args);
+  Builder.CreateCall(Instr->getTarget(), Args);
 
   return true;
 }
 
 
-PtrAnnotation* PtrAnnotation::Interpret(User *U) {
-  assert(U);
+void FieldInstrumentation::AppendInstrumentation() {
+  debug << "AppendInstrumentation\n";
 
-  auto *Call = dyn_cast<CallInst>(U);
-  assert(Call);
-  assert(Call->getNumArgOperands() == 4);
+  LLVMContext& Ctx = InstrFn->getContext();
+  auto& Params = InstrFn->getArgumentList();
 
-  Value *Ptr(Call->getArgOperand(0));
-  StringRef Name(ExtractStringConstant(Call->getArgOperand(1)));
-  StringRef Filename(ExtractStringConstant(Call->getArgOperand(2)));
-  APInt Line = dyn_cast<ConstantInt>(Call->getArgOperand(3))->getValue();
+  // The instrumentation function should be passed three parameters:
+  // the struct, the new value and a pointer to the field.
+  assert(Params.size() == 3);
+  auto i = Params.begin();
+  llvm::Argument *Struct = &*i++;
+  llvm::Argument *NewValue = &*i++;
+  llvm::Argument *Current = &*i++;
 
-  const string FIELD = "field:";
+  // We will definitely pass the structure's address to tesla_update_state().
+  // We may also pass the new value, if it's e.g. a pointer: see below.
+  SmallVector<const Value*,2> KeyValues;
+  KeyValues.push_back(Struct);
 
-  if (!Name.startswith(FIELD))
-    return new PtrAnnotation(Call, Ptr, Name, Filename, Line);
+  // Insert new instrumention before the current "exit" block.
+  auto *Exit = FindBlock("exit", *InstrFn);
+  auto *Instr = BasicBlock::Create(Ctx, A.Name() + ":instr", InstrFn, Exit);
+  Exit->replaceAllUsesWith(Instr);
 
-  size_t Dot(Name.find('.'));
-  StringRef StructName(Name.slice(FIELD.length(), Dot));
-  StringRef FieldName(Name.substr(Dot + 1));
+  // Do we expect a constant to pattern-match here in the instrumentation or
+  // a variable to pass to tesla_update_state()?
+  auto& ConstValue = Protobuf.value();
 
-  return new FieldAnnotation(Call, Ptr, StructName, FieldName, Filename, Line);
-}
+  switch (ConstValue.type()) {
+  case Argument::Constant: {
+    // Match the new value against the expected value or else ignore it.
+    Value *Expected;
+    IntegerType *ValueType = dyn_cast<IntegerType>(NewValue->getType());
+    if (!ValueType)
+      panic("NewValue not an integer type");
 
-StringRef PtrAnnotation::ExtractStringConstant(const Value *V) {
-  auto *Ptr = dyn_cast<ConstantExpr>(V);
-  assert(Ptr && Ptr->isGEPWithNoNotionalOverIndexing());
+    switch (Protobuf.operation()) {
+    case FieldAssignment::SimpleAssign:
+      Expected = ConstantInt::getSigned(ValueType, ConstValue.value());
+      break;
+    }
 
-  auto *Var = dyn_cast<GlobalVariable>(Ptr->getOperand(0));
-  auto *Array = dyn_cast<ConstantDataArray>(Var->getInitializer());
+    auto *Match = BasicBlock::Create(Ctx, A.Name() + ":match", InstrFn, Instr);
+    Instr->replaceAllUsesWith(Match);
 
-  return Array->getAsString();
+    IRBuilder<> Matcher(Match);
+    Matcher.CreateCondBr(Matcher.CreateICmpNE(NewValue, Expected), Exit, Instr);
+    break;
+  }
+
+  case Argument::Variable:
+    KeyValues.push_back(NewValue);
+    break;
+
+  case Argument::Any:
+    panic("'ANY' value should never be passed to struct field instrumentation");
+  }
+
+#if 0
+  // check constant values (e.g. return values).
+  // TODO: check constants besides the return value!
+  if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
+
+    const Argument &Arg = Ev.expectedreturnvalue();
+    if (Arg.type() == Argument::Constant) {
+      auto *Match = BasicBlock::Create(Ctx, A.Name() + ":match-retval",
+                                       InstrFn, Instr);
+
+      Instr->replaceAllUsesWith(Match);
+
+      IRBuilder<> Matcher(Match);
+      Value *ReturnVal = --(InstrFn->arg_end());
+      Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
+                                                        Arg.value());
+
+      Matcher.CreateCondBr(Matcher.CreateICmpNE(ReturnVal, ExpectedReturnVal),
+                           Exit, Instr);
+    }
+  }
+
+  IRBuilder<> Builder(Instr);
+  Type* IntType = Type::getInt32Ty(Ctx);
+
+  vector<Value*> Args;
+  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
+  Args.push_back(ConstantInt::get(IntType, A.ID()));
+  Args.push_back(ConstructKey(Builder, M, InstrFn->getArgumentList(), Ev));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
+  Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
+  Args.push_back(ConstructTransitions(Builder, M, Trans));
+
+  Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
+  assert(Args.size() == UpdateStateFn->arg_size());
+
+
+  Value *Error = Builder.CreateCall(UpdateStateFn, Args);
+  Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
+  Error = Builder.CreateICmpEQ(Error, NoError);
+
+  Builder.CreateCondBr(Error, Exit, FindBlock("die", *InstrFn));
+#endif
 }
 
 }

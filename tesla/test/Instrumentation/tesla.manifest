@@ -1462,9 +1462,103 @@ automaton {
     name: "op"
   }
 }
+automaton {
+  identifier {
+    name: "some_structure_assertion"
+  }
+  context: Global
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: FIELD_ASSIGN
+        fieldAssign {
+          type: "some_structure"
+          index: 0
+          base {
+            type: Variable
+            index: 0
+            name: "s"
+          }
+          operation: SimpleAssign
+          value {
+            type: Constant
+            name: "DIGITS_OF_PI"
+            value: 314159265358979
+          }
+          fieldName: "field0"
+        }
+      }
+      expression {
+        type: FIELD_ASSIGN
+        fieldAssign {
+          type: "some_structure"
+          index: 1
+          base {
+            type: Variable
+            index: 0
+            name: "s"
+          }
+          operation: SimpleAssign
+          value {
+            type: Constant
+            value: 42
+          }
+          fieldName: "field1"
+        }
+      }
+      expression {
+        type: FIELD_ASSIGN
+        fieldAssign {
+          type: "some_structure"
+          index: 1
+          base {
+            type: Variable
+            index: 0
+            name: "s"
+          }
+          operation: PlusEqual
+          value {
+            type: Constant
+            value: 1
+          }
+          fieldName: "field1"
+        }
+      }
+      expression {
+        type: FIELD_ASSIGN
+        fieldAssign {
+          type: "some_structure"
+          index: 1
+          base {
+            type: Variable
+            index: 0
+            name: "s"
+          }
+          operation: MinusEqual
+          value {
+            type: Constant
+            value: 1
+          }
+          fieldName: "field1"
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "s"
+  }
+}
 root {
   identifier {
     name: "my_tcpcb_assertion"
+  }
+}
+root {
+  identifier {
+    name: "some_structure_assertion"
   }
 }
 root {

@@ -9,6 +9,7 @@ set(LLVM_LINK_COMPONENTS ${LLVM_TARGETS_TO_BUILD}
 
 add_llvm_executable(tesla-instrument
 	instrument.cpp
+	Annotations.cpp
 	Assertion.cpp
 	Callee.cpp
 	Caller.cpp

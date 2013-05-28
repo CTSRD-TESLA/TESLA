@@ -242,19 +242,19 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
 }
 
 
-Function* tesla::StructInstrumentation(Module& Mod,
-                                       Type *ValueType, Type *PtrType,
-                                       StringRef StructTypeName,
-                                       StringRef FieldName,
+Function* tesla::StructInstrumentation(Module& Mod, StructType *Type,
+                                       const FieldAssignment& Protobuf,
                                        bool Store) {
 
   LLVMContext& Ctx = Mod.getContext();
+  StringRef StructName = Type->getName();
+  StringRef FieldName = Protobuf.fieldname();
 
   string Name = (Twine()
     + STRUCT_INSTR
     + (Store ? STORE : LOAD)
-    + StructTypeName
-    + "_"
+    + StructName
+    + "."
     + FieldName
   ).str();
 
@@ -270,36 +270,42 @@ Function* tesla::StructInstrumentation(Module& Mod,
     return InstrFn;
 
   // The instrumentation function does not exist; we need to build it.
+  if (Type->getNumElements() <= Protobuf.index())
+    panic("struct " + Type->getName() + " does not have "
+           + Twine(Protobuf.index()) + " elements");
 
-  // Two arguments: current value and next value.
+  auto *FieldTy = Type->getElementType(Protobuf.index());
+
+  // Three arguments: the struct, the new value and a pointer to the field.
   TypeVector Args;
-  Args.push_back(ValueType);
-  Args.push_back(PtrType);
+  Args.push_back(PointerType::getUnqual(Type));
+  Args.push_back(FieldTy);
+  Args.push_back(PointerType::getUnqual(FieldTy));
 
-  Type *Void = Type::getVoidTy(Ctx);
+  auto *Void = Type::getVoidTy(Ctx);
   FunctionType *InstrType = FunctionType::get(Void, Args, false);
 
   InstrFn = dyn_cast<Function>(Mod.getOrInsertFunction(Name, InstrType));
+  assert(InstrFn->empty());
+
   InstrFn->setLinkage(GlobalValue::PrivateLinkage);
 
   // Invariant: instrumentation blocks should have two exit blocks: one for
   // normal termination and one for abnormal termination.
-  if (InstrFn->empty()) {
-    // Debug printf should start with [FGET] or [FSET].
-    string Tag = (Twine() + "[F" + (Store ? "SET" : "GET") + "] ").str();
-    auto *Entry =
-      CreateInstrPreamble(Mod, InstrFn, Tag + StructTypeName + "." + FieldName);
+  // Debug printf should start with [FGET] or [FSET].
+  string Tag = (Twine() + "[F" + (Store ? "SET" : "GET") + "] ").str();
+  auto *Entry =
+    CreateInstrPreamble(Mod, InstrFn, Tag + StructName + "." + FieldName);
 
-    auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
-    IRBuilder<>(Entry).CreateBr(Exit);
-    IRBuilder<>(Exit).CreateRetVoid();
+  auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
+  IRBuilder<>(Entry).CreateBr(Exit);
+  IRBuilder<>(Exit).CreateRetVoid();
 
-    auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
-    IRBuilder<> ErrorHandler(Die);
-    auto *EventName = ErrorHandler.CreateGlobalStringPtr(InstrFn->getName());
-    ErrorHandler.CreateCall(FindDieFn(Mod), EventName);
-    ErrorHandler.CreateRetVoid();
-  }
+  auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
+  IRBuilder<> ErrorHandler(Die);
+  auto *EventName = ErrorHandler.CreateGlobalStringPtr(InstrFn->getName());
+  ErrorHandler.CreateCall(FindDieFn(Mod), EventName);
+  ErrorHandler.CreateRetVoid();
 
   return InstrFn;
 }
