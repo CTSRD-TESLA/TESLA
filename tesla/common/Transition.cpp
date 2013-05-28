@@ -226,7 +226,7 @@ int Transition::NewArgMask() const {
   int Mask = 0;
 
   for (int i = 0; i < NewArgs.size(); i++)
-    if (NewArgs[i] != NULL)
+    if ((NewArgs[i] != NULL) && (NewArgs[i]->type() == Argument::Variable))
       Mask += (1 << i);
 
   return Mask;
@@ -236,7 +236,7 @@ int Transition::NewArgMask() const {
 string Transition::String() const {
   string NewArgs;
   for (auto A : NewArguments())
-    if (A != NULL)
+    if ((A != NULL) && (A->type() == Argument::Variable))
       NewArgs += " " + ShortName(A);
 
   string Special =
