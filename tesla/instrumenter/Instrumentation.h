@@ -156,7 +156,8 @@ llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,
 
 //! Find (or create) one struct-field-event instrumentation function.
 llvm::Function* StructInstrumentation(llvm::Module&, llvm::StructType*,
-                                      const FieldAssignment&, bool Store);
+                                      llvm::StringRef FieldName, size_t Index,
+                                      bool Store);
 }
 
 #endif	/* !TESLA_INSTRUMENTATION_H */

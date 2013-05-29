@@ -60,30 +60,31 @@ raw_ostream& debug = debugs("tesla.instrumentation.field_assign");
 /** Instrumentation for a struct field assignment. */
 class FieldInstrumentation {
 public:
-  void AppendInstrumentation();
+  void AppendInstrumentation(const Automaton&, const TEquivalenceClass&);
 
   std::string CompleteFieldName() const {
-    return (Type->getName() + "." + FieldName).str();
+    return (StructTy->getName() + "." + FieldName).str();
   }
 
   Function* getTarget() const { return InstrFn; }
 
-  FieldInstrumentation(Function *InstrFn, const Automaton& A,
-                       const FieldAssignment& Protobuf,
-                       const TEquivalenceClass& Trans, const StructType *T,
-                       const StringRef FieldName)
-    : InstrFn(InstrFn), A(A), Protobuf(Protobuf), Trans(Trans),
-      Type(T), FieldName(FieldName)
+  FieldInstrumentation(Function *InstrFn, Module& M, const StructType *T,
+                       const StringRef FieldName, size_t FieldIndex)
+    : InstrFn(InstrFn), Exit(FindBlock("exit", *InstrFn)), M(M),
+      StructTy(T), FieldName(FieldName)
   {
   }
 
 private:
+  BasicBlock* NextInstrBlock(const Automaton*);
+
   Function *InstrFn;
-  const Automaton& A;
-  const FieldAssignment& Protobuf;
-  const TEquivalenceClass& Trans;
-  const StructType *Type;
+  BasicBlock *Exit;
+  Module& M;
+  const StructType *StructTy;
   const StringRef FieldName;
+
+  map<const Automaton*,BasicBlock*> NextInstr;
 };
 
 
@@ -201,19 +202,28 @@ FieldInstrumentation* FieldReferenceInstrumenter::GetInstr(
   auto FieldName = Protobuf.fieldname();
   string FullName = StructName + "." + FieldName;
 
+  FieldInstrumentation *Instr;
+
   auto Existing = Instrumentation.find(FullName);
   if (Existing != Instrumentation.end())
-    return Existing->second;
+    Instr = Existing->second;
 
-  StructType *T = Mod->getTypeByName("struct." + StructName);
-  if (!T)         // ignore structs that aren't used by this module
-    return NULL;
+  else {
+    StructType *T = Mod->getTypeByName("struct." + StructName);
+    if (!T)         // ignore structs that aren't used by this module
+      return NULL;
 
-  Function *InstrFn = StructInstrumentation(*Mod, T, Protobuf, true);
+    Function *InstrFn =
+      StructInstrumentation(*Mod, T, FieldName, Protobuf.index(), true);
 
-  auto *Instr = new FieldInstrumentation(InstrFn, A, Protobuf, Trans,
-                                         T, FieldName);
-  Instrumentation[FullName] = Instr;
+    Instr = new FieldInstrumentation(InstrFn, *Mod, T,
+                                     FieldName, Protobuf.index());
+
+    Instrumentation[FullName] = Instr;
+  }
+
+  Instr->AppendInstrumentation(A, Trans);
+
   return Instr;
 }
 
@@ -277,53 +287,73 @@ bool FieldReferenceInstrumenter::InstrumentStore(
 }
 
 
-void FieldInstrumentation::AppendInstrumentation() {
+void FieldInstrumentation::AppendInstrumentation(
+    const Automaton& A, const TEquivalenceClass& Trans) {
+
   debug << "AppendInstrumentation\n";
 
   LLVMContext& Ctx = InstrFn->getContext();
-  auto& Params = InstrFn->getArgumentList();
+  auto *Head = dyn_cast<FieldAssignTransition>(*Trans.begin());
+  assert(Head);
+  auto& Protobuf = Head->Assignment();
 
   // The instrumentation function should be passed three parameters:
   // the struct, the new value and a pointer to the field.
+  auto& Params = InstrFn->getArgumentList();
   assert(Params.size() == 3);
+
   auto i = Params.begin();
   llvm::Argument *Struct = &*i++;
   llvm::Argument *NewValue = &*i++;
-  llvm::Argument *Current = &*i++;
+  llvm::Argument *FieldPtr = &*i++;
 
   // We will definitely pass the structure's address to tesla_update_state().
   // We may also pass the new value, if it's e.g. a pointer: see below.
-  SmallVector<const Value*,2> KeyValues;
+  SmallVector<Value*,2> KeyValues;
   KeyValues.push_back(Struct);
 
-  // Insert new instrumention before the current "exit" block.
-  auto *Exit = FindBlock("exit", *InstrFn);
-  auto *Instr = BasicBlock::Create(Ctx, A.Name() + ":instr", InstrFn, Exit);
-  Exit->replaceAllUsesWith(Instr);
+  // Insert new instrumention before the current "end" block for the automaton.
+  auto *End = NextInstrBlock(&A);
+  auto *Instr = BasicBlock::Create(Ctx, Head->ShortLabel(), InstrFn, End);
+  End->replaceAllUsesWith(Instr);
+  IRBuilder<> Builder(Instr);
 
-  // Do we expect a constant to pattern-match here in the instrumentation or
-  // a variable to pass to tesla_update_state()?
-  auto& ConstValue = Protobuf.value();
+  // Are we assigning a constant value (in which case we should try to match
+  // it against a protobuf-supplied pattern) or a variable (in which case we
+  // should add it to the struct tesla_key)?
+  auto& ExpectedAssignment = Protobuf.value();
 
-  switch (ConstValue.type()) {
+  switch (ExpectedAssignment.type()) {
   case Argument::Constant: {
     // Match the new value against the expected value or else ignore it.
-    Value *Expected;
     IntegerType *ValueType = dyn_cast<IntegerType>(NewValue->getType());
     if (!ValueType)
       panic("NewValue not an integer type");
 
+    auto *Match = BasicBlock::Create(Ctx, "match: " + Head->ShortLabel(),
+                                     InstrFn, Instr);
+    Instr->replaceAllUsesWith(Match);
+    IRBuilder<> Matcher(Match);
+
+    auto *Const = ConstantInt::getSigned(ValueType, ExpectedAssignment.value());
+    Const->dump();
+    Value *Expected;
+
     switch (Protobuf.operation()) {
     case FieldAssignment::SimpleAssign:
-      Expected = ConstantInt::getSigned(ValueType, ConstValue.value());
+      Expected = Const;
+      break;
+
+    case FieldAssignment::PlusEqual:
+      Expected = Matcher.CreateAdd(Matcher.CreateLoad(FieldPtr), Const);
+      break;
+
+    case FieldAssignment::MinusEqual:
+      Expected = Matcher.CreateSub(Matcher.CreateLoad(FieldPtr), Const);
       break;
     }
 
-    auto *Match = BasicBlock::Create(Ctx, A.Name() + ":match", InstrFn, Instr);
-    Instr->replaceAllUsesWith(Match);
-
-    IRBuilder<> Matcher(Match);
-    Matcher.CreateCondBr(Matcher.CreateICmpNE(NewValue, Expected), Exit, Instr);
+    Matcher.CreateCondBr(Matcher.CreateICmpNE(NewValue, Expected), End, Instr);
     break;
   }
 
@@ -335,35 +365,12 @@ void FieldInstrumentation::AppendInstrumentation() {
     panic("'ANY' value should never be passed to struct field instrumentation");
   }
 
-#if 0
-  // check constant values (e.g. return values).
-  // TODO: check constants besides the return value!
-  if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
-
-    const Argument &Arg = Ev.expectedreturnvalue();
-    if (Arg.type() == Argument::Constant) {
-      auto *Match = BasicBlock::Create(Ctx, A.Name() + ":match-retval",
-                                       InstrFn, Instr);
-
-      Instr->replaceAllUsesWith(Match);
-
-      IRBuilder<> Matcher(Match);
-      Value *ReturnVal = --(InstrFn->arg_end());
-      Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
-                                                        Arg.value());
-
-      Matcher.CreateCondBr(Matcher.CreateICmpNE(ReturnVal, ExpectedReturnVal),
-                           Exit, Instr);
-    }
-  }
-
-  IRBuilder<> Builder(Instr);
   Type* IntType = Type::getInt32Ty(Ctx);
 
-  vector<Value*> Args;
+  std::vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
   Args.push_back(ConstantInt::get(IntType, A.ID()));
-  Args.push_back(ConstructKey(Builder, M, InstrFn->getArgumentList(), Ev));
+  Args.push_back(ConstructKey(Builder, M, KeyValues));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
   Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
   Args.push_back(ConstructTransitions(Builder, M, Trans));
@@ -377,7 +384,24 @@ void FieldInstrumentation::AppendInstrumentation() {
   Error = Builder.CreateICmpEQ(Error, NoError);
 
   Builder.CreateCondBr(Error, Exit, FindBlock("die", *InstrFn));
-#endif
+}
+
+BasicBlock* FieldInstrumentation::NextInstrBlock(const Automaton *A) {
+  auto Existing = NextInstr.find(A);
+  if (Existing != NextInstr.end())
+    return Existing->second;
+
+  auto& Ctx = M.getContext();
+  auto *Start = BasicBlock::Create(Ctx, A->Name(), InstrFn, Exit);
+  auto *End = BasicBlock::Create(Ctx, A->Name() + ":end", InstrFn, Exit);
+
+  Exit->replaceAllUsesWith(End);
+
+  IRBuilder<>(Start).CreateBr(End);
+  IRBuilder<>(End).CreateBr(Exit);
+
+  NextInstr[A] = End;
+  return End;
 }
 
 }

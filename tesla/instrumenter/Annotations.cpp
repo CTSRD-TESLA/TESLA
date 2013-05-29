@@ -1,4 +1,4 @@
-/*! @file callee.ll   Tests instrumentation of field assignment. */
+/*! @file Annotations.h   Declarations of LLVM annotation parsers. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
@@ -27,55 +27,60 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * Commands for llvm-lit:
- * RUN: clang %cflags -c -S -emit-llvm %s -o %t.ll
- * RUN: tesla instrument -S -tesla-manifest %p/tesla.manifest %t.ll -o %t.instr.ll
- * RUN: FileCheck -input-file=%t.instr.ll %s
  */
 
-/*
- * CHECK-DAG: @.[[FIELD0:[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field0
- * CHECK-DAG: @.[[FIELD1:[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field1
- * CHECK-DAG: @.[[FILENAME:[_a-zA-Z0-9\.]+]] = {{.*}} c"{{.*}}field-assign.c
- */
+#include "Annotations.h"
 
-#include <sys/types.h>
+#include <llvm/ADT/APInt.h>
+#include <llvm/IR/GlobalVariable.h>
 
-struct some_structure {
-	int64_t field0 __attribute__((annotate("field:some_structure.field0")));
-	int32_t field1 __attribute__((annotate("field:some_structure.field1")));
-};
+using namespace llvm;
+using std::string;
 
+namespace tesla {
 
-int main(int argc, char *argv[]) {
-	struct some_structure s;
+PtrAnnotation* PtrAnnotation::Interpret(User *U) {
+  assert(U);
 
-	// CHECK: call [[STORE:void @__tesla_instrumentation_struct_field_store_struct.some_structure]]
-	// CHECK: .field0([[STRUCT:%struct.some_structure\* %[_a-zA-Z0-9]+]],
-	// CHECK: i64 31415926
-	s.field0 = 31415926;
+  auto *Call = dyn_cast<CallInst>(U);
+  assert(Call);
+  assert(Call->getNumArgOperands() == 4);
 
-	// CHECK: call [[STORE]].field1([[STRUCT]], i32 0
-	s.field1 = 0;
+  Value *Ptr(Call->getArgOperand(0));
+  StringRef Name(ExtractStringConstant(Call->getArgOperand(1)));
+  StringRef Filename(ExtractStringConstant(Call->getArgOperand(2)));
+  APInt Line = dyn_cast<ConstantInt>(Call->getArgOperand(3))->getValue();
 
-	// CHECK: call [[STORE]].field1([[STRUCT]], i32 %
-	s.field1++;
+  const string FIELD = "field:";
 
-	// CHECK: call [[STORE]].field1([[STRUCT]], i32 %
-	return --s.field1;
+  if (!Name.startswith(FIELD))
+    return new PtrAnnotation(Call, Ptr, Name, Filename, Line);
+
+  size_t Dot(Name.find('.'));
+  StringRef StructName(Name.slice(FIELD.length(), Dot));
+  StringRef FieldName(Name.substr(Dot + 1));
+
+  return new FieldAnnotation(Call, Ptr, StructName, FieldName, Filename, Line);
 }
 
-/*
- * CHECK: define private [[STORE]].field0([[STRUCT:%struct.some_structure\*]], i64, i64*){{.*}} {
- * CHECK:   [[UPDATE_STATE:call i32 @tesla_update_state]]
- * CHECK: }
- */
+StringRef PtrAnnotation::ExtractStringConstant(const Value *V) {
+  auto *Ptr = dyn_cast<ConstantExpr>(V);
+  assert(Ptr && Ptr->isGEPWithNoNotionalOverIndexing());
 
-/*
- * CHECK: define private [[STORE]].field1([[STRUCT]], i32, i32*){{.*}} {
- * CHECK:   [[UPDATE_STATE]]
- * CHECK:   [[UPDATE_STATE]]
- * CHECK:   [[UPDATE_STATE]]
- * CHECK: }
- */
+  auto *Var = dyn_cast<GlobalVariable>(Ptr->getOperand(0));
+  auto *Array = dyn_cast<ConstantDataArray>(Var->getInitializer());
+
+  return Array->getAsString();
+}
+
+
+string tesla::FieldAnnotation::completeFieldName() const {
+  string Complete = (StructName + "." + FieldName).str();
+
+  // Remove trailing NULL character.
+  Complete.resize(strnlen(Complete.c_str(), Complete.length()));
+
+  return Complete;
+}
+
+}

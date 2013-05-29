@@ -243,12 +243,11 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
 
 
 Function* tesla::StructInstrumentation(Module& Mod, StructType *Type,
-                                       const FieldAssignment& Protobuf,
+                                       StringRef FieldName, size_t FieldIndex,
                                        bool Store) {
 
   LLVMContext& Ctx = Mod.getContext();
   StringRef StructName = Type->getName();
-  StringRef FieldName = Protobuf.fieldname();
 
   string Name = (Twine()
     + STRUCT_INSTR
@@ -270,11 +269,11 @@ Function* tesla::StructInstrumentation(Module& Mod, StructType *Type,
     return InstrFn;
 
   // The instrumentation function does not exist; we need to build it.
-  if (Type->getNumElements() <= Protobuf.index())
+  if (Type->getNumElements() <= FieldIndex)
     panic("struct " + Type->getName() + " does not have "
-           + Twine(Protobuf.index()) + " elements");
+           + Twine(FieldIndex) + " elements");
 
-  auto *FieldTy = Type->getElementType(Protobuf.index());
+  auto *FieldTy = Type->getElementType(FieldIndex);
 
   // Three arguments: the struct, the new value and a pointer to the field.
   TypeVector Args;
