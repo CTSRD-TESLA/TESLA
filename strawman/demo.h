@@ -36,7 +36,7 @@
 #include <openssl/des.h>
 
 struct object {
-	int	refcount;
+	int	refcount __attribute__((annotate("field:object.refcount")));
 };
 
 struct credential {};
