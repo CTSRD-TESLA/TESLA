@@ -100,6 +100,8 @@ example_syscall(struct credential *cred, int index, int op)
 
 	crypto_encrypt(&des_key, &key_schedule);
 
+	log_audit_record(o, op);
+
 	release(o);
 
 	return 0;
