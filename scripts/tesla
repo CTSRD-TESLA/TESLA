@@ -32,7 +32,7 @@ if [ $TESLA_BUILD_DIR ]; then
 		exit 1
 	fi
 else
-	TOOL=`which tesla-$TOOL_NAME`
+	TOOL=`which $TOOL_NAME`
 	if [ ! "$TOOL" ]; then
 		echo "No '$TOOL_NAME' in \$PATH; try setting TESLA_BUILD_DIR?"
 		exit 1
