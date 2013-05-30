@@ -430,8 +430,6 @@ bool Parser::Parse(Expression *E, const DeclRefExpr *Ref, Flags F) {
 
 
 bool Parser::Parse(Expression *E, const UnaryOperator *U, Flags F) {
-  U->dump();
-
   // We only support unary operators in struct field expressions (for now).
   E->set_type(Expression::FIELD_ASSIGN);
   FieldAssignment *A = E->mutable_fieldassign();
