@@ -162,6 +162,8 @@ private:
   //! Check that an @ref Expression is '__tesla_ignore'.
   bool CheckIgnore(const clang::Expr*);
 
+  //! Check that we aren't mixing simple with compound assignments.
+  bool CheckAssignmentKind(const clang::ValueDecl*, const clang::Expr*);
 
   //! Parse a literal C string embedded in code.
   std::string ParseStringLiteral(const clang::Expr*);
@@ -191,6 +193,7 @@ private:
   const clang::Stmt *Root;          //!< Expression describing the automaton.
   const Flags RootFlags;
 
+  std::map<const clang::ValueDecl*, const clang::Expr*> FieldAssignments;
   RefVector References;
 };
 

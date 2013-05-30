@@ -465,7 +465,8 @@ bool Parser::Parse(Expression *E, const UnaryOperator *U, Flags F) {
     return false;
   }
 
-  return ParseStructField(A, ME, F);
+  return CheckAssignmentKind(ME->getMemberDecl(), U)
+      && ParseStructField(A, ME, F);
 }
 
 
@@ -749,7 +750,8 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
     return false;
   }
 
-  return ParseStructField(A, LHS, F)
+  return CheckAssignmentKind(LHS->getMemberDecl(), O)
+      && ParseStructField(A, LHS, F)
       && Parse(A->mutable_value(), O->getRHS(), F);
 }
 
@@ -896,6 +898,37 @@ bool Parser::CheckIgnore(const Expr *E) {
   }
 
   return true;
+}
+
+
+static inline bool SimpleAssignment(const Expr *E) {
+  auto *BO = dyn_cast<BinaryOperator>(E);
+  return (BO != NULL) && (BO->getOpcode() == BO_Assign);
+}
+
+bool Parser::CheckAssignmentKind(const ValueDecl *Field, const Expr *E) {
+  auto i = FieldAssignments.find(Field);
+  if (i == FieldAssignments.end()) {
+    FieldAssignments[Field] = E;
+    return true;
+  }
+
+  auto *Old = i->second;
+
+  if (SimpleAssignment(E) == SimpleAssignment(Old))
+    return true;
+
+  static DiagnosticsEngine& Diag = Ctx.getDiagnostics();
+  static int Warn = Diag.getCustomDiagID(DiagnosticsEngine::Warning,
+    "TESLA: mixing instrumentation of simple and compound assignments");
+
+  static int Note = Diag.getCustomDiagID(DiagnosticsEngine::Note,
+    "TESLA: previous assignment here");
+
+  Diag.Report(E->getLocStart(), Warn) << E->getSourceRange();
+  Diag.Report(Old->getLocStart(), Note) << Old->getSourceRange();
+
+  return false;
 }
 
 
