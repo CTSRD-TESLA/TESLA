@@ -1,4 +1,1 @@
-*.ll
-*.o
-*.tesla
-demo
+smoketest
