@@ -3,7 +3,8 @@
 
 # The location of TESLA outputs (binaries, libraries, etc.).
 # Only needed when we don't install TESLA to /usr/local.
-TESLA_BUILD_DIR?=../build
+TESLA_SOURCE_DIR?=../..
+TESLA_BUILD_DIR?=${TESLA_SOURCE_DIR}/build
 
 # For our demo handcoded LLVM IR, we need to assign an arch-vendor-OS triple.
 # Normal consumers don't need to do this.
