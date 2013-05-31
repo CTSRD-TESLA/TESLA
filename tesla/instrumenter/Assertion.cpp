@@ -152,7 +152,20 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
         panic("assertion references non-existent variable '" + Arg.name()
            + "'; was it defined under '#ifdef TESLA'?");
 
-      Value *Ptr = ValuesInScope[Arg.name() + ".addr"];
+      // Find the pointer to the variable we care about, which is either a
+      // stack-allocated store target or else, if there is no address-taking,
+      // the variable we already have must be the pointer.
+      Value *Ptr;
+      for (auto i = V->use_begin(); i != V->use_end(); i++) {
+        auto *Store = dyn_cast<StoreInst>(*i);
+        if (!Store)
+          continue;
+
+        Ptr = Store->getPointerOperand();
+
+        if (V == Store->getValueOperand())
+          assert(isa<AllocaInst>(Ptr));
+      }
 
       // If LLVM hasn't taken the address of our variable, it's because the
       // variable *is* an address.
