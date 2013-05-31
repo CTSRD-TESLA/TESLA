@@ -118,6 +118,7 @@ include_directories(
 
 
 add_subdirectory(demos)
+add_subdirectory(include)
 add_subdirectory(libtesla)
 add_subdirectory(tesla)
 add_subdirectory(scripts)
