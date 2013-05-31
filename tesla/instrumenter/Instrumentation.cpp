@@ -409,8 +409,8 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
     panic(
       "Instrumentation argument "
       + (Name.empty() ? "" : ("'" + Name + "' "))
-      + "cannot be cast from '" + CurrentTypeName
-      + "' to '" + NewTypeName + "'"
+      + "cannot be cast from '" + CurrentOut.str()
+      + "' to '" + NameOut.str() + "'"
     );
   }
 
