@@ -145,10 +145,11 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
       if (!Annotation)
         continue;
 
+      // Not every struct field will have instrumentation defined for it.
       auto Name = Annotation->completeFieldName();
       auto *Instr = Instrumentation[Name];
       if (Instr == NULL)
-        panic("no instrumentation found for '" + Name + "'");
+        continue;
 
       for (User *U : *Annotation) {
         auto *Cast = dyn_cast<CastInst>(U);
