@@ -14,6 +14,7 @@ CFLAGS	+= -D _KERNEL -D AUDIT -D MAC -D __BSD_VISIBLE \
 
 LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
 
+# TODO: do some string substitution to derive .tesla file names
 OBJ=	\
 	${BASE}.instro \
 	helpers.instro \
@@ -22,6 +23,11 @@ OBJ=	\
 	vfs_lookup.instro \
 	vfs_syscalls.instro \
 	vfs_vnops.instro
+
+TESLA_FILES=	\
+	vfs_lookup.tesla \
+	vfs_syscalls.tesla \
+	vfs_vnops.tesla
 
 RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/3.3
 
@@ -36,7 +42,7 @@ clean:
 # Normal C workflow:
 #
 ${BASE}: ${OBJ}
-	${CC} ${LDFLAGS} $^ -o $@
+	${CC} ${LDFLAGS} ${OBJ} -o $@
 
 .c.ll:
 	${CC} -S -emit-llvm ${CFLAGS} $< -o $@
@@ -54,8 +60,8 @@ ${BASE}: ${OBJ}
 	tesla analyse $< -o $@ -- ${CFLAGS} ${RESOURCE_DIR}
 
 # Combining several TESLA files
-${BASE}.tesla: vfs_lookup.tesla vfs_syscalls.tesla vfs_vnops.tesla
-	tesla cat $^ -o $@
+${BASE}.tesla: ${TESLA_FILES}
+	tesla cat ${TESLA_FILES} -o $@
 	# temporary workaround for ClangTool irritant:
 	sed -i.backup "s@`pwd`/@@" ${BASE}.tesla && rm ${BASE}.tesla.backup
 
