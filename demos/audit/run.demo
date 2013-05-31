@@ -6,7 +6,7 @@
 # RUN: %s -D TESLA > %t.tesla.out 2>&1
 # RUN: FileCheck --check-prefix DTESLA -input-file %t.tesla.out %s
 #
-# XFAIL: Linux
+# XFAIL: linux
 #
 
 
