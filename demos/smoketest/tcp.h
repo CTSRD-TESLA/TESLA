@@ -170,6 +170,7 @@ struct tcpcb {
 	u_int64_t _pad[6];		/* 6 TBD (1-2 CC/RTT?) */
 };
 
+#ifdef TESLA
 #ifdef __TESLA_ANALYSER__
 automaton(my_tcpcb_assertion, struct tcpcb *tp);
 automaton(active_close, struct tcpcb*);
@@ -245,4 +246,4 @@ automaton(established, struct tcpcb *tp)
 }
 
 #endif
-
+#endif

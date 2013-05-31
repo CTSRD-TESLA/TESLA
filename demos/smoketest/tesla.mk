@@ -5,7 +5,7 @@ CAT=		tesla cat
 INSTRUMENT=	tesla instrument -S -verify-each
 GRAPH=		tesla graph
 
-CFLAGS+=	-D TESLA
+#CFLAGS+=	-D TESLA
 LIBS+=		-l tesla
 GRAPH_FLAGS?=	-d
 

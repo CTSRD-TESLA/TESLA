@@ -7,7 +7,7 @@ TESLA_BUILD_DIR?=../build
 
 # For our demo handcoded LLVM IR, we need to assign an arch-vendor-OS triple.
 # Normal consumers don't need to do this.
-TRIPLE=		$(shell ../scripts/tesla get-triple)
+TRIPLE=		$(shell tesla get-triple)
 LLC=llc -mtriple=${TRIPLE} -filetype=obj
 
 CC=		clang
@@ -19,7 +19,7 @@ CFLAGS+=	-Wall -D REVISION="${REVISION}" \
 		-Wno-deprecated-declarations	# DES_set_key() is deprecated
 LIBS+=		-l crypto -l tesla
 
-BIN=		demo
+BIN=		smoketest
 
 # tesla.mk will create OBJS for instrumented .o files from SRCS and IR.
 SRCS=	crypto.c example.c support.c main.c
@@ -44,7 +44,7 @@ tesla:
 #
 
 # Just in case TESLA isn't installed to /usr/local:
-CFLAGS+=	-I ../include
+CFLAGS+=	-I ${TESLA_SOURCE_DIR}/include
 LIBS+=		-L ${TESLA_BUILD_DIR}/libtesla/src
 
 include tesla.mk
