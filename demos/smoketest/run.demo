@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# RUN: %s > %t.out 2>&1
+# RUN: FileCheck --check-prefix NORMAL -input-file %t.out %s
+#
+# RUN: %s -D TESLA > %t.tesla.out 2>&1
+# RUN: FileCheck --check-prefix DTESLA -input-file %t.tesla.out %s
+#
+# Note: there is currently an assertion failure when running with TESLA.
+# XFAIL: *
+#
+
+cd `dirname $0`
+
+CFLAGS="$*" make clean all
+TESLA_DEBUG=tesla.events ./smoketest
+
+#
+# Without -D TESLA, no TESLA events should be printed:
+#
+# NORMAL: tesla analyse
+# NORMAL: tesla cat
+# NORMAL: tesla instrument
+# NORMAL: clang -o smoketest {{.*}}.instr.o
+# NORMAL: Calling the 'example_syscall' function...
+# NORMAL-NOT: [CALE]
+# NORMAL-NOT: [CALR]
+# NORMAL-NOT: [RETE]
+# NORMAL-NOT: [RETR]
+# NORMAL: example_syscall returned 0
+#
+#
+# With TESLA, we should see TESLA events but not errors:
+#
+# DTESLA: tesla analyse
+# DTESLA: tesla cat
+# DTESLA: tesla instrument
+# DTESLA: clang -o smoketest {{.*}}.instr.o
+# DTESLA: Calling the 'example_syscall' function...
+# DTESLA: [CALE] example_syscall [[O:0x[0-9a-f]+]] 0 0
+# DTESLA: [RETE] example_syscall [[O]] 0 0 0
+# DTESLA: example_syscall returned 0
+#

@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# RUN: %s > %t.out 2>&1
+# RUN: FileCheck --check-prefix NORMAL -input-file %t.out %s
+#
+# RUN: %s -D TESLA 2>&1 | tee %t.tesla.out
+# RUN: FileCheck --check-prefix DTESLA -input-file %t.tesla.out %s
+#
+
+LINE="======================================================================"
+
+CFLAGS="$*"
+export CFLAGS
+
+cd `dirname $0`
+
+echo $LINE
+echo "Compiling demo with CFLAGS '$CFLAGS'..."
+echo $LINE
+make clean all || exit 1
+echo $LINE
+echo
+
+echo $LINE
+echo "Running demo..."
+echo $LINE
+
+# 'self-signed' is a self-signed certificate: this should pass.
+./openssl-api Inputs/self-signed.crt Inputs/self-signed.crt || exit 1
+
+# 'self-signed' has NOT been signed by 'other': this should fail.
+./openssl-api Inputs/self-signed.crt Inputs/other.crt || exit 1
+
+# 'hacked' is not even a valid certificate; it should definitely fail!
+./openssl-api Inputs/self-signed.crt Inputs/hacked.crt || exit 1
+
+echo $LINE
+
+#
+# The run without -D TESLA should just pass:
+#
+# NORMAL: tesla analyse
+# NORMAL: tesla instrument
+# NORMAL: clang {{.*}}.instr.o -o openssl-api
+#
+#
+# The run with -D TESLA should detect the missing audit event:
+#
+# DTESLA: tesla analyse
+# DTESLA: tesla instrument
+# DTESLA: clang {{.*}}.instr.o -o openssl-api
+#
+# DTESLA: TESLA failure:
+# DTESLA: In automaton 'openssl-api.c
+# DTESLA: Instance {{[0-9]+}} is in state {{[0-9]+}}
+# DTESLA: but required to take a transition in [
+#
