@@ -1,0 +1,4 @@
+#!/bin/sh
+
+CFLAGS="$*" make clean all
+TESLA_DEBUG=tesla.events ./smoketest
