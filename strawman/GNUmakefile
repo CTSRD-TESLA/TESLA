@@ -29,7 +29,7 @@ IR=	handcoded.ll
 all: tesla tesla.dot ${BIN}
 
 clean:
-	rm -f ${BIN} ${SRCS:.c=.ll} ${OBJS} ${TESLA_ALLFILES}
+	rm -f ${BIN} ${SRCS:.c=.ll} ${OBJS} ${TESLA_ALLFILES} *.dot *.pdf
 
 tesla:
 	@if [ ! -d ${TESLA_BUILD_DIR} ]; then \
