@@ -188,7 +188,6 @@ struct tesla_class {
 	const char	*tc_description;/* Description of the assertion. */
 	uint32_t	 tc_scope;	/* Per-thread or global. */
 	uint32_t	 tc_limit;	/* Simultaneous automata limit. */
-	uint32_t	 tc_action;	/* What to do on failure. */
 
 	struct tesla_instance	*tc_instances;	/* Instances of this class. */
 	uint32_t		tc_free;	/* Unused instances. */
@@ -233,12 +232,6 @@ int	tesla_store_init(tesla_store*, uint32_t context, uint32_t classes,
 int	tesla_class_init(struct tesla_class*, uint32_t context,
 		uint32_t instances);
 
-#if 0
-//! We have failed to find an instance that matches a @ref tesla_key.
-void	tesla_match_fail(struct tesla_class*, const struct tesla_key*,
-		const struct tesla_transitions*);
-#endif
-
 /*
  * XXXRW: temporarily, maximum number of classes and instances are hard-coded
  * constants.  In the future, this should somehow be more dynamic.
@@ -276,39 +269,13 @@ void	tesla_class_perthread_destroy(struct tesla_class*);
 /*
  * Event notification:
  */
-/** A new @ref tesla_instance has been created. */
-void	tesla_notify_new_instance(struct tesla_class *,
-    struct tesla_instance *);
+extern struct tesla_event_handlers	*ev_handlers;
+extern struct tesla_event_handlers	failstop_handlers;
+extern struct tesla_event_handlers	printf_handlers;
 
-/** A @ref tesla_instance has taken an expected transition. */
-void	tesla_notify_transition(struct tesla_class *, struct tesla_instance *,
-    const struct tesla_transition*);
-
-/** An exisiting @ref tesla_instance has been cloned because of an event. */
-void	tesla_notify_clone(struct tesla_class *,
-    struct tesla_instance *old_instance, struct tesla_instance *new_instance,
-    const struct tesla_transition*);
-
-/** A @ref tesla_instance was unable to take any of a set of transitions. */
-void	tesla_notify_assert_fail(struct tesla_class *, struct tesla_instance *,
-    const struct tesla_transitions *);
-
-/** No @ref tesla_class instance was found to match a @ref tesla_key. */
-void	tesla_notify_match_fail(struct tesla_class *, const struct tesla_key *,
-    const struct tesla_transitions *);
-
-/** A @ref tesla_instance has "passed" (worked through the automaton). */
-void	tesla_notify_pass(struct tesla_class *, struct tesla_instance *);
-
-/*
- * DTrace notifications of various events.
- */
-void	tesla_state_transition_dtrace(struct tesla_class *,
-	    struct tesla_instance *, const struct tesla_transition *);
-void	tesla_assert_fail_dtrace(struct tesla_class *,
-	    struct tesla_instance *, const struct tesla_transitions *);
-void	tesla_assert_pass_dtrace(struct tesla_class *,
-	    struct tesla_instance *);
+#ifdef _KERNEL
+extern struct tesla_event_handlers	dtrace_handlers;
+#endif
 
 /*
  * Debug helpers.
