@@ -261,7 +261,7 @@ void	tesla_class_global_acquire(struct tesla_class*);
 void	tesla_class_global_release(struct tesla_class*);
 void	tesla_class_global_destroy(struct tesla_class*);
 
-int32_t	tesla_class_perthread_postinit(struct tesla_class*c);
+int32_t	tesla_class_perthread_postinit(struct tesla_class*);
 void	tesla_class_perthread_acquire(struct tesla_class*);
 void	tesla_class_perthread_release(struct tesla_class*);
 void	tesla_class_perthread_destroy(struct tesla_class*);
