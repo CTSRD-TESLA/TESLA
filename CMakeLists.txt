@@ -24,6 +24,14 @@ exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+#
+# Global include directories for all of TESLA:
+#
+include_directories(
+	include                          # [lib]tesla.h
+	${CMAKE_BINARY_DIR}/include      # config.h
+)
+
 # Default to libc++ if installed.
 find_package(LibCXX)
 
@@ -108,13 +116,6 @@ check_function_exists(strnlen HAVE_STRNLEN)
 configure_file(cmake/config.h.in include/config.h)
 
 
-#
-# Global include directories for all of TESLA:
-#
-include_directories(
-	include                          # [lib]tesla.h
-	${CMAKE_BINARY_DIR}/include      # config.h
-)
 
 
 add_subdirectory(demos)
