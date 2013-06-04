@@ -86,23 +86,6 @@ const std::string EXIT              = "return_";
 
 const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 
-/**!
- * Since neither std::string nor llvm::StringRef can compare the <i>content</i>
- * of strings by ignoring null terminators, we have to do it ourselves.
- */
-template<class T>
-struct less_ignoring_null : std::binary_function<T,T,bool> {
-  bool operator() (const T& x, const T& y) const { return x < y; }
-};
-
-template<>
-struct less_ignoring_null<std::string>
-  : std::binary_function<std::string,std::string,bool> {
-  bool operator() (const std::string& x, const std::string& y) const {
-    return (strncmp(x.data(), y.data(), x.length()) < 0);
-  }
-};
-
 //! Convert an @ref Argument into something human-readable.
 std::string ArgString(const Argument*);
 
