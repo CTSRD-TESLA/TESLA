@@ -1,0 +1,83 @@
+${HEADER}
+
+<h1>Programming with TESLA</h1>
+
+
+<a name="headers"></a>
+<h2>Header files</h2>
+
+<p>
+TESLA provides programmers with two header file options:
+tesla.h, which defines TESLA primitives prefixed by __tesla, and
+tesla-macros.h, which provides examples of macros that are more
+programmer-friendly but could cause namespace collisions.
+We recommend that you start with the example tesla-macros.h and
+modify it as necessary to avoid namespace collisions with your code.
+</p>
+
+
+<a name="inputs"></a>
+<h2>Assertions and automata</h2>
+
+<p>
+TESLA accepts two types of input: inline assertions and explicit automata.
+Both inputs describe the expected temporal behaviour of software; TESLA
+checks actual run-time behaviour against such descriptions.
+</p>
+
+
+<a name="assertions"></a>
+<h3>Inline assertions</h3>
+
+<p>
+Inline assertions are typically declared with the TESLA_GLOBAL or
+TESLA_PERTHREAD macros, or else the per-thread convenience wrapper
+TESLA_WITHIN.
+These macros wrap the __tesla_inline_assertion function, which expects
+several arguments:
+</p>
+
+<ul>
+  <li>
+    an assertion location:
+    <ul>
+      <li>filename, line number and counter</li>
+      <li>provided implicitly by the above macros</li>
+    </ul>
+  </li>
+  <li>
+    a storage and synchronisation context
+    <ul>
+      <li>global or per-thread</li>
+      <li>provided implicitly by the above macros</li>
+    </ul>
+  </li>
+  <li>
+    context bounds, at which all instances of an automaton should be
+    initialised and cleaned up
+    <ul>
+      <li>
+        TESLA_GLOBAL and TESLA_PERTHREAD expect explicit <em>start</em> and
+        <em>end</em> bounds
+      </li>
+      <li>
+        TESLA_WITHIN expects a function whose entry and exit are the
+        start and end bounds
+      </li>
+    </ul>
+  </li>
+  <li>a <a href="#expressions">TESLA expression</a></li>
+</ul>
+
+<a name="automata"></a>
+<h3>Explicit automata</h3>
+
+<p>TODO</p>
+
+
+<a name="expressions"></a>
+<h2>TESLA expressions</h2>
+
+<p>TODO</p>
+
+${FOOTER}

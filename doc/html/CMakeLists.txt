@@ -27,7 +27,7 @@ set(FOOTER "
 #
 configure_file(tesla.css ucam/tesla.css)
 
-set(HTML index build)
+set(HTML index build programming)
 foreach(base ${HTML})
 	configure_file(${base}.html ucam/${base}-b.html)
 	set(HTML_TARGETS "${HTML_TARGETS} ${base}.html")
