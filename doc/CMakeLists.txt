@@ -3,6 +3,15 @@ find_package(PythonInterp)
 
 add_custom_target(doc ALL)
 
+#
+# Static HTML content.
+#
+add_subdirectory(html)
+
+
+#
+# Doxgyen-generated API documentation.
+#
 if( DOXYGEN_FOUND)
 	message("-- Using Doxygen to generate API documentation")
 
@@ -17,13 +26,13 @@ if( DOXYGEN_FOUND)
 		set(PROTOBUF_FILTER true)
 	endif()
 
-	make_directory(api)
+	make_directory(doc/man)
 
 	configure_file(Doxyfile.in Doxyfile)
-	configure_file(api.htaccess api/.htaccess)
+	configure_file(api.htaccess html/api/ucam/.htaccess)
 
 	add_custom_command(
-		OUTPUT api/html/index.xhtml
+		OUTPUT html/api/ucam/index.xhtml
 
 		# In lieu of proper dependency checking, declare a dependency
 		# on lots of stuff.
@@ -43,7 +52,7 @@ if( DOXYGEN_FOUND)
 		COMMENT "Generating API documentation"
 	)
 
-	add_custom_target(api-docs DEPENDS api/html/index.xhtml)
+	add_custom_target(api-docs DEPENDS html/api/ucam/index.xhtml)
 	add_dependencies(doc api-docs)
 else()
 	message("-- Doxygen not found; not generating API documentation")

@@ -1,0 +1,4 @@
+all:	${HTML_TARGETS}
+
+%.html: %-b.html uconfig.txt
+	${UCAMPAS} $*

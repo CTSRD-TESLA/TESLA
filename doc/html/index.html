@@ -1,0 +1,32 @@
+${HEADER}
+
+<h1>
+  Temporally Enhanced Security Logic Assertions (TESLA)
+</h1>
+<br clear=all>
+
+<p>
+TESLA builds on our experiences developing the TrustedBSD MAC Framework
+and Capsicum: our most critical security properties are frequently safety
+(temporal) properties rather than static invariants.
+Current tools for testing temporal properties are largely static, and unable
+to work effectively on extremely large C-language software bases, such as
+multi-million lines-of-code operating system kernels and web browsers.
+TESLA borrows ideas from model checking, applying them in a dynamic context
+using compiler-assisted instrumentation to continuously validate temporal
+security assertions during software execution.
+We have implemented a prototype of TESLA based on clang/LLVM AST transforms,
+which is able to test both explicit automata against C implementations (such
+as protocol state machines in the kernel and OpenSSL) and inline assertions
+checking for missing access control checks in OS logic.
+</p>
+
+<h2>Documentation</h2>
+
+<ul>
+<li><a href="build.html">Building TESLA</a></li>
+<li>Coming soon: programmer documentation</li>
+<li><a href="api">API documentation</a></li>
+</ul>
+
+${FOOTER}

@@ -1,0 +1,45 @@
+/*
+ * Simulation of console output.
+ */
+.console {
+	background-color: black;
+	color: #ccc;
+}
+
+.code {
+	background-color: #ffd;
+}
+
+.console, .code {
+	font-family: monospace;
+	margin: 0.5em;
+	padding: 0.25em;
+	white-space: pre-wrap;
+}
+
+.console .red { color: #f99; }
+.console .green { color: #9f9; }
+.console .blue { color: #99f; }
+
+/*
+ * Simulation of coloured diff output.
+ */
+.diff .add { color: #3c3; }
+.diff .del { color: #c33; }
+
+/*
+ * Dependencies listed in a table.
+ */
+table.deps {
+	border-spacing: 3px;
+	text-align: center;
+}
+
+table.deps thead {
+	font-weight: bold;
+}
+
+table.deps td {
+	background-color: #eee;
+	padding: .25em;
+}

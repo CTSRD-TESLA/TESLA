@@ -1,0 +1,318 @@
+${HEADER}
+
+<h1>Building TESLA</h1>
+
+<p>
+For the moment, TESLA requires a bit of effort to build: it has a very
+heavyweight dependency (recent LLVM/Clang). The steps required to build are:
+</p>
+
+<ol>
+<li><a href="#prerequisites">acquire prerequisites</a></li>
+<li><a href="#build-llvm">build (a very recent version of) LLVM</a></li>
+<li><a href="#build">build TESLA</a></li>
+<li><a href="#exercise">exercise TESLA</a></li>
+</ol>
+
+<a name="prerequisites"></a>
+<h3>Prerequisites</h3>
+<p>
+Here is a table of dependencies and the names of their ports/packages on various platforms:
+</p>
+
+<table class="deps">
+	<thead>
+		<tr>
+			<td rowspan="2">Name</td>
+			<td rowspan="2">FreeBSD</td>
+			<td colspan="2">Mac OS X</td>
+			<td colspan="2">Linux</td>
+		</tr>
+		<tr>
+			<td><a href="http://mxcl.github.com/homebrew/" target="_blank">HomeBrew</a></td>
+			<td><a href="http://www.macports.org/" target="_blank">MacPorts</a></td>
+			<td>Ubuntu</td>
+			<td>Fedora</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>C++ compiler</td>
+			<td>base system</td>
+			<td colspan="2"><a href="https://developer.apple.com/xcode/" target="_blank">XCode</a> (with Command Line Tools)</td>
+			<td>clang</td>
+			<td>gcc-c++</td>
+		</tr>
+		<tr>
+			<td><a href="http://llvm.org/" target="_blank">LLVM</a></td>
+			<td>llvm-devel</td>
+			<td colspan="4" rowspan="2">
+				<a href="#build-llvm">build from source</a>
+			</td>
+		</tr>
+		<tr>
+			<td><a href="http://clang.llvm.org/" target="_blank">Clang</a></td>
+			<td>clang-devel</td>
+		</tr>
+		<tr>
+			<td><a href="http://www.freebsd.org/cgi/url.cgi?ports/devel/libexecinfo/pkg-descr" target="_blank">libexecinfo</a></td>
+			<td>libexecinfo</td>
+			<td colspan="4">included with libc</td>
+		</tr>
+		<tr>
+			<td><a href="http://git-scm.com" target="_blank">Git</a></td>
+			<td colspan="2">git</td>
+			<td>git-core</td>
+			<td colspan="2">git</td>
+		</tr>
+		<tr>
+			<td><a href="http://subversion.tigris.org/" target="_blank">Subversion</a></td>
+			<td colspan="5">subversion</td>
+		</tr>
+		<tr>
+			<td><a href="http://martine.github.com/ninja/" target="_blank">Ninja</a></td>
+			<td>devel/ninja</td>
+			<td colspan="2">ninja</td>
+			<td>ninja-build</td>
+			<td><a href="https://github.com/martine/ninja" target="_blank">from source</a></td>
+		</tr>
+		<tr>
+			<td><a href="http://www.cmake.org/" target="_blank">CMake</a></td>
+			<td>cmake</td>
+			<td>cmake --enable-ninja</td>
+			<td colspan="3">cmake</td>
+		</tr>
+		<tr>
+			<td><a href="http://code.google.com/p/protobuf/" target="_blank">Protocol Buffers</a></td>
+			<td colspan="2">protobuf</td>
+			<td>protobuf-cpp</td>
+			<td>libprotobuf-dev<br/>protobuf-compiler</td>
+			<td><a href="http://code.google.com/p/protobuf/downloads" target="_blank">from source</a></td>
+		</tr>
+	</tbody>
+</table>
+
+
+<a name="build-llvm"></a>
+<h3>Build a recent LLVM/Clang</h3>
+<p>
+You need to download and build a very recent version of LLVM/Clang from source
+unless you're using FreeBSD, which has a very recent version available from
+ports (see <a href="#prerequisites">prerequisites, above</a>).
+</p>
+
+<div class="console"><span class="blue">$</span> cd somewhere/to/stash/1GB/of/LLVM
+<span class="blue">$</span> svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
+[...]
+ U   llvm
+Checked out revision 175226.
+
+<span class="blue">$</span> cd llvm/tools
+<span class="blue">$</span> svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
+[...]
+A    clang/LICENSE.TXT
+ U   clang
+Checked out revision 175226.
+
+<span class="blue">$</span> cd ../..
+<span class="blue">$</span> mkdir build
+<span class="blue">$</span> cd build
+<span class="blue">$</span> cmake -DCMAKE_BUILD_TYPE=Release -G Ninja ../llvm
+-- The C compiler identification is [...]
+-- Check for working C compiler using: Ninja
+-- Check for working C compiler using: Ninja -- works
+[...]
+-- Generating done
+-- Build files have been written to: /home/jonathan/LLVM/build
+
+<span class="blue">$</span> cmake -D CMAKE_BUILD_TYPE=Release .    <span class="blue"># if you feel adventurous</span>
+<span class="blue">$</span> ninja
+[1932/1932] Linking CXX executable bin/c-index-test
+</div>
+
+
+
+<a name="build"></a>
+<h3>Build TESLA</h3>
+
+<p>
+Once you have LLVM, make sure that it's at the front of your PATH:
+</p>
+
+<div class="console"><span class="blue">$</span> export PATH=/path/to/LLVM/build/bin:$PATH
+<span class="blue">$</span> llvm-config --libdir               <span class="blue"># test that llvm-config works</span>
+</div>
+
+<p>
+Next, we download and configure TESLA:
+</p>
+
+<div class="console"><span class="blue">$</span> git clone https://github.com/CTSRD-TESLA/TESLA.git tesla
+Cloning into 'TESLA'...
+remote: Counting objects: 3138, done.
+[...]
+
+<span class="blue">$</span> cd tesla
+<span class="blue">$</span> mkdir build
+<span class="blue">$</span> cd build
+<span class="blue">$</span> cmake -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+-- The C compiler identification is Clang 3.3.0
+-- Check for working C compiler using: Ninja
+-- Check for working C compiler using: Ninja -- works
+-- Detecting C compiler ABI info
+<span class="blue">[...]</span>
+-- Found PROTOBUF: /usr/local/lib/libprotobuf.so
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/jonathan/TESLA/build
+
+<span class="blue">$</span> ccmake . <span class="blue"># nice UI for further configuration, or else:</span>
+<span class="blue">$</span> cmake -D USE_LIBCXX=false .  <span class="blue"># if you have libc++ but didn't link LLVM against it</span>
+<span class="blue">$</span> cmake -D CMAKE_MODULE_PATH=/&lt;LLVM prefix&gt;/share/llvm/cmake .  <span class="blue"># if CMake can't find LLVM-Config or AddLLVM</span>
+<span class="blue">$</span> cmake -D CMAKE_C_FLAGS=-fcolor-diagnostics .       <span class="blue"># optional but nice</span>
+<span class="blue">$</span> cmake -D CMAKE_CXX_FLAGS=-fcolor-diagnostics .     <span class="blue"># optional but nice</span>
+</div>
+
+<p>
+Then we can build and test it:
+</p>
+
+<div class="console"><span class="blue">$</span> ninja
+[49/49] Testing TESLA
+</div>
+
+<p>
+After that, you'll want to be able to actually run TESLA.
+You can either set some environment variables:
+</p>
+
+<div class="console"><span class="blue">$</span> export TESLA_BUILD_DIR=/path/to/TESLA/build
+<span class="blue">$</span> export TESLA_SOURCE_DIR=/path/to/TESLA
+<span class="blue">$</span> export PATH=$TESLA_SOURCE_DIR/scripts:$PATH
+</div>
+
+<p>or else you can install the tools somewhere on your PATH:</p>
+
+<div class="console"><span class="blue">$</span> cd build
+<span class="blue">$</span> cmake -D CMAKE_INSTALL_PREFIX=/some/sensible/path .   <span class="blue"># or else things go in /usr/local</span>
+<span class="blue">$</span> ninja install
+[1/1] Install the project...
+-- Install configuration: "Debug"
+-- Up-to-date: /some/sensible/path/lib/libtesla.so
+-- Installing: /some/sensible/path/bin/tesla-analyse
+-- Installing: /some/sensible/path/bin/tesla-instrument
+-- Installing: /some/sensible/path/bin/tesla-graph
+-- Installing: /some/sensible/path/bin/llvm-triple
+-- Installing: /some/sensible/path/bin/tesla-read
+-- Installing: /some/sensible/path/bin/tesla
+<span class="blue">$</span> export PATH=/some/sensible/path
+</div>
+
+<p>
+Having either set variables or installed TESLA, you should now be able
+to run TESLA commands:
+</p>
+
+<div class="console"><span class="blue">$</span> tesla graph -help
+USAGE: tesla-graph [options] &lt;input file&gt;
+
+OPTIONS:
+  automata determinism:
+    -u        - unlinked NFA
+    -l        - linked NFA
+    -d        - DFA
+  -help       - Display available options (-help-hidden for more)
+  -o=&lt;string&gt; - &lt;output file&gt;
+  -version    - Display the version of this program
+</div>
+
+<a name="exercise"></a>
+<h3>Exercise TESLA</h3>
+<p>
+The 'demos/smoketest' directory contains an example of how TESLA assertions can be written in C code. If you run it as-is:
+</p>
+
+<div class="console"><span class="blue">$</span> cd demos/smoketest
+<span class="blue">$</span> ./run.demo             <span class="blue"># without TESLA</span>
+TESLA demo application; version 7329b3b
+
+Calling the 'example_syscall' function...
+'example_syscall' returned 0
+
+<span class="blue">$</span> ./run.demo -D TESLA    <span class="blue"># with TESLA</span>
+TESLA demo application; version 7329b3b
+
+Calling the 'example_syscall' function...
+[CALE] example_syscall 0x7fff4fcaf5b8 0 0
+[CALE] hold 0x10ff58300
+[FSET] struct.object.refcount 0x10ff58300 1 0x10ff58300
+[RETE] hold 0x10ff58300
+[RETE] get_object 0 0x7fff4fcaf548 0
+[RETR] DES_set_key 0x7fff4fcaf568 0x7fff4fcaf4c0 0
+[CALE] security_check 0x7fff4fcaf5b8 0x10ff58300 0
+[RETE] security_check 0x7fff4fcaf5b8 0x10ff58300 0 0
+[RETE] some_helper 0 0
+[CALE] void_helper 0x10ff58300
+[NOW]  automaton 4 267748096 0
+[NOW]  automaton 5
+[NOW]  automaton 6 267748096
+[NOW]  automaton 7 267748096
+[NOW]  automaton 8 267748096
+[NOW]  automaton 9 267748096
+[NOW]  automaton 10 267748096 0
+[NOW]  automaton 11 267748096 0
+[NOW]  automaton 3 1338701160 1338700992
+[RETE] log_audit_record 0x10ff58300 0 0
+[CALE] release 0x10ff58300
+[FSET] struct.object.refcount 0x10ff58300 0 0x10ff58300
+[RETE] release 0x10ff58300
+[RETE] example_syscall 0x7fff4fcaf5b8 0 0 0
+</div>
+
+<p>
+This just shows that the 'demo' application runs normally.
+If, however, you comment out line 96 of example.c (which calls the security_check() function):
+</p>
+
+<div class="code diff">--- a/demos/smoketest/example.c
++++ b/demos/smoketest/example.c
+@@ -93,7 +93,7 @@ example_syscall(struct credential *cred, int index, int op)
+
+        crypto_setup(&amp;des_key, &amp;key_schedule);
+
+<span class="del">-       if ((error = security_check(cred, o, op))) return error;</span>
+<span class="add">+//     if ((error = security_check(cred, o, op))) return error;</span>
+        some_helper(op);
+        void_helper(o);
+        perform_operation(op, o);
+</div>
+
+<p>
+... you should see an error when you run the 'demo' application:
+</p>
+
+<div class="console"><span class="blue">$</span> ./run.demo -D TESLA
+TESLA demo application; version 7329b3b (dirty)
+
+Calling the 'example_syscall' function...
+[...]
+[NOW]  automaton 4 117814016 0
+
+
+TESLA failure:
+In automaton 'example.c:45#0':
+automaton 4 {
+        state 0 (X,X): --(example_syscall(X,X,X): Entry &lt;&lt;init&gt;&gt;)--&gt;(1)
+        state 1 (X,X): --(security_check(X,o,op) == 0: o op)--&gt;(2) --(example_syscall(X,X,X) == X)--&gt;(3)
+        state 2 (o,op): --(security_check(X,o,op) == 0: op)--&gt;(2) --(example_syscall(X,X,X) == X)--&gt;(3) --(NOW)--&gt;(4)
+        state 3 (o,op):
+        state 4 (o,op): --(example_syscall(X,X,X) == X &lt;&lt;cleanup&gt;&gt;)--&gt;(3)
+}
+smoketest: No instance matched key '0x3 [ 10705b300 0 X X ]' for transition(s) [ (2:0x3 -&gt; 4:0x3) ]
+</div>
+
+<p>
+This shows that, when we reach the assertion site for automaton 4, we detect that a transition (the security_check event) was missed.
+</p>
+
+${FOOTER}
