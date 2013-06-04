@@ -1,4 +1,4 @@
-/** @file AST.h    Declaration of @ref TeslaConsumer and @ref TeslaAction. */
+/** @file AST.h    Declaration of @ref tesla::TeslaAction, @ref tesla::TeslaConsumer. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

@@ -1,4 +1,4 @@
-/*! @file Parser.h  Declaration of @ref Parser. */
+/*! @file Parser.h  Declaration of @ref tesla::Parser. */
 /*
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.

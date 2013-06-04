@@ -1,4 +1,4 @@
-/*! @file State.cpp  Definition of @ref State. */
+/*! @file State.cpp  Definition of @ref tesla::State. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

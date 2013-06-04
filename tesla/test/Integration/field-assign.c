@@ -1,4 +1,4 @@
-/*! @file callee.ll   Tests instrumentation of field assignment. */
+//! @file Integration/field-assign.c   Tests instrumentating field assignment.
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

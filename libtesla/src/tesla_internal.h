@@ -33,6 +33,11 @@
 #ifndef TESLA_INTERNAL_H
 #define	TESLA_INTERNAL_H
 
+/**
+ * @addtogroup libtesla
+ * @{
+ */
+
 #include "config.h"
 
 #ifdef _KERNEL
@@ -61,7 +66,7 @@
 #include <libtesla.h>
 #endif
 
-//! Is @ref x a subset of @ref y?
+/** Is @a x a subset of @a y? */
 #define	SUBSET(x,y) ((x & y) == x)
 
 /**
@@ -129,7 +134,7 @@ enum tesla_action_t	tesla_action(const struct tesla_instance*,
 	    const struct tesla_key*, const struct tesla_transitions*,
 	    const struct tesla_transition** trigger);
 
-/** Copy new entries from @ref source into @ref dest. */
+/** Copy new entries from @a source into @a dest. */
 int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
 
 
@@ -161,10 +166,10 @@ int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
 
 #else	/* !_KERNEL */
 
-/** @ref errx() is the userspace equivalent of panic(). */
+/** @a errx() is the userspace equivalent of panic(). */
 #define tesla_panic(...) errx(1, __VA_ARGS__)
 
-/** POSIX @ref assert() doesn't let us provide an error message. */
+/** POSIX @a assert() doesn't let us provide an error message. */
 #define tesla_assert(condition, ...) assert(condition)
 
 #define tesla_malloc(len) calloc(1, len)
@@ -281,6 +286,7 @@ extern struct tesla_event_handlers	dtrace_handlers;
  * Debug helpers.
  */
 
+/** Do a @a sprintf() into a buffer, checking bounds appropriately. */
 #define	SAFE_SPRINTF(current, end, ...) do {				\
 	int written = snprintf(current, end - current, __VA_ARGS__);	\
 	if ((written > 0) && (current + written < end))			\
@@ -308,6 +314,7 @@ extern struct tesla_event_handlers	dtrace_handlers;
 /** Are we in (verbose) debug mode? */
 int32_t	tesla_debugging(const char*);
 
+/** Emit debugging information with a debug name (e.g., libtesla.event). */
 #define DEBUG(dclass, ...) \
 	if (tesla_debugging(#dclass)) printf(__VA_ARGS__)
 
@@ -325,10 +332,10 @@ int32_t	tesla_debugging(const char*) { return 0; }
  * Assert that a @ref tesla_instance is an instance of a @ref tesla_class.
  *
  * This could be expensive (a linear walk over all @ref tesla_instance in
- * @ref #tclass), so it should only be called from debug code.
+ * @a tclass), so it should only be called from debug code.
  *
  * @param   i          the instance to test
- * @param   tclass     the expected class of @ref #i
+ * @param   tclass     the expected class of @a i
  */
 void	assert_instanceof(struct tesla_instance *i, struct tesla_class *tclass);
 
@@ -354,5 +361,7 @@ void	print_transitions(const char *debug, const struct tesla_transitions *);
 /** Print a human-readable version of @ref tesla_transitions into a buffer. */
 char*	sprint_transitions(char *buffer, const char *end,
     const struct tesla_transitions *);
+
+/** @} */
 
 #endif /* TESLA_INTERNAL_H */

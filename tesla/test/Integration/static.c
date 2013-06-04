@@ -1,4 +1,4 @@
-//! @file static.c  Tests instrumentation of static functions.
+//! @file Integration/static.c  Tests instrumentation of static functions.
 /*
  * Commands for llvm-lit:
  * RUN: tesla analyse %s -o %t.tesla -- %cflags

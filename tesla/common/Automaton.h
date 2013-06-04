@@ -1,4 +1,4 @@
-/*! @file Automaton.h  Contains the declaration of @ref Automaton. */
+/*! @file Automaton.h  Declaration of @ref tesla::Automaton. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

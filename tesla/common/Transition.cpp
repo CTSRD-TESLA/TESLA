@@ -1,4 +1,4 @@
-/*! @file Transition.cpp  Definition of @ref Transition and subclasses. */
+/*! @file Transition.cpp  Definition of @ref tesla::Transition, subclasses. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

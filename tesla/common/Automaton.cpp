@@ -1,4 +1,4 @@
-/*! @file Automaton.cpp  Contains the definition of @ref Automaton. */
+/*! @file Automaton.cpp  Definition of @ref tesla::Automaton. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
@@ -88,7 +88,7 @@ public:
   NFAParser& AllowSubAutomata(bool Allow);
 
   /**
-   * Parse the NFA, assign it @ref #id and put it in @ref #Out.
+   * Parse the NFA, assign it ID @a id and put it in @a Out.
    *
    * @param[out]  Out    where to store the NFA
    * @param[in]   id     an integer ID for the resulting NFA

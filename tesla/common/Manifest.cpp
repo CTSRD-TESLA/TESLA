@@ -1,4 +1,4 @@
-/*! @file Manifest.cpp  Contains the definition of @ref Manifest. */
+/*! @file Manifest.cpp  Definition of @ref tesla::Manifest. */
 /*
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.

@@ -1,4 +1,4 @@
-/** @file Visitor.h  Declaration of @ref TeslaVisitor. */
+/** @file Visitor.h  Declaration of @ref tesla::TeslaVisitor. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

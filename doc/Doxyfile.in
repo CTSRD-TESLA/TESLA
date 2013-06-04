@@ -44,7 +44,7 @@ STRIP_FROM_PATH        =
 STRIP_FROM_INC_PATH    =
 SHORT_NAMES            = NO
 
-JAVADOC_AUTOBRIEF      = NO
+JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES
 
 INHERIT_DOCS           = YES
@@ -57,6 +57,10 @@ BUILTIN_STL_SUPPORT    = YES
 INLINE_SIMPLE_STRUCTS  = YES
 TYPEDEF_HIDES_STRUCT   = NO
 
+# Convert protocol buffers into something Doxygen can understand.
+FILE_PATTERNS          = *.c *.cpp *.h *.proto
+FILTER_PATTERNS        = *.proto="${PROTOBUF_FILTER}"
+
 #---------------------------------------------------------------------------
 # Build related configuration options
 #---------------------------------------------------------------------------
@@ -64,8 +68,8 @@ TYPEDEF_HIDES_STRUCT   = NO
 EXTRACT_ALL            = YES
 EXTRACT_STATIC         = NO
 
-HIDE_UNDOC_CLASSES     = YES
-HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = NO
+HIDE_UNDOC_MEMBERS     = NO
 HIDE_IN_BODY_DOCS      = NO
 INTERNAL_DOCS          = NO
 
@@ -98,7 +102,7 @@ CITE_BIB_FILES         =
 #---------------------------------------------------------------------------
 
 QUIET                  = YES
-WARNINGS               = YES
+WARNINGS               = NO
 
 WARN_IF_UNDOCUMENTED   = YES
 WARN_IF_DOC_ERROR      = YES
@@ -110,7 +114,7 @@ WARN_LOGFILE           =
 # configuration options related to the input files
 #---------------------------------------------------------------------------
 
-INPUT                  = include libtesla tesla
+INPUT                  = ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/libtesla ${CMAKE_SOURCE_DIR}/tesla
 INPUT_ENCODING         = UTF-8
 RECURSIVE              = YES
 
@@ -139,7 +143,7 @@ COLS_IN_ALPHA_INDEX    = 5
 #---------------------------------------------------------------------------
 
 GENERATE_HTML          = YES
-HTML_OUTPUT            = doxygen/html
+HTML_OUTPUT            = api/html
 HTML_FILE_EXTENSION    = .xhtml
 
 # The HTML_HEADER tag can be used to specify a personal HTML header for
@@ -160,7 +164,6 @@ HTML_STYLESHEET        =
 HTML_COLORSTYLE_HUE    = 220
 HTML_COLORSTYLE_SAT    = 80
 HTML_COLORSTYLE_GAMMA  = 120
-warning: no matching class member found
 HTML_TIMESTAMP         = YES
 HTML_DYNAMIC_SECTIONS  = YES
 
@@ -181,7 +184,7 @@ SERVER_BASED_SEARCH    = NO
 #---------------------------------------------------------------------------
 
 GENERATE_LATEX         = NO
-LATEX_OUTPUT           = doxygen/latex
+LATEX_OUTPUT           = api/latex
 
 COMPACT_LATEX          = YES
 PAPER_TYPE             = a4wide
@@ -199,7 +202,7 @@ LATEX_BIB_STYLE        = plain
 #---------------------------------------------------------------------------
 
 GENERATE_MAN           = YES
-MAN_OUTPUT             = doxygen/man
+MAN_OUTPUT             = api/man
 MAN_EXTENSION          = .3
 MAN_LINKS              = NO
 
@@ -208,10 +211,10 @@ MAN_LINKS              = NO
 #---------------------------------------------------------------------------
 
 ENABLE_PREPROCESSING   = YES
-MACRO_EXPANSION        = NO
+MACRO_EXPANSION        = YES
 SEARCH_INCLUDES        = YES
-INCLUDE_PATH           = ../Dev/LLVM/llvm/include ../Dev/LLVM/llvm/tools/clang/include
-PREDEFINED             =
+INCLUDE_PATH           = ${LLVM_SRC}/include ${LLVM_SRC}/tools/clang/include
+PREDEFINED             = TESLA= __TESLA_ANALYSER__=
 SKIP_FUNCTION_MACROS   = YES
 
 #---------------------------------------------------------------------------

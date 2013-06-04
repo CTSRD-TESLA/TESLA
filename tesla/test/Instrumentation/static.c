@@ -1,4 +1,4 @@
-/*! @file static.c    Tests instrumentation of static functions. */
+//! @file Instrumentation/static.c   Tests instrumention of static functions.
 /*
  * Commands for llvm-lit:
  * RUN: mkdir -p %t

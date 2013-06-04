@@ -1,4 +1,4 @@
-/*! @file Parser.cppDefinition of @ref Parser. */
+/*! @file Parser.cpp  Definition of @ref tesla::Parser. */
 /*
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.

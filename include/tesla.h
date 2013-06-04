@@ -28,10 +28,71 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * @mainpage TESLA API documentation
+ *
+ * This is the API documentation for TESLA's programmer interface
+ * (@ref ConsumerAPI), runtime support library (@ref libtesla) and
+ * analysis/instrumentation implementation.
+ */
+
 #ifndef	TESLA_H
 #define	TESLA_H
 
-/** Basic TESLA types (magic for the compiler to munge). */
+/**
+ * API for programmers who want to use TESLA in their code.
+ *
+ * @section headers Headers
+ *
+ * TESLA provides programmers with two header file options:
+ * @ref tesla.h, which defines TESLA primitives prefixed by __tesla, and
+ * @ref tesla-macros.h, which provides examples of macros that are more
+ * programmer-friendly but could cause namespace collisions.
+ * We recommend that you start with the example @ref tesla-macros.h and
+ * modify it as necessary to avoid namespace collisions with your code.
+ *
+ * @section assertions Assertions and automata
+ *
+ * TESLA accepts two types of input: inline assertions and explicit automata.
+ * Both inputs describe the expected temporal behaviour of software; TESLA
+ * checks actual run-time behaviour against such descriptions.
+ *
+ * @subsection inline Inline assertions
+ *
+ * Inline assertions are typically declared with the @ref TESLA_GLOBAL or
+ * @ref TESLA_PERTHREAD macros, or else the per-thread convenience wrapper
+ * @ref TESLA_WITHIN.
+ * These macros wrap the @ref __tesla_inline_assertion function, which expects
+ * several arguments:
+ *  - an assertion location:
+ *    * filename, line number and counter
+ *    * provided implicitly by the above macros
+ *  - a storage and synchronisation context
+ *    * global or per-thread
+ *    * provided implicitly by the above macros
+ *  - context bounds, at which all instances of an automaton should be
+ *    initialised and cleaned up
+ *    * @ref TESLA_GLOBAL and @ref TESLA_PERTHREAD expect explicit
+ *      @a start and @a end bounds
+ *    * @ref TESLA_WITHIN expects a function whose entry and exit are the
+ *      start and end bounds
+ *  - a TESLA expression (see @ref expressions)
+ *
+ * @subsection automata Explicit automata
+ *
+ * TODO
+ *
+ *
+ * @section expressions TESLA expressions
+ *
+ * TODO
+ *
+ *
+ * @addtogroup ConsumerAPI
+ * @{
+ */
+
+/** The basic TESLA type is a pointer to a TESLA Basic TESLA types (magic for the compiler to munge). */
 typedef	struct __tesla_event {}		__tesla_event;
 typedef	struct __tesla_locality {}	__tesla_locality;
 
@@ -144,7 +205,7 @@ __tesla_struct_uses_automaton(const char *automaton,
 /**
  * Declare that a struct's behaviour is described by an automaton.
  *
- * @param	struct_name	name of the struct that uses the automaton
+ * @param	subject		name of the struct that uses the automaton
  * @param	automaton	reference to the automaton description
  * @param	loc		a TESLA locality (global, per-thread...)
  * @param	start		event that kicks off the automaton
@@ -198,5 +259,6 @@ __tesla_struct_uses_automaton(const char *automaton,
 
 #endif	/* __TESLA_ANALYSER__ */
 
-#endif	/* TESLA_H */
+/** @} */
 
+#endif	/* TESLA_H */

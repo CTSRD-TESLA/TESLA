@@ -1,4 +1,4 @@
-/*! @file State.h  Declaration of @ref State. */
+/*! @file State.h  Declaration of a few important TESLA types. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

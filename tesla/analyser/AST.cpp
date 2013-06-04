@@ -1,4 +1,4 @@
-/** @file AST.cpp    Definition of @ref TeslaAction and @ref TeslaConsumer. */
+/** @file AST.cpp    Definition of @ref tesla::TeslaAction, @ref tesla::TeslaConsumer. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

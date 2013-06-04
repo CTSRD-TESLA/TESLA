@@ -34,6 +34,12 @@
 #ifndef _TESLA_STATE
 #define	_TESLA_STATE
 
+/**
+ * Support library for TESLA instrumentation.
+ * @addtogroup libtesla
+ * @{
+ */
+
 #ifdef _KERNEL
 #include <sys/types.h>
 #else
@@ -180,7 +186,7 @@ struct tesla_key {
 /**
  * Check to see if a key matches a pattern.
  *
- * @returns  1 if @ref #k matches @ref pattern, 0 otherwise
+ * @returns  1 if @a k matches @a pattern, 0 otherwise
  */
 int32_t	tesla_key_matches(
 	    const struct tesla_key *pattern, const struct tesla_key *k);
@@ -277,5 +283,7 @@ struct tesla_event_handlers {
 
 /** Register a set of event handlers. */
 int	tesla_set_event_handlers(struct tesla_event_handlers *);
+
+/** @} */
 
 #endif /* _TESLA_STATE */

@@ -93,13 +93,13 @@ typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
 /// A container for a few types (e.g., of function arguments).
 typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 
-/// Extract the @ref register_t type from a @ref Module.
+/// Extract the @a register_t type from an @a llvm::Module.
 llvm::Type* IntPtrType(llvm::Module&);
 
-/// Extract the @ref tesla_transition type from a @ref Module.
+/// Extract the @ref tesla_transition type from an @a llvm::Module.
 llvm::StructType* TransitionType(llvm::Module&);
 
-/// Extract the @ref tesla_transitions type from a @ref Module.
+/// Extract the @ref tesla_transitions type from an @a llvm::Module.
 llvm::StructType* TransitionSetType(llvm::Module&);
 
 /**
@@ -109,7 +109,7 @@ llvm::StructType* TransitionSetType(llvm::Module&);
 llvm::Constant* TeslaContext(AutomatonDescription::Context Context,
                              llvm::LLVMContext& Ctx);
 
-/*! Find a @ref BasicBlock within a @ref Function. */
+/*! Find a @a BasicBlock within a @a Function. */
 llvm::BasicBlock* FindBlock(llvm::StringRef Name, llvm::Function&);
 
 /*! Find the libtesla function @ref tesla_update_state. */
@@ -120,7 +120,7 @@ llvm::Function* FindStateUpdateFn(llvm::Module&,
 llvm::Function* FindDieFn(llvm::Module&);
 
 /**
- * Cast an integer-ish @ref Value to another type.
+ * Cast an integer-ish @a Value to another type.
  *
  * We use this for casting to register_t, but it's possible that other integer
  * types might work too. Maybe.
@@ -161,4 +161,3 @@ llvm::Function* StructInstrumentation(llvm::Module&, llvm::StructType*,
 }
 
 #endif	/* !TESLA_INSTRUMENTATION_H */
-

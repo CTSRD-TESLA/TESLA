@@ -32,6 +32,11 @@
 #ifndef	TESLA_MACROS_H
 #define	TESLA_MACROS_H
 
+/**
+ * @addtogroup ConsumerAPI
+ * @{
+ */
+
 #include <tesla.h>
 
 /*
@@ -92,6 +97,6 @@
 /** A more programmer-friendly way to write assertions about the future. */
 #define eventually(...)    TSEQUENCE(TESLA_NOW, __VA_ARGS__)
 
+/** @} */
+
 #endif	/* !TESLA_MACROS_H */
-
-

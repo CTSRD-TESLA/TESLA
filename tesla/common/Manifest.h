@@ -1,4 +1,4 @@
-/*! @file Manifest.h  Contains the declaration of @ref Manifest. */
+/*! @file Manifest.h  Declaration of @ref tesla::Manifest. */
 /*
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.
@@ -63,13 +63,13 @@ public:
   //! All automata in the manifest file.
   const AutomataMap& AllAutomata() const { return Descriptions; }
 
-  //! Find the @ref Automaton named by an @ref Identifier.
+  //! Find the @ref tesla::Automaton named by an @ref tesla::Identifier.
   const Automaton* FindAutomaton(const Identifier&) const;
 
-  //! Find the @ref Automaton defined at a @ref Location.
+  //! Find the @ref tesla::Automaton defined at a @ref tesla::Location.
   const Automaton* FindAutomaton(const Location&) const;
 
-  //! Load a @ref Manifest from a named file.
+  //! Load a @ref tesla::Manifest from a named file.
   static Manifest* load(llvm::raw_ostream& Err,
                         Automaton::Type = Automaton::Deterministic,
                         llvm::StringRef Path = defaultLocation());

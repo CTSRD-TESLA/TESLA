@@ -1,4 +1,4 @@
-/*! @file Transition.h  Declaration of @ref Transition and subclasses. */
+/*! @file Transition.h  Declaration of @ref tesla::Transition and subclasses. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
@@ -87,13 +87,14 @@ public:
    * @param[in,out]   From         The state to transition from; will be given
    *                               ownership of the new transition.
    * @param[in]       To           The state to transition to.
+   * @param[in]       Ev           Protobuf representation of the event.
    * @param[out]      Transitions  A place to record the new transition.
    * @param[in]       Init         Transition triggers class initialisation.
    * @param[in]       Cleanup      Transition triggers class cleanup.
    * @param[in]       OutOfScope   The transition is out of a conditional
    *                               automaton's scope.
    */
-  static void Create(State& From, State& To, const FunctionEvent&,
+  static void Create(State& From, State& To, const FunctionEvent& Ev,
                      TransitionSets&, bool Init, bool Cleanup,
                      bool OutOfScope = false);
 
@@ -103,13 +104,14 @@ public:
    * @param[in,out]   From         The state to transition from; will be given
    *                               ownership of the new transition.
    * @param[in]       To           The state to transition to.
+   * @param[in]       A            Protobuf representation of the event.
    * @param[out]      Transitions  A place to record the new transition.
    * @param[in]       Init         Transition triggers class initialisation.
    * @param[in]       Cleanup      Transition triggers class cleanup.
    * @param[in]       OutOfScope   The transition is out of a conditional
    *                               automaton's scope.
    */
-  static void Create(State& From, State& To, const FieldAssignment&,
+  static void Create(State& From, State& To, const FieldAssignment& A,
                      TransitionSets&, bool Init, bool Cleanup,
                      bool OutOfScope = false);
 

@@ -1,4 +1,4 @@
-/** @file Visitor.cpp  Definition of @ref TeslaVisitor. */
+/** @file Visitor.cpp  Definition of @ref tesla::TeslaVisitor. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
