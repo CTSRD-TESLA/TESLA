@@ -17,8 +17,10 @@ if( DOXYGEN_FOUND)
 		set(PROTOBUF_FILTER true)
 	endif()
 
-	configure_file(Doxyfile.in Doxyfile)
 	make_directory(api)
+
+	configure_file(Doxyfile.in Doxyfile)
+	configure_file(api.htaccess api/.htaccess)
 
 	add_custom_command(
 		OUTPUT api/html/index.xhtml
