@@ -116,6 +116,11 @@ check_function_exists(strnlen HAVE_STRNLEN)
 configure_file(cmake/config.h.in include/config.h)
 
 
+#
+# Indicate that we have a config.h file
+#
+ADD_DEFINITIONS(-DHAVE_CONFIG_H)
+
 
 
 add_subdirectory(doc)
