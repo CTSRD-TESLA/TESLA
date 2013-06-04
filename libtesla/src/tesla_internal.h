@@ -57,17 +57,15 @@
 #include <sys/systm.h>
 
 #include <machine/_inttypes.h>
-
-#include <libtesla/libtesla.h>
 #else
 #include <assert.h>
 #include <err.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#endif
 
 #include <libtesla.h>
-#endif
 
 /** Is @a x a subset of @a y? */
 #define	SUBSET(x,y) ((x & y) == x)
