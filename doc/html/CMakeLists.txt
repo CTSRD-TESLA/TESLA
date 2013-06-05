@@ -35,6 +35,7 @@ configure_file(tesla.css tesla.css)
 set(HTML
   "index -> Temporally Enhanced Security Logic Assertions (TESLA)"
   "build -> Building TESLA"
+  "freebsd -> Building FreeBSD with TESLA"
   "programming -> Programming with TESLA"
 )
 foreach(page ${HTML})
