@@ -143,7 +143,7 @@ COLS_IN_ALPHA_INDEX    = 5
 #---------------------------------------------------------------------------
 
 GENERATE_HTML          = YES
-HTML_OUTPUT            = html/ucam/api
+HTML_OUTPUT            = ${DOXYGEN_HTML}
 HTML_FILE_EXTENSION    = .xhtml
 
 # The HTML_HEADER tag can be used to specify a personal HTML header for
@@ -202,7 +202,7 @@ LATEX_BIB_STYLE        = plain
 #---------------------------------------------------------------------------
 
 GENERATE_MAN           = YES
-MAN_OUTPUT             = man/doxygen
+MAN_OUTPUT             = ${DOXYGEN_MAN}
 MAN_EXTENSION          = .3
 MAN_LINKS              = NO
 
