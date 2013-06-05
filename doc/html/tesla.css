@@ -22,6 +22,12 @@
 .console .blue { color: #99f; }
 
 /*
+ * Code syntax highlighting.
+ */
+.code .keyword { color: #393; }
+.code .comment { color: #339; }
+
+/*
  * Simulation of coloured diff output.
  */
 .diff .add { color: #3c3; }

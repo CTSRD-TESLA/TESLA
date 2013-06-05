@@ -69,12 +69,138 @@ several arguments:
 <a name="automata"></a>
 <h3>Explicit automata</h3>
 
-<p>TODO</p>
+<p>
+Programmers can also describe automata directly; this is useful for explicit
+state machines such the TCP state machine.
+</p>
+
+<p>
+Automata are declared and defined like C functions.
+The expected signature is:
+</p>
+
+<div class="code"><span class="comment">/* Declarations */</span>
+<span class="keyword">automaton</span>(assertion_name, <span class="keyword">struct</span> struct_type *);
+<span class="keyword">automaton</span>(some_other_automaton, <span class="keyword">struct</span> struct_type *);
+
+<span class="comment">/* Definition */</span>
+<span class="keyword">automaton</span>(assertion_name, <span class="keyword">struct</span> struct_type *sp)
+{
+  <span class="comment">/*
+   * a sequence of TESLA expressions
+   * that reference the 'sp' pointer,
+   * for instance:
+   */</span>
+  some_other_automaton(sp);
+
+  <span class="keyword">done</span>;
+}
+</div>
+
+TESLA_STRUCT_AUTOMATON(struct tcpcb *tp, my_tcpcb_assertion, __tesla_global,
+                       called(tcp_init, tp),
+                       returned(tcp_free, tp));
+
+
+<p>
+The single variable referenced by the automaton must be declared as a formal
+parameter.
+All sub-automata (e.g. some_other_automaton() in the above example) must
+operate on the same type.
+</p>
 
 
 <a name="expressions"></a>
 <h2>TESLA expressions</h2>
 
-<p>TODO</p>
+<p>
+There are six kinds of TESLA expressions, three abstract expressions and
+three concrete events:
+</p>
+
+<ul>
+  <li>
+    abstract
+    <ul>
+      <li><a href="#boolean_expr">boolean expression</a></li>
+      <li><a href="#sequence">sequence</a></li>
+      <li><a href="#sub_automaton">sub-automaton</a></li>
+    </ul>
+  </li>
+  <li>
+    concrete
+    <ul>
+      <li><a href="#fn_invoke">function invocation / return</a></li>
+      <li><a href="#field_assign">structure field assignment</a></li>
+      <li><a href="#now">"now"</a></li>
+    </ul>
+  </li>
+</ul>
+
+NOTE: special begin, end constraints!
+
+<h3>Abstract expressions</h3>
+
+<a name="boolean_expr"></a>
+<h4>Boolean expression</h4>
+<p>
+TESLA expressions may be combined with boolean operators.
+Currently, the only supported operator is OR ('<span class="code">||</span>').
+instead of <span class="code">a AND b</span>, programmers can write
+<span class="code">a</span> and <span class="code">b</span> as separate
+assertions.
+</p>
+
+<a name="sequence"></a>
+<h4>Sequence</h4>
+<p>
+A sequence of events can be specified with the TSEQUENCE macro, whose
+parameters are themselves TESLA expressions.
+For instance:
+</p>
+
+<div class="code">TSEQUENCE(
+  foo(x) == 0,
+  bar(y) || baz(z)
+)</div>
+
+<a name="sub_automaton"></a>
+<h4>Sub-automaton</h4>
+<p>
+Automata can "include" <a href="#automata">explicitly-declared automata</a>
+by "calling" them:
+</p>
+
+<div class="code"><span class="keyword">automaton</span>(active_close, struct tcpcb*);
+<span class="keyword">automaton</span>(established, struct tcpcb*);
+
+<span class="keyword">automaton</span>(my_tcpcb_assertion, struct tcpcb *tp)
+{
+	tp-&gt;t_state = TCPS_SYN_RECEIVED,
+	established(tp) || active_close(tp)
+}
+</div>
+
+
+<h3>Concrete expressions</h3>
+
+<a name="fn_invoke"></a>
+<h4>Function invocation</h4>
+<p>
+TODO
+</p>
+
+<a name="field_assign"></a>
+<h4>Structure field assignment</h4>
+<p>
+TODO
+</p>
+
+<a name="now"></a>
+<h4>"now"</h4>
+<p>
+TODO
+</p>
+
 
 ${FOOTER}
