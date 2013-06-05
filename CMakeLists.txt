@@ -28,6 +28,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 # Global include directories for all of TESLA:
 #
 include_directories(
+	${LLVM_SRC}/include
+	${LLVM_SRC}/tools/clang/include
 	include                          # [lib]tesla.h
 	${CMAKE_BINARY_DIR}/include      # config.h
 )
