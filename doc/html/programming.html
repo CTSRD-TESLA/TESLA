@@ -374,9 +374,12 @@ is called:
 
 <a name="optional"></a>
 <h4>Optional expression</h4>
-<p>TODO</p>
-
-<code class="listing"><span class="preproc">#define</span>	<span class="keyword">optional</span>(...)	__tesla_optional(__tesla_ignore, __VA_ARGS__)</code>
+<p>
+Any expression inside an <code><span class="keyword">optional</span>()</code>
+predicate is permitted but not required to occur.
+This is most useful in combination with
+<a href="#strict">strict mode (described below)</a>.
+</p>
 
 <a name="caller_callee"></a>
 <h4>Caller vs callee context</h4>
