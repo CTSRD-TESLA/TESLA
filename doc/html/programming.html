@@ -329,10 +329,44 @@ LLVM ERROR: TESLA: error analysing 'demos/smoketest/example.c'
 </div>
 
 <a name="now"></a>
-<h4>"now"</h4>
+<h4>"Now"</h4>
 <p>
-TODO
+The <code><span class="control">TESLA_NOW</span></code> event refers to
+the moment at which an assertion site is reached.
+For instance, in the following code:
 </p>
+
+<code class="listing"><span class="keyword">int</span> foo(<span class="keyword">int</span> x) { return 0; }
+
+<span class="keyword">void</span> bar()
+{
+  <span class="keyword">int</span> i = 42;
+  foo(i);
+
+  <span class="keyword">TESLA_WITHIN</span>(bar,
+    <span class="control">TSEQUENCE</span>(
+      foo(42) == 0,
+      <span class="keyword">TESLA_NOW</span>,
+      foo(43) == 0
+    )
+  );
+
+  foo(++i);
+}
+</code>
+
+<p>
+TESLA instrumentation will produce five events when <code>bar()</code>
+is called:
+</p>
+
+<ul>
+<li>enterered <code>bar</code></li>
+<li><code>foo(42)</code> returned 0</li>
+<li><code><span class="keyword">TESLA_NOW</span></code></li>
+<li><code>foo(43)</code> returned 0</li>
+<li>leaving <code>bar</code></li>
+</ul>
 
 
 <a name="predicates"></a>
