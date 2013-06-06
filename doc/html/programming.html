@@ -245,6 +245,39 @@ is a "don't care": any call to security_check() with
 satisfies the expression.
 </p>
 
+<p>
+To instrument a function call, rather than return, the programmer can use the
+<span class="code"><span class="keyword">called</span></span>() macro:
+</p>
+
+<div class="code"><span class="comment">/* An even simpler assertion! */</span>
+<span class="control">TESLA_WITHIN</span>(example_syscall, <span class="control">previously</span>(<span class="keyword">called</span>(security_check)));
+<span class="control">TESLA_WITHIN</span>(example_syscall,  <span class="control">previously</span>(<span class="keyword">called</span>(hold, o)));
+</div>
+
+<p>
+<span class="code"><span class="keyword">called</span></span>() takes the
+expected function as its first parameter and may optionally be passed
+parameters that represent expected function parameters.
+As above, <span class="code"><span class="keyword">ANY</span></span> can be
+used as a "don't care" value.
+</p>
+
+<p>
+Function return may also be specified with the
+<span class="code"><span class="keyword">returned</span></span>() macro,
+which acts like <span class="code"><span class="keyword">called</span></span>()
+and, unlike the C-style expression above, can be used with void functions:
+</p>
+
+<div class="code"><span class="control">TESLA_WITHIN</span>(example_syscall, <span class="control">eventually</span>(<span class="keyword">called</span>(release, o)));
+</div>
+
+<p>
+Functions can be instrumented in the caller or callee context;
+<a href="#caller_callee">see below</a> for more information.
+</p>
+
 <a name="field_assign"></a>
 <h4>Structure field assignment</h4>
 <p>
