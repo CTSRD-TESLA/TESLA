@@ -27,6 +27,7 @@
 .code .keyword { color: #393; }
 .code .comment { color: #339; }
 .code .control { color: #966; }
+.code .preproc { color: #c3c; }
 
 /*
  * Simulation of coloured diff output.
