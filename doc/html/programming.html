@@ -383,10 +383,24 @@ This is most useful in combination with
 
 <a name="caller_callee"></a>
 <h4>Caller vs callee context</h4>
-<p>TODO</p>
+<p>
+By default, TESLA instruments function calls and returns in the callee
+context, where instrumentation only has to be done once.
+It is possible to explicitly choose between callee- and caller-context
+instrumentation using the <code><span class="keyword">callee</span>()</code>
+and <code><span class="keyword">caller</span>()</code> predicates, which may
+be nested arbitrarily:
+</p>
 
-<code class="listing"><span class="preproc">#define</span>	<span class="keyword">callee</span>(...)	__tesla_callee(__tesla_ignore, __VA_ARGS__)
-<span class="preproc">#define</span>	<span class="keyword">caller</span>(...)	__tesla_caller(__tesla_ignore, __VA_ARGS__)</code>
+<code class="listing"><span class="keyword">TESLA_WITHIN</span>(foo,
+  <span class="keyword">caller</span>(
+    <span class="control">TSEQUENCE</span>(
+      bar(x) == 42,
+      <span class="keyword">callee</span>(baz(y) == 0 || baz(z) == 0)
+    )
+  )
+);
+</code>
 
 <a name="strict"></a>
 <h4>Strict vs conditional mode</h4>
