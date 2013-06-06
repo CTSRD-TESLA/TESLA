@@ -98,7 +98,7 @@ Automata are declared and defined like C functions.
 The expected signature is:
 </p>
 
-<div class="code"><span class="comment">/* Declarations */</span>
+<code class="listing"><span class="comment">/* Declarations */</span>
 <span class="keyword">automaton</span>(assertion_name, <span class="keyword">struct</span> struct_type *);
 <span class="keyword">automaton</span>(some_other_automaton, <span class="keyword">struct</span> struct_type *);
 
@@ -114,7 +114,7 @@ The expected signature is:
 
   <span class="control">done</span>;
 }
-</div>
+</code>
 
 <p>
 The single variable referenced by the automaton must be declared as a formal
@@ -128,10 +128,10 @@ Automata are bound to structure instance lifetimes with the
 <span class="keyword">TESLA_STRUCT_AUTOMATON</span> macro:
 </p>
 
-<div class="code"><span class="keyword">TESLA_STRUCT_AUTOMATON</span>(<span class="keyword">struct</span> tcpcb *tp, my_tcpcb_assertion, <span class="keyword">GLOBAL</span>,
+<code class="listing"><span class="keyword">TESLA_STRUCT_AUTOMATON</span>(<span class="keyword">struct</span> tcpcb *tp, my_tcpcb_assertion, <span class="keyword">GLOBAL</span>,
                        <span class="keyword">called</span>(tcp_init, tp),
                        <span class="keyword">returned</span>(tcp_free, tp));
-</div>
+</code>
 
 
 <a name="expressions"></a>
@@ -176,9 +176,9 @@ three concrete events and three control predicates.
 <h4>Boolean expression</h4>
 <p>
 TESLA expressions may be combined with boolean operators.
-Currently, the only supported operator is OR ('<span class="code">||</span>').
-instead of <span class="code">a AND b</span>, programmers can write
-<span class="code">a</span> and <span class="code">b</span> as separate
+Currently, the only supported operator is OR ('<code>||</code>').
+instead of <code>a AND b</code>, programmers can write
+<code>a</code> and <code>b</code> as separate
 assertions.
 </p>
 
@@ -191,26 +191,26 @@ parameters are themselves TESLA expressions.
 For instance:
 </p>
 
-<div class="code"><span class="control">TSEQUENCE</span>(
+<code class="listing"><span class="control">TSEQUENCE</span>(
   foo(x) == 0,
   bar(y) || baz(z)
-)</div>
+)</code>
 
 <p>
 Many simple assertions can be written with the
-<span class="code"><span class="control">previously</span></span>
+<code><span class="control">previously</span></code>
 and
-<span class="code"><span class="control">eventually</span></span>
+<code><span class="control">eventually</span></code>
 keywords, which provide wrappers around
-<span class="code"><span class="control">TSEQUENCE</span></span>:
+<code><span class="control">TSEQUENCE</span></code>:
 </p>
 
-<div class="code"><span class="comment">/** A more programmer-friendly way to write assertions about the past. */</span>
+<code class="listing"><span class="comment">/** A more programmer-friendly way to write assertions about the past. */</span>
 <span class="preproc">#define</span> <span class="control">previously</span>(...)    <span class="control">TSEQUENCE</span>(<span class="keyword">__VA_ARGS__</span>, <span class="control">TESLA_NOW</span>)
 
 <span class="comment">/** A more programmer-friendly way to write assertions about the future. */</span>
 <span class="preproc">#define</span> <span class="control">eventually</span>(...)    <span class="control">TSEQUENCE</span>(<span class="control">TESLA_NOW</span>, <span class="keyword">__VA_ARGS__</span>)
-</div>
+</code>
 
 
 <a name="sub_automaton"></a>
@@ -220,7 +220,7 @@ Automata can "include" <a href="#automata">explicitly-declared automata</a>
 by "calling" them:
 </p>
 
-<div class="code"><span class="keyword">automaton</span>(active_close, <span class="keyword">struct</span> tcpcb*);
+<code class="listing"><span class="keyword">automaton</span>(active_close, <span class="keyword">struct</span> tcpcb*);
 <span class="keyword">automaton</span>(established, <span class="keyword">struct</span> tcpcb*);
 
 <span class="keyword">automaton</span>(my_tcpcb_assertion, <span class="keyword">struct</span> tcpcb *tp)
@@ -228,7 +228,7 @@ by "calling" them:
 	tp-&gt;t_state = TCPS_SYN_RECEIVED,
 	established(tp) || active_close(tp)
 }
-</div>
+</code>
 
 
 <a name="concrete"></a>
@@ -242,49 +242,49 @@ particular parameters and/or return a particular value.
 This specification can be written in a very C-like manner:
 </p>
 
-<div class="code"><span class="comment">/* A very simple TESLA assertion. */</span>
+<code class="listing"><span class="comment">/* A very simple TESLA assertion. */</span>
 <span class="control">previously</span>(security_check(<span class="keyword">ANY</span>(ptr), o, op) == 0)
-</div>
+</code>
 
 <p>
 This specifies that, within the TESLA automaton's bounds,
 the security_check() function was previously called with the parameters
-<span class="code">o</span> and <span class="code">op</span> and that it
+<code>o</code> and <code>op</code> and that it
 returned 0.
 The first parameter
-<span class="code"><span class="keyword">ANY</span>(ptr)</span>
+<code><span class="keyword">ANY</span>(ptr)</code>
 is a "don't care": any call to security_check() with
-<span class="code">o</span> and <span class="code">op</span> that returns 0
+<code>o</code> and <code>op</code> that returns 0
 satisfies the expression.
 </p>
 
 <p>
 To instrument a function call, rather than return, the programmer can use the
-<span class="code"><span class="keyword">called</span></span>() macro:
+<code><span class="keyword">called</span></code>() macro:
 </p>
 
-<div class="code"><span class="comment">/* An even simpler assertion! */</span>
+<code class="listing"><span class="comment">/* An even simpler assertion! */</span>
 <span class="control">TESLA_WITHIN</span>(example_syscall, <span class="control">previously</span>(<span class="keyword">called</span>(security_check)));
 <span class="control">TESLA_WITHIN</span>(example_syscall,  <span class="control">previously</span>(<span class="keyword">called</span>(hold, o)));
-</div>
+</code>
 
 <p>
-<span class="code"><span class="keyword">called</span></span>() takes the
+<code><span class="keyword">called</span></code>() takes the
 expected function as its first parameter and may optionally be passed
 parameters that represent expected function parameters.
-As above, <span class="code"><span class="keyword">ANY</span></span> can be
+As above, <code><span class="keyword">ANY</span></code> can be
 used as a "don't care" value.
 </p>
 
 <p>
 Function return may also be specified with the
-<span class="code"><span class="keyword">returned</span></span>() macro,
-which acts like <span class="code"><span class="keyword">called</span></span>()
+<code><span class="keyword">returned</span></code>() macro,
+which acts like <code><span class="keyword">called</span></code>()
 and, unlike the C-style expression above, can be used with void functions:
 </p>
 
-<div class="code"><span class="control">TESLA_WITHIN</span>(example_syscall, <span class="control">eventually</span>(<span class="keyword">called</span>(release, o)));
-</div>
+<code class="listing"><span class="control">TESLA_WITHIN</span>(example_syscall, <span class="control">eventually</span>(<span class="keyword">called</span>(release, o)));
+</code>
 
 <p>
 Functions can be instrumented in the caller or callee context;
@@ -311,20 +311,20 @@ TODO
 <h4>Optional expression</h4>
 <p>TODO</p>
 
-<div class="code"><span class="preproc">#define</span>	<span class="keyword">optional</span>(...)	__tesla_optional(__tesla_ignore, __VA_ARGS__)</div>
+<code class="listing"><span class="preproc">#define</span>	<span class="keyword">optional</span>(...)	__tesla_optional(__tesla_ignore, __VA_ARGS__)</code>
 
 <a name="caller_callee"></a>
 <h4>Caller vs callee context</h4>
 <p>TODO</p>
 
-<div class="code"><span class="preproc">#define</span>	<span class="keyword">callee</span>(...)	__tesla_callee(__tesla_ignore, __VA_ARGS__)
-<span class="preproc">#define</span>	<span class="keyword">caller</span>(...)	__tesla_caller(__tesla_ignore, __VA_ARGS__)</div>
+<code class="listing"><span class="preproc">#define</span>	<span class="keyword">callee</span>(...)	__tesla_callee(__tesla_ignore, __VA_ARGS__)
+<span class="preproc">#define</span>	<span class="keyword">caller</span>(...)	__tesla_caller(__tesla_ignore, __VA_ARGS__)</code>
 
 <a name="strict"></a>
 <h4>Strict vs conditional mode</h4>
 <p>TODO</p>
 
-<div class="code"><span class="preproc">#define</span>	<span class="keyword">strict</span>(...)	__tesla_strict(__tesla_ignore, __VA_ARGS__)
-<span class="preproc">#define</span>	<span class="keyword">conditional</span>(...)	__tesla_conditional(__tesla_ignore, __VA_ARGS__)</div>
+<code class="listing"><span class="preproc">#define</span>	<span class="keyword">strict</span>(...)	__tesla_strict(__tesla_ignore, __VA_ARGS__)
+<span class="preproc">#define</span>	<span class="keyword">conditional</span>(...)	__tesla_conditional(__tesla_ignore, __VA_ARGS__)</code>
 
 ${FOOTER}

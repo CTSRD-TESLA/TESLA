@@ -272,7 +272,7 @@ This just shows that the 'demo' application runs normally.
 If, however, you comment out line 96 of example.c (which calls the security_check() function):
 </p>
 
-<div class="code diff">--- a/demos/smoketest/example.c
+<code class="diff listing"><span class="del">--- a/demos/smoketest/example.c</span>
 +++ b/demos/smoketest/example.c
 @@ -93,7 +93,7 @@ example_syscall(struct credential *cred, int index, int op)
 
@@ -283,7 +283,7 @@ If, however, you comment out line 96 of example.c (which calls the security_chec
         some_helper(op);
         void_helper(o);
         perform_operation(op, o);
-</div>
+</code>
 
 <p>
 ... you should see an error when you run the 'demo' application:

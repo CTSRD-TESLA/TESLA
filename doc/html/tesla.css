@@ -6,16 +6,17 @@
 	color: #ccc;
 }
 
-div.code {
+code.listing {
 	background-color: #ffd;
+	display: block;
 }
 
-.console, .code {
+.console, code {
 	font-family: monospace;
 	white-space: pre-wrap;
 }
 
-div.console, div.code {
+div.console, code.listing {
 	border: 1px solid;
 	margin: .5em;
 	padding: .5em;
@@ -28,10 +29,10 @@ div.console, div.code {
 /*
  * Code syntax highlighting.
  */
-.code .keyword { color: #696; }
-.code .comment { color: #33c; }
-.code .control { color: #966; }
-.code .preproc { color: #c3c; }
+code .keyword { color: #696; }
+code .comment { color: #33c; }
+code .control { color: #966; }
+code .preproc { color: #c3c; }
 
 /*
  * Simulation of coloured diff output.
