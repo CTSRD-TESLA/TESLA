@@ -224,7 +224,25 @@ by "calling" them:
 <a name="fn_invoke"></a>
 <h4>Function invocation</h4>
 <p>
-TODO
+Programmers can specify that they expect a function to be called with
+particular parameters and/or return a particular value.
+This specification can be written in a very C-like manner:
+</p>
+
+<div class="code"><span class="comment">/* A very simple TESLA assertion. */</span>
+<span class="control">previously</span>(security_check(<span class="keyword">ANY</span>(ptr), o, op) == 0)
+</div>
+
+<p>
+This specifies that, within the TESLA automaton's bounds,
+the security_check() function was previously called with the parameters
+<span class="code">o</span> and <span class="code">op</span> and that it
+returned 0.
+The first parameter
+<span class="code"><span class="keyword">ANY</span>(ptr)</span>
+is a "don't care": any call to security_check() with
+<span class="code">o</span> and <span class="code">op</span> that returns 0
+satisfies the expression.
 </p>
 
 <a name="field_assign"></a>
