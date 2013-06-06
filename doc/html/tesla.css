@@ -24,8 +24,8 @@
 /*
  * Code syntax highlighting.
  */
-.code .keyword { color: #393; }
-.code .comment { color: #339; }
+.code .keyword { color: #696; }
+.code .comment { color: #33c; }
 .code .control { color: #966; }
 .code .preproc { color: #c3c; }
 
