@@ -12,9 +12,12 @@
 
 .console, .code {
 	font-family: monospace;
-	margin: 0.5em;
-	padding: 0.25em;
 	white-space: pre-wrap;
+}
+
+div.console, div.code {
+	margin: .5em;
+	padding: 0.25em;
 }
 
 .console .red { color: #f99; }
