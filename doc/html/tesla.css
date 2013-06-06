@@ -22,9 +22,12 @@ div.console, code.listing {
 	padding: .5em;
 }
 
+.console .bold { font-weight: bold; }
+.console .white { color: white; }
 .console .red { color: #f99; }
 .console .green { color: #9f9; }
 .console .blue { color: #99f; }
+.console .purple { color: #f9f; }
 
 /*
  * Code syntax highlighting.
