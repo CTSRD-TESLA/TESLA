@@ -42,11 +42,14 @@ checks actual run-time behaviour against such descriptions.
 <h3>Inline assertions</h3>
 
 <p>
-Inline assertions are typically declared with the TESLA_GLOBAL or
-TESLA_PERTHREAD macros, or else the per-thread convenience wrapper
-TESLA_WITHIN.
-These macros wrap the __tesla_inline_assertion function, which expects
-several arguments:
+Inline assertions are typically declared with the
+<code><span class="keyword">TESLA_GLOBAL</span></code> or
+<code><span class="keyword">TESLA_PERTHREAD</span></code> macros, or else the
+per-thread convenience wrapper
+<code><span class="keyword">TESLA_WITHIN</span></code>.
+These macros wrap the
+<code><span class="keyword">__tesla_inline_assertion</span></code> function,
+which expects several arguments:
 </p>
 
 <ul>
@@ -73,12 +76,13 @@ several arguments:
         rather than <a href="#abstract">abstract expressions</a>
       </li>
       <li>
-        TESLA_GLOBAL and TESLA_PERTHREAD expect explicit <em>start</em> and
-        <em>end</em> bounds
+        <code><span class="keyword">TESLA_GLOBAL</span></code> and
+        <code><span class="keyword">TESLA_PERTHREAD</span></code>
+        expect explicit <em>start</em> and <em>end</em> bounds
       </li>
       <li>
-        TESLA_WITHIN expects a function whose entry and exit are the
-        start and end bounds
+        <code><span class="keyword">TESLA_WITHIN</span></code> expects a
+        function whose entry and exit are the start and end bounds
       </li>
     </ul>
   </li>
@@ -264,8 +268,8 @@ To instrument a function call, rather than return, the programmer can use the
 </p>
 
 <code class="listing"><span class="comment">/* An even simpler assertion! */</span>
-<span class="control">TESLA_WITHIN</span>(example_syscall, <span class="control">previously</span>(<span class="keyword">called</span>(security_check)));
-<span class="control">TESLA_WITHIN</span>(example_syscall,  <span class="control">previously</span>(<span class="keyword">called</span>(hold, o)));
+<span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="control">previously</span>(<span class="keyword">called</span>(security_check)));
+<span class="keyword">TESLA_WITHIN</span>(example_syscall,  <span class="control">previously</span>(<span class="keyword">called</span>(hold, o)));
 </code>
 
 <p>
@@ -283,7 +287,7 @@ which acts like <code><span class="keyword">called</span></code>()
 and, unlike the C-style expression above, can be used with void functions:
 </p>
 
-<code class="listing"><span class="control">TESLA_WITHIN</span>(example_syscall, <span class="control">eventually</span>(<span class="keyword">called</span>(release, o)));
+<code class="listing"><span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="control">eventually</span>(<span class="keyword">called</span>(release, o)));
 </code>
 
 <p>
