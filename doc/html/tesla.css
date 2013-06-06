@@ -6,20 +6,36 @@
 	color: #ccc;
 }
 
-.code {
+code.listing {
 	background-color: #ffd;
+	display: block;
 }
 
-.console, .code {
+.console, code {
 	font-family: monospace;
-	margin: 0.5em;
-	padding: 0.25em;
 	white-space: pre-wrap;
 }
 
+div.console, code.listing {
+	border: 1px solid;
+	margin: .5em;
+	padding: .5em;
+}
+
+.console .bold { font-weight: bold; }
+.console .white { color: white; }
 .console .red { color: #f99; }
 .console .green { color: #9f9; }
 .console .blue { color: #99f; }
+.console .purple { color: #f9f; }
+
+/*
+ * Code syntax highlighting.
+ */
+code .keyword { color: #696; }
+code .comment { color: #33c; }
+code .control { color: #966; }
+code .preproc { color: #c3c; }
 
 /*
  * Simulation of coloured diff output.

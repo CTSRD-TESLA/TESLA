@@ -1,14 +1,29 @@
 ${HEADER}
 
+<p>
+This page provides a high-level overview of the TESLA primitives made available
+to programmers wishing to add temporal assertions to their code.
+Programmers wishing to extend TESLA itself should consult
+<a href="api">the API documentation</a>.
+</p>
+
+<p>
+Most code examples on this page come from
+<a href="https://github.com/CTSRD-TESLA/TESLA/tree/master/demos/smoketest/example.c">demos/smoketest/example.c</a>
+in the TESLA repository.
+</p>
+
 <a name="headers"></a>
 <h2>Header files</h2>
 
 <p>
 TESLA provides programmers with two header file options:
-tesla.h, which defines TESLA primitives prefixed by __tesla, and
-tesla-macros.h, which provides examples of macros that are more
+<a href="api/tesla_8h.xhtml">tesla.h</a>, which defines TESLA primitives
+prefixed by __tesla, and <a href="api/tesla-macros_8h.xhtml">tesla-macros.h</a>,
+which provides examples of macros that are more
 programmer-friendly but could cause namespace collisions.
-We recommend that you start with the example tesla-macros.h and
+We recommend that you start with the example
+<a href="api/tesla-macros_8h.xhtml">tesla-macros.h</a> and
 modify it as necessary to avoid namespace collisions with your code.
 </p>
 
@@ -27,16 +42,19 @@ checks actual run-time behaviour against such descriptions.
 <h3>Inline assertions</h3>
 
 <p>
-Inline assertions are typically declared with the TESLA_GLOBAL or
-TESLA_PERTHREAD macros, or else the per-thread convenience wrapper
-TESLA_WITHIN.
-These macros wrap the __tesla_inline_assertion function, which expects
-several arguments:
+Inline assertions are typically declared with the
+<code><span class="keyword">TESLA_GLOBAL</span></code> or
+<code><span class="keyword">TESLA_PERTHREAD</span></code> macros, or else the
+per-thread convenience wrapper
+<code><span class="keyword">TESLA_WITHIN</span></code>.
+These macros wrap the
+<code><span class="keyword">__tesla_inline_assertion</span></code> function,
+which expects several arguments:
 </p>
 
 <ul>
   <li>
-    an assertion location:
+    an assertion location
     <ul>
       <li>filename, line number and counter</li>
       <li>provided implicitly by the above macros</li>
@@ -54,12 +72,17 @@ several arguments:
     initialised and cleaned up
     <ul>
       <li>
-        TESLA_GLOBAL and TESLA_PERTHREAD expect explicit <em>start</em> and
-        <em>end</em> bounds
+        bounds must be <a href="#concrete">concrete events</a>
+        rather than <a href="#abstract">abstract expressions</a>
       </li>
       <li>
-        TESLA_WITHIN expects a function whose entry and exit are the
-        start and end bounds
+        <code><span class="keyword">TESLA_GLOBAL</span></code> and
+        <code><span class="keyword">TESLA_PERTHREAD</span></code>
+        expect explicit <em>start</em> and <em>end</em> bounds
+      </li>
+      <li>
+        <code><span class="keyword">TESLA_WITHIN</span></code> expects a
+        function whose entry and exit are the start and end bounds
       </li>
     </ul>
   </li>
@@ -69,12 +92,321 @@ several arguments:
 <a name="automata"></a>
 <h3>Explicit automata</h3>
 
-<p>TODO</p>
+<p>
+Programmers can also describe automata directly; this is useful for explicit
+state machines such the TCP state machine.
+</p>
+
+<p>
+Automata are declared and defined like C functions.
+The expected signature is:
+</p>
+
+<code class="listing"><span class="comment">/* Declarations */</span>
+<span class="keyword">automaton</span>(assertion_name, <span class="keyword">struct</span> struct_type *);
+<span class="keyword">automaton</span>(some_other_automaton, <span class="keyword">struct</span> struct_type *);
+
+<span class="comment">/* Definition */</span>
+<span class="keyword">automaton</span>(assertion_name, <span class="keyword">struct</span> struct_type *sp)
+{
+  <span class="comment">/*
+   * a sequence of TESLA expressions
+   * that reference the 'sp' pointer,
+   * for instance:
+   */</span>
+  some_other_automaton(sp);
+
+  <span class="control">done</span>;
+}
+</code>
+
+<p>
+The single variable referenced by the automaton must be declared as a formal
+parameter.
+All sub-automata (e.g. some_other_automaton() in the above example) must
+operate on the same type.
+</p>
+
+<p>
+Automata are bound to structure instance lifetimes with the
+<span class="keyword">TESLA_STRUCT_AUTOMATON</span> macro:
+</p>
+
+<code class="listing"><span class="keyword">TESLA_STRUCT_AUTOMATON</span>(<span class="keyword">struct</span> tcpcb *tp, my_tcpcb_assertion, <span class="keyword">GLOBAL</span>,
+                       <span class="keyword">called</span>(tcp_init, tp),
+                       <span class="keyword">returned</span>(tcp_free, tp));
+</code>
 
 
 <a name="expressions"></a>
 <h2>TESLA expressions</h2>
 
+<p>
+There are nine kinds of TESLA expressions: three abstract expressions,
+three concrete events and three control predicates.
+</p>
+
+<ul>
+  <li>
+    abstract
+    <ul>
+      <li><a href="#boolean_expr">boolean expression</a></li>
+      <li><a href="#sequence">sequence</a></li>
+      <li><a href="#sub_automaton">sub-automaton</a></li>
+    </ul>
+  </li>
+  <li>
+    concrete
+    <ul>
+      <li><a href="#fn_invoke">function invocation / return</a></li>
+      <li><a href="#field_assign">structure field assignment</a></li>
+      <li><a href="#now">"now"</a></li>
+    </ul>
+  </li>
+  <li>
+    control predicates
+    <ul>
+      <li><a href="#optional">optional expression</a></li>
+      <li><a href="#caller_callee">caller vs callee context</a></li>
+      <li><a href="#strict">strict vs conditional mode</a></li>
+    </ul>
+  </li>
+</ul>
+
+<a name="abstract"></a>
+<h3>Abstract expressions</h3>
+
+<a name="boolean_expr"></a>
+<h4>Boolean expression</h4>
+<p>
+TESLA expressions may be combined with boolean operators.
+Currently, the only supported operator is OR ('<code>||</code>').
+instead of <code>a AND b</code>, programmers can write
+<code>a</code> and <code>b</code> as separate
+assertions.
+</p>
+
+<a name="sequence"></a>
+<h4>Sequence</h4>
+<p>
+A sequence of events can be specified with the
+<span class="control">TSEQUENCE</span> macro, whose
+parameters are themselves TESLA expressions.
+For instance:
+</p>
+
+<code class="listing"><span class="control">TSEQUENCE</span>(
+  foo(x) == 0,
+  bar(y) || baz(z)
+)</code>
+
+<p>
+Many simple assertions can be written with the
+<code><span class="control">previously</span></code>
+and
+<code><span class="control">eventually</span></code>
+keywords, which provide wrappers around
+<code><span class="control">TSEQUENCE</span></code>:
+</p>
+
+<code class="listing"><span class="comment">/** A more programmer-friendly way to write assertions about the past. */</span>
+<span class="preproc">#define</span> <span class="control">previously</span>(...)    <span class="control">TSEQUENCE</span>(<span class="keyword">__VA_ARGS__</span>, <span class="control">TESLA_NOW</span>)
+
+<span class="comment">/** A more programmer-friendly way to write assertions about the future. */</span>
+<span class="preproc">#define</span> <span class="control">eventually</span>(...)    <span class="control">TSEQUENCE</span>(<span class="control">TESLA_NOW</span>, <span class="keyword">__VA_ARGS__</span>)
+</code>
+
+
+<a name="sub_automaton"></a>
+<h4>Sub-automaton</h4>
+<p>
+Automata can "include" <a href="#automata">explicitly-declared automata</a>
+by "calling" them:
+</p>
+
+<code class="listing"><span class="keyword">automaton</span>(active_close, <span class="keyword">struct</span> tcpcb*);
+<span class="keyword">automaton</span>(established, <span class="keyword">struct</span> tcpcb*);
+
+<span class="keyword">automaton</span>(my_tcpcb_assertion, <span class="keyword">struct</span> tcpcb *tp)
+{
+	tp-&gt;t_state = TCPS_SYN_RECEIVED,
+	established(tp) || active_close(tp)
+}
+</code>
+
+
+<a name="concrete"></a>
+<h3>Concrete expressions</h3>
+
+<a name="fn_invoke"></a>
+<h4>Function invocation</h4>
+<p>
+Programmers can specify that they expect a function to be called with
+particular parameters and/or return a particular value.
+This specification can be written in a very C-like manner:
+</p>
+
+<code class="listing"><span class="comment">/* A very simple TESLA assertion. */</span>
+<span class="control">previously</span>(security_check(<span class="keyword">ANY</span>(ptr), o, op) == 0)
+</code>
+
+<p>
+This specifies that, within the TESLA automaton's bounds,
+the security_check() function was previously called with the parameters
+<code>o</code> and <code>op</code> and that it
+returned 0.
+The first parameter
+<code><span class="keyword">ANY</span>(ptr)</code>
+is a "don't care": any call to security_check() with
+<code>o</code> and <code>op</code> that returns 0
+satisfies the expression.
+</p>
+
+<p>
+To instrument a function call, rather than return, the programmer can use the
+<code><span class="keyword">called</span></code>() macro:
+</p>
+
+<code class="listing"><span class="comment">/* An even simpler assertion! */</span>
+<span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="control">previously</span>(<span class="keyword">called</span>(security_check)));
+<span class="keyword">TESLA_WITHIN</span>(example_syscall,  <span class="control">previously</span>(<span class="keyword">called</span>(hold, o)));
+</code>
+
+<p>
+<code><span class="keyword">called</span></code>() takes the
+expected function as its first parameter and may optionally be passed
+parameters that represent expected function parameters.
+As above, <code><span class="keyword">ANY</span></code> can be
+used as a "don't care" value.
+</p>
+
+<p>
+Function return may also be specified with the
+<code><span class="keyword">returned</span></code>() macro,
+which acts like <code><span class="keyword">called</span></code>()
+and, unlike the C-style expression above, can be used with void functions:
+</p>
+
+<code class="listing"><span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="control">eventually</span>(<span class="keyword">called</span>(release, o)));
+</code>
+
+<p>
+Functions can be instrumented in the caller or callee context;
+<a href="#caller_callee">see below</a> for more information.
+</p>
+
+<a name="field_assign"></a>
+<h4>Structure field assignment</h4>
+<p>
+Assertions and automata can also specify that constant values should be
+assigned to a structure field.
+Assignments can be simple (e.g. <code>s.foo = 1</code>)
+or compound (e.g. <code>s.foo += 1</code> or <code>s.foo++</code>), but
+a single automaton should not describe both simple and compound assignments
+to the same structure field.
+</p>
+<p>
+Mixing assignment types can confuse this instrumentation: if the old value is
+0 and the new value is 1, is this an assignment of constant value 1 or an
+increment operation?
+Such mixing will trigger a compiler warning:
+</p>
+
+<div class="console"><span class="bold white">demos/smoketest/example.c:57:3: <span class="purple">warning</span>: TESLA: mixing instrumentation of simple
+      and compound assignments</span>
+                o-&gt;refcount = 1));
+                <span class="green">^~~~~~~~~~~~~~~</span>
+/Volumes/Dev/TESLA/include/tesla-macros.h:95:38: note: expanded from macro 'previously'
+#define previously(...)    TSEQUENCE(__VA_ARGS__, TESLA_NOW)
+                                     <span class="green">^</span>
+/Volumes/Dev/TESLA/demos/smoketest/example.c:56:43: note: TESLA: previous assignment here
+        TESLA_WITHIN(example_syscall, previously(o-&gt;refcount += 1,
+                                                 <span class="green">^~~~~~~~~~~~~~~~</span>
+/Volumes/Dev/TESLA/include/tesla-macros.h:95:38: note: expanded from macro 'previously'
+#define previously(...)    TSEQUENCE(__VA_ARGS__, TESLA_NOW)
+                                     <span class="green">^</span>
+LLVM ERROR: TESLA: error analysing 'demos/smoketest/example.c'
+</div>
+
+<a name="now"></a>
+<h4>"Now"</h4>
+<p>
+The <code><span class="control">TESLA_NOW</span></code> event refers to
+the moment at which an assertion site is reached.
+For instance, in the following code:
+</p>
+
+<code class="listing"><span class="keyword">int</span> foo(<span class="keyword">int</span> x) { return 0; }
+
+<span class="keyword">void</span> bar()
+{
+  <span class="keyword">int</span> i = 42;
+  foo(i);
+
+  <span class="keyword">TESLA_WITHIN</span>(bar,
+    <span class="control">TSEQUENCE</span>(
+      foo(42) == 0,
+      <span class="keyword">TESLA_NOW</span>,
+      foo(43) == 0
+    )
+  );
+
+  foo(++i);
+}
+</code>
+
+<p>
+TESLA instrumentation will produce five events when <code>bar()</code>
+is called:
+</p>
+
+<ul>
+<li>enterered <code>bar</code></li>
+<li><code>foo(42)</code> returned 0</li>
+<li><code><span class="keyword">TESLA_NOW</span></code></li>
+<li><code>foo(43)</code> returned 0</li>
+<li>leaving <code>bar</code></li>
+</ul>
+
+
+<a name="predicates"></a>
+<h3>Control predicates</h3>
+
+<a name="optional"></a>
+<h4>Optional expression</h4>
+<p>
+Any expression inside an <code><span class="keyword">optional</span>()</code>
+predicate is permitted but not required to occur.
+This is most useful in combination with
+<a href="#strict">strict mode (described below)</a>.
+</p>
+
+<a name="caller_callee"></a>
+<h4>Caller vs callee context</h4>
+<p>
+By default, TESLA instruments function calls and returns in the callee
+context, where instrumentation only has to be done once.
+It is possible to explicitly choose between callee- and caller-context
+instrumentation using the <code><span class="keyword">callee</span>()</code>
+and <code><span class="keyword">caller</span>()</code> predicates, which may
+be nested arbitrarily:
+</p>
+
+<code class="listing"><span class="keyword">TESLA_WITHIN</span>(foo,
+  <span class="keyword">caller</span>(
+    <span class="control">TSEQUENCE</span>(
+      bar(x) == 42,
+      <span class="keyword">callee</span>(baz(y) == 0 || baz(z) == 0)
+    )
+  )
+);
+</code>
+
+<a name="strict"></a>
+<h4>Strict vs conditional mode</h4>
 <p>TODO</p>
+
+<code class="listing"><span class="preproc">#define</span>	<span class="keyword">strict</span>(...)	__tesla_strict(__tesla_ignore, __VA_ARGS__)
+<span class="preproc">#define</span>	<span class="keyword">conditional</span>(...)	__tesla_conditional(__tesla_ignore, __VA_ARGS__)</code>
 
 ${FOOTER}

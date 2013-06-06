@@ -1,0 +1,26 @@
+${HEADER}
+
+<p>
+Within the FreeBSD Perforce repository, there is a TESLA branch located at
+<code>//depot/projects/ctsrd/tesla/src</code>.
+</p>
+
+<p>
+To build the FreeBSD base system with TESLA instrumentation, run:
+</p>
+
+<div class="console"><span class="blue">$</span> make -j32 CONFIGARGS=-t -DNO_MODULES -DWITHOUT_FORMAT_EXTENSIONS \
+    XCC=<span class="green">$LLVM_BIN</span>/clang \
+    XCXX=<span class="green">$LLVM_BIN</span>/clang++ \
+    XCPP=<span class="green">$LLVM_BIN</span>/clang-cpp \
+    XLLC=<span class="green">$LLVM_BIN</span>/llc \
+    TESLA=<span class="green">$TESLA_SOURCE_DIR</span>/scripts/tesla \
+    KERNCONF=TESLA \
+    buildworld buildkernel
+</div>
+
+<p>
+where <code><span class="keyword">LLVM_BIN</span>=<span class="keyword">$LLVM_BUILD_DIR</span>/bin</code>.
+</p>
+
+${FOOTER}
