@@ -16,8 +16,9 @@
 }
 
 div.console, div.code {
+	border: 1px solid;
 	margin: .5em;
-	padding: 0.25em;
+	padding: .5em;
 }
 
 .console .red { color: #f99; }
