@@ -183,6 +183,23 @@ For instance:
   bar(y) || baz(z)
 )</div>
 
+<p>
+Many simple assertions can be written with the
+<span class="code"><span class="control">previously</span></span>
+and
+<span class="code"><span class="control">eventually</span></span>
+keywords, which provide wrappers around
+<span class="code"><span class="control">TSEQUENCE</span></span>:
+</p>
+
+<div class="code"><span class="comment">/** A more programmer-friendly way to write assertions about the past. */</span>
+<span class="preproc">#define</span> <span class="control">previously</span>(...)    <span class="control">TSEQUENCE</span>(<span class="keyword">__VA_ARGS__</span>, <span class="control">TESLA_NOW</span>)
+
+<span class="comment">/** A more programmer-friendly way to write assertions about the future. */</span>
+<span class="preproc">#define</span> <span class="control">eventually</span>(...)    <span class="control">TSEQUENCE</span>(<span class="control">TESLA_NOW</span>, <span class="keyword">__VA_ARGS__</span>)
+</div>
+
+
 <a name="sub_automaton"></a>
 <h4>Sub-automaton</h4>
 <p>
