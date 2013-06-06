@@ -177,10 +177,10 @@ Automata can "include" <a href="#automata">explicitly-declared automata</a>
 by "calling" them:
 </p>
 
-<div class="code"><span class="keyword">automaton</span>(active_close, struct tcpcb*);
-<span class="keyword">automaton</span>(established, struct tcpcb*);
+<div class="code"><span class="keyword">automaton</span>(active_close, <span class="keyword">struct</span> tcpcb*);
+<span class="keyword">automaton</span>(established, <span class="keyword">struct</span> tcpcb*);
 
-<span class="keyword">automaton</span>(my_tcpcb_assertion, struct tcpcb *tp)
+<span class="keyword">automaton</span>(my_tcpcb_assertion, <span class="keyword">struct</span> tcpcb *tp)
 {
 	tp-&gt;t_state = TCPS_SYN_RECEIVED,
 	established(tp) || active_close(tp)
