@@ -99,7 +99,7 @@ The expected signature is:
    */</span>
   some_other_automaton(sp);
 
-  <span class="keyword">done</span>;
+  <span class="control">done</span>;
 }
 </div>
 
@@ -159,12 +159,13 @@ assertions.
 <a name="sequence"></a>
 <h4>Sequence</h4>
 <p>
-A sequence of events can be specified with the TSEQUENCE macro, whose
+A sequence of events can be specified with the
+<span class="control">TSEQUENCE</span> macro, whose
 parameters are themselves TESLA expressions.
 For instance:
 </p>
 
-<div class="code">TSEQUENCE(
+<div class="code"><span class="control">TSEQUENCE</span>(
   foo(x) == 0,
   bar(y) || baz(z)
 )</div>
