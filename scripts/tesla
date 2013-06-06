@@ -20,10 +20,9 @@ fi
 
 TOOL_NAME="tesla-$1"
 shift
-ARGS="$*"
 
 #
-# TESLA_BUILD_DIR takes precedence over PATH.
+# TESLA_BUILD_DIR takes precedence, otherwise try to find beside wrapper
 #
 if [ $TESLA_BUILD_DIR ]; then
 	TOOL=`find $TESLA_BUILD_DIR/tesla -name $TOOL_NAME`
@@ -32,6 +31,17 @@ if [ $TESLA_BUILD_DIR ]; then
 		exit 1
 	fi
 else
+	TOOL="$(dirname $(which $0))/${TOOL_NAME}"
+	echo $TOOL
+	if [ ! -e "${TOOL}" ]; then
+		TOOL=
+	fi
+fi
+
+#
+# Last ditch effort to find in PATH
+#
+if [ -z "$TOOL" ]; then
 	TOOL=`which $TOOL_NAME`
 	if [ ! "$TOOL" ]; then
 		echo "No '$TOOL_NAME' in \$PATH; try setting TESLA_BUILD_DIR?"
@@ -39,5 +49,5 @@ else
 	fi
 fi
 
-$TOOL $ARGS
+$TOOL "$@"
 
