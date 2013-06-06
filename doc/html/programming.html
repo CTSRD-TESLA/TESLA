@@ -116,17 +116,22 @@ The expected signature is:
 }
 </div>
 
-TESLA_STRUCT_AUTOMATON(struct tcpcb *tp, my_tcpcb_assertion, __tesla_global,
-                       called(tcp_init, tp),
-                       returned(tcp_free, tp));
-
-
 <p>
 The single variable referenced by the automaton must be declared as a formal
 parameter.
 All sub-automata (e.g. some_other_automaton() in the above example) must
 operate on the same type.
 </p>
+
+<p>
+Automata are bound to structure instance lifetimes with the
+<span class="keyword">TESLA_STRUCT_AUTOMATON</span> macro:
+</p>
+
+<div class="code"><span class="keyword">TESLA_STRUCT_AUTOMATON</span>(<span class="keyword">struct</span> tcpcb *tp, my_tcpcb_assertion, <span class="keyword">GLOBAL</span>,
+                       <span class="keyword">called</span>(tcp_init, tp),
+                       <span class="keyword">returned</span>(tcp_free, tp));
+</div>
 
 
 <a name="expressions"></a>
