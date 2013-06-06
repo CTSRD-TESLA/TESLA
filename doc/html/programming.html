@@ -138,8 +138,8 @@ Automata are bound to structure instance lifetimes with the
 <h2>TESLA expressions</h2>
 
 <p>
-There are six kinds of TESLA expressions, three abstract expressions and
-three concrete events:
+There are six kinds of TESLA expressions: three abstract expressions,
+three concrete events and three control predicates.
 </p>
 
 <ul>
@@ -157,6 +157,14 @@ three concrete events:
       <li><a href="#fn_invoke">function invocation / return</a></li>
       <li><a href="#field_assign">structure field assignment</a></li>
       <li><a href="#now">"now"</a></li>
+    </ul>
+  </li>
+  <li>
+    control predicates
+    <ul>
+      <li><a href="#optional">optional expression</a></li>
+      <li><a href="#caller_callee">caller vs callee context</a></li>
+      <li><a href="#strict">strict vs conditional mode</a></li>
     </ul>
   </li>
 </ul>
@@ -295,5 +303,28 @@ TODO
 TODO
 </p>
 
+
+<a name="predicates"></a>
+<h3>Control predicates</h3>
+
+<a name="optional"></a>
+<h4>Optional expression</h4>
+<p>TODO</p>
+
+<div class="code"><span class="preproc">#define</span>	<span class="keyword">optional</span>(...)	__tesla_optional(__tesla_ignore, __VA_ARGS__)</div>
+
+<a name="caller_callee"></a>
+<h4>Caller vs callee context</h4>
+<p>TODO</p>
+
+<div class="code"><span class="preproc">#define</span>	<span class="keyword">callee</span>(...)	__tesla_callee(__tesla_ignore, __VA_ARGS__)
+<span class="preproc">#define</span>	<span class="keyword">caller</span>(...)	__tesla_caller(__tesla_ignore, __VA_ARGS__)</div>
+
+<a name="strict"></a>
+<h4>Strict vs conditional mode</h4>
+<p>TODO</p>
+
+<div class="code"><span class="preproc">#define</span>	<span class="keyword">strict</span>(...)	__tesla_strict(__tesla_ignore, __VA_ARGS__)
+<span class="preproc">#define</span>	<span class="keyword">conditional</span>(...)	__tesla_conditional(__tesla_ignore, __VA_ARGS__)</div>
 
 ${FOOTER}
