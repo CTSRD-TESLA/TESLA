@@ -56,6 +56,10 @@ several arguments:
     initialised and cleaned up
     <ul>
       <li>
+        bounds must be <a href="#concrete">concrete events</a>
+        rather than <a href="#abstract">abstract expressions</a>
+      </li>
+      <li>
         TESLA_GLOBAL and TESLA_PERTHREAD expect explicit <em>start</em> and
         <em>end</em> bounds
       </li>
@@ -139,8 +143,7 @@ three concrete events:
   </li>
 </ul>
 
-NOTE: special begin, end constraints!
-
+<a name="abstract"></a>
 <h3>Abstract expressions</h3>
 
 <a name="boolean_expr"></a>
@@ -184,6 +187,7 @@ by "calling" them:
 </div>
 
 
+<a name="concrete"></a>
 <h3>Concrete expressions</h3>
 
 <a name="fn_invoke"></a>
