@@ -1,4 +1,15 @@
 /*
+ * Common HTML elements (extremely specific to override UCam style defaults).
+ */
+.dept div#content-primary h1 { margin-top: 1.5em; }
+.dept div#content-primary h1.title { margin-top: 0em; }
+
+.dept div#content-primary h3 { margin-top: 1em; }
+
+h1, h2, h3, h4, h5, h6 { color: rgb(0, 51, 102); }
+
+
+/*
  * Warning messages of various kinds.
  */
 div.severe, div.warning, div.note {

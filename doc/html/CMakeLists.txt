@@ -16,7 +16,7 @@ function(header outvar title)
 </head>
 
 <body>
-<h1>${title}</h1>"
+<h1 class=\"title\">${title}</h1>"
 	PARENT_SCOPE)
 endfunction()
 
