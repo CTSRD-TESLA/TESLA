@@ -14,7 +14,7 @@ in the TESLA repository.
 </p>
 
 <a name="headers"></a>
-<h2>Header files</h2>
+<h1>Header files</h1>
 
 <p>
 TESLA provides programmers with two header file options:
@@ -29,7 +29,7 @@ modify it as necessary to avoid namespace collisions with your code.
 
 
 <a name="inputs"></a>
-<h2>Assertions and automata</h2>
+<h1>Assertions and automata</h1>
 
 <p>
 TESLA accepts two types of input: inline assertions and explicit automata.
@@ -39,7 +39,7 @@ checks actual run-time behaviour against such descriptions.
 
 
 <a name="assertions"></a>
-<h3>Inline assertions</h3>
+<h2>Inline assertions</h2>
 
 <p>
 Inline assertions are typically declared with the
@@ -90,7 +90,7 @@ which expects several arguments:
 </ul>
 
 <a name="automata"></a>
-<h3>Explicit automata</h3>
+<h2>Explicit automata</h2>
 
 <p>
 Programmers can also describe automata directly; this is useful for explicit
@@ -139,7 +139,7 @@ Automata are bound to structure instance lifetimes with the
 
 
 <a name="expressions"></a>
-<h2>TESLA expressions</h2>
+<h1>TESLA expressions</h1>
 
 <p>
 There are nine kinds of TESLA expressions: three abstract expressions,
@@ -174,10 +174,10 @@ three concrete events and three control predicates.
 </ul>
 
 <a name="abstract"></a>
-<h3>Abstract expressions</h3>
+<h2>Abstract expressions</h2>
 
 <a name="boolean_expr"></a>
-<h4>Boolean expression</h4>
+<h3>Boolean expression</h3>
 <p>
 TESLA expressions may be combined with boolean operators.
 Currently, the only supported operator is OR ('<code>||</code>').
@@ -187,7 +187,7 @@ assertions.
 </p>
 
 <a name="sequence"></a>
-<h4>Sequence</h4>
+<h3>Sequence</h3>
 <p>
 A sequence of events can be specified with the
 <span class="control">TSEQUENCE</span> macro, whose
@@ -218,7 +218,7 @@ keywords, which provide wrappers around
 
 
 <a name="sub_automaton"></a>
-<h4>Sub-automaton</h4>
+<h3>Sub-automaton</h3>
 <p>
 Automata can "include" <a href="#automata">explicitly-declared automata</a>
 by "calling" them:
@@ -236,10 +236,10 @@ by "calling" them:
 
 
 <a name="concrete"></a>
-<h3>Concrete expressions</h3>
+<h2>Concrete expressions</h2>
 
 <a name="fn_invoke"></a>
-<h4>Function invocation</h4>
+<h3>Function invocation</h3>
 <p>
 Programmers can specify that they expect a function to be called with
 particular parameters and/or return a particular value.
@@ -296,7 +296,7 @@ Functions can be instrumented in the caller or callee context;
 </p>
 
 <a name="field_assign"></a>
-<h4>Structure field assignment</h4>
+<h3>Structure field assignment</h3>
 <p>
 Assertions and automata can also specify that constant values should be
 assigned to a structure field.
@@ -345,7 +345,7 @@ field access instrumentation detects accesses.
 </div>
 
 <a name="now"></a>
-<h4>"Now"</h4>
+<h3>"Now"</h3>
 <p>
 The <code><span class="control">TESLA_NOW</span></code> event refers to
 the moment at which an assertion site is reached.
@@ -386,10 +386,10 @@ is called:
 
 
 <a name="predicates"></a>
-<h3>Control predicates</h3>
+<h2>Control predicates</h2>
 
 <a name="optional"></a>
-<h4>Optional expression</h4>
+<h3>Optional expression</h3>
 <p>
 Any expression inside an <code><span class="keyword">optional</span>()</code>
 predicate is permitted but not required to occur.
@@ -398,7 +398,7 @@ This is most useful in combination with
 </p>
 
 <a name="caller_callee"></a>
-<h4>Caller vs callee context</h4>
+<h3>Caller vs callee context</h3>
 <p>
 By default, TESLA instruments function calls and returns in the callee
 context, where instrumentation only has to be done once.
@@ -452,7 +452,7 @@ This the following caller- and callee-context function instrumentation:
 </table>
 
 <a name="strict"></a>
-<h4>Strict vs conditional mode</h4>
+<h3>Strict vs conditional mode</h3>
 <p>
 Sometimes, it is desirable to specify the exact behaviour of the system:
 "the following events can only ever occur according to this automaton".
