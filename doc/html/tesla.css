@@ -36,7 +36,7 @@ div.note:before		{ content: "Note";	color: #666; }
 }
 
 code.listing {
-	background-color: #ffd;
+	background-color: #ffe;
 	display: block;
 }
 
