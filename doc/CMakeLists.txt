@@ -1,4 +1,5 @@
 find_package(Doxygen)
+find_package(GraphViz)
 find_package(PythonInterp)
 
 add_custom_target(doc ALL)
