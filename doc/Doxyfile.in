@@ -222,7 +222,7 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 
 HIDE_UNDOC_RELATIONS   = NO
-HAVE_DOT               = ${GRAPHVIZ_FOUND}
+HAVE_DOT               = ${DOT_EXECUTABLE_FOUND}
 DOT_FONTNAME           = Helvetica
 DOT_FONTSIZE           = 10
 DOT_FONTPATH           =
