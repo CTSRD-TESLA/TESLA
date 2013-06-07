@@ -31,6 +31,7 @@ endfunction()
 # Static HTML content:
 #
 configure_file(tesla.css tesla.css)
+install(FILES tesla.css DESTINATION ${HTML_OUTPUT})
 
 set(HTML
   "index -> Temporally Enhanced Security Logic Assertions (TESLA)"
@@ -57,4 +58,4 @@ endforeach()
 configure_file(uconfig.txt uconfig.txt)
 configure_file(Makefile.in Makefile)
 
-install(FILES Makefile tesla.css uconfig.txt DESTINATION ${HTML_OUTPUT})
+install(FILES Makefile uconfig.txt DESTINATION ${HTML_OUTPUT})
