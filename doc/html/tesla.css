@@ -82,18 +82,18 @@ code .literal { color: #e99; }
 .diff .del { color: #c33; }
 
 /*
- * Dependencies listed in a table.
+ * A pretty table format.
  */
-table.deps {
+table.pretty {
 	border-spacing: 3px;
 	text-align: center;
 }
 
-table.deps thead {
+table.pretty thead {
 	font-weight: bold;
 }
 
-table.deps td {
+table.pretty td {
 	background-color: #eee;
 	padding: .25em;
 }
