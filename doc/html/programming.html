@@ -287,7 +287,7 @@ which acts like <code><span class="keyword">called</span></code>()
 and, unlike the C-style expression above, can be used with void functions:
 </p>
 
-<code class="listing"><span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="control">eventually</span>(<span class="keyword">called</span>(release, o)));
+<code class="listing"><span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="control">previously</span>(<span class="keyword">returned</span>(hold, o)));
 </code>
 
 <p>
