@@ -328,6 +328,22 @@ Such mixing will trigger a compiler warning:
 LLVM ERROR: TESLA: error analysing 'demos/smoketest/example.c'
 </div>
 
+<div class="note">
+<p>
+Currently, fields whose accesses are to be instrumented must be manually
+annotated with an attribute of the following form:
+</p>
+
+<code class="listing">__attribute__((annotate(<span class="literal">"field:struct_name.field_name"</span>)));
+</code>
+
+<p>
+We will remove this limitation in the future by either modifying Clang to make
+it produce field annotation on demand or else by changing the way the
+field access instrumentation detects accesses.
+</p>
+</div>
+
 <a name="now"></a>
 <h4>"Now"</h4>
 <p>

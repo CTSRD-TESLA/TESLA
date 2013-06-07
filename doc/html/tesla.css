@@ -1,4 +1,33 @@
 /*
+ * Warning messages of various kinds.
+ */
+div.severe, div.warning, div.note {
+	border: 1px dashed;
+	margin: 2em;
+	padding-left: 1em;
+	padding-right: 1em;
+	position: relative;
+}
+
+div.severe:before, div.warning:before, div.note:before {
+	font-family: sans-serif;
+	font-size: smaller;
+	font-weight: bold;
+	text-align: right;
+	position: absolute;
+	top: -1.5em;
+	left: 0;
+}
+
+.severe		{ background-color: #fdd; }
+.warning	{ background-color: #ffd; }
+.note		{ background-color: #eee; }
+
+div.severe:before	{ content: "Warning";	color: #711; }
+div.warning:before	{ content: "Warning";	color: #993; }
+div.note:before		{ content: "Note";	color: #666; }
+
+/*
  * Simulation of console output.
  */
 .console {
@@ -36,6 +65,7 @@ code .keyword { color: #696; }
 code .comment { color: #33c; }
 code .control { color: #966; }
 code .preproc { color: #c3c; }
+code .literal { color: #e99; }
 
 /*
  * Simulation of coloured diff output.
