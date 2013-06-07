@@ -411,12 +411,45 @@ be nested arbitrarily:
 <code class="listing"><span class="keyword">TESLA_WITHIN</span>(foo,
   <span class="keyword">caller</span>(
     <span class="control">TSEQUENCE</span>(
-      bar(x) == 42,
-      <span class="keyword">callee</span>(baz(y) == 0 || baz(z) == 0)
+      fn1() == 0,
+      fn2() == 0,
+      <span class="keyword">callee</span>(
+        <span class="control">TSEQUENCE</span>(
+          fn3() == 0,
+          <span class="keyword">caller</span>(fn4() == 0),
+          fn5() == 0
+        )
+        ||
+        fn6() == 0
+      ),
+      fn7() == 0
     )
   )
 );
 </code>
+
+<p>
+This the following caller- and callee-context function instrumentation:
+</p>
+
+<table class="deps">
+<thead><tr><th>Caller context</th><th>Callee context</th></tr></thead>
+<tbody>
+	<tr>
+		<td>
+			fn1<br/>
+			fn2<br/>
+			fn4<br/>
+			fn7
+		</td>
+		<td>
+			fn3<br/>
+			fn5<br/>
+			fn6
+		</td>
+	</tr>
+</tbody>
+</table>
 
 <a name="strict"></a>
 <h4>Strict vs conditional mode</h4>
