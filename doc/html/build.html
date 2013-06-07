@@ -168,8 +168,6 @@ remote: Counting objects: 3138, done.
 <span class="blue">$</span> ccmake . <span class="blue"># nice UI for further configuration, or else:</span>
 <span class="blue">$</span> cmake -D USE_LIBCXX=false .  <span class="blue"># if you have libc++ but didn't link LLVM against it</span>
 <span class="blue">$</span> cmake -D CMAKE_MODULE_PATH=/&lt;LLVM prefix&gt;/share/llvm/cmake .  <span class="blue"># if CMake can't find LLVM-Config or AddLLVM</span>
-<span class="blue">$</span> cmake -D CMAKE_C_FLAGS=-fcolor-diagnostics .       <span class="blue"># optional but nice</span>
-<span class="blue">$</span> cmake -D CMAKE_CXX_FLAGS=-fcolor-diagnostics .     <span class="blue"># optional but nice</span>
 </div>
 
 <p>
