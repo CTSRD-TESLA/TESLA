@@ -316,13 +316,13 @@ Such mixing will trigger a compiler warning:
       and compound assignments</span>
                 o-&gt;refcount = 1));
                 <span class="green">^~~~~~~~~~~~~~~</span>
-/Volumes/Dev/TESLA/include/tesla-macros.h:95:38: note: expanded from macro 'previously'
+include/tesla-macros.h:95:38: note: expanded from macro 'previously'
 #define previously(...)    TSEQUENCE(__VA_ARGS__, TESLA_NOW)
                                      <span class="green">^</span>
-/Volumes/Dev/TESLA/demos/smoketest/example.c:56:43: note: TESLA: previous assignment here
+demos/smoketest/example.c:56:43: note: TESLA: previous assignment here
         TESLA_WITHIN(example_syscall, previously(o-&gt;refcount += 1,
                                                  <span class="green">^~~~~~~~~~~~~~~~</span>
-/Volumes/Dev/TESLA/include/tesla-macros.h:95:38: note: expanded from macro 'previously'
+include/tesla-macros.h:95:38: note: expanded from macro 'previously'
 #define previously(...)    TSEQUENCE(__VA_ARGS__, TESLA_NOW)
                                      <span class="green">^</span>
 LLVM ERROR: TESLA: error analysing 'demos/smoketest/example.c'
