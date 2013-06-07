@@ -167,7 +167,12 @@ string Automaton::Dot() const {
     << " * " << Name() << "\n"
     << " */\n"
     << "digraph automaton_" << id << " {\n"
-    << "\tnode [ fontname = \"Monospace\", shape = circle ];\n"
+    << "\tgraph [ truecolor=true, bgcolor=\"transparent\" ];\n"
+    << "\tnode ["
+    << " shape = circle,"
+    << " fontname = \"Monospace\","
+    << " style = filled, fillcolor = \"white\""
+    << "];\n"
     << "\tedge [ fontname = \"Monospace\" ];\n"
     << "\n"
     ;
