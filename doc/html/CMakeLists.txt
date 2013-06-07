@@ -31,7 +31,9 @@ endfunction()
 # Static HTML content:
 #
 configure_file(tesla.css tesla.css)
+file(COPY images DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 install(FILES tesla.css DESTINATION ${HTML_OUTPUT})
+install(DIRECTORY images DESTINATION ${HTML_OUTPUT})
 
 set(HTML
   "index -> Temporally Enhanced Security Logic Assertions (TESLA)"

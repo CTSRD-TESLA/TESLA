@@ -420,9 +420,55 @@ be nested arbitrarily:
 
 <a name="strict"></a>
 <h4>Strict vs conditional mode</h4>
-<p>TODO</p>
+<p>
+Sometimes, it is desirable to specify the exact behaviour of the system:
+"the following events can only ever occur according to this automaton".
+Other times, the programmer wants to specify that "on <i>this</i> code path,
+the behaviour of the sytem is ...".
+These modes can be selected from using the
+<code><span class="keyword">strict</span>()</code>
+and
+<code><span class="keyword">conditional</span>()</code>
+predicates.
+</p>
 
-<code class="listing"><span class="preproc">#define</span>	<span class="keyword">strict</span>(...)	__tesla_strict(__tesla_ignore, __VA_ARGS__)
-<span class="preproc">#define</span>	<span class="keyword">conditional</span>(...)	__tesla_conditional(__tesla_ignore, __VA_ARGS__)</code>
+<p>
+In <code><span class="keyword">strict</span>()</code> mode (the default for
+explicit automata representations), it is an error for any named event to
+occur outside of the sequences described by the given automaton.
+For instance, if an automaton includes the event
+<code>tcp_control_block-&gt;t_state = TCPS_CLOSING</code>,
+it is an error for <code>TCPS_CLOSING</code> to be assigned to
+<code>tcp_control_block-&gt;t_state</code> outside of the automaton.
+</p>
+
+<p>
+In <code><span class="keyword">conditional</span>()</code> mode (the default
+for inline automata), any named event can occur at any time unless the code
+path includes the <a href="#now">TESLA_NOW</a> event; then the system must
+behave as described in the automaton.
+For instance, many FreeBSD kernel assertions may reference the function
+<code>syscallenter()</code>; it is only an error for this function event to
+occur in a way not described by an assertion if we are on the code path
+described by that assertion.
+</p>
+
+<p>
+The difference between automata generated in strict and conditional mode
+is illustrated here:
+</p>
+
+<table>
+<thead>
+	<tr>
+		<th>Strict mode</th>
+		<th>Conditional mode</th>
+	</tr>
+</thead>
+<tr>
+	<td><img src="images/strict.png"/></td>
+	<td><img src="images/conditional.png"/></td>
+</tr>
+</table>
 
 ${FOOTER}

@@ -28,6 +28,14 @@ div.warning:before	{ content: "Warning";	color: #993; }
 div.note:before		{ content: "Note";	color: #666; }
 
 /*
+ * Center tables.
+ */
+table {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/*
  * Simulation of console output.
  */
 .console {
