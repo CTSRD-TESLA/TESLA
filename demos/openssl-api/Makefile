@@ -47,7 +47,7 @@ ${BASE}: ${BASE}.instr.o
 
 # TESLA instrumentation (LLVM IR --TESLA IR--> instrumented LLVM IR)
 ${BASE}.instr.ll: ${BASE}.ll ${BASE}.tesla
-	tesla instrument -S $< -tesla-manifest ${BASE}.tesla -o $@
+	tesla instrument -S ${BASE}.ll -tesla-manifest ${BASE}.tesla -o $@
 
 
 #
