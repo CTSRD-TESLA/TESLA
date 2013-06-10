@@ -123,8 +123,6 @@ Checked out revision 175226.
 -- Generating done
 -- Build files have been written to: /home/jonathan/LLVM/build
 
-<span class="blue">$</span> cmake -D CMAKE_BUILD_TYPE=Debug .      <span class="blue"># for debugging symbols, etc.</span>
-<span class="blue">$</span> cmake -D CMAKE_BUILD_TYPE=Release .    <span class="blue"># if you feel adventurous</span>
 <span class="blue">$</span> ninja
 [1932/1932] Linking CXX executable bin/c-index-test
 </div>
@@ -164,14 +162,19 @@ remote: Counting objects: 3138, done.
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /home/jonathan/TESLA/build
+</div>
 
-<span class="blue">$</span> ccmake . <span class="blue"># nice UI for further configuration, or else:</span>
-<span class="blue">$</span> cmake -D USE_LIBCXX=false .  <span class="blue"># if you have libc++ but didn't link LLVM against it</span>
+<p>
+If the CMake command fails because of libc++ link failures or an inability to
+find LLVM-Config or AddLLVM, you may need to run one of:
+</p>
+
+<div class="console"><span class="blue">$</span> cmake -D USE_LIBCXX=false .  <span class="blue"># if you have libc++ but didn't link LLVM against it</span>
 <span class="blue">$</span> cmake -D CMAKE_MODULE_PATH=/&lt;LLVM prefix&gt;/share/llvm/cmake .  <span class="blue"># if CMake can't find LLVM-Config or AddLLVM</span>
 </div>
 
 <p>
-Then we can build and test it:
+Then we can build TESLA and test it:
 </p>
 
 <div class="console"><span class="blue">$</span> ninja
