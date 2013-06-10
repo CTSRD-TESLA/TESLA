@@ -525,25 +525,24 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
                            ArrayRef<Value*> Args) {
 
-  assert(Args.size() <= TESLA_KEY_SIZE);
-
   Value *Key = Builder.CreateAlloca(KeyType(M), 0, "key");
   Type *IntPtrTy = IntPtrType(M);
   Type *IntTy = Type::getInt32Ty(M.getContext());
-
-  static Constant *Null = ConstantInt::get(IntPtrTy, 0);
 
   int i = 0;
   int KeyMask = 0;
 
   for (Value* Arg : Args) {
+    if (Arg == NULL)
+      continue;
+
+    assert(i < TESLA_KEY_SIZE);
+
     Builder.CreateStore(
-      (Arg == NULL) ? Null : Cast(Arg, Twine(i - 1).str(), IntPtrTy, Builder),
+      Cast(Arg, Twine(i - 1).str(), IntPtrTy, Builder),
       Builder.CreateStructGEP(Key, i));
 
-    if (Arg != NULL)
-      KeyMask |= (1 << i);
-
+    KeyMask |= (1 << i);
     i++;
   }
 
