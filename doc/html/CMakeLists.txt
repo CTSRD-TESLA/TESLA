@@ -81,7 +81,7 @@ endforeach()
 #
 # If we have a local instance of UCampas, use it to generate HTML previews.
 #
-if( DEFINED UCAMPAS_EXECUTABLE )
+if( UCAMPAS_EXECUTABLE )
 	add_custom_command(
 		OUTPUT ${HTML_BINDIR}/index.html
 		DEPENDS ${UCAMPAS_FILES}

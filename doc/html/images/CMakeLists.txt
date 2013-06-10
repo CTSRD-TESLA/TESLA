@@ -6,7 +6,7 @@ file(COPY
 	workflow.png
 	DESTINATION ${HTML_BINDIR}/images)
 
-if( DEFINED DOT_EXECUTABLE )
+if( DOT_EXECUTABLE )
 	set(Y "66")
 	set(N  "00")
 	set(ALPHA "66")
