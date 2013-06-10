@@ -54,7 +54,6 @@ if( DOXYGEN_FOUND )
 	endif()
 
 	configure_file(Doxyfile.in Doxyfile)
-	configure_file(api.htaccess ${DOXYGEN_HTML}/.htaccess)
 
 	add_custom_command(
 		OUTPUT
