@@ -32,7 +32,7 @@ TESLA_FILES=	\
 RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/3.3
 
 
-all: ${BASE}.tesla ${BASE} ${BASE}.pdf
+all: ${BASE}.tesla ${BASE}
 
 clean:
 	rm -f ${BASE} *.dot *.instrll *.instro *.ll *.o *.tesla *.pdf

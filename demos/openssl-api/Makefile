@@ -13,7 +13,7 @@ LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
 RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/3.3
 
 
-all: ${BASE} ${BASE}.pdf
+all: ${BASE}
 
 clean:
 	rm -f ${BASE} *.dot *.ll *.o *.tesla *.pdf
