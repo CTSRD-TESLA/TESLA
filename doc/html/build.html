@@ -182,17 +182,18 @@ Then we can build TESLA and test it:
 </div>
 
 <p>
-After that, you'll want to be able to actually run TESLA.
-You can either set some environment variables:
+After that, you'll want to be able to actually run TESLA!
 </p>
 
-<div class="console"><span class="blue">$</span> export TESLA_BUILD_DIR=/path/to/tesla/build
-<span class="blue">$</span> export TESLA_SOURCE_DIR=/path/to/tesla
-<span class="blue">$</span> export PATH=$TESLA_SOURCE_DIR/scripts:$PATH
-</div>
 
 <a name="install"></a>
-<p>or else you can install the tools somewhere on your PATH:</p>
+<h3>Installing TESLA</h3>
+
+<p>
+TESLA can be
+<a href="environment.html">run in-place from the build directory</a>,
+but you may prefer to install it on your PATH:
+</p>
 
 <div class="console"><span class="blue">$</span> cd build
 <span class="blue">$</span> cmake -D CMAKE_INSTALL_PREFIX=/some/sensible/path .   <span class="blue"># or else things go in /usr/local</span>
@@ -228,7 +229,7 @@ OPTIONS:
 </div>
 
 <a name="exercise"></a>
-<h3>Exercise TESLA</h3>
+<h2>Exercising TESLA</h2>
 <p>
 The 'demos/smoketest' directory contains an example of how TESLA assertions can be written in C code. If you run it as-is:
 </p>
