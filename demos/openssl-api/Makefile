@@ -23,7 +23,7 @@ clean:
 # Normal C workflow:
 #
 ${BASE}: ${BASE}.instr.o
-	${CC} ${LDFLAGS} $< -o $@
+	${CC} ${LDFLAGS} ${BASE}.instr.o -o $@
 
 .c.ll:
 	${CC} -S -emit-llvm ${CFLAGS} $< -o $@
