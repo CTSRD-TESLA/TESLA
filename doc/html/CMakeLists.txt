@@ -94,10 +94,7 @@ if( DEFINED UCAMPAS_EXECUTABLE )
 endif()
 
 #
-# Create the ucampas build system.
+# Describe the HTML files to ucampas.
 #
 configure_file(uconfig.txt ${HTML_BINDIR}/uconfig.txt)
-configure_file(Makefile.in ${HTML_BINDIR}/Makefile @ONLY)
-
-install(FILES ${HTML_BINDIR}/Makefile ${HTML_BINDIR}/uconfig.txt
-	DESTINATION ${HTML_OUTPUT})
+install(FILES ${HTML_BINDIR}/uconfig.txt DESTINATION ${HTML_OUTPUT})
