@@ -61,8 +61,12 @@ foreach(page ${HTML})
 	header(HEADER ${title})
 	footer(FOOTER)
 
-	configure_file(${base}.html ${HTML_BINDIR}/${base}-b.html)
-	set(HTML_TARGETS "${HTML_TARGETS} ${base}.html")
+	set(INPUT "${base}.html")
+	set(OUTPUT "${HTML_BINDIR}/${base}-b.html")
+
+	configure_file(${INPUT} ${OUTPUT})
+	set(HTML_TARGETS "${HTML_TARGETS} ${INPUT}")
+	set(UCAMPAS_FILES ${UCAMPAS_FILES} ${OUTPUT})
 
 	# If this isn't index.html, add it to ucampas' config file.
 	if( NOT "${base}" STREQUAL "index" )
@@ -71,6 +75,21 @@ foreach(page ${HTML})
 
 	install(FILES ${HTML_BINDIR}/${base}-b.html DESTINATION ${HTML_OUTPUT})
 endforeach()
+
+#
+# If we have a local instance of UCampas, use it to generate HTML previews.
+#
+if( DEFINED UCAMPAS_EXECUTABLE )
+	add_custom_command(
+		OUTPUT ${HTML_BINDIR}/index.html
+		DEPENDS ${UCAMPAS_FILES}
+		COMMAND ${UCAMPAS_EXECUTABLE} -q -r ${HTML_BINDIR}
+		COMMENT "Processing HTML documentation with ucampas"
+	)
+
+	add_custom_target(html-preview DEPENDS ${HTML_BINDIR}/index.html)
+	add_dependencies(doc html-preview)
+endif()
 
 #
 # Create the ucampas build system.
