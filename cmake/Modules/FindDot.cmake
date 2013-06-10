@@ -35,12 +35,14 @@ if (NOT DOT_EXECUTABLE_FOUND)
       "/usr/local/bin"
       "/opt/bin"
       "/opt/local/bin"
+
       # Windows paths
       "$ENV{ProgramFiles}/Graphviz 2.21/bin"
       "C:/Program Files/Graphviz 2.21/bin"
       "$ENV{ProgramFiles}/ATT/Graphviz/bin"
       "C:/Program Files/ATT/Graphviz/bin"
       [HKEY_LOCAL_MACHINE\\SOFTWARE\\ATT\\Graphviz;InstallPath]/bin
+
       # Mac OS X Bundle paths
       /Applications/Graphviz.app/Contents/MacOS
       /Applications/Doxygen.app/Contents/Resources
