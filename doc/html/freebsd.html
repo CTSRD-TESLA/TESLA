@@ -23,4 +23,10 @@ To build the FreeBSD base system with TESLA instrumentation, run:
 where <code><span class="keyword">LLVM_BIN</span>=<span class="keyword">$LLVM_BUILD_DIR</span>/bin</code>.
 </p>
 
+<p>
+After the build is complete, there will be a <code>kernel.instrumented</code>
+file alongside <code>kernel</code> in
+<code><span class="keyword">$OBJDIR</span>/sys/TESLA</code>.
+</p>
+
 ${FOOTER}
