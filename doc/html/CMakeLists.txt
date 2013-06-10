@@ -43,9 +43,9 @@ endfunction()
 # Static HTML content:
 #
 configure_file(tesla.css ${HTML_BINDIR}/tesla.css)
-file(COPY images DESTINATION ${HTML_BINDIR})
 install(FILES tesla.css DESTINATION ${HTML_OUTPUT})
-install(DIRECTORY images DESTINATION ${HTML_OUTPUT})
+
+add_subdirectory(images)
 
 set(HTML
   "index -> Temporally Enhanced Security Logic Assertions (TESLA)"
