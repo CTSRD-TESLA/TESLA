@@ -24,14 +24,16 @@ if( DOT_EXECUTABLE )
 	configure_file(example-deps.dot.in example-deps.dot)
 
 	add_custom_command(
-		OUTPUT example-deps.png
+		OUTPUT ${HTML_BINDIR}/images/example-deps.png
 		DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/example-deps.dot
 		COMMAND ${DOT_EXECUTABLE} -Tpng
 			example-deps.dot
 			-o ${HTML_BINDIR}/images/example-deps.png
 	)
 
-	add_custom_target(example-deps DEPENDS example-deps.png)
+	add_custom_target(example-deps
+		DEPENDS ${HTML_BINDIR}/images/example-deps.png)
+
 	add_dependencies(doc example-deps)
 endif()
 
