@@ -1,4 +1,9 @@
 #
+# The ucampas tool converts bare HTML to the UCam house style.
+#
+find_package(UCampas)
+
+#
 # Allow the user to specify the build location of HTML output.
 #
 # This is useful for e.g. building HTML content into a larger website
@@ -9,12 +14,6 @@ if( NOT DEFINED HTML_BINDIR )
 		CACHE PATH "HTML staging dir")
 	message("-- HTML will be built in ${HTML_BINDIR}")
 endif()
-
-#
-# The ucampas tool converts bare HTML to the UCam house style.
-#
-set(UCAMPAS "/anfs/www/tools/bin/ucampas"
-	CACHE FILEPATH "Location of the 'ucampas' HTML styling tool")
 
 #
 # Header and footer that fit within the ucampas world.
