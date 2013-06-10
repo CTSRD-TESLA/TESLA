@@ -5,12 +5,24 @@ find_package(PythonInterp)
 add_custom_target(doc ALL)
 
 #
-# Where we will install documentation.
+# Allow the user to specify the build location of HTML output.
 #
-if( "${HTML_OUTPUT}" STREQUAL "" )
-	set(HTML_OUTPUT share/doc/tesla/html)
+# This is useful for e.g. building HTML content into a larger website
+# located in a Subversion repository.
+#
+if( NOT DEFINED HTML_BINDIR )
+	set(HTML_BINDIR ${CMAKE_CURRENT_BINARY_DIR}
+		CACHE PATH "HTML staging dir")
+	message("-- HTML will be built in ${HTML_BINDIR}")
 endif()
-message("-- HTML documentation will be installed in ${HTML_OUTPUT}")
+
+#
+# Where we will install HTML documentation.
+#
+if( NOT DEFINED HTML_OUTPUT )
+	set(HTML_OUTPUT share/doc/tesla/html CACHE PATH "HTML install dir")
+	message("-- HTML documentation will be installed in ${HTML_OUTPUT}")
+endif()
 
 #
 # Static HTML content.
@@ -21,21 +33,21 @@ add_subdirectory(html)
 #
 # Doxgyen-generated API documentation.
 #
-if( DOXYGEN_FOUND)
-	message("-- Using Doxygen to generate API documentation")
-
+if( DOXYGEN_FOUND )
 	#
 	# Staging locations for Doxygen output in the build directory.
 	#
-	if( "${DOXYGEN_HTML}" STREQUAL "" )
-		set(DOXYGEN_HTML ${CMAKE_CURRENT_BINARY_DIR}/doxygen/html/api)
+	if( NOT DEFINED DOXYGEN_HTML )
+		set(DOXYGEN_HTML ${CMAKE_CURRENT_BINARY_DIR}/doxygen/html/api
+			CACHE PATH "Doxygen HTML build dir")
+		message("-- Doxygen HTML will be built in ${DOXYGEN_HTML}")
 	endif()
-	message("-- Doxygen HTML will be staged in ${DOXYGEN_HTML}")
 
-	if( "${DOXYGEN_MAN}" STREQUAL "" )
-		set(DOXYGEN_MAN ${CMAKE_CURRENT_BINARY_DIR}/doxygen/man)
+	if( NOT DEFINED DOXYGEN_MAN )
+		set(DOXYGEN_MAN ${CMAKE_CURRENT_BINARY_DIR}/doxygen/man
+			CACHE PATH "Doxygen man page build dir")
+		message("-- Doxygen man pages will be staged in ${DOXYGEN_MAN}")
 	endif()
-	message("-- Doxygen man pages will be staged in ${DOXYGEN_MAN}")
 
 	set(DOXYGEN_MAN3 ${DOXYGEN_MAN}/man3)
 

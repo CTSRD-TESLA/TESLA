@@ -31,8 +31,8 @@ endfunction()
 #
 # Static HTML content:
 #
-configure_file(tesla.css tesla.css)
-file(COPY images DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+configure_file(tesla.css ${HTML_BINDIR}/tesla.css)
+file(COPY images DESTINATION ${HTML_BINDIR})
 install(FILES tesla.css DESTINATION ${HTML_OUTPUT})
 install(DIRECTORY images DESTINATION ${HTML_OUTPUT})
 
@@ -50,15 +50,16 @@ foreach(page ${HTML})
 	header(HEADER ${title})
 	footer(FOOTER)
 
-	configure_file(${base}.html ${base}-b.html)
+	configure_file(${base}.html ${HTML_BINDIR}/${base}-b.html)
 	set(HTML_TARGETS "${HTML_TARGETS} ${base}.html")
-	install(FILES ${base}-b.html DESTINATION ${HTML_OUTPUT})
+	install(FILES ${HTML_BINDIR}/${base}-b.html DESTINATION ${HTML_OUTPUT})
 endforeach()
 
 #
 # Create the ucampas build system.
 #
-configure_file(uconfig.txt uconfig.txt)
-configure_file(Makefile.in Makefile @ONLY)
+configure_file(uconfig.txt ${HTML_BINDIR}/uconfig.txt)
+configure_file(Makefile.in ${HTML_BINDIR}/Makefile @ONLY)
 
-install(FILES Makefile uconfig.txt DESTINATION ${HTML_OUTPUT})
+install(FILES ${HTML_BINDIR}/Makefile ${HTML_BINDIR}/uconfig.txt
+	DESTINATION ${HTML_OUTPUT})
