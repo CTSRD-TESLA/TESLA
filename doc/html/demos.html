@@ -1,0 +1,92 @@
+${HEADER}
+
+<a name="smoketest"></a>
+<h2>demos/smoketest</h2>
+<p>
+The 'demos/smoketest' directory contains an example of how TESLA assertions can be written in C code. If you run it as-is:
+</p>
+
+<div class="console"><span class="blue">$</span> cd demos/smoketest
+<span class="blue">$</span> ./run.demo             <span class="blue"># without TESLA</span>
+TESLA demo application; version 7329b3b
+
+Calling the 'example_syscall' function...
+'example_syscall' returned 0
+
+<span class="blue">$</span> ./run.demo -D TESLA    <span class="blue"># with TESLA</span>
+TESLA demo application; version 7329b3b
+
+Calling the 'example_syscall' function...
+[CALE] example_syscall 0x7fff4fcaf5b8 0 0
+[CALE] hold 0x10ff58300
+[FSET] struct.object.refcount 0x10ff58300 1 0x10ff58300
+[RETE] hold 0x10ff58300
+[RETE] get_object 0 0x7fff4fcaf548 0
+[RETR] DES_set_key 0x7fff4fcaf568 0x7fff4fcaf4c0 0
+[CALE] security_check 0x7fff4fcaf5b8 0x10ff58300 0
+[RETE] security_check 0x7fff4fcaf5b8 0x10ff58300 0 0
+[RETE] some_helper 0 0
+[CALE] void_helper 0x10ff58300
+[NOW]  automaton 4 267748096 0
+[NOW]  automaton 5
+[NOW]  automaton 6 267748096
+[NOW]  automaton 7 267748096
+[NOW]  automaton 8 267748096
+[NOW]  automaton 9 267748096
+[NOW]  automaton 10 267748096 0
+[NOW]  automaton 11 267748096 0
+[NOW]  automaton 3 1338701160 1338700992
+[RETE] log_audit_record 0x10ff58300 0 0
+[CALE] release 0x10ff58300
+[FSET] struct.object.refcount 0x10ff58300 0 0x10ff58300
+[RETE] release 0x10ff58300
+[RETE] example_syscall 0x7fff4fcaf5b8 0 0 0
+</div>
+
+<p>
+This just shows that the 'demo' application runs normally.
+If, however, you comment out line 96 of example.c (which calls the security_check() function):
+</p>
+
+<code class="diff listing"><span class="del">--- a/demos/smoketest/example.c</span>
+<span class="add">+++ b/demos/smoketest/example.c</span>
+<span class="preproc">@@ -93,7 +93,7 @@</span> example_syscall(struct credential *cred, int index, int op)
+
+        crypto_setup(&amp;des_key, &amp;key_schedule);
+
+<span class="del">-       if ((error = security_check(cred, o, op))) return error;</span>
+<span class="add">+//     if ((error = security_check(cred, o, op))) return error;</span>
+        some_helper(op);
+        void_helper(o);
+        perform_operation(op, o);
+</code>
+
+<p>
+... you should see an error when you run the 'demo' application:
+</p>
+
+<div class="console"><span class="blue">$</span> ./run.demo -D TESLA
+TESLA demo application; version 7329b3b (dirty)
+
+Calling the 'example_syscall' function...
+[...]
+[NOW]  automaton 4 117814016 0
+
+
+TESLA failure:
+In automaton 'example.c:45#0':
+automaton 4 {
+        state 0 (X,X): --(example_syscall(X,X,X): Entry &lt;&lt;init&gt;&gt;)--&gt;(1)
+        state 1 (X,X): --(security_check(X,o,op) == 0: o op)--&gt;(2) --(example_syscall(X,X,X) == X)--&gt;(3)
+        state 2 (o,op): --(security_check(X,o,op) == 0: op)--&gt;(2) --(example_syscall(X,X,X) == X)--&gt;(3) --(NOW)--&gt;(4)
+        state 3 (o,op):
+        state 4 (o,op): --(example_syscall(X,X,X) == X &lt;&lt;cleanup&gt;&gt;)--&gt;(3)
+}
+smoketest: No instance matched key '0x3 [ 10705b300 0 X X ]' for transition(s) [ (2:0x3 -&gt; 4:0x3) ]
+</div>
+
+<p>
+This shows that, when we reach the assertion site for automaton 4, we detect that a transition (the security_check event) was missed.
+</p>
+
+${FOOTER}
