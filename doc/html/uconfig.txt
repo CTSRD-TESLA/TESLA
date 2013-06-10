@@ -7,4 +7,4 @@ copyright_year="2013",
 navtop=2,
 webmaster=(name="Jonathan Anderson", url="/~jra40/"),
 ${UCONFIG_FILES}
-api(title="API Documentation"),
+*link("api", title="API Documentation")
