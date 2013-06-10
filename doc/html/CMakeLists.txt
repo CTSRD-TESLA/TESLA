@@ -49,12 +49,12 @@ add_subdirectory(images)
 
 set(HTML
   "index -> Temporally Enhanced Security Logic Assertions (TESLA)"
-  "build -> Building TESLA"
-  "demos -> TESLA demos"
-  "workflow -> TESLA workflow"
+  "build -> Getting started"
+  "demos -> Demos"
+  "workflow -> Workflow"
   "environment -> Build environment"
-  "freebsd -> Building FreeBSD with TESLA"
-  "programming -> Programming with TESLA"
+  "freebsd -> Building FreeBSD"
+  "programming -> Assertions and automata"
 )
 foreach(page ${HTML})
 	string(REPLACE " -> " ";" metadata ${page})
