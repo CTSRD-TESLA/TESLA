@@ -6,7 +6,5 @@ copyright_holder="Jonathan Anderson",
 copyright_year="2013",
 navtop=2,
 webmaster=(name="Jonathan Anderson", url="/~jra40/"),
-build.html,
-programming.html,
-freebsd.html,
+${UCONFIG_FILES}
 api(title="API Documentation"),

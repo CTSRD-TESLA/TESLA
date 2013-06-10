@@ -64,6 +64,12 @@ foreach(page ${HTML})
 
 	configure_file(${base}.html ${HTML_BINDIR}/${base}-b.html)
 	set(HTML_TARGETS "${HTML_TARGETS} ${base}.html")
+
+	# If this isn't index.html, add it to ucampas' config file.
+	if( NOT "${base}" STREQUAL "index" )
+		set(UCONFIG_FILES "${UCONFIG_FILES} ${base}.html,")
+	endif()
+
 	install(FILES ${HTML_BINDIR}/${base}-b.html DESTINATION ${HTML_OUTPUT})
 endforeach()
 
