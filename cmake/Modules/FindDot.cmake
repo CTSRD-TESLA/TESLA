@@ -27,7 +27,7 @@
 IF (NOT DOT_EXECUTABLE_FOUND)
   FIND_PROGRAM(DOT_EXECUTABLE
     NAMES dot
-    PATHS 
+    PATHS
       # UNIX paths
       "/bin"
       "/usr/bin"
@@ -46,6 +46,7 @@ IF (NOT DOT_EXECUTABLE_FOUND)
       /Applications/Doxygen.app/Contents/MacOS
     DOC "Graphviz Dot tool for generating image graph from dot file"
   )
+
   IF (DOT_EXECUTABLE)
     SET (DOT_EXECUTABLE_FOUND TRUE)
     SET (DOT_EXECUTABLE ${DOT_EXECUTABLE} CACHE FILEPATH "'dot' location")
