@@ -51,6 +51,7 @@ set(HTML
   "index -> Temporally Enhanced Security Logic Assertions (TESLA)"
   "build -> Building TESLA"
   "workflow -> TESLA workflow"
+  "environment -> Build environment"
   "freebsd -> Building FreeBSD with TESLA"
   "programming -> Programming with TESLA"
 )
