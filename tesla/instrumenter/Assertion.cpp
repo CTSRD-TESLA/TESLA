@@ -212,7 +212,8 @@ Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
 
   string Message = ("[NOW]  automaton " + Twine(A.ID())).str();
 
-  IRBuilder<> Builder(CreateInstrPreamble(M, InstrFn, Message));
+  BasicBlock *Instr = CreateInstrPreamble(M, InstrFn, Message);
+  IRBuilder<> Builder(Instr);
 
   Type *IntType = Type::getInt32Ty(Ctx);
   Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);
@@ -221,15 +222,6 @@ Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
   // libtesla via a tesla_key: they are already in the right order.
   std::vector<Value*> InstrArgs;
   for (Value& Arg : InstrFn->getArgumentList()) InstrArgs.push_back(&Arg);
-
-  auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
-  IRBuilder<> ErrorHandler(Die);
-
-  auto *ErrMsg = ErrorHandler.CreateGlobalStringPtr(
-    "error in tesla_update_state() for automaton '" + A.Name() + "'");
-
-  ErrorHandler.CreateCall(FindDieFn(M), ErrMsg);
-  ErrorHandler.CreateRetVoid();
 
   std::vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
@@ -243,12 +235,20 @@ Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
   assert(Args.size() == UpdateStateFn->arg_size());
 
   Value *Error = Builder.CreateCall(UpdateStateFn, Args);
-  Error = Builder.CreateICmpEQ(Error, Success);
 
   auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
   IRBuilder<>(Exit).CreateRetVoid();
 
-  Builder.CreateCondBr(Error, Exit, Die);
+  auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
+  IRBuilder<> ErrorHandler(Die);
+
+  Value* DieArgs[] = { Error, ErrorHandler.CreateGlobalStringPtr(
+      "error in tesla_update_state() for automaton '" + A.Name() + "'") };
+
+  ErrorHandler.CreateCall(FindDieFn(M), DieArgs);
+  ErrorHandler.CreateRetVoid();
+
+  Builder.CreateCondBr(Builder.CreateICmpEQ(Error, Success), Exit, Die);
 
   return InstrFn;
 }

@@ -382,9 +382,11 @@ void FieldInstrumentation::AppendInstrumentation(
 
   Value *Error = Builder.CreateCall(UpdateStateFn, Args);
   Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
-  Error = Builder.CreateICmpEQ(Error, NoError);
 
-  Builder.CreateCondBr(Error, Exit, FindBlock("die", *InstrFn));
+  BasicBlock *Die = FindBlock("die", *InstrFn);
+  dyn_cast<PHINode>(Die->begin())->addIncoming(Error, Instr);
+
+  Builder.CreateCondBr(Builder.CreateICmpEQ(Error, NoError), Exit, Die);
 }
 
 BasicBlock* FieldInstrumentation::NextInstrBlock(const Automaton *A) {

@@ -120,10 +120,12 @@ void FnInstrumentation::AppendInstrumentation(
 
 
   Value *Error = Builder.CreateCall(UpdateStateFn, Args);
-  Constant *NoError = ConstantInt::get(IntType, TESLA_SUCCESS);
-  Error = Builder.CreateICmpEQ(Error, NoError);
+  Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);
 
-  Builder.CreateCondBr(Error, Exit, FindBlock("die", *InstrFn));
+  BasicBlock *Die = FindBlock("die", *InstrFn);
+  dyn_cast<PHINode>(Die->begin())->addIncoming(Error, Instr);
+
+  Builder.CreateCondBr(Builder.CreateICmpEQ(Error, Success), Exit, Die);
 }
 
 
@@ -233,8 +235,11 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
 
     auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
     IRBuilder<> ErrorHandler(Die);
-    auto *EventName = ErrorHandler.CreateGlobalStringPtr(InstrFn->getName());
-    ErrorHandler.CreateCall(FindDieFn(Mod), EventName);
+    Value* Args[] = {
+      ErrorHandler.CreatePHI(IntegerType::get(Ctx, 32), 0),
+      ErrorHandler.CreateGlobalStringPtr(InstrFn->getName())
+    };
+    ErrorHandler.CreateCall(FindDieFn(Mod), Args);
     ErrorHandler.CreateRetVoid();
   }
 
@@ -302,8 +307,11 @@ Function* tesla::StructInstrumentation(Module& Mod, StructType *Type,
 
   auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
   IRBuilder<> ErrorHandler(Die);
-  auto *EventName = ErrorHandler.CreateGlobalStringPtr(InstrFn->getName());
-  ErrorHandler.CreateCall(FindDieFn(Mod), EventName);
+  Value* DieArgs[] = {
+    ErrorHandler.CreatePHI(IntegerType::get(Ctx, 32), 0),
+    ErrorHandler.CreateGlobalStringPtr(InstrFn->getName())
+  };
+  ErrorHandler.CreateCall(FindDieFn(Mod), DieArgs);
   ErrorHandler.CreateRetVoid();
 
   return InstrFn;
@@ -455,6 +463,7 @@ Function* tesla::FindDieFn(Module& M) {
 
   Type *Char = IntegerType::get(Ctx, 8);
   Type *CharStar = PointerType::getUnqual(Char);
+  Type *Int32 = IntegerType::get(Ctx, 32);
   Type *Void = Type::getVoidTy(Ctx);
 
   // TODO: apply 'noreturn' attribute.
@@ -463,7 +472,8 @@ Function* tesla::FindDieFn(Module& M) {
   //   Some attributes in 'noreturn' only apply to functions!
   //
   // Which is odd, since I am only applying them to a function.
-  auto *Fn = M.getOrInsertFunction("tesla_die", Void, CharStar, NULL);
+  auto *Fn = M.getOrInsertFunction(
+    "tesla_die", Void, Int32, CharStar, NULL);
 
   assert(isa<Function>(Fn));
   return cast<Function>(Fn);
