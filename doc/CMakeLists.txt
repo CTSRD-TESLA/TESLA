@@ -42,6 +42,12 @@ if( DOXYGEN_FOUND )
 	make_directory(${DOXYGEN_HTML})
 	make_directory(${DOXYGEN_MAN})
 
+	add_custom_target(api-docs DEPENDS
+		${DOXYGEN_HTML}/index.xhtml
+		${DOXYGEN_MAN3}/tesla.3
+	)
+	add_dependencies(doc api-docs)
+
 	#
 	# We use a Python script to convert .proto files into something that
 	# Doxygen can understand
@@ -53,6 +59,9 @@ if( DOXYGEN_FOUND )
 		set(PROTOBUF_FILTER true)
 	endif()
 
+	#
+	# Having done all of this configuration, generate the Doxygen config.
+	#
 	configure_file(Doxyfile.in Doxyfile)
 
 	add_custom_command(
@@ -63,6 +72,8 @@ if( DOXYGEN_FOUND )
 		# In lieu of proper dependency checking, declare a dependency
 		# on lots of stuff.
 		DEPENDS
+			header.html
+			footer.html
 			${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 			${CMAKE_SOURCE_DIR}/include/libtesla.h
 			${CMAKE_SOURCE_DIR}/include/tesla.h
@@ -74,12 +85,6 @@ if( DOXYGEN_FOUND )
 		COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
 		COMMENT "Generating API documentation"
 	)
-
-	add_custom_target(api-docs DEPENDS
-		${DOXYGEN_HTML}/index.xhtml
-		${DOXYGEN_MAN3}/tesla.3
-	)
-	add_dependencies(doc api-docs)
 
 	install(DIRECTORY ${DOXYGEN_HTML} DESTINATION ${HTML_OUTPUT})
 	install(DIRECTORY ${DOXYGEN_MAN3} DESTINATION share/man)

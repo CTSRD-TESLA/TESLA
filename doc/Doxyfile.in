@@ -144,6 +144,7 @@ COLS_IN_ALPHA_INDEX    = 5
 
 GENERATE_HTML          = YES
 HTML_OUTPUT            = ${DOXYGEN_HTML}
+LAYOUT_FILE            = ${CMAKE_CURRENT_SOURCE_DIR}/DoxygenLayout.xml
 HTML_FILE_EXTENSION    = .html
 
 # The HTML_HEADER tag can be used to specify a personal HTML header for
@@ -157,14 +158,14 @@ HTML_FILE_EXTENSION    = .html
 # have to redo this when upgrading to a newer version of doxygen or when
 # changing the value of configuration settings such as GENERATE_TREEVIEW!
 
-HTML_HEADER            =
-HTML_FOOTER            =
-HTML_STYLESHEET        =
+HTML_HEADER            = ${CMAKE_CURRENT_SOURCE_DIR}/header.html
+HTML_FOOTER            = ${CMAKE_CURRENT_SOURCE_DIR}/footer.html
+HTML_STYLESHEET        = ${CMAKE_CURRENT_SOURCE_DIR}/doxygen.css
 
-HTML_COLORSTYLE_HUE    = 220
-HTML_COLORSTYLE_SAT    = 80
-HTML_COLORSTYLE_GAMMA  = 120
-HTML_TIMESTAMP         = YES
+HTML_COLORSTYLE_HUE    = 210
+HTML_COLORSTYLE_SAT    = 100
+HTML_COLORSTYLE_GAMMA  = 140
+HTML_TIMESTAMP         = NO
 HTML_DYNAMIC_SECTIONS  = YES
 
 GENERATE_TREEVIEW      = NO
