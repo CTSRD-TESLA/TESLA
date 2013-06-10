@@ -1,4 +1,16 @@
 #
+# Allow the user to specify the build location of HTML output.
+#
+# This is useful for e.g. building HTML content into a larger website
+# located in a Subversion repository.
+#
+if( NOT DEFINED HTML_BINDIR )
+	set(HTML_BINDIR ${CMAKE_CURRENT_BINARY_DIR}
+		CACHE PATH "HTML staging dir")
+	message("-- HTML will be built in ${HTML_BINDIR}")
+endif()
+
+#
 # The ucampas tool converts bare HTML to the UCam house style.
 #
 set(UCAMPAS "/anfs/www/tools/bin/ucampas"

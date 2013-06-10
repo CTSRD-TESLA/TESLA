@@ -5,18 +5,6 @@ find_package(PythonInterp)
 add_custom_target(doc ALL)
 
 #
-# Allow the user to specify the build location of HTML output.
-#
-# This is useful for e.g. building HTML content into a larger website
-# located in a Subversion repository.
-#
-if( NOT DEFINED HTML_BINDIR )
-	set(HTML_BINDIR ${CMAKE_CURRENT_BINARY_DIR}
-		CACHE PATH "HTML staging dir")
-	message("-- HTML will be built in ${HTML_BINDIR}")
-endif()
-
-#
 # Where we will install HTML documentation.
 #
 if( NOT DEFINED HTML_OUTPUT )
