@@ -1,0 +1,152 @@
+${HEADER}
+
+<p>
+Once you have <a href="build.html">built TESLA</a>, you need to either
+install it to your PATH or else set two environment variables:
+</p>
+
+<div class="console"><span class="blue">$</span> export PATH=<span class="green">$PATH</span>:/path/to/tesla/scripts
+</div>
+
+<p>
+The TESLA workflow deviates from a more typical LLVM-based workflow in that
+it adds two steps:
+</p>
+
+<ol>
+	<li>
+		<a href="#analysis">analysis</a> of all C sources,
+		generating .tesla files, followed by
+	</li>
+	<li>
+		<a href="#instrumentation">instrumentation</a> of LLVM IR,
+		based on <em>all</em> .tesla files, generating instrumented IR.
+	</li>
+</ol>
+
+<p>This overall workflow is pictured below:</p>
+
+<div class="figure">
+	<img src="images/workflow.png" alt="TESLA workflow"/>
+	<p class="caption">
+	The TESLA workflow augments an LLVM-based C workflow.
+	</p>
+</div>
+
+<p>
+On this page, we apply this workflow to a simple example: two C files
+<code>foo.c</code> and <code>bar.c</code> that are compiled into a binary:
+</p>
+
+<div class="figure">
+	<img src="images/example-deps.png" alt="Example workflow"/>
+	<p class="caption">
+	A simple example of a TESLA workflow.
+	</p>
+</div>
+
+
+<a name="analysis"></a>
+<h2>Analysis</h2>
+
+<p>
+In the analysis stage, TESLA is used to parse temporal assertions defined by
+the programmer as described in
+<a href="programming.html">Programming with TESLA</a>.
+To analyse source files foo.c and bar.c that require
+<code>CFLAGS="-Wno-error -D VERSION=42"</code>, the programmer
+(or the build system) should run the following commands:
+</p>
+
+<div class="console"><span class="blue">$</span> tesla analyse foo.c -o foo.tesla -- -Wno-error -D VERSION=42
+<span class="blue">$</span> tesla analyse bar.c -o bar.tesla -- -Wno-error -D VERSION=42
+<span class="blue">$</span> tesla cat foo.tesla bar.tesla -o tesla.manifest   <span class="blue"># combine into single manifest</span>
+</div>
+
+<p>
+The TESLA analyser needs to know the appropriate CFLAGS because it is running
+a full Clang parser on the C code, and errors, warnings, condititional
+compilation, etc. need to be consistent with those options used by Clang when
+compiling the source into LLVM IR.
+</p>
+
+
+<a name="instrumentation"></a>
+<h2>Instrumentation</h2>
+
+<p>
+The LLVM instrumenter modifies LLVM IR, adding hooks for events that are
+named in a TESLA manifest.
+Calls to instrumentation are inserted inline within LLVM basic blocks:
+</p>
+
+<code class="diff listing"><span class="preproc">@@ -108,7 +202,9 @@</span>
+   %3 = bitcast i8* %2 to i32*, !dbg !62
+   %4 = load i32* %3, align 4, !dbg !62
+   %add = add nsw i32 %4, 1, !dbg !62
+<span class="add">+  call void @__tesla_instrumentation_struct_field_store_struct.object.refcount(%struct.object* %0, i3</span>
+2 %add, i32* %3), !dbg !62
+   store i32 %add, i32* %3, align 4, !dbg !62
+<span class="add">+  call void @__tesla_instrumentation_callee_return_hold(%struct.object* %o)</span>
+   ret void, !dbg !63
+ }
+</code>
+
+<p>
+These language-level events are translated by machine-generated instrumentation
+into symbols that can be consumed by TESLA automata:
+</p>
+
+<code class="listing"><span class="control">define</span> <span class="keyword">void</span> @__tesla_instrumentation_callee_enter_hold(%struct.object*) {
+<span class="control">preamble</span>:
+  %1 = <span class="control">call</span> <span class="keyword">i32</span> (...)* @tesla_debugging([13 x i8]* @debug_name)
+  %2 = <span class="control">icmp</span> ne <span class="keyword">i32</span> %1, 0
+  <span class="control">br</span> i1 %2, <span class="keyword">label</span> %printf, <span class="keyword">label</span> %entry
+
+<span class="control">printf</span>:                                           <span class="comment">; preds = %preamble</span>
+  %3 = <span class="control">call</span> <span class="keyword">i32</span> (<span class="keyword">i8*</span>, ...)* @printf(<span class="keyword">i8*</span> <span class="control">getelementptr</span> <span class="keyword">inbounds</span> ([20 x i8]* @8, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 0), %struct
+.object* %0)
+  <span class="control">br</span> <span class="keyword">label</span> %entry
+
+<span class="control">entry</span>:                                            <span class="comment">; preds = %printf, %preamble</span>
+  <span class="control">br</span> <span class="keyword">label</span> %"example.c:51#2:instr"
+
+<span class="literal">"example.c:51#2:instr"</span>:                           <span class="comment">; preds = %entry</span>
+  %key = <span class="control">alloca</span> %tesla_key+  %4 = <span class="control">ptrtoint</span> %struct.object* %0 to i64+
+  %5 = <span class="control">getelementptr</span> <span class="keyword">inbounds</span> %tesla_key* %key, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 0+  store <span class="keyword">i64</span> %4, i64* %5+
+  %6 = <span class="control">getelementptr</span> <span class="keyword">inbounds</span> %tesla_key* %key, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 4+  store <span class="keyword">i32</span> 1, i32* %6+
+  %7 = <span class="control">call</span> <span class="keyword">i32</span> @tesla_update_state(<span class="keyword">i32</span> 1, <span class="keyword">i32</span> 6, %tesla_key* %key, <span class="keyword">i8*</span> <span class="control">getelementptr</span> <span class="keyword">inbounds</span> ([15 x i8]* @10, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 0), <span class="keyword">i8*</span> <span class="control">getelementptr</span> <span class="keyword">inbounds</span> ([328 x i8]* @11, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 0), %tesla_transitions* @transitions4)
+  %8 = <span class="control">icmp</span> eq <span class="keyword">i32</span> %7, 0
+  <span class="control">br</span> i1 %8, <span class="keyword">label</span> %"example.c:85#8:instr", <span class="keyword">label</span> %die
+
+<span class="literal">"example.c:85#8:instr"</span>:                           <span class="comment">; preds = %"example.c:51#2:instr"</span>
+  %key1 = <span class="control">alloca</span> %tesla_key
+  %9 = <span class="control">ptrtoint</span> %struct.object* %0 to i64
+  %10 = <span class="control">getelementptr</span> <span class="keyword">inbounds</span> %tesla_key* %key1, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 0
+  store <span class="keyword">i64</span> %9, i64* %10
+  %11 = <span class="control">getelementptr</span> <span class="keyword">inbounds</span> %tesla_key* %key1, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 4
+  store <span class="keyword">i32</span> 1, i32* %11
+  %12 = <span class="control">call</span> <span class="keyword">i32</span> @tesla_update_state(<span class="keyword">i32</span> 1, <span class="keyword">i32</span> 12, %tesla_key* %key1, <span class="keyword">i8*</span> <span class="control">getelementptr</span> <span class="keyword">inbounds</span> ([1
+5 x i8]* @42, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 0), <span class="keyword">i8*</span> <span class="control">getelementptr</span> <span class="keyword">inbounds</span> ([684 x i8]* @43, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 0), %tesla_transi
+tions* @transitions24)
+  %13 = <span class="control">icmp</span> eq <span class="keyword">i32</span> %12, 0
+  <span class="control">br</span> i1 %13, <span class="keyword">label</span> %exit, <span class="keyword">label</span> %die
+
+<span class="control">exit</span>:                                             <span class="comment">; preds = %"example.c:85#8:instr"</span>
+  ret <span class="keyword">void</span>
+
+<span class="control">die</span>:                                              <span class="comment">; preds = %"example.c:85#8:instr", %"example.c:51#2</span>
+:instr"
+  <span class="control">call</span> <span class="keyword">void</span> @tesla_die(<span class="keyword">i8*</span> <span class="control">getelementptr</span> <span class="keyword">inbounds</span> ([42 x i8]* @9, <span class="keyword">i32</span> 0, <span class="keyword">i32</span> 0))
+  ret <span class="keyword">void</span>
+}
+</code>
+
+<p>
+These instrumentated .ll files can be linked together into the final binary
+(or shared library) using Clang.
+The result must be linked against libtesla, which provides the
+<code>tesla_update_state()</code> function.
+</p>
+
+${FOOTER}

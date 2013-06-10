@@ -50,6 +50,7 @@ add_subdirectory(images)
 set(HTML
   "index -> Temporally Enhanced Security Logic Assertions (TESLA)"
   "build -> Building TESLA"
+  "workflow -> TESLA workflow"
   "freebsd -> Building FreeBSD with TESLA"
   "programming -> Programming with TESLA"
 )
