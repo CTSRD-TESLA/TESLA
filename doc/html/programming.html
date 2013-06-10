@@ -17,14 +17,12 @@ in the TESLA repository.
 <h1>Header files</h1>
 
 <p>
-TESLA provides programmers with two header file options:
-<a href="api/tesla_8h.xhtml">tesla.h</a>, which defines TESLA primitives
-prefixed by __tesla, and <a href="api/tesla-macros_8h.xhtml">tesla-macros.h</a>,
-which provides examples of macros that are more
-programmer-friendly but could cause namespace collisions.
-We recommend that you start with the example
-<a href="api/tesla-macros_8h.xhtml">tesla-macros.h</a> and
-modify it as necessary to avoid namespace collisions with your code.
+TESLA's header file (<a href="api/tesla_8h.xhtml">tesla.h</a>) defines TESLA
+primitives with a <code>__tesla</code> prefix to avoid namespace collisions.
+Rather than using these primitives directly, we recommend that you take
+the template <a href="api/tesla-macros_8h.xhtml">tesla-macros.h</a>
+and modify it for your needs, eliminating collisions with names in your project
+but keeping most of the programmer-friendly names that it suggests.
 </p>
 
 
