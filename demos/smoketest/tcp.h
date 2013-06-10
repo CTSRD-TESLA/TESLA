@@ -205,7 +205,7 @@ automaton(my_tcpcb_assertion, struct tcpcb *tp)
 	||
 	called(tcp_free, tp);
 
-	done;
+	tesla_done;
 }
 
 automaton(active_close, struct tcpcb *tp)
@@ -225,7 +225,7 @@ automaton(active_close, struct tcpcb *tp)
 	tp->t_state = TCPS_CLOSED;
 	called(tcp_free, tp);
 
-	done;
+	tesla_done;
 }
 
 automaton(established, struct tcpcb *tp)
@@ -242,7 +242,7 @@ automaton(established, struct tcpcb *tp)
 
 	called(tcp_free, tp);
 
-	done;
+	tesla_done;
 }
 
 #endif
