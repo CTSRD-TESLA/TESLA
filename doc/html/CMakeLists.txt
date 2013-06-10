@@ -1,7 +1,8 @@
 #
 # The ucampas tool converts bare HTML to the UCam house style.
 #
-set(UCAMPAS "/anfs/www/tools/bin/ucampas")
+set(UCAMPAS "/anfs/www/tools/bin/ucampas"
+	CACHE FILEPATH "Location of the 'ucampas' HTML styling tool")
 
 #
 # Header and footer that fit within the ucampas world.
@@ -58,6 +59,6 @@ endforeach()
 # Create the ucampas build system.
 #
 configure_file(uconfig.txt uconfig.txt)
-configure_file(Makefile.in Makefile)
+configure_file(Makefile.in Makefile @ONLY)
 
 install(FILES Makefile uconfig.txt DESTINATION ${HTML_OUTPUT})

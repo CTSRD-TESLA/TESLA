@@ -1,4 +1,11 @@
-all:	${HTML_TARGETS}
+#
+# Allow UCAMPAS to be overridden with environment or make variables.
+#
+UCAMPAS?=@UCAMPAS@
+
+all:	@HTML_TARGETS@
+clean:
+	rm -f @HTML_TARGETS@
 
 %.html: %-b.html uconfig.txt
 	${UCAMPAS} $*
