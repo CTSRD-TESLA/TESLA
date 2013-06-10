@@ -15,6 +15,10 @@ LINE="======================================================================"
 CFLAGS="$*"
 export CFLAGS
 
+if [ "$TESLA_BUILD_DIR" != "" ]; then
+	export LD_LIBRARY_PATH=$TESLA_BUILD_DIR/libtesla/src
+fi
+
 cd `dirname $0`
 
 echo $LINE
