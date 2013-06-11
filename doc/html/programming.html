@@ -351,18 +351,18 @@ the moment at which an assertion site is reached.
 For instance, in the following code:
 </p>
 
-<code class="listing"><span class="keyword">int</span> foo(<span class="keyword">int</span> x) { return 0; }
+<code class="listing"><span class="keyword">int</span> foo(<span class="keyword">int</span> x) { return <span class="literal">0</span>; }
 
 <span class="keyword">void</span> bar()
 {
-  <span class="keyword">int</span> i = 42;
+  <span class="keyword">int</span> i = <span class="literal">42</span>;
   foo(i);
 
   <span class="keyword">TESLA_WITHIN</span>(bar,
-    <span class="control">TSEQUENCE</span>(
-      foo(42) == 0,
+    <span class="keywordflow">TSEQUENCE</span>(
+      foo(<span class="literal">42</span>) == <span class="literal">0</span>,
       <span class="keyword">TESLA_NOW</span>,
-      foo(43) == 0
+      foo(<span class="literal">43</span>) == <span class="literal">0</span>
     )
   );
 
