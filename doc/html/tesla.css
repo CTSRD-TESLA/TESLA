@@ -101,11 +101,14 @@ div.console, code.listing {
 /*
  * Code syntax highlighting.
  */
-code .keyword { color: #696; }
-code .comment { color: #33c; }
-code .control { color: #966; }
-code .preproc { color: #c3c; }
-code .literal { color: #e99; }
+.comment       { color: #33c; }
+.keyword       { color: #696; }
+.keywordtype   { color: #696; }
+.keywordflow   { color: #966; }
+.preprocessor  { color: #c3c; }
+.literal       { color: #c66; }
+.stringliteral { color: #c66; }
+.charliteral   { color: #c66; }
 
 /*
  * Simulation of coloured diff output.

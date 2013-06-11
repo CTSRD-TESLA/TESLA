@@ -115,7 +115,7 @@ The expected signature is:
    */</span>
   some_other_automaton(sp);
 
-  <span class="control">done</span>;
+  <span class="keywordflow">done</span>;
 }
 </code>
 
@@ -189,30 +189,30 @@ assertions.
 <h3>Sequence</h3>
 <p>
 A sequence of events can be specified with the
-<span class="control">TSEQUENCE</span> macro, whose
+<span class="keywordflow">TSEQUENCE</span> macro, whose
 parameters are themselves TESLA expressions.
 For instance:
 </p>
 
-<code class="listing"><span class="control">TSEQUENCE</span>(
+<code class="listing"><span class="keywordflow">TSEQUENCE</span>(
   foo(x) == 0,
   bar(y) || baz(z)
 )</code>
 
 <p>
 Many simple assertions can be written with the
-<code><span class="control">previously</span></code>
+<code><span class="keywordflow">previously</span></code>
 and
-<code><span class="control">eventually</span></code>
+<code><span class="keywordflow">eventually</span></code>
 keywords, which provide wrappers around
-<code><span class="control">TSEQUENCE</span></code>:
+<code><span class="keywordflow">TSEQUENCE</span></code>:
 </p>
 
 <code class="listing"><span class="comment">/** A more programmer-friendly way to write assertions about the past. */</span>
-<span class="preproc">#define</span> <span class="control">previously</span>(...)    <span class="control">TSEQUENCE</span>(<span class="keyword">__VA_ARGS__</span>, <span class="control">TESLA_NOW</span>)
+<span class="preprocessor">#define</span> <span class="keywordflow">previously</span>(...)    <span class="keywordflow">TSEQUENCE</span>(<span class="keyword">__VA_ARGS__</span>, <span class="keywordflow">TESLA_NOW</span>)
 
 <span class="comment">/** A more programmer-friendly way to write assertions about the future. */</span>
-<span class="preproc">#define</span> <span class="control">eventually</span>(...)    <span class="control">TSEQUENCE</span>(<span class="control">TESLA_NOW</span>, <span class="keyword">__VA_ARGS__</span>)
+<span class="preprocessor">#define</span> <span class="keywordflow">eventually</span>(...)    <span class="keywordflow">TSEQUENCE</span>(<span class="keywordflow">TESLA_NOW</span>, <span class="keyword">__VA_ARGS__</span>)
 </code>
 
 
@@ -246,7 +246,7 @@ This specification can be written in a very C-like manner:
 </p>
 
 <code class="listing"><span class="comment">/* A very simple TESLA assertion. */</span>
-<span class="control">previously</span>(security_check(<span class="keyword">ANY</span>(ptr), o, op) == 0)
+<span class="keywordflow">previously</span>(security_check(<span class="keyword">ANY</span>(ptr), o, op) == 0)
 </code>
 
 <p>
@@ -267,8 +267,8 @@ To instrument a function call, rather than return, the programmer can use the
 </p>
 
 <code class="listing"><span class="comment">/* An even simpler assertion! */</span>
-<span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="control">previously</span>(<span class="keyword">called</span>(security_check)));
-<span class="keyword">TESLA_WITHIN</span>(example_syscall,  <span class="control">previously</span>(<span class="keyword">called</span>(hold, o)));
+<span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="keywordflow">previously</span>(<span class="keyword">called</span>(security_check)));
+<span class="keyword">TESLA_WITHIN</span>(example_syscall,  <span class="keywordflow">previously</span>(<span class="keyword">called</span>(hold, o)));
 </code>
 
 <p>
@@ -286,7 +286,7 @@ which acts like <code><span class="keyword">called</span></code>()
 and, unlike the C-style expression above, can be used with void functions:
 </p>
 
-<code class="listing"><span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="control">previously</span>(<span class="keyword">returned</span>(hold, o)));
+<code class="listing"><span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="keywordflow">previously</span>(<span class="keyword">returned</span>(hold, o)));
 </code>
 
 <p>
@@ -346,7 +346,7 @@ field access instrumentation detects accesses.
 <a name="now"></a>
 <h3>"Now"</h3>
 <p>
-The <code><span class="control">TESLA_NOW</span></code> event refers to
+The <code><span class="keywordflow">TESLA_NOW</span></code> event refers to
 the moment at which an assertion site is reached.
 For instance, in the following code:
 </p>
@@ -409,11 +409,11 @@ be nested arbitrarily:
 
 <code class="listing"><span class="keyword">TESLA_WITHIN</span>(foo,
   <span class="keyword">caller</span>(
-    <span class="control">TSEQUENCE</span>(
+    <span class="keywordflow">TSEQUENCE</span>(
       fn1() == 0,
       fn2() == 0,
       <span class="keyword">callee</span>(
-        <span class="control">TSEQUENCE</span>(
+        <span class="keywordflow">TSEQUENCE</span>(
           fn3() == 0,
           <span class="keyword">caller</span>(fn4() == 0),
           fn5() == 0
