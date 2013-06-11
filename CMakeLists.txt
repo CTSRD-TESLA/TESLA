@@ -20,6 +20,9 @@ exec_program(llvm-config ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
 exec_program(llvm-config ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
 exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 
+# Explicitly put LLVM's library directory before others, e.g. /usr/local/lib.
+link_directories(${LLVM_PREFIX}/lib)
+
 # Always build with all warnings.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
