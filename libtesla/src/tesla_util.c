@@ -37,6 +37,7 @@
 void
 tesla_die(int32_t code, const char *event)
 {
+
 	tesla_panic("tesla_die: fatal error in event '%s'; %s\n",
 		event, tesla_strerror(code));
 }
