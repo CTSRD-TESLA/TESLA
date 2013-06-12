@@ -21,7 +21,7 @@ exec_program(llvm-config ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
 exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 
 # Find the Clang "resource dir" (contains include/stdarg.h, etc.).
-if(NOT RESOURCE_DIR)
+if(NOT CLANG_RESOURCE_DIR)
 	exec_program(llvm-config ARGS --bindir OUTPUT_VARIABLE LLVM_BIN)
 	exec_program(${LLVM_BIN}/clang ARGS --version OUTPUT_VARIABLE VERSION)
 
