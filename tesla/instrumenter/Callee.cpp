@@ -51,14 +51,14 @@ using std::vector;
 
 namespace tesla {
 
-// ==== CalleeInstrumenter implementation ======================================
-char TeslaCalleeInstrumenter::ID = 0;
+// ==== FnCalleeInstrumenter implementation ======================================
+char FnCalleeInstrumenter::ID = 0;
 
-TeslaCalleeInstrumenter::~TeslaCalleeInstrumenter() {
+FnCalleeInstrumenter::~FnCalleeInstrumenter() {
   google::protobuf::ShutdownProtobufLibrary();
 }
 
-bool TeslaCalleeInstrumenter::runOnModule(Module &Mod) {
+bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
   bool ModifiedIR = false;
 
   for (auto i : M.RootAutomata()) {
@@ -91,7 +91,7 @@ bool TeslaCalleeInstrumenter::runOnModule(Module &Mod) {
 }
 
 
-CalleeInstr* TeslaCalleeInstrumenter::GetOrCreateInstr(
+CalleeInstr* FnCalleeInstrumenter::GetOrCreateInstr(
     Module& M, Function *F, FunctionEvent::Direction Dir) {
 
   assert(F != NULL);
@@ -107,7 +107,7 @@ CalleeInstr* TeslaCalleeInstrumenter::GetOrCreateInstr(
 
 
 
-// ==== CalleeInstr implementation ===========================================
+// ==== FnCalleeInstr implementation ===========================================
 CalleeInstr* CalleeInstr::Build(Module& M, Function *Target,
                                 FunctionEvent::Direction Dir) {
 
@@ -158,7 +158,7 @@ CalleeInstr* CalleeInstr::Build(Module& M, Function *Target,
 
 
 CalleeInstr::CalleeInstr(Module& M, Function *Target, Function *InstrFn,
-                             FunctionEvent::Direction Dir)
+                         FunctionEvent::Direction Dir)
   : FnInstrumentation(M, Target, InstrFn, Dir)
 {
   assert(TargetFn != NULL);

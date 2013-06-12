@@ -47,11 +47,11 @@ class NowTransition;
 class Location;
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
-class TeslaAssertionSiteInstrumenter : public llvm::ModulePass {
+class AssertionSiteInstrumenter : public llvm::ModulePass {
 public:
   static char ID;
-  TeslaAssertionSiteInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
-  virtual ~TeslaAssertionSiteInstrumenter();
+  AssertionSiteInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
+  virtual ~AssertionSiteInstrumenter();
 
   const char* getPassName() const {
     return "TESLA assertion site instrumenter";

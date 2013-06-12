@@ -52,11 +52,11 @@ class CallerInstrumentation;
 class Manifest;
 
 /// Instruments function calls in the caller context.
-class TeslaCallerInstrumenter : public llvm::FunctionPass {
+class FnCallerInstrumenter : public llvm::FunctionPass {
 public:
   static char ID;
-  TeslaCallerInstrumenter(const Manifest& M) : FunctionPass(ID), M(M) {}
-  ~TeslaCallerInstrumenter();
+  FnCallerInstrumenter(const Manifest& M) : FunctionPass(ID), M(M) {}
+  ~FnCallerInstrumenter();
 
   const char* getPassName() const {
     return "TESLA function instrumenter (caller-side)";

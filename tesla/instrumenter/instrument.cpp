@@ -142,9 +142,9 @@ int main(int argc, char **argv) {
     Passes.add(TD);
 
   // Just add TESLA instrumentation passes.
-  addPass(Passes, new tesla::TeslaAssertionSiteInstrumenter(*Manifest));
-  addPass(Passes, new tesla::TeslaCalleeInstrumenter(*Manifest));
-  addPass(Passes, new tesla::TeslaCallerInstrumenter(*Manifest));
+  addPass(Passes, new tesla::AssertionSiteInstrumenter(*Manifest));
+  addPass(Passes, new tesla::FnCalleeInstrumenter(*Manifest));
+  addPass(Passes, new tesla::FnCallerInstrumenter(*Manifest));
   addPass(Passes, new tesla::FieldReferenceInstrumenter(*Manifest));
 
   // Write bitcode or assembly to the output as the last step...

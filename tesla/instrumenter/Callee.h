@@ -53,11 +53,11 @@ class CalleeInstr;
 class Manifest;
 
 /// Instruments function calls in the callee context.
-class TeslaCalleeInstrumenter : public llvm::ModulePass {
+class FnCalleeInstrumenter : public llvm::ModulePass {
 public:
   static char ID;
-  TeslaCalleeInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
-  ~TeslaCalleeInstrumenter();
+  FnCalleeInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
+  ~FnCalleeInstrumenter();
 
   const char* getPassName() const {
     return "TESLA function instrumenter (callee-side)";

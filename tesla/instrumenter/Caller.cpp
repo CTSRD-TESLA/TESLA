@@ -47,14 +47,14 @@ using std::string;
 
 namespace tesla {
 
-// ==== TeslaCallerInstrumenter implementation =================================
-char TeslaCallerInstrumenter::ID = 0;
+// ==== FnCallerInstrumenter implementation =================================
+char FnCallerInstrumenter::ID = 0;
 
-TeslaCallerInstrumenter::~TeslaCallerInstrumenter() {
+FnCallerInstrumenter::~FnCallerInstrumenter() {
   ::google::protobuf::ShutdownProtobufLibrary();
 }
 
-bool TeslaCallerInstrumenter::doInitialization(Module &Mod) {
+bool FnCallerInstrumenter::doInitialization(Module &Mod) {
   bool ModifiedIR = true;
 
   for (auto i : M.RootAutomata()) {
@@ -85,7 +85,7 @@ bool TeslaCallerInstrumenter::doInitialization(Module &Mod) {
 }
 
 
-CallerInstrumentation* TeslaCallerInstrumenter::GetOrCreateInstr(
+CallerInstrumentation* FnCallerInstrumenter::GetOrCreateInstr(
     Module& M, Function *F, FunctionEvent::Direction Dir) {
 
   assert(F != NULL);
@@ -100,7 +100,7 @@ CallerInstrumentation* TeslaCallerInstrumenter::GetOrCreateInstr(
 }
 
 
-bool TeslaCallerInstrumenter::runOnFunction(Function &Fn) {
+bool FnCallerInstrumenter::runOnFunction(Function &Fn) {
   bool modifiedIR = false;
 
   for (auto &Block : Fn) {
@@ -110,7 +110,7 @@ bool TeslaCallerInstrumenter::runOnFunction(Function &Fn) {
   return modifiedIR;
 }
 
-bool TeslaCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
+bool FnCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
   bool ModifiedIR = false;
 
   for (auto &Inst : Block) {

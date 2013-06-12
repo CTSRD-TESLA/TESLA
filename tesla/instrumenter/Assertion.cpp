@@ -57,13 +57,13 @@ using std::string;
 
 namespace tesla {
 
-char TeslaAssertionSiteInstrumenter::ID = 0;
+char AssertionSiteInstrumenter::ID = 0;
 
-TeslaAssertionSiteInstrumenter::~TeslaAssertionSiteInstrumenter() {
+AssertionSiteInstrumenter::~AssertionSiteInstrumenter() {
   ::google::protobuf::ShutdownProtobufLibrary();
 }
 
-bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
+bool AssertionSiteInstrumenter::runOnModule(Module &M) {
   // If this module doesn't declare any assertions, just carry on.
   AssertFn = M.getFunction(INLINE_ASSERTION);
   if (!AssertFn)
@@ -78,7 +78,7 @@ bool TeslaAssertionSiteInstrumenter::runOnModule(Module &M) {
 }
 
 
-bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
+bool AssertionSiteInstrumenter::ConvertAssertions(
     set<CallInst*>& AssertCalls, Module& Mod) {
 
   // Things we'll need later, common to all assertions.
@@ -191,7 +191,7 @@ bool TeslaAssertionSiteInstrumenter::ConvertAssertions(
 }
 
 
-Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
+Function* AssertionSiteInstrumenter::CreateInstrumentation(
     const Automaton& A, const TEquivalenceClass& Eq, Module& M) {
 
   const AutomatonDescription& Descrip = A.getAssertion();
@@ -254,7 +254,7 @@ Function* TeslaAssertionSiteInstrumenter::CreateInstrumentation(
 }
 
 
-void TeslaAssertionSiteInstrumenter::ParseAssertionLocation(
+void AssertionSiteInstrumenter::ParseAssertionLocation(
   Location *Loc, CallInst *Call) {
 
   assert(Call->getCalledFunction()->getName() == INLINE_ASSERTION);
