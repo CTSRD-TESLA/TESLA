@@ -100,7 +100,7 @@ CalleeInstr* FnCalleeInstrumenter::GetOrCreateInstr(
   auto& Map = (Dir == FunctionEvent::Entry) ? Entry : Exit;
   CalleeInstr *Instr = Map[Name];
   if (!Instr)
-    Instr = Map[Name] = CalleeInstr::Build(M, F, Dir);
+    Instr = Map[Name] = CalleeInstr::Build(M, F, Dir, SuppressDebugInstr);
 
   return Instr;
 }
@@ -109,13 +109,15 @@ CalleeInstr* FnCalleeInstrumenter::GetOrCreateInstr(
 
 // ==== FnCalleeInstr implementation ===========================================
 CalleeInstr* CalleeInstr::Build(Module& M, Function *Target,
-                                FunctionEvent::Direction Dir) {
+                                FunctionEvent::Direction Dir,
+                                bool SuppressDebugInstr) {
 
   // Find (or create) the instrumentation function.
   // Note: it doesn't yet contain the code to translate events and
   //       dispatch them to tesla_update_state().
   Function *InstrFn = FunctionInstrumentation(M, *Target, Dir,
-                                              FunctionEvent::Callee);
+                                              FunctionEvent::Callee,
+                                              SuppressDebugInstr);
 
   // Record the arguments passed to the instrumented function.
   //

@@ -135,7 +135,8 @@ llvm::Value* Cast(llvm::Value *From, llvm::StringRef Name,
  * the event being interpreted.
  */
 llvm::BasicBlock* CreateInstrPreamble(llvm::Module& Mod, llvm::Function *F,
-                                      const llvm::Twine& Prefix);
+                                      const llvm::Twine& Prefix,
+                                      bool SuppressDebugInstrumentation);
 
 //! Map a set of values into a @ref tesla_key.
 llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
@@ -152,12 +153,13 @@ llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
 //! Find (or create) one function-event instrumentation function.
 llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,
                                         FunctionEvent::Direction,
-                                        FunctionEvent::CallContext);
+                                        FunctionEvent::CallContext,
+                                        bool SuppressDebugInstr);
 
 //! Find (or create) one struct-field-event instrumentation function.
 llvm::Function* StructInstrumentation(llvm::Module&, llvm::StructType*,
                                       llvm::StringRef FieldName, size_t Index,
-                                      bool Store);
+                                      bool Store, bool SuppressDebugInstr);
 }
 
 #endif	/* !TESLA_INSTRUMENTATION_H */

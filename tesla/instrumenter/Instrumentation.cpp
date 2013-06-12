@@ -185,7 +185,8 @@ const char* Format(Type *T) {
 
 Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
                                          FunctionEvent::Direction Dir,
-                                         FunctionEvent::CallContext Context) {
+                                         FunctionEvent::CallContext Context,
+                                         bool SuppressDebugInstr) {
 
   LLVMContext& Ctx = Mod.getContext();
 
@@ -228,7 +229,8 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
   // Invariant: instrumentation blocks should have two exit blocks: one for
   // normal termination and one for abnormal termination.
   if (InstrFn->empty()) {
-    auto *Entry = CreateInstrPreamble(Mod, InstrFn, Tag + Subject.getName());
+    auto *Entry = CreateInstrPreamble(Mod, InstrFn, Tag + Subject.getName(),
+                                      SuppressDebugInstr);
     auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
     IRBuilder<>(Entry).CreateBr(Exit);
     IRBuilder<>(Exit).CreateRetVoid();
@@ -249,7 +251,7 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
 
 Function* tesla::StructInstrumentation(Module& Mod, StructType *Type,
                                        StringRef FieldName, size_t FieldIndex,
-                                       bool Store) {
+                                       bool Store, bool SuppressDebugInstr) {
 
   LLVMContext& Ctx = Mod.getContext();
   StringRef StructName = Type->getName();
@@ -299,7 +301,8 @@ Function* tesla::StructInstrumentation(Module& Mod, StructType *Type,
   // Debug printf should start with [FGET] or [FSET].
   string Tag = (Twine() + "[F" + (Store ? "SET" : "GET") + "] ").str();
   auto *Entry =
-    CreateInstrPreamble(Mod, InstrFn, Tag + StructName + "." + FieldName);
+    CreateInstrPreamble(Mod, InstrFn, Tag + StructName + "." + FieldName,
+                        SuppressDebugInstr);
 
   auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
   IRBuilder<>(Entry).CreateBr(Exit);
@@ -358,18 +361,19 @@ StructType* tesla::TransitionSetType(Module& M) {
 }
 
 BasicBlock* tesla::CreateInstrPreamble(Module& Mod, Function *F,
-                                       const Twine& Prefix) {
+                                       const Twine& Prefix, bool SuppressDI) {
 
   auto& Ctx = Mod.getContext();
-
-  auto *Preamble = BasicBlock::Create(Ctx, "preamble", F);
-  auto *PrintBB = BasicBlock::Create(Ctx, "printf", F);
   auto *Entry = BasicBlock::Create(Ctx, "entry", F);
 
+  if (SuppressDI)
+    return Entry;
+
+  auto *Preamble = BasicBlock::Create(Ctx, "preamble", F, Entry);
+  auto *PrintBB = BasicBlock::Create(Ctx, "printf", F);
   IRBuilder<> Builder(Preamble);
 
   // Only print if TESLA_DEBUG indicates that we want output.
-  // TODO: allow printf() to be disabled at compile time, too.
   Value *DebugName = Mod.getGlobalVariable("debug_name", true);
   if (!DebugName)
     DebugName = Builder.CreateGlobalStringPtr("tesla.events", "debug_name");

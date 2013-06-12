@@ -215,7 +215,8 @@ FieldInstrumentation* FieldReferenceInstrumenter::GetInstr(
       return NULL;
 
     Function *InstrFn =
-      StructInstrumentation(*Mod, T, FieldName, Protobuf.index(), true);
+      StructInstrumentation(*Mod, T, FieldName, Protobuf.index(), true,
+                            SuppressDebugInstr);
 
     Instr = new FieldInstrumentation(InstrFn, *Mod, T,
                                      FieldName, Protobuf.index());

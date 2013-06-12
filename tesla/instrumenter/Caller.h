@@ -33,6 +33,7 @@
 
 #include "tesla.pb.h"
 
+#include "Instrumenter.h"
 #include "Instrumentation.h"
 
 #include "llvm/ADT/StringMap.h"
@@ -52,10 +53,11 @@ class CallerInstrumentation;
 class Manifest;
 
 /// Instruments function calls in the caller context.
-class FnCallerInstrumenter : public llvm::FunctionPass {
+class FnCallerInstrumenter : public Instrumenter, public llvm::FunctionPass {
 public:
   static char ID;
-  FnCallerInstrumenter(const Manifest& M) : FunctionPass(ID), M(M) {}
+  FnCallerInstrumenter(const Manifest& M, bool SuppressDI)
+    : Instrumenter(M, SuppressDI), FunctionPass(ID) {}
   ~FnCallerInstrumenter();
 
   const char* getPassName() const {
@@ -70,9 +72,6 @@ private:
   CallerInstrumentation* GetOrCreateInstr(llvm::Module&, llvm::Function*,
                                           FunctionEvent::Direction);
 
-  //! TESLA manifest that describes automata.
-  const Manifest& M;
-
   llvm::StringMap<CallerInstrumentation*> Calls;
   llvm::StringMap<CallerInstrumentation*> Returns;
 };
@@ -86,7 +85,8 @@ class CallerInstrumentation
 public:
   /// Construct an object that can instrument calls to a given function.
   static CallerInstrumentation* Build(llvm::Module&, llvm::Function *Target,
-                                      FunctionEvent::Direction);
+                                      FunctionEvent::Direction,
+                                      bool SuppressDebugInstr);
 
   // InstInstrumentation implementation:
   bool Instrument(llvm::Instruction&);
@@ -94,10 +94,13 @@ public:
 private:
   /// Private constructor: clients should use CalleeInstrumention::Build().
   CallerInstrumentation(llvm::Module& M, llvm::Function *Target,
-                        llvm::Function *Instr, FunctionEvent::Direction Dir)
-    : FnInstrumentation(M, Target, Instr, Dir)
+                        llvm::Function *Instr, FunctionEvent::Direction Dir,
+                        bool SuppressDI)
+    : FnInstrumentation(M, Target, Instr, Dir), SuppressDebugInstr(SuppressDI)
   {
   }
+
+  const bool SuppressDebugInstr;
 };
 
 }

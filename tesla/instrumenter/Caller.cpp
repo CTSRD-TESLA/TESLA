@@ -94,7 +94,8 @@ CallerInstrumentation* FnCallerInstrumenter::GetOrCreateInstr(
   auto& Map = (Dir == FunctionEvent::Entry) ? Calls : Returns;
   CallerInstrumentation *Instr = Map[Name];
   if (!Instr)
-    Instr = Map[Name] = CallerInstrumentation::Build(M, F, Dir);
+    Instr = Map[Name] = CallerInstrumentation::Build(M, F, Dir,
+                                                     SuppressDebugInstr);
 
   return Instr;
 }
@@ -137,14 +138,16 @@ bool FnCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
 // ==== CallerInstrumentation implementation ===================================
 CallerInstrumentation*
     CallerInstrumentation::Build(Module& M, Function *Target,
-                                 FunctionEvent::Direction Dir) {
+                                 FunctionEvent::Direction Dir,
+                                 bool SuppressDebugInstr) {
 
   assert(Target != NULL);
 
   Function *InstrFn = FunctionInstrumentation(M, *Target, Dir,
-                                              FunctionEvent::Caller);
+                                              FunctionEvent::Caller,
+                                              SuppressDebugInstr);
 
-  return new CallerInstrumentation(M, Target, InstrFn, Dir);
+  return new CallerInstrumentation(M, Target, InstrFn, Dir, SuppressDebugInstr);
 }
 
 

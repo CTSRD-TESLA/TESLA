@@ -212,7 +212,8 @@ Function* AssertionSiteInstrumenter::CreateInstrumentation(
 
   string Message = ("[NOW]  automaton " + Twine(A.ID())).str();
 
-  BasicBlock *Instr = CreateInstrPreamble(M, InstrFn, Message);
+  BasicBlock *Instr = CreateInstrPreamble(M, InstrFn, Message,
+                                          SuppressDebugInstr);
   IRBuilder<> Builder(Instr);
 
   Type *IntType = Type::getInt32Ty(Ctx);

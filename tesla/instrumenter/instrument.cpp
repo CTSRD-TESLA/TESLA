@@ -62,6 +62,10 @@ static cl::opt<bool>
 OutputAssembly("S", cl::desc("Write output as LLVM assembly"));
 
 static cl::opt<bool>
+SuppressDI("suppress-debug-instrumentation",
+    cl::desc("Suppress the generation of debug output in instrumentation"));
+
+static cl::opt<bool>
 VerifyEach("verify-each", cl::desc("Verify after each transform"));
 
 
@@ -142,10 +146,10 @@ int main(int argc, char **argv) {
     Passes.add(TD);
 
   // Just add TESLA instrumentation passes.
-  addPass(Passes, new tesla::AssertionSiteInstrumenter(*Manifest));
-  addPass(Passes, new tesla::FnCalleeInstrumenter(*Manifest));
-  addPass(Passes, new tesla::FnCallerInstrumenter(*Manifest));
-  addPass(Passes, new tesla::FieldReferenceInstrumenter(*Manifest));
+  addPass(Passes, new tesla::AssertionSiteInstrumenter(*Manifest, SuppressDI));
+  addPass(Passes, new tesla::FnCalleeInstrumenter(*Manifest, SuppressDI));
+  addPass(Passes, new tesla::FnCallerInstrumenter(*Manifest, SuppressDI));
+  addPass(Passes, new tesla::FieldReferenceInstrumenter(*Manifest, SuppressDI));
 
   // Write bitcode or assembly to the output as the last step...
   if (!NoOutput) {

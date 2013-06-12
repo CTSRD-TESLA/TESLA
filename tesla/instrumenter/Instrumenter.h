@@ -1,3 +1,4 @@
+/** @file Instrumenter.h   Declaration of @ref tesla::Instrumenter. */
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
@@ -28,51 +29,29 @@
  * SUCH DAMAGE.
  */
 
-#include <llvm/ADT/StringMap.h>
-#include <llvm/Pass.h>
-#include <map>
-
-#include "Instrumenter.h"
-#include "Transition.h"
-
-namespace llvm {
-  class Function;
-  class LoadInst;
-  class StoreInst;
-  class Value;
-}
+#ifndef INSTRUMENTER_H
+#define INSTRUMENTER_H
 
 namespace tesla {
 
-class Automaton;
-class FieldInstrumentation;
 class Manifest;
 
-/// Converts calls to TESLA pseudo-assertions into instrumentation sites.
-class FieldReferenceInstrumenter
-  : public Instrumenter, public llvm::ModulePass {
+/// Base class for TESLA instrumenters.
+class Instrumenter {
 public:
-  static char ID;
-  FieldReferenceInstrumenter(const Manifest& M, bool SuppressDI)
-    : Instrumenter(M, SuppressDI), ModulePass(ID) {}
-  const char* getPassName() const { return "field reference instrumenter"; }
+  Instrumenter(const Manifest& M, bool SuppressDI)
+    : M(M), SuppressDebugInstr(SuppressDI) {}
 
-  ~FieldReferenceInstrumenter();
+  virtual ~Instrumenter() {}
 
-  virtual bool runOnModule(llvm::Module &M);
+protected:
+  //! TESLA manifest that describes automata.
+  const Manifest& M;
 
-private:
-  void BuildInstrumentation(const Automaton&);
-  FieldInstrumentation *GetInstr(const Automaton&, const TEquivalenceClass&);
-
-  void AppendInstrumentation(llvm::Function*, const Automaton&,
-                             const FieldAssignment&, TEquivalenceClass&);
-
-  bool InstrumentLoad(llvm::LoadInst*, FieldInstrumentation*);
-  bool InstrumentStore(llvm::StoreInst*, FieldInstrumentation*);
-
-  llvm::Module *Mod;
-  llvm::StringMap<FieldInstrumentation*> Instrumentation;
+  //! Don't produce debug instrumentation (e.g., printf() statements).
+  const bool SuppressDebugInstr;
 };
 
 }
+
+#endif

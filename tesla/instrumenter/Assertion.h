@@ -30,6 +30,7 @@
 
 #include "llvm/Pass.h"
 
+#include "Instrumenter.h"
 #include "Transition.h"
 
 #include <set>
@@ -47,10 +48,11 @@ class NowTransition;
 class Location;
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
-class AssertionSiteInstrumenter : public llvm::ModulePass {
+class AssertionSiteInstrumenter : public Instrumenter, public llvm::ModulePass {
 public:
   static char ID;
-  AssertionSiteInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
+  AssertionSiteInstrumenter(const Manifest& M, bool SuppressDI)
+    : Instrumenter(M, SuppressDI), ModulePass(ID) {}
   virtual ~AssertionSiteInstrumenter();
 
   const char* getPassName() const {
@@ -73,9 +75,6 @@ private:
    * pseudo-call.
    */
   static void ParseAssertionLocation(Location *Loc, llvm::CallInst*);
-
-  //! TESLA manifest that describes automata.
-  const Manifest& M;
 
   //! The TESLA pseudo-function used to declare assertions.
   llvm::Function *AssertFn = NULL;

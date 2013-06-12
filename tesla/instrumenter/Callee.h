@@ -31,6 +31,7 @@
 #ifndef	TESLA_CALLEE_INSTRUMENTATION_H
 #define	TESLA_CALLEE_INSTRUMENTATION_H
 
+#include "Instrumenter.h"
 #include "Instrumentation.h"
 
 #include "tesla.pb.h"
@@ -53,10 +54,11 @@ class CalleeInstr;
 class Manifest;
 
 /// Instruments function calls in the callee context.
-class FnCalleeInstrumenter : public llvm::ModulePass {
+class FnCalleeInstrumenter : public Instrumenter, public llvm::ModulePass {
 public:
   static char ID;
-  FnCalleeInstrumenter(const Manifest& M) : ModulePass(ID), M(M) {}
+  FnCalleeInstrumenter(const Manifest& M, bool SuppressDI)
+    : Instrumenter(M, SuppressDI), ModulePass(ID) {}
   ~FnCalleeInstrumenter();
 
   const char* getPassName() const {
@@ -69,9 +71,6 @@ private:
   CalleeInstr* GetOrCreateInstr(llvm::Module&, llvm::Function*,
                                 FunctionEvent::Direction);
 
-  //! TESLA manifest that describes automata.
-  const Manifest& M;
-
   llvm::StringMap<CalleeInstr*> Entry;
   llvm::StringMap<CalleeInstr*> Exit;
 };
@@ -82,7 +81,8 @@ class CalleeInstr : public FnInstrumentation {
 public:
   /// Construct an object that can instrument a given function.
   static CalleeInstr* Build(llvm::Module&, llvm::Function *Target,
-                            FunctionEvent::Direction);
+                            FunctionEvent::Direction,
+                            bool SuppressDebugInstr);
 
 private:
   CalleeInstr(llvm::Module&, llvm::Function *Fn, llvm::Function *Inst,
