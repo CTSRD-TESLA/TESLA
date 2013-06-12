@@ -43,7 +43,7 @@ if( DOXYGEN_FOUND )
 	make_directory(${DOXYGEN_MAN})
 
 	add_custom_target(api-docs DEPENDS
-		${DOXYGEN_HTML}/index.xhtml
+		${DOXYGEN_HTML}/index.html
 		${DOXYGEN_MAN3}/tesla.3
 	)
 	add_dependencies(doc api-docs)
@@ -66,7 +66,7 @@ if( DOXYGEN_FOUND )
 
 	add_custom_command(
 		OUTPUT
-			${DOXYGEN_HTML}/index.xhtml
+			${DOXYGEN_HTML}/index.html
 			${DOXYGEN_MAN3}/tesla.3
 
 		# In lieu of proper dependency checking, declare a dependency
