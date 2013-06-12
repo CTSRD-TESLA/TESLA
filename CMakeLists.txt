@@ -20,6 +20,19 @@ exec_program(llvm-config ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
 exec_program(llvm-config ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
 exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 
+# Find the Clang "resource dir" (contains include/stdarg.h, etc.).
+if(NOT RESOURCE_DIR)
+	exec_program(llvm-config ARGS --bindir OUTPUT_VARIABLE LLVM_BIN)
+	exec_program(${LLVM_BIN}/clang ARGS --version OUTPUT_VARIABLE VERSION)
+
+	string(REPLACE "clang version " "" VERSION ${VERSION})
+	string(REGEX REPLACE "\n.*" "" VERSION ${VERSION})
+
+	set(CLANG_RESOURCE_DIR ${LLVM_OBJ}/lib/clang/${VERSION}
+		CACHE PATH "Clang resource dir (stdarg.h, etc.)")
+	message(STATUS "Found Clang resource dir: ${CLANG_RESOURCE_DIR}")
+endif()
+
 # Explicitly put LLVM's library directory before others, e.g. /usr/local/lib.
 link_directories(${LLVM_PREFIX}/lib)
 
@@ -107,7 +120,7 @@ else ( ${CMAKE_SYSTEM_NAME} MATCHES Linux )
 	# automatically, and we need to figure out why the Clang tooling
 	# framework doesn't. In the meantime, however, this workaround works.
 	set(LIT_EXTRA ${LIT_EXTRA}
-		--param=extra_cflags=-resource-dir:${LLVM_OBJ}/lib/clang/3.3)
+		--param=extra_cflags=-resource-dir:${CLANG_RESOURCE_DIR})
 endif()
 
 #
