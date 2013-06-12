@@ -32,7 +32,7 @@ def ldflags(dirs, libs, extras = []):
 
 def cpp_out():
 	""" How do we specify the output file from our platform's cpp? """
-	cpp_version = run_command('cpp', [ '--version' ]).split()[0]
+	cpp_version = run_command('cpp', [ '--version' ]).split('\n')[0]
 
 	if 'clang' in cpp_version: return '-o'
 	if 'gcc' in cpp_version: return ''
