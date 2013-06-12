@@ -34,11 +34,9 @@ def cpp_out():
 	""" How do we specify the output file from our platform's cpp? """
 	cpp_version = run_command('cpp', [ '--version' ]).split('\n')[0]
 
+	# Clang usage: 'cpp in -o out'; GCC usage: 'cpp in out'
 	if 'clang' in cpp_version: return '-o'
-	if 'gcc' in cpp_version: return ''
-
-	sys.stderr.write('Unsupported C preprocessor: %s\n' % cpp_version)
-	sys.exit(1)
+	else: return ''
 
 
 def find_containing_dir(filename, paths, notfound_msg):
