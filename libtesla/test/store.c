@@ -26,8 +26,8 @@ main(int argc, char **argv)
 
 	struct tesla_store *global_store, *perthread;
 
-	check(tesla_store_get(TESLA_SCOPE_GLOBAL, CLASSES, 1, &global_store));
-	check(tesla_store_get(TESLA_SCOPE_PERTHREAD, CLASSES, 1, &perthread));
+	check(tesla_store_get(TESLA_CONTEXT_GLOBAL, CLASSES, 1, &global_store));
+	check(tesla_store_get(TESLA_CONTEXT_THREAD, CLASSES, 1, &perthread));
 
 	check_store(global_store);
 	check_store(perthread);

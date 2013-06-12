@@ -38,13 +38,13 @@ main(int argc, char **argv)
 
 	struct tesla_store *global_store;
 	struct tesla_class *glob_automaton;
-	check(tesla_store_get(TESLA_SCOPE_GLOBAL, 1, 3, &global_store));
+	check(tesla_store_get(TESLA_CONTEXT_GLOBAL, 1, 3, &global_store));
 	check(tesla_class_get(global_store, 0, &glob_automaton,
 		"glob_automaton", "a class of TESLA automata"));
 
 	struct tesla_store *perthread_store;
 	struct tesla_class *thr_automaton;
-	check(tesla_store_get(TESLA_SCOPE_PERTHREAD, 1, 3, &perthread_store));
+	check(tesla_store_get(TESLA_CONTEXT_THREAD, 1, 3, &perthread_store));
 	check(tesla_class_get(perthread_store, 0, &thr_automaton,
 		"thr_automaton", "a class of TESLA automata"));
 

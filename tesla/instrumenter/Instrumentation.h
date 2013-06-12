@@ -103,8 +103,8 @@ llvm::StructType* TransitionType(llvm::Module&);
 llvm::StructType* TransitionSetType(llvm::Module&);
 
 /**
- * Find the constant for a libtesla context (either @ref TESLA_SCOPE_PERTHREAD
- * or @ref TESLA_SCOPE_GLOBAL).
+ * Find the constant for a libtesla context (either @ref TESLA_CONTEXT_THREAD
+ * or @ref TESLA_CONTEXT_GLOBAL).
  */
 llvm::Constant* TeslaContext(AutomatonDescription::Context Context,
                              llvm::LLVMContext& Ctx);

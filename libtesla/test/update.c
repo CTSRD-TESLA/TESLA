@@ -37,7 +37,7 @@ main(int argc, char **argv)
 {
 	install_default_signal_handler();
 
-	const int32_t scope = TESLA_SCOPE_GLOBAL;
+	const int32_t scope = TESLA_CONTEXT_GLOBAL;
 	const int32_t instances_in_class = 10;
 
 	struct tesla_store *store;

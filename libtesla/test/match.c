@@ -6,6 +6,7 @@
  */
 
 #include <libtesla.h>
+#include "tesla_internal.h"
 
 #include <assert.h>
 #include <err.h>

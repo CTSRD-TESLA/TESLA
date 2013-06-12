@@ -484,8 +484,8 @@ Constant* tesla::TeslaContext(AutomatonDescription::Context Context,
                               LLVMContext& Ctx) {
   static Type *IntType = Type::getInt32Ty(Ctx);
 
-  static auto *Global = ConstantInt::get(IntType, TESLA_SCOPE_GLOBAL);
-  static auto *PerThread = ConstantInt::get(IntType, TESLA_SCOPE_PERTHREAD);
+  static auto *Global = ConstantInt::get(IntType, TESLA_CONTEXT_GLOBAL);
+  static auto *PerThread = ConstantInt::get(IntType, TESLA_CONTEXT_THREAD);
 
   switch (Context) {
   case AutomatonDescription::Global: return Global;
