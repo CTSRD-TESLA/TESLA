@@ -10,7 +10,8 @@ CC=clang
 CFLAGS	+= -Wall -g -ggdb -I ${TESLA_SOURCE_DIR}/include
 LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
 
-RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/3.3
+CLANG_VERSION=`clang --version | grep version | awk '{ print $$3 }'`
+RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/${CLANG_VERSION}
 
 
 all: ${BASE}

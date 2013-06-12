@@ -29,7 +29,8 @@ TESLA_FILES=	\
 	vfs_syscalls.tesla \
 	vfs_vnops.tesla
 
-RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/3.3
+CLANG_VERSION=`clang --version | grep version | awk '{ print $$3 }'`
+RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/${CLANG_VERSION}
 
 
 all: ${BASE}.tesla ${BASE}
