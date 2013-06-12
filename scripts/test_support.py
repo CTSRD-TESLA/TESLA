@@ -30,6 +30,16 @@ def ldflags(dirs, libs, extras = []):
 		' '.join([ '-l %s' % l for l in libs ])
 	] + extras)
 
+def cpp_out():
+	""" How do we specify the output file from our platform's cpp? """
+	cpp_version = run_command('cpp', [ '--version' ]).split()[0]
+
+	if 'clang' in cpp_version: return '-o'
+	if 'gcc' in cpp_version: return ''
+
+	sys.stderr.write('Unsupported C preprocessor: %s\n' % cpp_version)
+	sys.exit(1)
+
 
 def find_containing_dir(filename, paths, notfound_msg):
 	""" Find the first directory that contains a file. """

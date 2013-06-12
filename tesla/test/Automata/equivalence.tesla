@@ -4,7 +4,7 @@
  * text-based serialisation format for protocol buffers. Instead, let's abuse
  * the C preprocessor a little bit:
  *
- * RUN: cpp -P -DTESLA %s %t.tesla
+ * RUN: cpp -P -DTESLA %s %cpp_out %t.tesla
  * RUN: tesla graph %t.tesla -o %t.dot
  * RUN: FileCheck -input-file=%t.dot %s
  */
