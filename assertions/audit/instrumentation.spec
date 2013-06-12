@@ -1,3 +1,0 @@
-function,audit_submit
-function,syscallenter
-function,syscallret

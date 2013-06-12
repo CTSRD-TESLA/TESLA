@@ -1,3 +1,0 @@
-function,mac_vnode_check_write
-function,syscallenter
-function,syscallret
