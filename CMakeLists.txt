@@ -27,6 +27,7 @@ if(NOT RESOURCE_DIR)
 
 	string(REPLACE "clang version " "" VERSION ${VERSION})
 	string(REGEX REPLACE "\n.*" "" VERSION ${VERSION})
+	string(REGEX REPLACE " .*" "" VERSION ${VERSION})
 
 	set(CLANG_RESOURCE_DIR ${LLVM_OBJ}/lib/clang/${VERSION}
 		CACHE PATH "Clang resource dir (stdarg.h, etc.)")
