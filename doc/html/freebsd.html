@@ -7,8 +7,19 @@ Within the FreeBSD Perforce repository, there is a TESLA branch located at
 
 <p>
 To build the FreeBSD base system with TESLA instrumentation, first
-<a href="environment.html">set up your environment</a>, then run make in the
-FreeBSD source tree with the following variables:
+<a href="environment.html">set up your environment</a>, then move some
+LLVM-generated headers out of the way to prevent conflicts with FreeBSD system
+ones:
+</p>
+
+<div class="console">cd <span class="green">$LLVM_BUILD_DIR</span>/lib/clang/3.4
+mkdir unsafe
+mv *.h unsafe/
+mv unsafe/*intrin*.h unsafe/mm3dnow.h unsafe/mm_malloc.h .
+</div>
+
+<p>
+Then run make in the FreeBSD source tree with the following variables:
 </p>
 
 <div class="console">CONFIGARGS=-t -DNO_MODULES -DWITHOUT_FORMAT_EXTENSIONS \
