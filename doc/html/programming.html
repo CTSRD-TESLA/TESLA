@@ -88,6 +88,16 @@ which expects several arguments:
   <li>a <a href="#expressions">TESLA expression</a></li>
 </ul>
 
+<p>
+For example, a simple assertion taken from
+<code>demos/smoketest/example.c</code>:
+</p>
+
+<code class="listing"><span class="proprocessor"><span class="comment">/* A very simple TESLA assertion. */</span>
+<span class="keyword">TESLA_WITHIN</span>(example_syscall,
+        <span class="keywordflow">previously</span>(security_check(<span class="keyword">ANY</span>(ptr), o, op) == <span class="literal">0</span>));
+</code>
+
 <a name="automata"></a>
 <h2>Explicit automata</h2>
 
