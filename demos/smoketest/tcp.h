@@ -179,6 +179,16 @@ automaton(established, struct tcpcb*);
 void	tcp_init(struct tcpcb*);
 void	tcp_free(struct tcpcb*);
 
+/*
+ * Specify that the automaton 'my_tcpcb_assertion' describes the behaviour
+ * of struct tcpcb.
+ *
+ * This is a global automaton: its state will be stored in a global store
+ * and its events will trigger synchronisation.
+ *
+ * The automaton starts with the event 'called(tcp_init, tp)' and ends with
+ * the event 'returned(tcp_free, tp)'.
+ */
 TESLA_STRUCT_AUTOMATON(struct tcpcb *tp, my_tcpcb_assertion, __tesla_global,
                        called(tcp_init, tp),
                        returned(tcp_free, tp));
