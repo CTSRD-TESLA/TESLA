@@ -147,7 +147,7 @@ CallerInstrumentation*
                                               FunctionEvent::Caller,
                                               SuppressDebugInstr);
 
-  return new CallerInstrumentation(M, Target, InstrFn, Dir, SuppressDebugInstr);
+  return new CallerInstrumentation(M, Target, InstrFn, Dir);
 }
 
 

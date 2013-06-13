@@ -94,13 +94,10 @@ public:
 private:
   /// Private constructor: clients should use CalleeInstrumention::Build().
   CallerInstrumentation(llvm::Module& M, llvm::Function *Target,
-                        llvm::Function *Instr, FunctionEvent::Direction Dir,
-                        bool SuppressDI)
-    : FnInstrumentation(M, Target, Instr, Dir), SuppressDebugInstr(SuppressDI)
+                        llvm::Function *Instr, FunctionEvent::Direction Dir)
+    : FnInstrumentation(M, Target, Instr, Dir)
   {
   }
-
-  const bool SuppressDebugInstr;
 };
 
 }
