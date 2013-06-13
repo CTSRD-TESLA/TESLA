@@ -288,13 +288,6 @@ int	tesla_class_init(struct tesla_class*, enum tesla_context context,
 #define	TESLA_MAX_CLASSES		128
 #define	TESLA_MAX_INSTANCES		128
 
-/*
- * When the assertion fails, what to do?
- */
-#define	TESLA_ACTION_FAILSTOP	1	/* Stop on failure. */
-#define	TESLA_ACTION_DTRACE	2	/* Fire DTrace probe on failure. */
-#define	TESLA_ACTION_PRINTF	3	/* Console/stdio printf. */
-
 #if defined(_KERNEL) && defined(MALLOC_DECLARE)
 /*
  * Memory type for TESLA allocations in the kernel.
