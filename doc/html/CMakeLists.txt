@@ -16,10 +16,17 @@ if( NOT DEFINED HTML_BINDIR )
 endif()
 
 #
-# Header and footer that fit within the ucampas world.
+# Build a complete HTML file, ready for ucampas.
 #
-function(header outvar title)
-	set(${outvar}
+function(build_html_file output base title)
+	set(tmpdir "${CMAKE_CURRENT_BINARY_DIR}/CMakeTmp")
+	set(header "${tmpdir}/header-${base}.html")
+	set(footer "${tmpdir}/footer.html")
+
+	set(input "${CMAKE_CURRENT_SOURCE_DIR}/${base}.html")
+	concatenate(${output} ${header} ${input} ${footer})
+
+	file(WRITE ${header}
 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">
 
 <head>
@@ -28,21 +35,15 @@ function(header outvar title)
 </head>
 
 <body>
-<h1 class=\"title\">${title}</h1>"
-	PARENT_SCOPE)
-endfunction()
+<h1 class=\"title\">${title}</h1>")
 
-function(footer outvar)
-	set(${outvar}
-"</body>
-</html>"
-	PARENT_SCOPE)
+	file(WRITE ${footer} "</body></html>")
 endfunction()
 
 #
 # Static HTML content:
 #
-configure_file(tesla.css ${HTML_BINDIR}/tesla.css)
+copy(tesla.css ${HTML_BINDIR}/tesla.css)
 install(FILES tesla.css DESTINATION ${HTML_OUTPUT})
 
 add_subdirectory(images)
@@ -61,14 +62,9 @@ foreach(page ${HTML})
 	list(GET metadata 0 base)
 	list(GET metadata 1 title)
 
-	header(HEADER ${title})
-	footer(FOOTER)
-
-	set(INPUT "${base}.html")
 	set(OUTPUT "${HTML_BINDIR}/${base}-b.html")
+	build_html_file(${OUTPUT} ${base} ${title})
 
-	configure_file(${INPUT} ${OUTPUT})
-	set(HTML_TARGETS "${HTML_TARGETS} ${INPUT}")
 	set(UCAMPAS_FILES ${UCAMPAS_FILES} ${OUTPUT})
 
 	# If this isn't index.html, add it to ucampas' config file.
@@ -78,6 +74,12 @@ foreach(page ${HTML})
 
 	install(FILES ${HTML_BINDIR}/${base}-b.html DESTINATION ${HTML_OUTPUT})
 endforeach()
+
+add_custom_target(html DEPENDS
+	${HTML_BINDIR}/tesla.css
+)
+
+add_dependencies(doc html)
 
 #
 # If we have a local instance of UCampas, use it to generate HTML previews.
