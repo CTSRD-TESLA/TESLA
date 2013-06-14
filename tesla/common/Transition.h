@@ -188,7 +188,7 @@ protected:
 
   Transition(const State& From, const State& To, bool Init, bool Cleanup,
              bool OutOfScope)
-    : From(From), To(To), Init(Init), Cleanup(Cleanup && !OutOfScope),
+    : From(From), To(To), Init(Init), Cleanup(Cleanup),
       OutOfScope(OutOfScope)
   {
     // An out-of-scope event cannot cause initialisation.

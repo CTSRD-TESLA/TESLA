@@ -11,8 +11,6 @@
  *
  * RUN: tesla graph -d %t.tesla -o %t.dfa.dot
  * RUN: FileCheck %s -check-prefix=DFA -input-file %t.dfa.dot
- *
- * XFAIL: *
  */
 
 /*
@@ -68,10 +66,6 @@ automaton {
           strict: false
         }
       }
-      /*
-       * NFA: label = "NOW"
-       * DFA: label = "NOW"
-       */
       expression {
         type: NOW
         now {

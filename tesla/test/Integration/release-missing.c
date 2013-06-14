@@ -77,7 +77,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * ERR: TESLA failure
 	 * ERR: Instance {{[0-9]+}} is in state {{[0-9]+}}
 	 * ERR: but required to take a transition in [
-	 * ERR:     ({{[0-9]+}}:0x0 -> [[FINAL:[0-9]+]]:0x1)
+	 * ERR:     ({{[0-9]+}}:0x0 -> [[FINAL:[0-9]+]]:0x1 <clean>)
 	 * ERR:     ({{[0-9]+}}:0x1 -> [[FINAL]]:0x1 <clean>)
 	 * ERR: ]
 	 */
