@@ -1,0 +1,143 @@
+/** vim:syntax=proto
+ *
+ * @file missing-cleanup.tesla
+ * Checks for a regression in which <<cleanup>> disappears when determinising
+ * an automaton.
+ *
+ * RUN: cpp %s %cpp_out %t.tesla
+ *
+ * RUN: tesla graph -u %t.tesla -o %t.nfa.dot
+ * RUN: FileCheck %s -check-prefix=NFA -input-file %t.nfa.dot
+ *
+ * RUN: tesla graph -d %t.tesla -o %t.dfa.dot
+ * RUN: FileCheck %s -check-prefix=DFA -input-file %t.dfa.dot
+ *
+ * XFAIL: *
+ */
+
+/*
+ * NFA: digraph automaton
+ * DFA: digraph automaton
+ */
+automaton {
+  identifier {
+    location {
+      filename: "/home/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 668
+      counter: 1
+    }
+  }
+  /*
+   * NFA: label = "amd64_syscall([[ANY:&#[0-9a-f]+;]],[[ANY]]){{.*}}init
+   * DFA: label = "amd64_syscall([[ANY:&#[0-9a-f]+;]],[[ANY]]){{.*}}init
+   */
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      /*
+       * NFA: label = "mac_vnode_check_write([[ANY]],[[ANY]],vp) == 0"
+       * DFA: label = "mac_vnode_check_write([[ANY]],[[ANY]],vp) == 0"
+       */
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "mac_vnode_check_write"
+          }
+          direction: Exit
+          context: Callee
+          argument {
+            type: Any
+          }
+          argument {
+            type: Any
+          }
+          argument {
+            type: Variable
+            index: 0
+            name: "vp"
+          }
+          expectedReturnValue {
+            type: Constant
+            value: 0
+          }
+          strict: false
+        }
+      }
+      /*
+       * NFA: label = "NOW"
+       * DFA: label = "NOW"
+       */
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "/home/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+            line: 668
+            counter: 1
+          }
+        }
+      }
+    }
+  }
+  /*
+   * NFA: label = "amd64_syscall([[ANY]],[[ANY]]){{.*}}(Exit){{.*}}cleanup
+   * DFA: label = "amd64_syscall([[ANY]],[[ANY]]){{.*}}(Exit){{.*}}cleanup
+   */
+  argument {
+    type: Variable
+    index: 0
+    name: "vp"
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "/home/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 668
+      counter: 1
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
