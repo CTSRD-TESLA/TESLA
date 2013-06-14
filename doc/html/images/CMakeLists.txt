@@ -3,6 +3,7 @@ find_package(Dot)
 file(COPY
 	conditional.png
 	strict.png
+	tesla-logo.png
 	workflow.png
 	DESTINATION ${HTML_BINDIR}/images)
 
