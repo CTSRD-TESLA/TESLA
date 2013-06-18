@@ -96,7 +96,7 @@ entry:
 
 ; CHECK: define void @__tesla_instrumentation_callee_return_some_helper(i32
 ; there should be at least one call to tesla_update_state():
-; CHECK: call i32 @tesla_update_state
+; CHECK: call void @tesla_update_state
 
 ; CHECK-NOT: define void @__tesla_instrumentation_callee_enter_some_helper(i32
 
@@ -106,7 +106,7 @@ entry:
 
 ; CHECK: define void @__tesla_instrumentation_callee_enter_void_helper(
 ; there should be at least one call to tesla_update_state():
-; CHECK: call i32 @tesla_update_state
+; CHECK: call void @tesla_update_state
 
 ; CHECK-NOT: define void @__tesla_instrumentation_callee_return_void_helper(
 

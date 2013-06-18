@@ -111,12 +111,11 @@ int main(int argc, char *argv[]) {
  *
  * TODO: this should actually read DIGITS_OF_PI:
  * CHECK: "sp.field0 = 31415926":
- * CHECK:   [[UPDATE_STATE:call i32 @tesla_update_state]]
+ * CHECK:   [[UPDATE_STATE:call void @tesla_update_state]]
  *
  * CHECK: "[[FILENAME]]:{{[0-9]+}}#{{[0-9]+}}:end":
  *
  * CHECK: exit:
- * CHECK: die:
  * CHECK: }
  */
 
@@ -142,6 +141,5 @@ int main(int argc, char *argv[]) {
  * CHECK: "[[FILENAME]]:{{[0-9]+}}#{{[0-9]+}}:end":
  *
  * CHECK: exit:
- * CHECK: die:
  * CHECK: }
  */

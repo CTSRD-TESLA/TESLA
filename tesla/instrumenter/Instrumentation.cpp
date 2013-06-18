@@ -117,15 +117,8 @@ void FnInstrumentation::AppendInstrumentation(
 
   Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
   assert(Args.size() == UpdateStateFn->arg_size());
-
-
-  Value *Error = Builder.CreateCall(UpdateStateFn, Args);
-  Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);
-
-  BasicBlock *Die = FindBlock("die", *InstrFn);
-  dyn_cast<PHINode>(Die->begin())->addIncoming(Error, Instr);
-
-  Builder.CreateCondBr(Builder.CreateICmpEQ(Error, Success), Exit, Die);
+  Builder.CreateCall(UpdateStateFn, Args);
+  Builder.CreateBr(Exit);
 }
 
 
@@ -234,15 +227,6 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
     auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
     IRBuilder<>(Entry).CreateBr(Exit);
     IRBuilder<>(Exit).CreateRetVoid();
-
-    auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
-    IRBuilder<> ErrorHandler(Die);
-    Value* Args[] = {
-      ErrorHandler.CreatePHI(IntegerType::get(Ctx, 32), 0),
-      ErrorHandler.CreateGlobalStringPtr(InstrFn->getName())
-    };
-    ErrorHandler.CreateCall(FindDieFn(Mod), Args);
-    ErrorHandler.CreateRetVoid();
   }
 
   return InstrFn;
@@ -307,15 +291,6 @@ Function* tesla::StructInstrumentation(Module& Mod, StructType *Type,
   auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
   IRBuilder<>(Entry).CreateBr(Exit);
   IRBuilder<>(Exit).CreateRetVoid();
-
-  auto *Die = BasicBlock::Create(Ctx, "die", InstrFn);
-  IRBuilder<> ErrorHandler(Die);
-  Value* DieArgs[] = {
-    ErrorHandler.CreatePHI(IntegerType::get(Ctx, 32), 0),
-    ErrorHandler.CreateGlobalStringPtr(InstrFn->getName())
-  };
-  ErrorHandler.CreateCall(FindDieFn(Mod), DieArgs);
-  ErrorHandler.CreateRetVoid();
 
   return InstrFn;
 }
@@ -444,9 +419,10 @@ Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
   Type *CharStar = PointerType::getUnqual(Char);
   Type *TransStar = PointerType::getUnqual(TransitionSetType(M));
   Type *KeyStar = PointerType::getUnqual(KeyType(M));
+  Type *Void = Type::getVoidTy(Ctx);
 
   Constant *Fn = M.getOrInsertFunction("tesla_update_state",
-      IntType,    // return type
+      Void,       // return type
       IntType,    // context
       IntType,    // class_id
       KeyStar,    // key
@@ -455,29 +431,6 @@ Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
       TransStar,  // transitions data
       NULL
     );
-
-  assert(isa<Function>(Fn));
-  return cast<Function>(Fn);
-}
-
-
-Function* tesla::FindDieFn(Module& M) {
-
-  LLVMContext& Ctx = M.getContext();
-
-  Type *Char = IntegerType::get(Ctx, 8);
-  Type *CharStar = PointerType::getUnqual(Char);
-  Type *Int32 = IntegerType::get(Ctx, 32);
-  Type *Void = Type::getVoidTy(Ctx);
-
-  // TODO: apply 'noreturn' attribute.
-  //
-  // Currently, if I supply an AttributeSet the Verifier says:
-  //   Some attributes in 'noreturn' only apply to functions!
-  //
-  // Which is odd, since I am only applying them to a function.
-  auto *Fn = M.getOrInsertFunction(
-    "tesla_die", Void, Int32, CharStar, NULL);
 
   assert(isa<Function>(Fn));
   return cast<Function>(Fn);

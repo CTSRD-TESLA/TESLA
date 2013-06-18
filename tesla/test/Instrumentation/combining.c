@@ -48,7 +48,7 @@ main(int argc, char *argv[])
 	 */
 
 	/*
-	 * INSTR: call i32 @tesla_update_state({{.*}}[[TSET]]
+	 * INSTR: call void @tesla_update_state({{.*}}[[TSET]]
 	 *
 	 * TESLA: ====
 	 * TESLA: ([[INIT]]:0x0 -> [[FOO:[0-9]+]]:0x0) ({{[0-9]+}}:0x0 ->

@@ -63,6 +63,6 @@ declare i32 @DES_set_key([8 x i8]*, %struct.DES_ks*) #1
 
 ; CHECK-NOT: define{{.*}} void @__tesla_instrumentation_caller_enter_DES_set_key
 ; CHECK: define private void @__tesla_instrumentation_caller_return_DES_set_key
-; CHECK: call i32 @tesla_update_state
+; CHECK: call void @tesla_update_state
 ; CHECK-NOT: define{{.*}} void @__tesla_instrumentation_caller_enter_DES_set_key
 

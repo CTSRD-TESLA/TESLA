@@ -91,7 +91,7 @@ main(int argc, char **argv)
 	 * CHECK:   0: state 1, 0x0 [ X X X X ]
 	 * CHECK: ====
 	 */
-	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
+	tesla_update_state(scope, id, &key, name, descrip, &trans);
 	assert(count(store, &any) == 1);
 	assert(count(store, &one) == 0);
 	assert(count(store, &two) == 0);
@@ -119,7 +119,7 @@ main(int argc, char **argv)
 	 * CHECK: 2/{{[0-9]+}} instances
 	 * CHECK: ====
 	 */
-	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
+	tesla_update_state(scope, id, &key, name, descrip, &trans);
 
 	assert(count(store, &any) == 2);
 	assert(count(store, &one) == 1);
@@ -149,7 +149,7 @@ main(int argc, char **argv)
 	 * CHECK: 3/{{[0-9]+}} instances
 	 * CHECK: ====
 	 */
-	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
+	tesla_update_state(scope, id, &key, name, descrip, &trans);
 
 	assert(count(store, &any) == 3);
 	assert(count(store, &one) == 2);
@@ -179,7 +179,7 @@ main(int argc, char **argv)
 	 * CHECK: 3/{{[0-9]+}} instances
 	 * CHECK: ====
 	 */
-	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
+	tesla_update_state(scope, id, &key, name, descrip, &trans);
 
 	assert(count(store, &any) == 3);
 	assert(count(store, &one) == 2);
@@ -208,7 +208,7 @@ main(int argc, char **argv)
 	 * CHECK: 4/{{[0-9]+}} instances
 	 * CHECK: ====
 	 */
-	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
+	tesla_update_state(scope, id, &key, name, descrip, &trans);
 
 	assert(count(store, &any) == 4);
 	assert(count(store, &one) == 2);
@@ -238,7 +238,7 @@ main(int argc, char **argv)
 	 * CHECK: 5/{{[0-9]+}} instances
 	 * CHECK: ====
 	 */
-	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
+	tesla_update_state(scope, id, &key, name, descrip, &trans);
 
 	assert(count(store, &any) == 5);
 	assert(count(store, &one) == 2);
@@ -275,7 +275,7 @@ main(int argc, char **argv)
 	 * CHECK: ----
 	 * CHECK: ====
 	 */
-	check(tesla_update_state(scope, id, &key, name, descrip, &trans));
+	tesla_update_state(scope, id, &key, name, descrip, &trans);
 
 	assert(count(store, &any) == 6);
 	assert(count(store, &one) == 2);

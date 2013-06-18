@@ -217,7 +217,6 @@ Function* AssertionSiteInstrumenter::CreateInstrumentation(
   IRBuilder<> Builder(Instr);
 
   Type *IntType = Type::getInt32Ty(Ctx);
-  Constant *Success = ConstantInt::get(IntType, TESLA_SUCCESS);
 
   // The arguments to the function should be passed straight through to
   // libtesla via a tesla_key: they are already in the right order.
@@ -234,22 +233,12 @@ Function* AssertionSiteInstrumenter::CreateInstrumentation(
 
   Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
   assert(Args.size() == UpdateStateFn->arg_size());
-
-  Value *Error = Builder.CreateCall(UpdateStateFn, Args);
+  Builder.CreateCall(UpdateStateFn, Args);
 
   auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
   IRBuilder<>(Exit).CreateRetVoid();
 
-  auto Die = BasicBlock::Create(Ctx, "die", InstrFn);
-  IRBuilder<> ErrorHandler(Die);
-
-  Value* DieArgs[] = { Error, ErrorHandler.CreateGlobalStringPtr(
-      "error in tesla_update_state() for automaton '" + A.Name() + "'") };
-
-  ErrorHandler.CreateCall(FindDieFn(M), DieArgs);
-  ErrorHandler.CreateRetVoid();
-
-  Builder.CreateCondBr(Builder.CreateICmpEQ(Error, Success), Exit, Die);
+  Builder.CreateBr(Exit);
 
   return InstrFn;
 }

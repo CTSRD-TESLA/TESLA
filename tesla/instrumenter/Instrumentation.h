@@ -116,9 +116,6 @@ llvm::BasicBlock* FindBlock(llvm::StringRef Name, llvm::Function&);
 llvm::Function* FindStateUpdateFn(llvm::Module&,
                                   llvm::Type *IntType);
 
-/*! Find the libtesla function @ref tesla_die. */
-llvm::Function* FindDieFn(llvm::Module&);
-
 /**
  * Cast an integer-ish @a Value to another type.
  *

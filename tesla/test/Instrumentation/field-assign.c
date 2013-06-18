@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 
 /*
  * CHECK: define private [[STORE]].field0([[STRUCT:%struct.some_structure\*]], i64, i64*){{.*}} {
- * CHECK:   [[UPDATE_STATE:call i32 @tesla_update_state]]
+ * CHECK:   [[UPDATE_STATE:call void @tesla_update_state]]
  * CHECK: }
  */
 

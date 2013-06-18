@@ -112,39 +112,39 @@ do_test_run(enum tesla_context context)
 
 	/* event A: */
 	const struct tesla_key *k = &nothing;
-	check(tesla_update_state(context, 0, k, name, descrip, &A));
-	check(tesla_update_state(context, 1, k, name, descrip, &A));
+	tesla_update_state(context, 0, k, name, descrip, &A);
+	tesla_update_state(context, 1, k, name, descrip, &A);
 
 
 	/* event B (but only on some instances): */
 	for (size_t i = 0; i < INSTANCES / 2; i += 2) {
 		const struct tesla_key *k = others + i;
-		check(tesla_update_state(context, 0, k, name, descrip, &B));
-		check(tesla_update_state(context, 1, k, name, descrip, &B));
+		tesla_update_state(context, 0, k, name, descrip, &B);
+		tesla_update_state(context, 1, k, name, descrip, &B);
 	}
 
 
 	/* event B again: */
 	for (size_t i = 0; i < INSTANCES / 2; i += 2) {
 		const struct tesla_key *k = others + i;
-		check(tesla_update_state(context, 0, k, name, descrip, &B));
-		check(tesla_update_state(context, 1, k, name, descrip, &B));
+		tesla_update_state(context, 0, k, name, descrip, &B);
+		tesla_update_state(context, 1, k, name, descrip, &B);
 	}
 
 
 	/* event D: */
 	for (size_t i = 0; i < INSTANCES / 2; i += 2) {
 		const struct tesla_key *k = others + i;
-		check(tesla_update_state(context, 0, k, name, descrip, &D));
-		check(tesla_update_state(context, 1, k, name, descrip, &D));
+		tesla_update_state(context, 0, k, name, descrip, &D);
+		tesla_update_state(context, 1, k, name, descrip, &D);
 	}
 
 
 	/* event C: */
 	for (size_t i = 0; i < INSTANCES / 2; i++) {
 		const struct tesla_key *k = others + i;
-		check(tesla_update_state(context, 0, k, name, descrip, &C));
-		check(tesla_update_state(context, 1, k, name, descrip, &C));
+		tesla_update_state(context, 0, k, name, descrip, &C);
+		tesla_update_state(context, 1, k, name, descrip, &C);
 	}
 
 	return 0;
