@@ -607,10 +607,13 @@ Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
 
   Constant *Count = ConstantInt::get(IntType, Transitions.size());
 
+  assert(Tr.size() > 0);
+  string Name = "transition_array_" + (*Tr.begin())->String();
+
   ArrayType *ArrayT = ArrayType::get(TransitionType(M), Transitions.size());
   auto *Array = new GlobalVariable(M, ArrayT, true, GlobalValue::PrivateLinkage,
                                    ConstantArray::get(ArrayT, Transitions),
-                                   "transition_array");
+                                   Name);
 
   // Create a global variable that points to this structure.
   Constant *ArrayPtr = ConstantExpr::getInBoundsGetElementPtr(Array, Zeroes);
