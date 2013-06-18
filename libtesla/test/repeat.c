@@ -28,12 +28,12 @@ main(int argc, char **argv)
 
 	enum tesla_context context = TESLA_CONTEXT_THREAD;
 	check(tesla_store_get(context, 2, INSTANCES, &store));
-	for (size_t i = 0; i < 200; i++)
+	for (size_t i = 0; i < 100; i++)
 		do_test_run(context);
 
 	context = TESLA_CONTEXT_GLOBAL;
 	check(tesla_store_get(context, 2, INSTANCES, &store));
-	for (size_t i = 0; i < 100; i++)
+	for (size_t i = 0; i < 50; i++)
 		do_test_run(context);
 
 	return 0;
