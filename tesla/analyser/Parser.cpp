@@ -39,6 +39,7 @@
 #include <clang/Lex/Lexer.h>
 
 #include <llvm/ADT/StringSwitch.h>
+#include <algorithm>
 
 #include <tesla.pb.h>
 
@@ -676,19 +677,60 @@ bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
     return false;
   }
 
-  auto FnRef = dyn_cast<DeclRefExpr>(Call->getArg(0)->IgnoreImplicit());
-  if (!FnRef) {
-    ReportError("not a function", Call);
+  auto Arg = Call->getArg(0)->IgnoreParenCasts();
+  auto FnRef = dyn_cast<DeclRefExpr>(Arg);
+  const FunctionDecl *Fn = 0;
+  const Expr *const*Args;
+  SmallVector<const Expr*, 8> ArgsVector;
+  int ArgCount = 0;
+
+  if (FnRef) {
+    Args = Call->getArgs() + 1;
+    ArgCount = Call->getNumArgs() - 1;
+  } else
+      if (const BinaryOperator *BinOp = dyn_cast<BinaryOperator>(Arg))
+        if (BinOp->getOpcode() == BO_Comma) {
+          Arg = BinOp->getLHS()->IgnoreParenCasts();
+          // IF this is just a function name (undecorated) then use it),
+          // otherwise get the call expression and look at it.
+          if (isa<BinaryOperator>(Arg))
+            while (const BinaryOperator *BO = dyn_cast<BinaryOperator>(Arg)) {
+              ArgsVector.push_back(BO->getRHS()->IgnoreParenCasts());
+              Arg = BO->getLHS()->IgnoreParenCasts();
+            }
+          if ((FnRef = dyn_cast<DeclRefExpr>(Arg))) {
+            std::reverse(ArgsVector.begin(), ArgsVector.end());
+            ArgCount = ArgsVector.size();
+            Args = ArgsVector.data();
+          } else if (const CallExpr *CE = dyn_cast<CallExpr>(Arg)) {
+            // If there isn't a direct callee, then we'll fall through to the
+            // error block.  We probably should have a better error report
+            // here.
+            Fn = CE->getDirectCallee();
+            // Use this call as the call expression so that we can look at
+            // its arguments, and don't skip the first argument.
+            Args = CE->getArgs();
+            ArgCount = CE->getNumArgs();
+          } else {
+            assert(0);
+          }
+          // TODO: This is where ObjC / C++ method call expressions would be
+          // inspected.
+        }
+
+  if (FnRef)
+    Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
+
+  if (!Fn) {
+    ReportError("called() must refer to a function or method call", Call);
     return false;
   }
 
-  auto Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
   assert(Fn != NULL);
   bool HaveRetVal = ParseRetVal && !Fn->getResultType()->isVoidType();
 
   // Parse the arguments to the event: either specified by the programmer in
   // the assertion or else the definition of the function.
-  size_t ArgCount = Call->getNumArgs() - 1;  // first arg is the function
 
   if (ArgCount > 0) {
     const size_t ExpectedSize = Fn->param_size() + (HaveRetVal ? 1 : 0);
@@ -700,13 +742,13 @@ bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
     }
 
     for (size_t i = 0; i < ArgCount; i++) {
-      if (!Parse(Event->add_argument(), Call->getArg(i + 1), F))
+      if (!Parse(Event->add_argument(), Args[i], F))
         return false;
     }
 
     if (HaveRetVal)
       if (!Parse(Event->mutable_expectedreturnvalue(),
-                 Call->getArg(ArgCount), F))
+                 Args[ArgCount-1], F))
         return false;
 
   } else {
