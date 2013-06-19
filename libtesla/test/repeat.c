@@ -16,7 +16,7 @@
 
 int	do_test_run(enum tesla_context);
 
-const int32_t INSTANCES = 128;
+const int32_t INSTANCES = 4;
 
 
 int
@@ -28,12 +28,12 @@ main(int argc, char **argv)
 
 	enum tesla_context context = TESLA_CONTEXT_THREAD;
 	check(tesla_store_get(context, 2, INSTANCES, &store));
-	for (size_t i = 0; i < 100; i++)
+	for (size_t i = 0; i < INSTANCES + 1; i++)
 		do_test_run(context);
 
 	context = TESLA_CONTEXT_GLOBAL;
 	check(tesla_store_get(context, 2, INSTANCES, &store));
-	for (size_t i = 0; i < 50; i++)
+	for (size_t i = 0; i < INSTANCES + 1; i++)
 		do_test_run(context);
 
 	return 0;
