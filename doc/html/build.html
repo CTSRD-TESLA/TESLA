@@ -5,7 +5,6 @@ heavyweight dependency (recent LLVM/Clang). The steps required to build are:
 
 <ol>
 <li><a href="#prerequisites">acquire prerequisites</a></li>
-<li><a href="#build-llvm">build (a very recent version of) LLVM</a></li>
 <li><a href="#build">build TESLA</a></li>
 <li><a href="#install">install TESLA (optional)</a></li>
 </ol>
@@ -40,14 +39,14 @@ Here is a table of dependencies and the names of their ports/packages on various
 			<td>gcc-c++</td>
 		</tr>
 		<tr>
-			<td><a href="http://llvm.org/" target="_blank">LLVM</a></td>
+			<td><a href="http://llvm.org/releases/3.3" target="_blank">LLVM 3.3</a></td>
 			<td>llvm-devel</td>
 			<td colspan="4" rowspan="2">
 				<a href="#build-llvm">build from source</a>
 			</td>
 		</tr>
 		<tr>
-			<td><a href="http://clang.llvm.org/" target="_blank">Clang</a></td>
+			<td><a href="http://clang.llvm.org/" target="_blank">Clang 3.3</a></td>
 			<td>clang-devel</td>
 		</tr>
 		<tr>
@@ -90,21 +89,21 @@ Here is a table of dependencies and the names of their ports/packages on various
 
 
 <a name="build-llvm"></a>
-<h2>Build a recent LLVM/Clang</h2>
+<h3>Building LLVM/Clang from source</h3>
 <p>
-You need to download and build a very recent version of LLVM/Clang from source
-unless you're using FreeBSD, which has a very recent version available from
-ports (see <a href="#prerequisites">prerequisites, above</a>).
+FreeBSD provides LLVM and Clang 3.3 as a port (see
+<a href="#prerequisites">prerequisites, above</a>), but on other systems,
+you will likely need to build Clang/LLVM from source.
 </p>
 
 <div class="console"><span class="blue">$</span> cd somewhere/to/stash/1GB/of/LLVM
-<span class="blue">$</span> svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
+<span class="blue">$</span> svn co http://llvm.org/svn/llvm-project/llvm/branches/release_33 llvm
 [...]
  U   llvm
 Checked out revision 175226.
 
 <span class="blue">$</span> cd llvm/tools
-<span class="blue">$</span> svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
+<span class="blue">$</span> svn co http://llvm.org/svn/llvm-project/cfe/branches/release_33 clang
 [...]
 A    clang/LICENSE.TXT
  U   clang
