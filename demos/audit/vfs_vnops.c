@@ -277,7 +277,7 @@ vn_write(fp, uio, active_cred, flags, td)
 	 */
 #ifdef TESLA
 	TESLA_WITHIN(syscall, eventually(
-		called(audit_arg_upath1, td, ANY(int), ANY(ptr))
+		called(audit_arg_upath1(td, ANY(int), ANY(ptr)))
 	));
 #endif
 

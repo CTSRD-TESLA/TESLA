@@ -48,9 +48,9 @@ perform_operation(int op, struct object *o)
 	TESLA_WITHIN(example_syscall, previously(called(security_check)));
 
 	/* More simple assertions. */
-	TESLA_WITHIN(example_syscall, previously(called(hold, o)));
+	TESLA_WITHIN(example_syscall, previously(called(hold(o))));
 	TESLA_WITHIN(example_syscall, previously(returned(hold, o)));
-	TESLA_WITHIN(example_syscall, eventually(called(release, o)));
+	TESLA_WITHIN(example_syscall, eventually(called(release(o))));
 
 	/* A simple assertion about struct manipulation. */
 	TESLA_WITHIN(example_syscall, previously(o->refcount += 1));
@@ -68,7 +68,7 @@ perform_operation(int op, struct object *o)
 			get_object(ANY(int), ANY(ptr)) == 0,
 			security_check(ANY(ptr), o, op) == 0,
 			some_helper(op) == 0 || called(never_actually_called),
-			optional(called(void_helper, o)),
+			optional(called(void_helper(o))),
 			returned(release, o)
 		)
 		||

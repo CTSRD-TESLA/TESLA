@@ -186,11 +186,11 @@ void	tcp_free(struct tcpcb*);
  * This is a global automaton: its state will be stored in a global store
  * and its events will trigger synchronisation.
  *
- * The automaton starts with the event 'called(tcp_init, tp)' and ends with
+ * The automaton starts with the event 'called(tcp_init(tp))' and ends with
  * the event 'returned(tcp_free, tp)'.
  */
 TESLA_STRUCT_AUTOMATON(struct tcpcb *tp, my_tcpcb_assertion, __tesla_global,
-                       called(tcp_init, tp),
+                       called(tcp_init(tp)),
                        returned(tcp_free, tp));
 
 automaton(my_tcpcb_assertion, struct tcpcb *tp)
@@ -200,7 +200,7 @@ automaton(my_tcpcb_assertion, struct tcpcb *tp)
 	TSEQUENCE(
 		tp->t_state = TCPS_LISTEN,
 		optional(tp->t_state = TCPS_CLOSED),
-		called(tcp_free, tp)
+		called(tcp_free(tp))
 	)
 	||
 	TSEQUENCE(
@@ -213,7 +213,7 @@ automaton(my_tcpcb_assertion, struct tcpcb *tp)
 		established(tp)
 	)
 	||
-	called(tcp_free, tp);
+	called(tcp_free(tp));
 
 	tesla_done;
 }
@@ -233,7 +233,7 @@ automaton(active_close, struct tcpcb *tp)
 	);
 
 	tp->t_state = TCPS_CLOSED;
-	called(tcp_free, tp);
+	called(tcp_free(tp));
 
 	tesla_done;
 }
@@ -250,7 +250,7 @@ automaton(established, struct tcpcb *tp)
 		optional(tp->t_state = TCPS_CLOSED)
 	);
 
-	called(tcp_free, tp);
+	called(tcp_free(tp));
 
 	tesla_done;
 }

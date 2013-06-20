@@ -1040,7 +1040,7 @@ kern_open(struct thread *td, char *path, enum uio_seg pathseg, int flags,
 #ifdef AUDIT
 #ifdef TESLA
 	TESLA_WITHIN(syscall, eventually(
-		called(audit_arg_upath1, td, ANY(int), ANY(ptr))
+		called(audit_arg_upath1(td, ANY(int), ANY(ptr)))
 	));
 #endif
 #endif

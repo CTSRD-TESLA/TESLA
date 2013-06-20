@@ -70,8 +70,6 @@
 /** A strictly-ordered sequence of events. */
 #define	TSEQUENCE(...)		__tesla_sequence(TIGNORE, __VA_ARGS__)
 
-// This can be removed once all users are converted to the new syntax for calls.
-#pragma clang diagnostic ignored "-Wunused"
 #define	called(...)		__tesla_call(((void)__VA_ARGS__, TIGNORE))
 #define	returned(...)		__tesla_return(__VA_ARGS__)
 
