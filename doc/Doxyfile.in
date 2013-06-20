@@ -44,6 +44,8 @@ STRIP_FROM_PATH        = ${CMAKE_SOURCE_DIR}
 STRIP_FROM_INC_PATH    =
 SHORT_NAMES            = NO
 
+EXCLUDE_PATTERNS       = */test/*
+
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = YES
 
