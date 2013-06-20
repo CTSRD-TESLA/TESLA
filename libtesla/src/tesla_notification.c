@@ -349,9 +349,8 @@ const static struct tesla_event_handlers* const default_handlers[] = {
 	&printf_handlers,
 #if defined(_KERNEL) && defined(KDTRACE_HOOKS)
 	&dtrace_handlers,
-#else
-	&failstop_handlers,
 #endif
+	&failstop_handlers,
 };
 
 static struct tesla_event_metahandler default_event_handlers = {
