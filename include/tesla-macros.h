@@ -85,9 +85,8 @@
 
 #define	TESLA_STRUCT_AUTOMATON(...)	__tesla_struct_usage(__VA_ARGS__)
 
-#define automaton(name, ...)    __tesla_automaton(name, __VA_ARGS__)
-
-#define	tesla_done return (__tesla_automaton_done())
+#define automaton(name, ...)	__tesla_automaton(name, __VA_ARGS__)
+#define	tesla_done		return (__tesla_automaton_done())
 
 #define	optional(...)		__tesla_optional(TIGNORE, __VA_ARGS__)
 #define	ANY_REP	INT_MAX
