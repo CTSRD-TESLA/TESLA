@@ -9,6 +9,14 @@
 
 h1, h2, h3, h4, h5, h6 { color: rgb(0, 51, 102); }
 
+/*
+ * Increase font size of inline code to match surrounding text.
+ *
+ * The font size in code listings is already big enough.
+ */
+code { font-size: 130%; }
+code.listing { font-size: 100%; }
+
 
 /*
  * Nice figures.
