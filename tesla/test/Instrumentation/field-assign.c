@@ -35,9 +35,11 @@
  */
 
 /*
- * CHECK-DAG: @.[[FIELD0:[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field0
- * CHECK-DAG: @.[[FIELD1:[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field1
- * CHECK-DAG: @.[[FILENAME:[_a-zA-Z0-9\.]+]] = {{.*}} c"{{.*}}field-assign.c
+ * TODO: if/when we move to LLVM 3.4, use CHECK-DAG here:
+ *
+ * CHECK: @.[[FIELD0:[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field0
+ * CHECK: @.[[FILENAME:[_a-zA-Z0-9\.]+]] = {{.*}} c"{{.*}}field-assign.c
+ * CHECK: @.[[FIELD1:[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field1
  */
 
 #include <sys/types.h>

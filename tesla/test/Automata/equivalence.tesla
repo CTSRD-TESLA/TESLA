@@ -13,6 +13,14 @@
 automaton {
   /*
    * CHECK: digraph automaton_{{[0-9]+}}
+   *
+   * TODO: if/when we move to LLVM 3.4, use the CHECK-DAG prefix and distribute
+   *       these state checks to be closer to their relevant transitions:
+   *
+   * CHECK: 0 [ label = "state 0\n([[ANY:&#[0-9]+;]],[[ANY:&#[0-9]+;]])" ];
+   * CHECK: 1 [ label = "state 1\n([[ANY]],[[ANY]])" ];
+   * CHECK: 2 [ label = "state 2\n(o,[[ANY]])" ];
+   * CHECK: 3 [ label = "state 3\n(o,op)" ];
    */
   identifier {
     location {
@@ -26,9 +34,8 @@ automaton {
     type: SEQUENCE
     sequence {
       /*
-       * CHECK-DAG: 0 [ label = "state 0\n([[ANY:&#[0-9]+;]],[[ANY:&#[0-9]+;]])" ];
-       * CHECK-DAG: label = "example_syscall([[ANY]],[[ANY]],[[ANY]])
-       * CHECK-DAG: 0 -> 1;
+       * CHECK: label = "example_syscall([[ANY]],[[ANY]],[[ANY]])
+       * CHECK: 0 -> 1;
        */
       expression {
         type: FUNCTION
@@ -53,9 +60,8 @@ automaton {
         }
       }
       /*
-       * CHECK-DAG: 1 [ label = "state 1\n([[ANY]],[[ANY]])" ];
-       * CHECK-DAG: label = "security_check([[ANY]],o,[[ANY]])
-       * CHECK-DAG: 1 -> 2
+       * CHECK: label = "security_check([[ANY]],o,[[ANY]])
+       * CHECK: 1 -> 2
        */
       expression {
         type: FUNCTION
@@ -86,9 +92,8 @@ automaton {
       /*
        * After that transition, we know about one referenced variable:
        *
-       * CHECK-DAG: 2 [ label = "state 2\n(o,[[ANY]])" ];
-       * CHECK-DAG: label = "security_check([[ANY]],o,op)
-       * CHECK-DAG: 2 -> 3;
+       * CHECK: label = "security_check([[ANY]],o,op)
+       * CHECK: 2 -> 3;
        */
       expression {
         type: FUNCTION
@@ -119,9 +124,8 @@ automaton {
         }
       }
       /*
-       * CHECK-DAG: 3 [ label = "state 3\n(o,op)" ];
-       * CHECK-DAG: label = "NOW"
-       * CHECK-DAG: 3 -> 4;
+       * CHECK: label = "NOW"
+       * CHECK: 3 -> 4;
        */
       expression {
         type: NOW

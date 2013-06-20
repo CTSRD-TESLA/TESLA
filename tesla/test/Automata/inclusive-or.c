@@ -51,8 +51,8 @@ void ab() {
    *
    * ø: [ 2->4, 3->4 ]
    * CHECK: label = "[[EPSILON:&#[0-9a-f]+;]]"
-   * CHECK-DAG: [[A1]] -> [[Final]]
-   * CHECK-DAG: [[B1]] -> [[Final]]
+   * CHECK: [[A1]] -> [[Final]]
+   * CHECK: [[B1]] -> [[Final]]
    */
 
   /*

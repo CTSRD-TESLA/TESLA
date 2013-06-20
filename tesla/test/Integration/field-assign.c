@@ -49,9 +49,9 @@ struct some_structure {
 };
 
 /*
- * CHECK-DAG: [[FIELD0:@[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field0
- * CHECK-DAG: [[FIELD1:@[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field1
- * CHECK-DAG: [[FILEVAR:@[_a-zA-Z0-9\.]+]] = {{.*}}c"[[FILENAME:.*field-assign.c]]
+ * CHECK: [[FIELD0:@[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field0
+ * CHECK: [[FIELD1:@[_a-zA-Z0-9\.]+]] = {{.*}}some_structure.field1
+ * CHECK: [[FILEVAR:@[_a-zA-Z0-9\.]+]] = {{.*}}c"[[FILENAME:.*field-assign.c]]
  */
 
 
