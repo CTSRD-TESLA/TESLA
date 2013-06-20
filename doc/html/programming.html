@@ -140,7 +140,7 @@ Automata are bound to structure instance lifetimes with the
 </p>
 
 <code class="listing"><span class="keyword">TESLA_STRUCT_AUTOMATON</span>(<span class="keyword">struct</span> tcpcb *tp, my_tcpcb_assertion, <span class="keyword">GLOBAL</span>,
-                       <span class="keyword">called</span>(tcp_init, tp),
+                       <span class="keyword">called</span>(tcp_init(tp)),
                        <span class="keyword">returned</span>(tcp_free, tp));
 </code>
 
@@ -276,7 +276,7 @@ To instrument a function call, rather than return, the programmer can use the
 
 <code class="listing"><span class="comment">/* An even simpler assertion! */</span>
 <span class="keyword">TESLA_WITHIN</span>(example_syscall, <span class="keywordflow">previously</span>(<span class="keyword">called</span>(security_check)));
-<span class="keyword">TESLA_WITHIN</span>(example_syscall,  <span class="keywordflow">previously</span>(<span class="keyword">called</span>(hold, o)));
+<span class="keyword">TESLA_WITHIN</span>(example_syscall,  <span class="keywordflow">previously</span>(<span class="keyword">called</span>(hold(o))));
 </code>
 
 <p>
