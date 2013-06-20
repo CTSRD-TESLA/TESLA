@@ -308,6 +308,16 @@ static const struct tesla_event_handlers printf_handlers = {
 	.teh_ignored		= print_ignored,
 };
 
+static const struct tesla_event_handlers printf_on_failure = {
+	.teh_init		= ev_noop,
+	.teh_transition		= ev_noop,
+	.teh_clone		= ev_noop,
+	.teh_fail_no_instance	= print_no_instance,
+	.teh_bad_transition	= print_bad_transition,
+	.teh_err		= print_error,
+	.teh_accept		= ev_noop,
+	.teh_ignored		= ev_noop,
+};
 
 /*
  * Wrappers that panic on failure:
@@ -347,6 +357,7 @@ static const struct tesla_event_handlers failstop_handlers = {
  */
 const static struct tesla_event_handlers* const default_handlers[] = {
 	&printf_handlers,
+	&printf_on_failure,
 #if defined(_KERNEL) && defined(KDTRACE_HOOKS)
 	&dtrace_handlers,
 #endif
@@ -356,9 +367,9 @@ const static struct tesla_event_handlers* const default_handlers[] = {
 static struct tesla_event_metahandler default_event_handlers = {
 	.tem_length = sizeof(default_handlers) / sizeof(*default_handlers),
 #if defined(_KERNEL) && defined(KDTRACE_HOOKS)
-	.tem_mask = 0x2,
+	.tem_mask = TESLA_KERN_DTRACE_EV,
 #else
-	.tem_mask = 0x3,
+	.tem_mask = 0x5,
 #endif
 	.tem_handlers = default_handlers,
 };
