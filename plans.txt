@@ -1,0 +1,38 @@
+Things people are going to look at:
+* rwatson
+  * socket lock verification
+* kg365
+  * MAC framework ( + audit?)
+  * OpenSSH (sshd)
+* theraven
+  * Python Objective-C bindings ("spectacularly shoddy code")
+  * cross-language assertions (e.g. Smalltalk) -> requires dynamic registration
+  * Xlib/Xcb: some X state-machine checking already
+* marinosi
+  * marinosi's stack
+* avsm2
+  * OCaml GC (C interface)
+* bz
+  * possibly ND6 or IPSEC assertions?
+* jon
+  * check ability to express BigKnife's state machines
+  * will ponder Capsicum
+* brooks
+  * dhclient
+  * will ponder Capsicum
+
+
+Other possible targets:
+* OpenSSL
+  * how many ports do it wrongly?
+* Kerberos
+* Kernel TCP?
+* John Baldwin's thread, process state machines
+* Xen? (split drivers, etc.)
+* PAM ("complex, annoying, stateful")?
+* NFSv4?
+  * nfslockd
+* PPP
+  * lots of handcrafted switch cases
+* named, libresolve
+
