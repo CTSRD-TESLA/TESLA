@@ -25,6 +25,40 @@
 ## ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ## POSSIBILITY OF SUCH DAMAGE.
 
+function(check_dot_output DOT_EXECUTABLE INPUT FILE_TYPE OUTPUT)
+  execute_process(
+      COMMAND ${DOT_EXECUTABLE} -T${FILE_TYPE} -o ${INPUT}.${FILE_TYPE} ${INPUT}
+      RESULT_VARIABLE DOT_ERRC
+      OUTPUT_VARIABLE STDOUT
+      ERROR_VARIABLE STDERR)
+
+    # Did the command succeed?
+    if (NOT ${ERRC} EQUAL 0)
+      set(ERR "dot execution failed: ${STDERR}")
+
+    else ()
+      #
+      # The execution returned 0, but did it do the right thing?
+      #
+
+      # Did we just blat the result to stdout?
+      if (NOT "${STDOUT}" STREQUAL "")
+        set(ERR "dot ignored -o, emitted ${FILE_TYPE} output to stdout")
+
+      else ()
+        # Did we produce anything useful?
+        file(READ ${INPUT}.${FILE_TYPE} OUTPUT HEX)
+        if ("${OUTPUT}" STREQUAL "")
+          set(ERR "dot -T${FILE_TYPE} produced an empty file")
+        endif ()
+      endif ()
+    endif ()
+
+    set(${OUTPUT} ${ERR} PARENT_SCOPE)
+endfunction()
+
+
+
 if (NOT DOT_EXECUTABLE_FOUND)
   FIND_PROGRAM(DOT_EXECUTABLE
     NAMES dot
@@ -52,54 +86,32 @@ if (NOT DOT_EXECUTABLE_FOUND)
 
   if (DOT_EXECUTABLE)
     message(STATUS "Dot executable found : ${DOT_EXECUTABLE}")
+    set(DOT_EXECUTABLE_FOUND TRUE CACHE BOOL "'dot' command found")
     set(ERR 0)
 
     #
     # Test that the 'dot' we found actually does the right thing.
     #
     set(F "${CMAKE_CURRENT_BINARY_DIR}/CMakeTmp/test.dot")
-    file(WRITE ${F} "digraph foo { a -> b; } digraph bar { c -> d; }")
+    file(WRITE ${F} "digraph foo { a -> b; }")
 
-    #
-    # First, make sure it doesn't blat its output to stdout.
-    #
-    execute_process(
-      COMMAND ${DOT_EXECUTABLE} -Tpdf ${F} -o ${F}.pdf
-      OUTPUT_VARIABLE STDOUT)
-
-    file(READ ${F}.pdf PDF HEX)
-
-    if (NOT "${STDOUT}" STREQUAL "")
-      set(ERR 1)
-      message(WARNING "dot ignored -o, emitted PDF output to stdout")
+    check_dot_output(${DOT_EXECUTABLE} ${F} pdf DOT_ERR)
+    if (NOT "${DOT_ERR}" STREQUAL "")
+      set(FAIL 1)
+      message(WARNING "error in .dot->.pdf: '${DOT_ERR}'")
     endif ()
 
-    if ("${PDF}" STREQUAL "")
-      set(ERR 1)
-      message(WARNING "dot -Tpdf produced an empty file")
-    endif ()
-
-    #
-    # Next, make sure we can produce PNG output.
-    #
-    execute_process(
-      COMMAND ${DOT_EXECUTABLE} -Tpng ${F} -o ${F}.png
-      OUTPUT_VARIABLE STDOUT)
-
-    file(READ ${F}.png PNG HEX)
-
-    if ("${PNG}" STREQUAL "")
-      set(ERR 1)
-      message(WARNING "dot -Tpng produced an empty file")
+    check_dot_output(${DOT_EXECUTABLE} ${F} png DOT_ERR)
+    if (NOT "${DOT_ERR}" STREQUAL "")
+      set(FAIL 1)
+      message(WARNING "error in .dot->.png: '${DOT_ERR}'")
     endif ()
 
     #
     # All checks complete.
     #
-    if (NOT ERR)
+    if (NOT FAIL)
       message(STATUS "'dot' executable works as expected")
-
-      set (DOT_EXECUTABLE_FOUND TRUE CACHE BOOL "'dot' command found, works")
       set (DOT_EXECUTABLE ${DOT_EXECUTABLE} CACHE FILEPATH "'dot' location")
     endif ()
   endif (DOT_EXECUTABLE)
