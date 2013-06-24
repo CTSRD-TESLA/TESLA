@@ -679,7 +679,11 @@ bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
 
   auto Arg = Call->getArg(0)->IgnoreParenCasts();
   auto FnRef = dyn_cast<DeclRefExpr>(Arg);
+  // For C function calls
   const FunctionDecl *Fn = 0;
+  // For Objective-C message sends
+  const ObjCMethodDecl *Meth = 0;
+
   const Expr *const*Args;
   SmallVector<const Expr*, 8> ArgsVector;
   int ArgCount = 0;
@@ -711,7 +715,34 @@ bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
             // its arguments, and don't skip the first argument.
             Args = CE->getArgs();
             ArgCount = CE->getNumArgs();
+          } else if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(Arg)) {
+            Meth = OME->getMethodDecl();
+            if (!Meth) {
+              ReportError("types of Objective-C method to be instrumented must be known", OME);
+              return false;
+            }
+            FunctionEvent::CallKind kind;
+            switch (OME->getReceiverKind()) {
+              default: assert(0); break;
+              case ObjCMessageExpr::Class:
+                Event->mutable_receiver()->set_name(OME->getReceiverInterface()->getName());
+                kind = FunctionEvent::ObjCClassMessage;
+                break;
+              case ObjCMessageExpr::Instance:
+                Parse(Event->mutable_receiver(), OME->getInstanceReceiver(), F);
+                kind = FunctionEvent::ObjCInstanceMessage;
+                break;
+              case ObjCMessageExpr::SuperClass:
+              case ObjCMessageExpr::SuperInstance:
+                kind = FunctionEvent::ObjCSuperMessage;
+                break;
+            }
+            Event->set_kind(kind);
+            Event->mutable_function()->set_name(Meth->getNameAsString());
+            Args = OME->getArgs();
+            ArgCount = OME->getNumArgs();
           } else {
+            Call->dump();
             assert(0);
           }
           // TODO: This is where ObjC / C++ method call expressions would be
@@ -721,19 +752,21 @@ bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
   if (FnRef)
     Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
 
-  if (!Fn) {
+  if (!(Fn || Meth)) {
     ReportError("called() must refer to a function or method call", Call);
     return false;
   }
 
-  assert(Fn != NULL);
-  bool HaveRetVal = ParseRetVal && !Fn->getResultType()->isVoidType();
+  bool HaveRetVal = ParseRetVal && 
+    (Fn ? !Fn->getResultType()->isVoidType()
+        : Meth->getResultType()->isVoidType()) ;
 
   // Parse the arguments to the event: either specified by the programmer in
   // the assertion or else the definition of the function.
 
   if (ArgCount > 0) {
-    const size_t ExpectedSize = Fn->param_size() + (HaveRetVal ? 1 : 0);
+    const size_t ExpectedSize = (Fn ? Fn->param_size() : Meth->param_size())
+      + (HaveRetVal ? 1 : 0);
 
     // If an assertion specifies any arguments, it must specify all of them.
     if (ArgCount != ExpectedSize) {
@@ -747,23 +780,32 @@ bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
     }
 
     if (HaveRetVal)
+    { assert(0);
       if (!Parse(Event->mutable_expectedreturnvalue(),
                  Args[ArgCount-1], F))
         return false;
+    }
 
   } else {
     // The assertion doesn't specify any arguments; include information about
     // arguments from the function definition, just for information.
-    for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
-      if (!Parse(Event->add_argument(), *I, true, F))
-        return false;
-    }
+    if (Fn)
+      for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
+        if (!Parse(Event->add_argument(), *I, true, F))
+          return false;
+      }
+    else
+      for (auto I = Meth->param_begin(); I != Meth->param_end(); ++I) {
+        if (!Parse(Event->add_argument(), *I, true, F))
+          return false;
+      }
+
 
     if (HaveRetVal)
       Event->mutable_expectedreturnvalue()->set_type(Argument::Any);
   }
 
-  return Parse(Event->mutable_function(), Fn, F);
+  return Fn ? Parse(Event->mutable_function(), Fn, F) : true;
 }
 
 
@@ -828,7 +870,7 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
   assert(Arg != NULL);
   assert(E != NULL);
 
-  auto P = E->IgnoreImplicit();
+  auto P = E->IgnoreParenCasts();
   llvm::APSInt ConstValue;
 
   // Each variable references must be one of:
@@ -900,7 +942,6 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
   return true;
 }
 
-
 bool Parser::Parse(FunctionRef *FnRef, const FunctionDecl *Fn, Flags F) {
   FnRef->set_name(Fn->getName());
   if (FnRef->name().empty()) {
@@ -930,7 +971,7 @@ bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F) {
 
 
 bool Parser::CheckIgnore(const Expr *E) {
-  auto *IgnoreRef = dyn_cast<DeclRefExpr>(E->IgnoreImpCasts());
+  auto *IgnoreRef = dyn_cast<DeclRefExpr>(E->IgnoreParenCasts());
   if (!IgnoreRef || IgnoreRef->getDecl()->getName() != IGNORE) {
     ReportError("expected " + IGNORE, E);
     E->dump();

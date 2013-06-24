@@ -145,8 +145,12 @@ message NowEvent {
 message FunctionEvent {
   enum Direction { Entry = 1; Exit = 2; }
   enum CallContext { Caller = 1; Callee = 2; }
+  /** Is this a C function call or an Objective-C message send? */
+  enum CallKind { CCall = 1; ObjCInstanceMessage = 2; ObjCClassMessage = 3;
+    ObjCSuperMessage = 4; }
 
-  /** The function to be instrumented. */
+  /** The function to be instrumented. This contains the selector name for
+   * Objective-C*/
   required FunctionRef function = 1;
 
   /** We can instrument call, return or both. */
@@ -163,6 +167,13 @@ message FunctionEvent {
 
   /** If set, this event should only occur as described by the automaton. */
   optional bool strict = 6 [ default = true ];
+
+  /** If set, specifies the kind of call-like operation that this describes. */
+  optional CallKind kind = 7 [ default = CCall ];
+
+  /** If set, this is the receiver for an Objective-C message.  This is either
+   * a class name for class messages or a variable for instance message. */
+  optional Argument receiver = 8;
 }
 
 /** A function that can be instrumented. */
