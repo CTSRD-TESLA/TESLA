@@ -50,4 +50,7 @@ if [ -z "$TOOL" ]; then
 fi
 
 $TOOL "$@"
+if [ $? ] ; then
+	echo Invocation was $TOOL "$@"
+fi
 
