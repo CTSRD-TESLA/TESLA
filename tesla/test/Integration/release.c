@@ -39,7 +39,7 @@ static void	release(struct object *o) { o->refcount -= 1; }
 int
 perform_operation(int op, struct object *o)
 {
-	TESLA_WITHIN(example_syscall, eventually(called(release, o)));
+	TESLA_WITHIN(example_syscall, eventually(called(release(o))));
 
 	return 0;
 }
