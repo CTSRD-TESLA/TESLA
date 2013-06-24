@@ -192,7 +192,7 @@ static void
 print_new_instance(struct tesla_class *tcp, struct tesla_instance *tip)
 {
 
-	DEBUG(libtesla.instance.new, "new    %td: %tx\n",
+	DEBUG(libtesla.instance.new, "new    %td: %d\n",
 		tip - tcp->tc_instances, tip->ti_state);
 }
 
@@ -201,7 +201,7 @@ print_transition_taken(struct tesla_class *tcp,
     struct tesla_instance *tip, const struct tesla_transition *transp)
 {
 
-	DEBUG(libtesla.state.transition, "update %td: %tx->%tx\n",
+	DEBUG(libtesla.state.transition, "update %td: %d->%d\n",
 		tip - tcp->tc_instances, transp->from, transp->to);
 }
 
@@ -211,7 +211,7 @@ print_clone(struct tesla_class *tcp,
     const struct tesla_transition *transp)
 {
 
-	DEBUG(libtesla.instance.clone, "clone  %td:%tx -> %td:%tx\n",
+	DEBUG(libtesla.instance.clone, "clone  %td:%d -> %td:%d\n",
 		old_instance - tcp->tc_instances, transp->from,
 		new_instance - tcp->tc_instances, transp->to);
 }
