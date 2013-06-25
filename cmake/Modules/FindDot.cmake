@@ -33,7 +33,7 @@ function(check_dot_output DOT_EXECUTABLE INPUT FILE_TYPE OUTPUT)
       ERROR_VARIABLE STDERR)
 
     # Did the command succeed?
-    if (NOT ${ERRC} EQUAL 0)
+    if (NOT ${DOT_ERRC} EQUAL 0)
       set(ERR "dot execution failed: ${STDERR}")
 
     else ()
