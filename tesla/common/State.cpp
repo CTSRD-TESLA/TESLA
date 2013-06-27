@@ -73,6 +73,7 @@ void State::UpdateReferences(ReferenceVector NewRefs)
          || (NewRefs.size() == 0)
          || (Refs.size() == NewRefs.size()));
   const size_t Len = NewRefs.size();
+  assert(Len < 8 * sizeof(Mask()));
 
   if (!VariableReferences) {
     // If we don't have any bound variables, just copy NewRefs.
