@@ -338,7 +338,6 @@ void FieldInstrumentation::AppendInstrumentation(
     IRBuilder<> Matcher(Match);
 
     auto *Const = ConstantInt::getSigned(ValueType, ExpectedAssignment.value());
-    Const->dump();
     Value *Expected;
 
     switch (Protobuf.operation()) {
