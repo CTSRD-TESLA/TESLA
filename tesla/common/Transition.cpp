@@ -45,7 +45,7 @@ using std::string;
 namespace tesla {
 
 
-void Transition::Create(State& From, State& To, TransitionSets& Transitions,
+void Transition::Create(State& From, State& To, TransitionVector& Transitions,
                         bool Init, bool Cleanup) {
   OwningPtr<Transition> T(new NullTransition(From, To, Init, Cleanup));
   Register(T, From, To, Transitions);
@@ -53,7 +53,7 @@ void Transition::Create(State& From, State& To, TransitionSets& Transitions,
 
 void Transition::Create(State& From, State& To, const NowEvent& Ev,
                         const AutomatonDescription& Automaton,
-                        TransitionSets& Transitions, bool Init, bool Cleanup) {
+                        TransitionVector& Transitions, bool Init, bool Cleanup) {
 
   ReferenceVector Refs(Automaton.argument().data(),
                                  Automaton.argument_size());
@@ -63,7 +63,7 @@ void Transition::Create(State& From, State& To, const NowEvent& Ev,
 }
 
 void Transition::Create(State& From, State& To, const FunctionEvent& Ev,
-                        TransitionSets& Transitions, bool Init, bool Cleanup,
+                        TransitionVector& Transitions, bool Init, bool Cleanup,
                         bool OutOfScope) {
 
   OwningPtr<Transition> T(
@@ -73,7 +73,7 @@ void Transition::Create(State& From, State& To, const FunctionEvent& Ev,
 }
 
 void Transition::Create(State& From, State& To, const FieldAssignment& A,
-                        TransitionSets& Transitions, bool Init, bool Cleanup,
+                        TransitionVector& Transitions, bool Init, bool Cleanup,
                         bool OutOfScope) {
 
   OwningPtr<Transition> T(
@@ -84,14 +84,14 @@ void Transition::Create(State& From, State& To, const FieldAssignment& A,
 
 void Transition::CreateSubAutomaton(State& From, State& To,
                                     const Identifier& ID,
-                                    TransitionSets& Transitions) {
+                                    TransitionVector& Transitions) {
 
   OwningPtr<Transition> T(new SubAutomatonTransition(From, To, ID));
   Register(T, From, To, Transitions);
 }
 
 void Transition::Copy(State &From, State& To, const Transition* Other,
-                      TransitionSets& Transitions, bool OutOfScope) {
+                      TransitionVector& Transitions, bool OutOfScope) {
 
   OwningPtr<Transition> New;
   bool Init = Other->RequiresInit();
@@ -135,9 +135,9 @@ void Transition::Copy(State &From, State& To, const Transition* Other,
 }
 
 void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
-                          TransitionSets& Transitions) {
+                          TransitionVector& Transitions) {
 
-  Append(T, Transitions);
+  Transitions.push_back(T.get());
 
   if (!T->OutOfScope) {
     // We should never try to update the start state's references.
@@ -154,23 +154,27 @@ void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
   From.AddTransition(T);
 }
 
-void Transition::Append(const OwningPtr<Transition>& Tr,
-                        TransitionSets& Transitions) {
+void Transition::GroupClasses(const TransitionVector& Ungrouped,
+                              TransitionSets& EquivalenceClasses) {
 
-  const Transition *T = Tr.get();
+  for (auto *T : Ungrouped) {
+    bool FoundEquivalent = false;
+    for (auto& Set : EquivalenceClasses) {
+      auto *Head = *Set.begin();
+      if (T->EquivalentTo(*Head)) {
+        assert(Head->EquivalentTo(*T));
+        FoundEquivalent = true;
+        Set.insert(T);
+        break;
+      }
+    }
 
-  for (auto& Set : Transitions) {
-    auto *Head = *Set.begin();
-    if (T->EquivalentTo(*Head)) {
-      assert(Head->EquivalentTo(*T));
-      Set.insert(T);
-      return;
+    if (!FoundEquivalent) {
+      SmallPtrSet<const Transition*, 4> New;
+      New.insert(T);
+      EquivalenceClasses.push_back(New);
     }
   }
-
-  SmallPtrSet<const Transition*, 4> New;
-  New.insert(T);
-  Transitions.push_back(New);
 }
 
 

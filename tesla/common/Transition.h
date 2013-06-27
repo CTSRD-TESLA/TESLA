@@ -54,6 +54,9 @@ class NowEvent;
 
 typedef llvm::MutableArrayRef<const Argument*> MutableReferenceVector;
 
+//! Ungrouped transitions.
+typedef llvm::SmallVector<Transition*,10> TransitionVector;
+
 //! A set of TESLA transitions that are considered equivalent.
 typedef llvm::SmallPtrSet<const Transition*,4> TEquivalenceClass;
 
@@ -78,7 +81,7 @@ public:
    * @param[in]       Init         Transition triggers class initialisation.
    * @param[in]       Cleanup      Transition triggers class cleanup.
    */
-  static void Create(State& From, State& To, TransitionSets& Transitions,
+  static void Create(State& From, State& To, TransitionVector& Transitions,
                      bool Init = false, bool Cleanup = false);
 
   /**
@@ -95,7 +98,7 @@ public:
    *                               automaton's scope.
    */
   static void Create(State& From, State& To, const FunctionEvent& Ev,
-                     TransitionSets&, bool Init, bool Cleanup,
+                     TransitionVector&, bool Init, bool Cleanup,
                      bool OutOfScope = false);
 
   /**
@@ -112,21 +115,24 @@ public:
    *                               automaton's scope.
    */
   static void Create(State& From, State& To, const FieldAssignment& A,
-                     TransitionSets&, bool Init, bool Cleanup,
+                     TransitionVector&, bool Init, bool Cleanup,
                      bool OutOfScope = false);
 
   static void Create(State& From, State& To, const NowEvent&,
-                     const AutomatonDescription&, TransitionSets&,
+                     const AutomatonDescription&, TransitionVector&,
                      bool Init, bool Cleanup);
 
   static void CreateSubAutomaton(State& From, State& To,
-                                 const Identifier&, TransitionSets&);
+                                 const Identifier&, TransitionVector&);
 
   /// Creates a transition between the specified states, with the same
   /// transition type as the copied transition.  This is used when constructing
   /// DFA transitions from NFA transitions.
   static void Copy(State &From, State& To, const Transition* Other,
-                   TransitionSets &, bool OutOfScope = false);
+                   TransitionVector &, bool OutOfScope = false);
+
+  /// Group transitions into equivalence classes.
+  static void GroupClasses(const TransitionVector&, TransitionSets&);
 
   virtual ~Transition() {}
 
@@ -182,7 +188,7 @@ public:
 
 protected:
   static void Register(llvm::OwningPtr<Transition>&, State& From, State& To,
-                       TransitionSets&);
+                       TransitionVector&);
 
   static void Append(const llvm::OwningPtr<Transition>&, TransitionSets&);
 

@@ -121,7 +121,7 @@ private:
   bool SubAutomataAllowed;
   State* Start;
   StateVector States;
-  TransitionSets Transitions;
+  TransitionVector Transitions;
 };
 
 }
@@ -300,10 +300,9 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   // Handle out-of-scope events: if we observe one, we it should cause us to
   // stay in the post-initialisation state.
   vector<const Transition*> OutOfScope;
-  for (const TEquivalenceClass& C : Transitions) {
-    auto *Head = *C.begin();
-    if (!Head->IsStrict() && !Head->RequiresInit())
-      OutOfScope.push_back(Head);
+  for (const Transition *T : Transitions) {
+    if (!T->IsStrict() && !T->RequiresInit())
+      OutOfScope.push_back(T);
   }
 
   for (auto *T : OutOfScope) {
@@ -327,7 +326,10 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   string Description;
   TextFormat::PrintToString(Automaton, &Description);
 
-  Out.reset(new NFA(id, Automaton, Use, ShortName(ID), States, Transitions));
+  TransitionSets TEquivClasses;
+  Transition::GroupClasses(Transitions, TEquivClasses);
+
+  Out.reset(new NFA(id, Automaton, Use, ShortName(ID), States, TEquivClasses));
 }
 
 State* NFAParser::Parse(const Expression& Expr, State& Start,
@@ -686,7 +688,7 @@ class DFABuilder {
   llvm::SmallVector<
     std::pair<NFAState, std::pair<bool,bool> >, 16> UnfinishedStates;
   StateVector States;
-  TransitionSets Transitions;
+  TransitionVector Transitions;
   /// Collect the set of NFA states that correspond to a single DFA state (i.e.
   /// all of the states that are reachable from the input state via epsilon
   /// transitions)
@@ -794,9 +796,11 @@ class DFABuilder {
     }
     // FIXME: We can end up with a lot of accepting states, which could be
     // folded into a single one.
+    TransitionSets TEquivClasses;
+    Transition::GroupClasses(Transitions, TEquivClasses);
     DFA *D = new DFA(N->ID(),
                      const_cast<AutomatonDescription&>(N->getAssertion()),
-                     N->Use(), N->Name(), States, Transitions);
+                     N->Use(), N->Name(), States, TEquivClasses);
 
     debugs("tesla.automata.dfa")
         << "DFA conversion results:\n"
@@ -806,20 +810,6 @@ class DFABuilder {
         << DFAStates
         << ">>  DFA transition equivalence classes:\n"
         ;
-
-#ifndef NDEBUG
-    std::set<const Transition*> EquivClassRepresentatives;
-    for (auto EquivClass : Transitions) {
-      auto *Rep = *EquivClass.begin();
-      debugs("tesla.automata.dfa") << "    " << Rep->String() << "\n";
-
-      for (auto C : EquivClassRepresentatives) {
-        assert(!Rep->EquivalentTo(*C));
-      }
-
-      EquivClassRepresentatives.insert(Rep);
-    }
-#endif
 
     return D;
   }
