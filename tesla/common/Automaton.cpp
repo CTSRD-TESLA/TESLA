@@ -148,7 +148,7 @@ bool Automaton::IsRealisable() const {
 
 string Automaton::String() const {
   stringstream ss;
-  ss << "automaton " << id << " {\n";
+  ss << "automaton '" << Name() << "' {\n";
 
   for (State *S : States) {
     assert(S != NULL);
