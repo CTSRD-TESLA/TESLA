@@ -29,6 +29,7 @@
  * SUCH DAMAGE.
  */
 
+#include "Debug.h"
 #include "Protocol.h"
 #include "State.h"
 #include "Transition.h"
@@ -138,6 +139,7 @@ void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
                           TransitionVector& Transitions) {
 
   Transitions.push_back(T.get());
+  debugs("tesla.automata.transitions") << "registered " << T->String() << "\n";
 
   if (!T->OutOfScope) {
     // We should never try to update the start state's references.
@@ -157,7 +159,12 @@ void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
 void Transition::GroupClasses(const TransitionVector& Ungrouped,
                               TransitionSets& EquivalenceClasses) {
 
+  auto& Out = debugs("tesla.automata.transitions.equivalence");
+  Out << "grouping transitions:\n";
+
   for (auto *T : Ungrouped) {
+    Out << "  " << T->String() << "\n";
+
     bool FoundEquivalent = false;
     for (auto& Set : EquivalenceClasses) {
       auto *Head = *Set.begin();
@@ -173,6 +180,15 @@ void Transition::GroupClasses(const TransitionVector& Ungrouped,
       SmallPtrSet<const Transition*, 4> New;
       New.insert(T);
       EquivalenceClasses.push_back(New);
+    }
+  }
+
+  Out << "equivalence classes:\n";
+  for (auto& EquivClass : EquivalenceClasses) {
+    bool Head = true;
+    for (const Transition *T : EquivClass) {
+      Out << (Head ? "  " : "   == ") << T->String() << "\n";
+      Head = false;
     }
   }
 }
