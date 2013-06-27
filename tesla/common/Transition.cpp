@@ -141,18 +141,12 @@ void Transition::Register(OwningPtr<Transition>& T, State& From, State& To,
   Transitions.push_back(T.get());
   debugs("tesla.automata.transitions") << "registered " << T->String() << "\n";
 
-  if (!T->OutOfScope) {
-    // We should never try to update the start state's references.
-    assert(To.ID() != 0);
+  // We should never try to update the start state's references.
+  assert(To.ID() != 0);
 
-    // Update the state we're pointing to with the references it should
-    // know about thus far in the execution of the automaton.
-    OwningArrayPtr<const Argument*> Args;
-    ReferenceVector Ref;
-    T->ReferencesThusFar(Args, Ref);
-    To.UpdateReferences(Ref);
-  }
-
+  // Update the state we're pointing to with the references it should
+  // know about thus far in the execution of the automaton.
+  To.UpdateReferences(*T.get());
   From.AddTransition(T);
 }
 

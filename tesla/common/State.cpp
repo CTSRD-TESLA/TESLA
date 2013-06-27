@@ -65,8 +65,15 @@ void State::AddTransition(OwningPtr<Transition>& T)
   Transitions.push_back(T.take());
 }
 
-void State::UpdateReferences(ReferenceVector NewRefs)
+void State::UpdateReferences(const Transition& T)
 {
+  if (!T.InScope())
+    return;
+
+  OwningArrayPtr<const Argument*> Args;
+  ReferenceVector NewRefs;
+  T.ReferencesThusFar(Args, NewRefs);
+
   assert(!VariableReferences
          || (NewRefs.size() == 0)
          || (Refs.size() == NewRefs.size()));

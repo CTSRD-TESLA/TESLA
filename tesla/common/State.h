@@ -84,7 +84,7 @@ public:
   bool IsStartState() const { return start; }
   bool IsAcceptingState() const { return accept; }
 
-  void UpdateReferences(llvm::ArrayRef<const Argument*>);
+  void UpdateReferences(const Transition&);
   const ReferenceVector References() const { return Refs; }
   uint32_t Mask() const;
 
