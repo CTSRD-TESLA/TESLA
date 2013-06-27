@@ -151,7 +151,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * CHECK: tesla_update_state
 	 * CHECK: class:        0 ('[[CLASS0]]')
 	 * CHECK: transitions:
-	 * CHECK:     ([[OP0]]:0x1 -> [[FIN0:[0-9]+]]:0x1 <clean>)
+	 * CHECK:     ([[OP0]]:0x1 -> [[FIN0:[0-9]+]]:0x{{[01]}} <clean>)
 	 * CHECK: ----
 	 * CHECK: ----
 	 * CHECK: ----
@@ -167,7 +167,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * CHECK: tesla_update_state
 	 * CHECK: class:        1 ('[[CLASS1]]')
 	 * CHECK: transitions:
-	 * CHECK:     ([[OP1]]:0x1 -> [[FIN1:[0-9]+]]:0x1 <clean>)
+	 * CHECK:     ([[OP1]]:0x1 -> [[FIN1:[0-9]+]]:0x{{[01]}} <clean>)
 	 * CHECK: ----
 	 * CHECK: ----
 	 * CHECK: ----

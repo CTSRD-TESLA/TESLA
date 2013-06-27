@@ -89,23 +89,25 @@ void State::UpdateReferences(const Transition& T)
     return;
   }
 
-  for (auto *Arg : NewRefs) {
-    if (Arg == NULL)
-      continue;
+#ifndef NDEBUG
+  if (T.InScope()) {
+    for (auto *Arg : NewRefs) {
+      if (Arg == NULL)
+        continue;
 
-    assert(Arg->type() == Argument::Variable);
-    assert(((size_t) Arg->index()) <= Len);
+      assert(Arg->type() == Argument::Variable);
+      assert(((size_t) Arg->index()) <= Len);
+    }
 
-    uint32_t Index = Arg->index();
-    const Argument *Existing = Refs[Index];
+    uint32_t NewMask = 0;
+    for (size_t i = 0; i < Len; i++) {
+      if ((NewRefs[i] != NULL) && (NewRefs[i]->type() == Argument::Constant))
+        NewMask |= (1 << i);
+    }
 
-    if (Existing == NULL)
-      Refs[Index] = Arg;
-
-    else
-      // Sanity check: we shouldn't be losing information.
-      assert(*Existing == *Arg);
+    assert((Mask() & NewMask) == NewMask);
   }
+#endif
 }
 
 uint32_t State::Mask() const {
