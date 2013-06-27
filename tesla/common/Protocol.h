@@ -63,19 +63,26 @@ inline bool operator == (const Identifier& x, const Identifier& y) {
 }
 
 inline bool operator==(const Argument &A1, const Argument &A2) {
-  if (A1.type() != A2.type()) return false;
+  if (A1.type() != A2.type())
+    return false;
 
-  if (A1.has_index())
-    if (!A2.has_index() || (A1.index() != A2.index()))
-      return false;
+  if (A1.has_index() ^ A2.has_index())
+    return false;
 
-  if (A1.has_name())
-    if (!A2.has_name() || (A1.name() != A2.name()))
-      return false;
+  if (A1.has_index() && ((A1.index() != A2.index())))
+    return false;
 
-  if (A1.has_value())
-    if (!A2.has_value() || (A1.value() != A2.value()))
-      return false;
+  if (A1.has_name() ^ A2.has_name())
+    return false;
+
+  if (A1.has_name() && (A1.name() != A2.name()))
+    return false;
+
+  if (A1.has_value() ^ A2.has_value())
+    return false;
+
+  if (A1.has_value() && (A1.value() != A2.value()))
+    return false;
 
   return true;
 }
@@ -92,18 +99,24 @@ inline bool operator==(const FunctionEvent &E1, const FunctionEvent &E2) {
   if (E1.function() != E2.function())
     return false;
 
-  if (E1.has_direction())
-    if (!E2.has_direction() || (E1.direction() != E2.direction()))
-      return false;
+  if (E1.has_direction() ^ E2.has_direction())
+    return false;
 
-  if (E1.has_context())
-    if (!E2.has_context() || (E1.context() != E2.context()))
-      return false;
+  if (E1.has_direction() && (E1.direction() != E2.direction()))
+    return false;
 
-  if (E1.has_expectedreturnvalue())
-    if (!E2.has_expectedreturnvalue() ||
-        (E1.expectedreturnvalue() != E2.expectedreturnvalue()))
-      return false;
+  if (E1.has_context() ^ E2.has_context())
+    return false;
+
+  if (E1.has_context() && (E1.context() != E2.context()))
+    return false;
+
+  if (E1.has_expectedreturnvalue() ^ E2.has_expectedreturnvalue())
+    return false;
+
+  if (E1.has_expectedreturnvalue()
+      && (E1.expectedreturnvalue() != E2.expectedreturnvalue()))
+    return false;
 
   if (E1.argument_size() != E2.argument_size()) return false;
   for (int i=0 ; i<E1.argument_size() ; i++)

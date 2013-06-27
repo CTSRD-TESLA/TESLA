@@ -162,6 +162,7 @@ void Transition::Append(const OwningPtr<Transition>& Tr,
   for (auto& Set : Transitions) {
     auto *Head = *Set.begin();
     if (T->EquivalentTo(*Head)) {
+      assert(Head->EquivalentTo(*T));
       Set.insert(T);
       return;
     }
