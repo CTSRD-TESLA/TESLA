@@ -827,10 +827,9 @@ class DFABuilder {
         }
       }
     }
-    // FIXME: We can end up with a lot of accepting states, which could be
-    // folded into a single one.
     TransitionSets TEquivClasses;
     Transition::GroupClasses(Transitions, TEquivClasses);
+
     DFA *D = new DFA(N->ID(),
                      const_cast<AutomatonDescription&>(N->getAssertion()),
                      N->Use(), N->Name(), States, TEquivClasses);
