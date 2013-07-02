@@ -273,7 +273,10 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
     if (A.type() == Argument::Variable)
       VariableRefs++;
 
-  Start = State::CreateStartState(States, VariableRefs);
+  Start = State::NewBuilder(States)
+    .SetStartState()
+    .SetRefCount(VariableRefs)
+    .Build();
 
   // Parse the automaton entry point, if provided...
   if (Use && Use->has_beginning()) {
@@ -428,7 +431,7 @@ State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
   if (!LHSFinal || !RHSFinal)
     return NULL;
 
-  State *Join = State::Create(States);
+  State *Join = State::NewBuilder(States).Build();
   Transition::Create(*LHSFinal, *Join, Transitions);
   Transition::Create(*RHSFinal, *Join, Transitions);
 
@@ -457,7 +460,7 @@ State* NFAParser::Parse(const Sequence& Seq, State& Start) {
 
 State* NFAParser::Parse(const NowEvent& now, State& InitialState,
                         bool Init, bool Cleanup) {
-  State *Final = State::Create(States, Cleanup);
+  State *Final = State::NewBuilder(States).SetAccepting(Cleanup).Build();
   Transition::Create(InitialState, *Final, now, Automaton, Transitions,
                      Init, Cleanup);
   return Final;
@@ -465,20 +468,20 @@ State* NFAParser::Parse(const NowEvent& now, State& InitialState,
 
 State* NFAParser::Parse(const FunctionEvent& Ev, State& From,
                         bool Init, bool Cleanup) {
-  State *Final = State::Create(States, Cleanup);
+  State *Final = State::NewBuilder(States).SetAccepting(Cleanup).Build();
   Transition::Create(From, *Final, Ev, Transitions, Init, Cleanup);
   return Final;
 }
 
 State* NFAParser::Parse(const FieldAssignment& Assign, State& From,
                         bool Init, bool Cleanup) {
-  State *Final = State::Create(States, Cleanup);
+  State *Final = State::NewBuilder(States).SetAccepting(Cleanup).Build();
   Transition::Create(From, *Final, Assign, Transitions, Init, Cleanup);
   return Final;
 }
 
 State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState) {
-  State *Final = State::Create(States);
+  State *Final = State::NewBuilder(States).Build();
   Transition::CreateSubAutomaton(InitialState, *Final, ID, Transitions);
   return Final;
 }
@@ -636,7 +639,7 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
     // Decompose as per above comment
     // a (b ||cd)
     Transition *LhsFirstT = lhs.front();
-    State *LhsFirstTNewDest = State::Create(States);
+    State *LhsFirstTNewDest = State::NewBuilder(States).Build();
     Transition::Copy(InitialState, *LhsFirstTNewDest, LhsFirstT, Transitions);
     SmallVector<Transition*,16> lhsCopy = lhs;
     lhsCopy.erase(lhsCopy.begin()); // TODO: use a more efficient data structure (deque?)
@@ -644,7 +647,7 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
 
     // c (ab || d)
     Transition *RhsFirstT = rhs.front();
-    State *RhsFirstTNewDest = State::Create(States);
+    State *RhsFirstTNewDest = State::NewBuilder(States).Build();
     Transition::Copy(InitialState, *RhsFirstTNewDest, RhsFirstT, Transitions);
     SmallVector<Transition*,16> rhsCopy = rhs;
     rhsCopy.erase(rhsCopy.begin()); // TODO: use a more efficient data structure (deque?)
@@ -671,7 +674,7 @@ void NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, St
     debugs("tesla.automata.inclusive_or")
       << "Creating copy of transition: " << T->String() << "\n";
 
-    State* TDest = State::Create(States);
+    State* TDest = State::NewBuilder(States).Build();
     Transition::Copy(*CurrSource, *TDest, T, Transitions);
     CurrSource = TDest;
   }
@@ -733,10 +736,13 @@ class DFABuilder {
     if (Existing != DFAStates.end()) 
       return Existing->second;
 
-    State *DS = Start
-      ? State::CreateStartState(States, RefCount)
-      : State::Create(States, Final);
+    auto Builder = State::NewBuilder(States);
+    Builder.SetStartState(Start);
+    Builder.SetAccepting(Final);
+    if (Start)
+      Builder.SetRefCount(RefCount);
 
+    State *DS = Builder.Build();
     DFAStates.insert(std::make_pair(NStates, DS));
     UnfinishedStates.push_back(
       std::make_pair(NStates, std::make_pair(Start, Final)));

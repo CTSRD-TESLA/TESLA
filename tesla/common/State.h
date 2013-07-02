@@ -50,16 +50,30 @@ namespace internal {
 class State {
   friend class internal::DFABuilder;
 public:
-  /**
-   * Create an initial @ref State for an @ref Automaton.
-   *
-   * @param[out]  States    where to put the resulting State
-   * @param[in]   RefSize   the number of variables this automaton references
-   */
-  static State* CreateStartState(StateVector& States, unsigned int RefSize);
+  class Builder {
+  public:
+    Builder& SetName(llvm::StringRef N) { Name = N; return *this; }
+    Builder& SetStartState(bool S = true) { Start = S; return *this; }
+    Builder& SetAccepting(bool A = true) { Accept = A; return *this; }
+    Builder& SetRefCount(int R) { assert(R >= 0); RefCount = R; return *this; }
 
-  //! Create a @ref State.
-  static State* Create(StateVector&, bool Accepting = false);
+    State* Build();
+
+    Builder(StateVector& S)
+      : States(S), Start(false), Accept(false), RefCount(-1)
+    {
+    }
+
+  private:
+    StateVector& States;
+
+    std::string Name;
+    bool Start;
+    bool Accept;
+    int RefCount;
+  };
+
+  static Builder NewBuilder(StateVector& S) { return Builder(S); }
 
   ~State();
 

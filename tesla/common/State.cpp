@@ -41,21 +41,19 @@ using std::string;
 
 namespace tesla {
 
-State* State::Create(StateVector& States, bool Accepting) {
-  State *New = new State(States.size(), false, Accepting);
-  States.push_back(New);
-  return New;
-}
+State* State::Builder::Build() {
+  llvm::OwningPtr<State> New(new State(States.size(), Start, Accept, Name));
+  States.push_back(New.get());
 
-State* State::CreateStartState(StateVector& States, unsigned int RefSize) {
-  State *New = new State(States.size(), true);
-  States.push_back(New);
+  if (RefCount >= 0) {
+    auto& Refs = New->VariableReferences;
+    Refs.reset(new const Argument*[RefCount]);
+    bzero(Refs.get(), RefCount * sizeof(Refs[0]));
 
-  OwningArrayPtr<const Argument*> NullStore(new const Argument*[RefSize]);
-  bzero(NullStore.get(), RefSize * sizeof(NullStore[0]));
-  New->UpdateReferences(ReferenceVector(NullStore.get(), RefSize));
+    New->Refs = MutableReferenceVector(Refs.get(), RefCount);
+  }
 
-  return New;
+  return New.take();
 }
 
 State::~State() {
