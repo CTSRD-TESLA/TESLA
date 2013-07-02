@@ -302,10 +302,14 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
 
   // Handle out-of-scope events: if we observe one, we it should cause us to
   // stay in the post-initialisation state.
+  debugs("tesla.automata.parsing.out-of-scope") << "out-of-scope events:\n";
   vector<const Transition*> OutOfScope;
   for (const Transition *T : Transitions) {
-    if (!T->IsStrict() && !T->RequiresInit())
+    if (!T->IsStrict() && !T->RequiresInit()) {
       OutOfScope.push_back(T);
+      debugs("tesla.automata.parsing.out-of-scope")
+        << "  " << T->String() << "\n";
+    }
   }
 
   for (auto *T : OutOfScope) {
