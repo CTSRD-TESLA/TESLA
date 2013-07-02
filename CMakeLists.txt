@@ -53,7 +53,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 #
 include_directories(
 	${LLVM_SRC}/include
+	${LLVM_OBJ}/include
 	${LLVM_SRC}/tools/clang/include
+	${LLVM_OBJ}/tools/clang/include
 	include                          # [lib]tesla.h
 	${CMAKE_BINARY_DIR}/include      # config.h
 )
