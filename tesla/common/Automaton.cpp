@@ -733,7 +733,7 @@ class DFABuilder {
   }
   State *stateForNFAStates(NFAState& NStates, bool Start, bool Final) {
     auto Existing = DFAStates.find(NStates);
-    if (Existing != DFAStates.end()) 
+    if (Existing != DFAStates.end())
       return Existing->second;
 
     auto Builder = State::NewBuilder(States);
