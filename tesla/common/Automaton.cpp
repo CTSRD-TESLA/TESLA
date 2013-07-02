@@ -742,6 +742,11 @@ class DFABuilder {
     if (Start)
       Builder.SetRefCount(RefCount);
 
+    std::stringstream Name;
+    std::copy(NStates.begin(), NStates.end(),
+              std::ostream_iterator<int>(Name,","));
+    Builder.SetName(StringRef("NFA:" + Name.str()).drop_back(1));
+
     State *DS = Builder.Build();
     DFAStates.insert(std::make_pair(NStates, DS));
     UnfinishedStates.push_back(
