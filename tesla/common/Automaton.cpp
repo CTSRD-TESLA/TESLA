@@ -265,6 +265,9 @@ NFAParser& NFAParser::AllowSubAutomata(bool Allow) {
 }
 
 void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
+  debugs("tesla.automata.parsing")
+    << "Parsing '" << ShortName(Automaton.identifier()) << "'...\n";
+
   size_t VariableRefs = 0;
   for (auto A : Automaton.argument())
     if (A.type() == Argument::Variable)
@@ -330,6 +333,8 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   Transition::GroupClasses(Transitions, TEquivClasses);
 
   Out.reset(new NFA(id, Automaton, Use, ShortName(ID), States, TEquivClasses));
+
+  debugs("tesla.automata.parsing") << "parsed '" << Out->Name() << "'.\n\n";
 }
 
 State* NFAParser::Parse(const Expression& Expr, State& Start,
