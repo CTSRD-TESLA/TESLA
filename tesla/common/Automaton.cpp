@@ -305,7 +305,20 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
   debugs("tesla.automata.parsing.out-of-scope") << "out-of-scope events:\n";
   vector<const Transition*> OutOfScope;
   for (const Transition *T : Transitions) {
-    if (!T->IsStrict() && !T->RequiresInit()) {
+    // Have we already noted an equivalent out-of-scope transition?
+    //
+    // This check is subtly different from looping over the equivalence
+    // classes created below: that equivalence is based on the transition's
+    // input event only, so transitions in the same equivalence class can have
+    // different in-scope vs out-of-scope characteristics.
+    bool AlreadyHave = false;
+    for (const Transition *Existing : OutOfScope)
+      if (Existing->EquivalentTo(*T)) {
+        AlreadyHave = true;
+        break;
+      }
+
+    if (!AlreadyHave && !T->IsStrict() && !T->RequiresInit()) {
       OutOfScope.push_back(T);
       debugs("tesla.automata.parsing.out-of-scope")
         << "  " << T->String() << "\n";
