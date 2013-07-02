@@ -66,6 +66,7 @@ public:
   void AddTransition(llvm::OwningPtr<Transition>&);
 
   size_t ID() const { return id; }
+  std::string Name(bool QuoteNonNumeric = true) const;
   bool IsStartState() const { return start; }
   bool IsAcceptingState() const { return accept; }
 
@@ -79,12 +80,14 @@ public:
   Transition *const*end() const { return Transitions.end(); }
 
 private:
-  State(size_t id, bool start = false, bool accept = false)
-    : id(id), start(start), accept(accept)
+  State(size_t id, bool start = false, bool accept = false,
+        llvm::StringRef name = "")
+    : id(id), name(name), start(start), accept(accept)
   {
   }
 
   const size_t id;
+  std::string name;
   const bool start;
   const bool accept;
 

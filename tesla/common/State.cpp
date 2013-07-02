@@ -116,9 +116,22 @@ uint32_t State::Mask() const {
   return Mask;
 }
 
+string State::Name(bool QuoteNonNumeric) const {
+  std::stringstream ss;
+  if (name.empty()) {
+    ss << ID();
+  } else {
+    auto Quote = (QuoteNonNumeric ? "'" : "");
+    ss << Quote << name << Quote;
+  }
+
+  return ss.str();
+}
+
+
 string State::String() const {
   std::stringstream ss;
-  ss << "state " << id << " " << InstanceName(Refs, true) << ":";
+  ss << "state " << Name(true) << " " << InstanceName(Refs, true) << ":";
 
   for (const auto& I : Transitions) {
     const Transition& T = *I;
@@ -129,10 +142,13 @@ string State::String() const {
 }
 
 string State::Dot() const {
+  string NameExtra = name.empty() ? "" : ("\\n\\\"" + name + "\\\"");
+
   return (
     Twine(ID())
     + " [ label = \""
     + "state " + Twine(ID())
+    + NameExtra
     + "\\n" + InstanceName(Refs, false) + "\""
     + (IsAcceptingState() ? ", shape = doublecircle" : "")
     + " ];"
