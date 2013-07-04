@@ -84,6 +84,9 @@ const std::string CALLER            = "caller_";
 const std::string ENTER             = "enter_";
 const std::string EXIT              = "return_";
 
+const std::string FLAGS             = TESLA_BASE + "flags";
+const std::string MASK              = TESLA_BASE + "mask";
+
 const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 
 //! Convert an @ref Argument into something human-readable.

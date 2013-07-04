@@ -222,6 +222,11 @@ message Argument {
   required Type type = 1;
 
   /**
+   * Ways that we can match a constant: exactly, as flags (OR) or a mask (AND).
+   */
+  enum MatchType { Exact = 1; Flags = 2; Mask = 3; }
+
+  /**
    * An index for the variable within an automaton.
    *
    * For instance, if an assertion refers to foo(x,y) and bar(y,z), the
@@ -237,5 +242,8 @@ message Argument {
 
   /** The integer value. */
   optional int64 value = 5;
+
+  /** Values that are ORed together in the mask. */
+  optional MatchType constantMatch = 6 [ default = Exact ];
 }
 

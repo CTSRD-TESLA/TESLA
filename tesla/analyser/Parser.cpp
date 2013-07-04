@@ -875,7 +875,10 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
   llvm::APSInt ConstValue;
 
   // Each variable references must be one of:
-  //  - __tesla_any(),
+  //  - a call to a TESLA pseudo-function:
+  //    - __tesla_flags(),
+  //    - __tesla_mask(),
+  //    - __tesla_any*(),
   //  - a reference to a named declaration or
   //  - an integer constant expression.
   if (auto Call = dyn_cast<CallExpr>(P)) {
@@ -885,21 +888,39 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
       return false;
     }
 
-    if (Fn->getName().slice(0, ANY.length()) != ANY) {
-      ReportError("expected " + ANY + "*()", P);
+    StringRef Name = Fn->getName();
+
+    if ((Name == FLAGS) || (Name == MASK)) {
+      if (Call->getNumArgs() != 1) {
+        ReportError("expected one argument", Call);
+        return false;
+      }
+
+      Arg->set_constantmatch(
+        (Name == FLAGS) ? Argument::Flags : Argument::Mask);
+      P = Call->getArg(0);
+
+    } else if (Name.slice(0, ANY.length()) == ANY) {
+      Arg->set_type(Argument::Any);
+      return true;
+
+    } else {
+      ReportError("expected __tesla_{flags,mask,any}", P);
       return false;
     }
 
-    Arg->set_type(Argument::Any);
+  }
 
-  } else if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
+  if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
     Arg->set_type(Argument::Variable);
     const ValueDecl *D = DRE->getDecl();
 
     *Arg->mutable_name() = DRE->getDecl()->getName();
     Arg->set_index(ReferenceIndex(D));
+    return true;
+  }
 
-  } else if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
+  if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Arg->set_type(Argument::Constant);
     Arg->set_value(ConstValue.getSExtValue());
 
@@ -935,12 +956,11 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
           Lexer::getImmediateMacroName(Loc, SM, Ctx.getLangOpts());
     }
 
-  } else {
-    ReportError("Invalid argument to function within TESLA assertion", P);
-    return false;
+    return true;
   }
 
-  return true;
+  ReportError("Invalid argument to function within TESLA assertion", P);
+  return false;
 }
 
 bool Parser::Parse(FunctionRef *FnRef, const FunctionDecl *Fn, Flags F) {
