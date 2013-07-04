@@ -230,7 +230,9 @@ tesla_action(const tesla_instance *inst, const tesla_key *event_data,
 
 		if (t->from == inst->ti_state) {
 			assert(inst->ti_key.tk_mask == t->from_mask);
-			assert(SUBSET(t->from_mask, t->to_mask));
+
+			if ((t->flags & TESLA_TRANS_CLEANUP) == 0)
+				assert(SUBSET(t->from_mask, t->to_mask));
 
 			/*
 			 * We need to match events against a pattern based on
@@ -249,7 +251,7 @@ tesla_action(const tesla_instance *inst, const tesla_key *event_data,
 			 * Does the transition cause key data to be added
 			 * to the instance's name?
 			 */
-			if (t->from_mask == t->to_mask) {
+			if (SUBSET(t->to_mask, t->from_mask)) {
 				/*
 				 * No: just just update the instance
 				 *     if its (masked) name matches.

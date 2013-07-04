@@ -234,6 +234,36 @@ main(int argc, char **argv)
 	inst.ti_state = 99;
 	log_action(inst, event_data, t);
 
+	/*
+	 * If we ever try to lose information (as can happen during automata
+	 * cleanup), it should result in UPDATE:
+	 */
+	event_data.tk_mask = 1;
+	event_data.tk_keys[0] = x;
+
+	t.length = 1;
+
+	t.transitions[0].from       = 1;
+	t.transitions[0].from_mask  = 1;
+	t.transitions[0].to         = 2;
+	t.transitions[0].to_mask    = 0;
+	t.transitions[0].flags      = TESLA_TRANS_CLEANUP;
+
+	PRINT("\n");
+	print_key(DEBUG_NAME, &event_data);
+	PRINT(" : ");
+	print_transitions(DEBUG_NAME, &t);
+	PRINT("\n");
+
+	/*
+	 * Instance: (x):1
+	 * CHECK: UPDATE (1:0x1 -> 2:0x0 <clean>)
+	 */
+	inst.ti_key.tk_mask = 1;
+	inst.ti_key.tk_keys[0] = x;
+	inst.ti_state = 1;
+	log_action(inst, event_data, t);
+
 	return 0;
 }
 
