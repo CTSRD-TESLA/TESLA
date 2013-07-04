@@ -32,12 +32,12 @@ void context() {
  * CHECK:     br i1 [[COND]], label %"[[NAME]]:match:retval"
  *
  * We also need to check that the return value is ANSWER:
- * CHECK:   "[[NAME:.*constant-arg.c:[0-9]+#[0-9]+]]:match:retval":
+ * CHECK:   "[[NAME]]:match:retval":
  * CHECK:     [[COND:%[0-9]+]] = icmp eq i32 %{{[0-9]+}}, 42
  * CHECK:     br i1 [[COND]], label %"[[NAME]]:instr"
  *
  * The actual instrumentation:
- * CHECK:   "[[NAME:.*constant-arg.c:[0-9]+#[0-9]+]]:instr":
+ * CHECK:   "[[NAME]]:instr":
  *
  * CHECK: }
  */
