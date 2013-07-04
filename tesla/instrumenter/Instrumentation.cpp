@@ -496,10 +496,10 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   Type *IntPtrTy = IntPtrType(M);
   Type *IntTy = Type::getInt32Ty(M.getContext());
 
-  int i = 0;
   int KeyMask = 0;
 
-  for (Value* Arg : Args) {
+  for (size_t i = 0; i < Args.size(); i++) {
+    Value* Arg = Args[i];
     if (Arg == NULL)
       continue;
 
@@ -510,7 +510,6 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
       Builder.CreateStructGEP(Key, i));
 
     KeyMask |= (1 << i);
-    i++;
   }
 
   Value *Mask = Builder.CreateStructGEP(Key, TESLA_KEY_SIZE);
