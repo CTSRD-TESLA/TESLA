@@ -58,6 +58,10 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
+BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
+                         BasicBlock *MatchTarget, BasicBlock *NonMatchTarget,
+                         Value *Val, const tesla::Argument& Pattern);
+
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
     if (B.getName() == Name)
@@ -86,21 +90,11 @@ void FnInstrumentation::AppendInstrumentation(
   // We may need to check constant values (e.g. return values).
   // TODO: check constants besides the return value!
   if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
-
     const Argument &Arg = Ev.expectedreturnvalue();
     if (Arg.type() == Argument::Constant) {
-      auto *Match = BasicBlock::Create(Ctx, A.Name() + ":match-retval",
-                                       InstrFn, Instr);
-
-      Instr->replaceAllUsesWith(Match);
-
-      IRBuilder<> Matcher(Match);
-      Value *ReturnVal = --(InstrFn->arg_end());
-      Value *ExpectedReturnVal = ConstantInt::getSigned(ReturnVal->getType(),
-                                                        Arg.value());
-
-      Matcher.CreateCondBr(Matcher.CreateICmpNE(ReturnVal, ExpectedReturnVal),
-                           Exit, Instr);
+      Value *ReturnValue = --(InstrFn->arg_end());
+      MatchPattern(Ctx, A.Name() + ":match:retval", InstrFn,
+                   Instr, Exit, ReturnValue, Arg);
     }
   }
 
@@ -408,6 +402,27 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
     return Builder.CreateIntCast(From, NewType, false);
 
   llvm_unreachable("failed to cast something castable");
+}
+
+
+BasicBlock* tesla::MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
+                                BasicBlock *MatchTarget,
+                                BasicBlock *NonMatchTarget,
+                                Value *Val, const tesla::Argument& Pattern) {
+
+  if (Pattern.type() != Argument::Constant)
+    return MatchTarget;
+
+  auto *MatchBlock = BasicBlock::Create(Ctx, Name, Fn, MatchTarget);
+  MatchTarget->replaceAllUsesWith(MatchBlock);
+
+  IRBuilder<> Matcher(MatchBlock);
+  Value *Expected = ConstantInt::getSigned(Val->getType(), Pattern.value());
+
+  Matcher.CreateCondBr(Matcher.CreateICmpEQ(Val, Expected),
+                       MatchTarget, NonMatchTarget);
+
+  return MatchBlock;
 }
 
 
