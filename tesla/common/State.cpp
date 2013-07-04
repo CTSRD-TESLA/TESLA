@@ -67,7 +67,7 @@ void State::AddTransition(OwningPtr<Transition>& T)
 
 void State::UpdateReferences(const Transition& T)
 {
-  if (!T.InScope())
+  if (VariableReferences && !T.InScope())
     return;
 
   OwningArrayPtr<const Argument*> Args;
