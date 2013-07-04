@@ -424,11 +424,27 @@ BasicBlock* tesla::MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
   auto *MatchBlock = BasicBlock::Create(Ctx, Name, Fn, MatchTarget);
   MatchTarget->replaceAllUsesWith(MatchBlock);
 
-  IRBuilder<> Matcher(MatchBlock);
-  Value *Expected = ConstantInt::getSigned(Val->getType(), Pattern.value());
+  IRBuilder<> M(MatchBlock);
+  Value *PatternValue = ConstantInt::getSigned(Val->getType(), Pattern.value());
+  Value *Cmp;
 
-  Matcher.CreateCondBr(Matcher.CreateICmpEQ(Val, Expected),
-                       MatchTarget, NonMatchTarget);
+  switch (Pattern.constantmatch()) {
+  case Argument::Exact:
+    Cmp = M.CreateICmpEQ(Val, PatternValue);
+    break;
+
+  case Argument::Flags:
+    // test that x contains mask: (val & pattern) == pattern
+    Cmp = M.CreateICmpEQ(M.CreateAnd(Val, PatternValue), PatternValue);
+    break;
+
+  case Argument::Mask:
+    // test that x contains no more than mask: (val & pattern) == val
+    Cmp = M.CreateICmpEQ(M.CreateAnd(Val, PatternValue), Val);
+    break;
+  }
+
+  M.CreateCondBr(Cmp, MatchTarget, NonMatchTarget);
 
   return MatchBlock;
 }
