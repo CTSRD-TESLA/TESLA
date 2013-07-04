@@ -88,14 +88,22 @@ void FnInstrumentation::AppendInstrumentation(
   Exit->replaceAllUsesWith(Instr);
 
   // We may need to check constant values (e.g. return values).
-  // TODO: check constants besides the return value!
+  size_t i = 0;
+  for (auto& InstrArg : InstrFn->getArgumentList()) {
+    const Argument& Arg = Ev.argument(i);
+    MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
+                 Instr, Exit, &InstrArg, Arg);
+
+    // Ignore the return value, which passed as an argument to InstrFn.
+    if (++i == Ev.argument_size())
+      break;
+  }
+
   if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
     const Argument &Arg = Ev.expectedreturnvalue();
-    if (Arg.type() == Argument::Constant) {
-      Value *ReturnValue = --(InstrFn->arg_end());
-      MatchPattern(Ctx, A.Name() + ":match:retval", InstrFn,
-                   Instr, Exit, ReturnValue, Arg);
-    }
+    Value *ReturnValue = --(InstrFn->arg_end());
+    MatchPattern(Ctx, A.Name() + ":match:retval", InstrFn,
+                 Instr, Exit, ReturnValue, Arg);
   }
 
   IRBuilder<> Builder(Instr);
