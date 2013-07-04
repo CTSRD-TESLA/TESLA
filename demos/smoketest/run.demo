@@ -6,9 +6,6 @@
 # RUN: %s -D TESLA > %t.tesla.out 2>&1
 # RUN: FileCheck --check-prefix DTESLA -input-file %t.tesla.out %s
 #
-# Note: there is currently an assertion failure when running with TESLA.
-# XFAIL: *
-#
 
 cd `dirname $0`
 
@@ -27,7 +24,7 @@ TESLA_DEBUG=tesla.events ./smoketest
 # NORMAL-NOT: [CALR]
 # NORMAL-NOT: [RETE]
 # NORMAL-NOT: [RETR]
-# NORMAL: example_syscall returned 0
+# NORMAL: 'example_syscall' returned 0
 #
 #
 # With TESLA, we should see TESLA events but not errors:
@@ -39,5 +36,5 @@ TESLA_DEBUG=tesla.events ./smoketest
 # DTESLA: Calling the 'example_syscall' function...
 # DTESLA: [CALE] example_syscall [[O:0x[0-9a-f]+]] 0 0
 # DTESLA: [RETE] example_syscall [[O]] 0 0 0
-# DTESLA: example_syscall returned 0
+# DTESLA: 'example_syscall' returned 0
 #
