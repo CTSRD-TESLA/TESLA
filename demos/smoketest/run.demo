@@ -10,7 +10,7 @@
 cd `dirname $0`
 
 CFLAGS="$*" make clean all
-TESLA_DEBUG=tesla.events ./smoketest
+TESLA_DEBUG=tesla.events LD_LIBRARY_PATH=$TESLA_BUILD_DIR/libtesla/src ./smoketest
 
 #
 # Without -D TESLA, no TESLA events should be printed:
