@@ -135,6 +135,8 @@ string State::Name(bool QuoteNonNumeric) const {
 
 
 string State::String() const {
+  assert(VariableReferences);
+
   std::stringstream ss;
   ss << "state " << Name(true) << " " << InstanceName(Refs, true) << ":";
 
@@ -147,6 +149,7 @@ string State::String() const {
 }
 
 string State::Dot() const {
+  assert(VariableReferences);
   string NameExtra = name.empty() ? "" : ("\\n\\\"" + name + "\\\"");
 
   return (
