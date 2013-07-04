@@ -241,13 +241,19 @@ main(int argc, char **argv)
 	event_data.tk_mask = 1;
 	event_data.tk_keys[0] = x;
 
-	t.length = 1;
+	t.length = 2;
 
 	t.transitions[0].from       = 1;
 	t.transitions[0].from_mask  = 1;
 	t.transitions[0].to         = 2;
 	t.transitions[0].to_mask    = 0;
 	t.transitions[0].flags      = TESLA_TRANS_CLEANUP;
+
+	t.transitions[1].from       = 3;
+	t.transitions[1].from_mask  = 1;
+	t.transitions[1].to         = 1;
+	t.transitions[1].to_mask    = 0;
+	t.transitions[1].flags      = 0;
 
 	PRINT("\n");
 	print_key(DEBUG_NAME, &event_data);
@@ -264,6 +270,15 @@ main(int argc, char **argv)
 	inst.ti_state = 1;
 	log_action(inst, event_data, t);
 
+	/*
+	 * Instance: (x):3
+	 * CHECK: JOIN (3:0x1 -> 1:0x0)
+	 */
+	inst.ti_key.tk_mask = 1;
+	inst.ti_key.tk_keys[0] = x;
+	inst.ti_state = 3;
+	log_action(inst, event_data, t);
+
 	return 0;
 }
 
@@ -273,6 +288,7 @@ action_str(enum tesla_action_t action)
 	switch (action) {
 	case UPDATE:  return "UPDATE";
 	case FORK:    return "FORK";
+	case JOIN:    return "JOIN";
 	case IGNORE:  return "IGNORE";
 	case FAIL:    return "FAIL";
 	default:      return "<<invalid action>>";
