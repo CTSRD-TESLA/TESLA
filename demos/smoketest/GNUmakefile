@@ -32,13 +32,6 @@ all: tesla tesla.dot ${BIN}
 clean:
 	rm -f ${BIN} ${SRCS:.c=.ll} ${OBJS} ${TESLA_ALLFILES} *.dot *.pdf
 
-tesla:
-	@if [ ! -d ${TESLA_BUILD_DIR} ]; then \
-		echo "TESLA_BUILD_DIR ('${TESLA_BUILD_DIR}') not a directory"; \
-		exit 1; \
-	fi
-	ninja -C ${TESLA_BUILD_DIR}
-
 
 #
 # Include TESLA build rules from tesla.mk (with some preparation):

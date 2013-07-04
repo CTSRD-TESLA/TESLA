@@ -23,7 +23,7 @@ OBJS=		${TESLA_OBJS}
 	sed -i.backup "s@`pwd`/@@" .tesla && rm .tesla.backup
 
 # Run the TESLA analyser over C code.
-.c.tesla: tesla
+.c.tesla:
 	${ANALYSE} $< -o $@ -- ${CFLAGS}
 
 # Instrument LLVM IR using TESLA.

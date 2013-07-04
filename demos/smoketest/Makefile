@@ -1,6 +1,6 @@
 # BSD makefile to drive GNU make
 
-.PHONY: all clean tesla
+.PHONY: all clean
 .SILENT:
 
 all:
@@ -8,7 +8,3 @@ all:
 
 clean:
 	gmake clean
-
-tesla:
-	gmake tesla
-
