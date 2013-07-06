@@ -330,15 +330,15 @@ FieldAssignTransition::FieldAssignTransition(const State& From, const State& To,
     ReferencedVariables(new const Argument*[2]),
     Refs(ReferencedVariables.get(), 2)
 {
-  ReferencedVariables[0] = &Assign.base();
+  ReferencedVariables[0] = &Assign.field().base();
   ReferencedVariables[1] = &Assign.value();
 }
 
 string FieldAssignTransition::ShortLabel() const {
   return (Twine()
-    + ShortName(&Assign.base())
+    + ShortName(&Assign.field().base())
     + "."
-    + Assign.fieldname()
+    + Assign.field().name()
     + " "
     + OpString(Assign.operation())
     + " "
@@ -348,10 +348,10 @@ string FieldAssignTransition::ShortLabel() const {
 
 string FieldAssignTransition::DotLabel() const {
   return (Twine()
-    + "struct " + Assign.type() + ":\\l"
-    + ShortName(&Assign.base())
+    + "struct " + Assign.field().type() + ":\\l"
+    + ShortName(&Assign.field().base())
     + "."
-    + Assign.fieldname()
+    + Assign.field().name()
     + " "
     + OpString(Assign.operation())
     + " "

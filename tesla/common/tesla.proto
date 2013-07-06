@@ -194,17 +194,8 @@ message FieldAssignment {
   /** Types of assignment: simple or compound. */
   enum AssignType { SimpleAssign = 1; PlusEqual = 2; MinusEqual = 3; };
 
-  /** The name of the structure. */
-  required string type = 1;
-
-  /** The base of the member being assigned to: the struct. */
-  required Argument base = 3;
-
-  /** The index of the field within the struct. */
-  required int32 index = 2;
-
-  /** The name of the struct field being assigned to. */
-  required string fieldName = 6;
+  /** The field being assigned to. */
+  required StructField field = 8;
 
   /** The kind of assignment (e.g. '+='). */
   required AssignType operation = 4;
@@ -214,6 +205,21 @@ message FieldAssignment {
 
   /** If set, this event should only occur as described by the automaton. */
   optional bool strict = 7 [ default = true ];
+}
+
+/** A field within a structure. */
+message StructField {
+  /** Name of the structure type. */
+  required string type = 1;
+
+  /** Reference to the structure. */
+  required Argument base = 2;
+
+  /** Name of the struct field. */
+  required string name = 3;
+
+  /** Index of the field within the struct. */
+  required int32 index = 4;
 }
 
 /** An argument to a function. */

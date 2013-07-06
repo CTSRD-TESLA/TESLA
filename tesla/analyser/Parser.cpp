@@ -466,7 +466,7 @@ bool Parser::Parse(Expression *E, const UnaryOperator *U, Flags F) {
   }
 
   return CheckAssignmentKind(ME->getMemberDecl(), U)
-      && ParseStructField(A, ME, F);
+      && ParseStructField(A->mutable_field(), ME, F);
 }
 
 
@@ -834,12 +834,12 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
   }
 
   return CheckAssignmentKind(LHS->getMemberDecl(), O)
-      && ParseStructField(A, LHS, F)
+      && ParseStructField(A->mutable_field(), LHS, F)
       && Parse(A->mutable_value(), O->getRHS(), F);
 }
 
 
-bool Parser::ParseStructField(FieldAssignment *A, const MemberExpr *ME,
+bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
                               Flags F) {
   auto *Base =
     dyn_cast<DeclRefExpr>(ME->getBase()->IgnoreImpCasts())->getDecl();
@@ -852,7 +852,7 @@ bool Parser::ParseStructField(FieldAssignment *A, const MemberExpr *ME,
     return false;
   }
 
-  A->set_type(BaseType->getDecl()->getName());
+  Field->set_type(BaseType->getDecl()->getName());
 
   auto *Member = dyn_cast<FieldDecl>(ME->getMemberDecl());
   if (!Member) {
@@ -860,10 +860,10 @@ bool Parser::ParseStructField(FieldAssignment *A, const MemberExpr *ME,
     return false;
   }
 
-  A->set_index(Member->getFieldIndex());
-  A->set_fieldname(Member->getName());
+  Field->set_index(Member->getFieldIndex());
+  Field->set_name(Member->getName());
 
-  return Parse(A->mutable_base(), Base, false, F);
+  return Parse(Field->mutable_base(), Base, false, F);
 }
 
 

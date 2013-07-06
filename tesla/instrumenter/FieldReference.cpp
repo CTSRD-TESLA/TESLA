@@ -199,8 +199,8 @@ FieldInstrumentation* FieldReferenceInstrumenter::GetInstr(
 
   debug << Head->String() << "\n";
   auto& Protobuf = Head->Assignment();
-  auto StructName = Protobuf.type();
-  auto FieldName = Protobuf.fieldname();
+  auto StructName = Protobuf.field().type();
+  auto FieldName = Protobuf.field().name();
   string FullName = StructName + "." + FieldName;
 
   FieldInstrumentation *Instr;
@@ -215,11 +215,11 @@ FieldInstrumentation* FieldReferenceInstrumenter::GetInstr(
       return NULL;
 
     Function *InstrFn =
-      StructInstrumentation(*Mod, T, FieldName, Protobuf.index(), true,
+      StructInstrumentation(*Mod, T, FieldName, Protobuf.field().index(), true,
                             SuppressDebugInstr);
 
     Instr = new FieldInstrumentation(InstrFn, *Mod, T,
-                                     FieldName, Protobuf.index());
+                                     FieldName, Protobuf.field().index());
 
     Instrumentation[FullName] = Instr;
   }

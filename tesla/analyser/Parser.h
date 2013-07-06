@@ -130,7 +130,7 @@ private:
   bool Parse(Argument*, const clang::Expr*, Flags);
   bool Parse(Argument*, const clang::ValueDecl*, bool AllowAny, Flags);
 
-  bool ParseStructField(FieldAssignment*, const clang::MemberExpr*, Flags);
+  bool ParseStructField(StructField*, const clang::MemberExpr*, Flags);
   bool ParseSubAutomaton(Expression*, const clang::CallExpr*, Flags);
   bool ParsePredicate(Expression*, const clang::CallExpr*, Flags);
 

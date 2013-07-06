@@ -125,11 +125,18 @@ inline bool operator==(const FunctionEvent &E1, const FunctionEvent &E2) {
   return true;
 }
 
-inline bool operator==(const FieldAssignment &X, const FieldAssignment &Y) {
+inline bool operator==(const StructField &X, const StructField &Y) {
   return (
     (X.type() == Y.type())
-    && (X.index() == Y.index())
     && (X.base() == Y.base())
+    && (X.name() == Y.name())
+    && (X.index() == Y.index())
+  );
+}
+
+inline bool operator==(const FieldAssignment &X, const FieldAssignment &Y) {
+  return (
+    (X.field() == Y.field())
     && (X.operation() == Y.operation())
     && (X.value() == Y.value())
   );
