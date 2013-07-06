@@ -58,6 +58,14 @@ std::string tesla::ArgString(const Argument* A) {
 
   case Argument::Any:
     return "<anything>";
+
+  case Argument::Indirect:
+    assert(A->has_indirection());
+    return "*" + ShortName(&A->indirection());
+
+  case Argument::Field:
+    assert(A->has_field());
+    return ShortName(&A->field().base()) + "." + A->field().name();
   }
 }
 
@@ -84,11 +92,20 @@ std::string tesla::ShortName(const Argument* A) {
 
   case Argument::Any:
     return "X";
+
+  case Argument::Indirect:
+    assert(A->has_indirection());
+    return "*" + ShortName(&A->indirection());
+
+  case Argument::Field:
+    assert(A->has_field());
+    return ShortName(&A->field().base()) + "." + A->field().name();
   }
 }
 
 std::string tesla::DotName(const Argument* A) {
   const static std::string Star = "&#8902;";
+  const static std::string Asterisk = "&#x2217;";
 
   if (A == NULL)
     return Star;
@@ -102,6 +119,14 @@ std::string tesla::DotName(const Argument* A) {
 
   case Argument::Any:
     return Star;
+
+  case Argument::Indirect:
+    assert(A->has_indirection());
+    return Asterisk + DotName(&A->indirection());
+
+  case Argument::Field:
+    assert(A->has_field());
+    return ShortName(&A->field().base()) + "." + A->field().name();
   }
 }
 

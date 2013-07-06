@@ -844,15 +844,17 @@ bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
   auto *Base =
     dyn_cast<DeclRefExpr>(ME->getBase()->IgnoreImpCasts())->getDecl();
 
-  auto *BasePtrType = dyn_cast<PointerType>(Base->getType());
+  auto BaseType = Base->getType();
 
-  auto *BaseType = BasePtrType->getPointeeType()->getAsStructureType();
-  if (!BaseType) {
+  if (auto *BasePtrType = dyn_cast<PointerType>(BaseType))
+    BaseType = BasePtrType->getPointeeType();
+
+  if (BaseType.isNull()) {
     ReportError("base of assignment ME not a struct type", Base);
     return false;
   }
 
-  Field->set_type(BaseType->getDecl()->getName());
+  Field->set_type(BaseType->getAsStructureType()->getDecl()->getName());
 
   auto *Member = dyn_cast<FieldDecl>(ME->getMemberDecl());
   if (!Member) {
@@ -959,6 +961,22 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
     return true;
   }
 
+  // We also allow a very limited number of simple expressions:
+  //  * multiple-return-via-pointer: foo(&x) => foo() returned x via pointer
+  if (auto *UO = dyn_cast<UnaryOperator>(P)) {
+    if (UO->getOpcode() == UO_AddrOf) {
+      Arg->set_type(Argument::Indirect);
+      return Parse(Arg->mutable_indirection(), UO->getSubExpr(), F);
+    }
+  }
+
+  //  * structure field access: bar(s->x) => called bar() with s->x (TODO)
+  if (auto *ME = dyn_cast<MemberExpr>(P)) {
+    Arg->set_type(Argument::Field);
+    return ParseStructField(Arg->mutable_field(), ME, F);
+  }
+
+  P->dump();
   ReportError("Invalid argument to function within TESLA assertion", P);
   return false;
 }

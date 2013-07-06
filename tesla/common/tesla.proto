@@ -224,7 +224,7 @@ message StructField {
 
 /** An argument to a function. */
 message Argument {
-  enum Type { Constant = 1; Variable = 2; Any = 3; }
+  enum Type { Constant = 1; Variable = 2; Any = 3; Indirect = 4; Field = 5; }
   required Type type = 1;
 
   /**
@@ -251,5 +251,11 @@ message Argument {
 
   /** Values that are ORed together in the mask. */
   optional MatchType constantMatch = 6 [ default = Exact ];
+
+  /** In an indirect expression like '&x' or '*x', this is 'x'. */
+  optional Argument indirection = 7;
+
+  /** If type == Field, this is the field holding the value. */
+  optional StructField field = 8;
 }
 

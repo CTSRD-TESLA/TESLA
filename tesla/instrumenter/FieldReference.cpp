@@ -364,6 +364,12 @@ void FieldInstrumentation::AppendInstrumentation(
 
   case Argument::Any:
     panic("'ANY' value should never be passed to struct field instrumentation");
+
+  case Argument::Indirect:
+    panic("struct field instrumentation should not be passed indirect value");
+
+  case Argument::Field:
+    panic("struct field instrumentation should not be passed struct field");
   }
 
   Type* IntType = Type::getInt32Ty(Ctx);
