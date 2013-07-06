@@ -139,6 +139,7 @@ inline bool operator==(const FieldAssignment &X, const FieldAssignment &Y) {
     (X.field() == Y.field())
     && (X.operation() == Y.operation())
     && (X.value() == Y.value())
+    && (X.strict() == Y.strict())
   );
 }
 
