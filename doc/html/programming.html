@@ -270,6 +270,16 @@ satisfies the expression.
 </p>
 
 <p>
+Bitmask arguments can be described with
+<code><span class="keyword">flags</span>(FLAG1|FLAG2)</code>,
+meaning that <code>FLAG1</code> and <code>FLAG2</code> <em>must</em> be present
+in the argument,
+or <code><span class="keyword">bitmask</span>(FLAG1|FLAG2)</code>,
+meaning that <em>only</em> <code>FLAG1</code> and <code>FLAG2</code>
+may be present in the mask.
+</p>
+
+<p>
 To instrument a function call, rather than return, the programmer can use the
 <code><span class="keyword">called</span></code>() macro:
 </p>
