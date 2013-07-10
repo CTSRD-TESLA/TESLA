@@ -75,6 +75,16 @@ compiling the source into LLVM IR.
 <p>
 The LLVM instrumenter modifies LLVM IR, adding hooks for events that are
 named in a TESLA manifest.
+If once again CFLAGS="-Wno-error -D VERSION=42", the TESLA instrumenter is
+run as follows:
+</p>
+
+<div class="console"><span class="blue">$</span> clang <span class="green">$CFLAGS</span> foo.c -o foo.ll
+<span class="blue">$</span> tesla instrument -tesla-manifest tesla.manifest foo.ll -o foo.instr.ll
+<span class="blue">$</span> tesla instrument -tesla-manifest tesla.manifest bar.ll -o bar.instr.ll
+</div>
+
+<p>
 Calls to instrumentation are inserted inline within LLVM basic blocks:
 </p>
 
