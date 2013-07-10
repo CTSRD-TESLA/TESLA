@@ -280,6 +280,21 @@ may be present in the mask.
 </p>
 
 <p>
+Values passed or returned by reference may be referred to using the address-of
+operator.
+The value referred to is the value pointed to at the moment of call or return,
+depending on whether a call or return is being described.
+</p>
+
+<code class="listing"><span class="keyword">int</span> get_object(<span class="keyword">int</span> id, <span class="keyword">struct</span> **ptr_out);
+
+<span class="comment">/* [...] */</span>
+{
+  <span class="keyword">struct</span> object *o = a_pointer_from_somewhere;
+  <span class="keyword">TESLA_WITHIN</span>(some_function, <span class="keywordflow">previously</span>(get_object(ANY(<span class="keyword">int</span>), &amp;o)));
+</code>
+
+<p>
 To instrument a function call, rather than return, the programmer can use the
 <code><span class="keyword">called</span></code>() macro:
 </p>
