@@ -270,6 +270,13 @@ satisfies the expression.
 </p>
 
 <p>
+Argument values can be derived from structure fields, as shown here:
+</p>
+
+<code class="listing"><span class="keywordflow">previously</span>(security_check(<span class="keyword">ANY</span>(ptr), o, some_struct-&gt;operation) == 0)
+</code>
+
+<p>
 Bitmask arguments can be described with
 <code><span class="keyword">flags</span>(FLAG1|FLAG2)</code>,
 meaning that <code>FLAG1</code> and <code>FLAG2</code> <em>must</em> be present
