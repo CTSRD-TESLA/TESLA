@@ -42,6 +42,8 @@
 
 namespace tesla {
 
+int ArgIndex(const Argument&);
+
 template<class T>
 inline bool operator != (const T& x, const T& y) { return !(x == y); }
 

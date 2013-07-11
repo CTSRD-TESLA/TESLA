@@ -8,6 +8,7 @@ add_library(TeslaCommon
   Debug.cpp
   Manifest.cpp
   Names.cpp
+  Protocol.cpp
   State.cpp
   Transition.cpp
 )
