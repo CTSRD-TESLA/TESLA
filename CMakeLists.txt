@@ -26,7 +26,8 @@ if("${LLVM_VERSION}" MATCHES "not found")
   message(FATAL_ERROR "llvm-config not found; may need to set PATH?")
 endif()
 
-exec_program(${CMAKE_LLVM_CONFIG} ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
+exec_program(${CMAKE_LLVM_CONFIG} ARGS --includedir OUTPUT_VARIABLE LLVM_INCDIR)
+exec_program(${CMAKE_LLVM_CONFIG} ARGS --libdir   OUTPUT_VARIABLE LLVM_LIBDIR)
 exec_program(${CMAKE_LLVM_CONFIG} ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
 exec_program(${CMAKE_LLVM_CONFIG} ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 
@@ -45,7 +46,7 @@ if(NOT CLANG_RESOURCE_DIR)
 endif()
 
 # Explicitly put LLVM's library directory before others, e.g. /usr/local/lib.
-link_directories(${LLVM_PREFIX}/lib)
+link_directories(${LLVM_LIBDIR})
 
 # Always build with all warnings.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes")
@@ -55,11 +56,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 #
 # Global include directories for all of TESLA:
 #
+include_directories(${LLVM_INCDIR})
+# Add includes from src and obj only if we're building from a
+# non-installed copy.
+if (${LLVM_SRC}/include STREQUAL ${LLVM_INCDIR})
+	include_directories(
+		${LLVM_OBJ}/include
+		${LLVM_SRC}/tools/clang/include
+		${LLVM_OBJ}/tools/clang/include
+	)
+endif()
 include_directories(
-	${LLVM_SRC}/include
-	${LLVM_OBJ}/include
-	${LLVM_SRC}/tools/clang/include
-	${LLVM_OBJ}/tools/clang/include
 	include                          # [lib]tesla.h
 	${CMAKE_BINARY_DIR}/include      # config.h
 )
