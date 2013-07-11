@@ -93,10 +93,10 @@ const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 std::string ArgString(const Argument*);
 
 //! Convert an @ref Argument into a very short, human-readable name.
-std::string ShortName(const Argument*);
+std::string ShortName(const Argument*, bool DecorateIndirection = true);
 
 //! Convert an @ref Argument into a very short name for GraphViz's dot.
-std::string DotName(const Argument*);
+std::string DotName(const Argument*, bool DecorateIndirection = true);
 
 //! Convert an @ref Identifier into a short, human-readable name.
 std::string ShortName(const Identifier&);
@@ -105,7 +105,8 @@ std::string ShortName(const Identifier&);
 std::string ShortName(const Location&);
 
 //! Convert the name of an automata instance.
-std::string InstanceName(const ReferenceVector&, bool PlainAscii);
+std::string InstanceName(const ReferenceVector&,
+                         bool PlainAscii, bool DecorateIndirection);
 
 } /* namespace tesla */
 

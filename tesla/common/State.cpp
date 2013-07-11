@@ -147,7 +147,7 @@ string State::String() const {
   assert(VariableReferences);
 
   std::stringstream ss;
-  ss << "state " << Name(true) << " " << InstanceName(Refs, true) << ":";
+  ss << "state " << Name(true) << " " << InstanceName(Refs, true, false) << ":";
 
   for (const auto& I : Transitions) {
     const Transition& T = *I;
@@ -166,7 +166,7 @@ string State::Dot() const {
     + " [ label = \""
     + "state " + Twine(ID())
     + NameExtra
-    + "\\n" + InstanceName(Refs, false) + "\""
+    + "\\n" + InstanceName(Refs, false, false) + "\""
     + (IsAcceptingState() ? ", shape = doublecircle" : "")
     + " ];"
   ).str();

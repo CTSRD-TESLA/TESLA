@@ -4,6 +4,8 @@
  *
  * RUN: tesla analyse %s -o %t -- %cflags
  * RUN: FileCheck -input-file=%t %s
+ * RUN: tesla graph %t -o %t.dot
+ * RUN: FileCheck -check-prefix=DOT -input-file=%t.dot %s
  */
 
 #include "tesla-macros.h"
@@ -22,6 +24,12 @@ void foo(struct object *o) {
 	 * CHECK:           }
 	 * CHECK:         }
 	 * CHECK:         expression {
+	 *
+	 * DOT: digraph automaton
+	 * DOT:  0 [ label = "state 0\n([[ANY:&#[0-9]+;]])" ];
+	 * DOT:  [[INIT:[0-9]+]] [ label = "state [[INIT]]\n([[ANY]])" ];
+	 * DOT:  [[OBJ:[0-9]+]]  [ label = "state [[OBJ]]\n(o)" ];
+	 * DOT:  [[DONE:[0-9]+]] [ label = "state [[DONE]]\n({{.*}})", shape = doublecircle ];
 	 */
 	TESLA_WITHIN(context,
 		TSEQUENCE(
@@ -43,6 +51,13 @@ void foo(struct object *o) {
 			 * CHECK-NEXT:      }
 			 * CHECK:         }
 			 * CHECK:       }
+			 *
+			 * TODO: use DOT-DAG when we move to LLVM 3.4:
+			 *
+			 * DOT:        0 -> [[INIT]];
+			 * DOT: [[INIT]] -> [[OBJ]];
+			 * DOT: [[OBJ]]  -> [[DONE]];
+			 * DOT: [[INIT]] -> [[DONE]];
 			 */
 			get_object(&o) == 0
 		)

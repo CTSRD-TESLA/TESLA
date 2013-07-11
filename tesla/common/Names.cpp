@@ -79,7 +79,7 @@ static std::string ConstantName(const tesla::Argument* A) {
     return Twine(A->value()).str();
 }
 
-std::string tesla::ShortName(const Argument* A) {
+std::string tesla::ShortName(const Argument* A, bool DecorateIndirection) {
   if (A == NULL)
     return "X";
 
@@ -95,7 +95,7 @@ std::string tesla::ShortName(const Argument* A) {
 
   case Argument::Indirect:
     assert(A->has_indirection());
-    return "*" + ShortName(&A->indirection());
+    return (DecorateIndirection ? "&" : "") + ShortName(&A->indirection());
 
   case Argument::Field:
     assert(A->has_field());
@@ -103,9 +103,8 @@ std::string tesla::ShortName(const Argument* A) {
   }
 }
 
-std::string tesla::DotName(const Argument* A) {
+std::string tesla::DotName(const Argument* A, bool DecorateIndirection) {
   const static std::string Star = "&#8902;";
-  const static std::string Asterisk = "&#x2217;";
 
   if (A == NULL)
     return Star;
@@ -122,7 +121,7 @@ std::string tesla::DotName(const Argument* A) {
 
   case Argument::Indirect:
     assert(A->has_indirection());
-    return Asterisk + DotName(&A->indirection());
+    return (DecorateIndirection ? "&": "") + DotName(&A->indirection());
 
   case Argument::Field:
     assert(A->has_field());
@@ -147,14 +146,17 @@ std::string tesla::ShortName(const Location& Loc) {
   ).str();
 }
 
-std::string tesla::InstanceName(const ReferenceVector& Refs, bool PlainAscii) {
+std::string tesla::InstanceName(const ReferenceVector& Refs,
+                                bool PlainAscii, bool DecorateIndirection) {
 
   std::stringstream InstanceName;
 
   InstanceName << "(";
 
   for (auto i = Refs.begin(); i != Refs.end(); ) {
-    InstanceName << (PlainAscii ? ShortName(*i) : DotName(*i));
+    InstanceName << (PlainAscii
+                     ? ShortName(*i, DecorateIndirection)
+                     : DotName(*i, DecorateIndirection));
 
     if (++i != Refs.end())
       InstanceName << ",";
