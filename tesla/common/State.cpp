@@ -95,10 +95,11 @@ void State::UpdateReferences(const Transition& T)
       if (Arg == NULL)
         continue;
 
-      assert(Arg->type() == Argument::Variable);
-      assert(((size_t) Arg->index()) <= Len);
+      int Index = ArgIndex(*Arg);
+      if (Index < 0)
+        continue;
 
-      uint32_t Index = Arg->index();
+      assert(Index <= Len);
       const Argument *Existing = Refs[Index];
 
       // New variable references should be a subset of existing ones.
@@ -122,8 +123,14 @@ uint32_t State::Mask() const {
   ReferenceVector Refs = References();
 
   for (size_t i = 0; i < Refs.size(); i++) {
-    if (Refs[i] && Refs[i]->type() == Argument::Variable)
-      Mask |= (1 << i);
+    if (!Refs[i])
+      continue;
+
+    int Index = ArgIndex(*Refs[i]);
+    if (Index < 0)
+      continue;
+
+    Mask |= (1 << Index);
   }
 
 

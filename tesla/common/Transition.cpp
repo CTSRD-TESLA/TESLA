@@ -193,15 +193,19 @@ void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
 
   // Put this transition's *variable* references in var-index order.
   SmallVector<const Argument*, 4> MyRefs;
-  for (auto Arg : this->Arguments())
-    if (Arg && Arg->type() == Argument::Variable) {
-      size_t i = Arg->index();
+  for (auto Arg : this->Arguments()) {
+    if (!Arg)
+      continue;
 
-      if (MyRefs.size() <= i)
-        MyRefs.resize(i + 1);
+    int Index = ArgIndex(*Arg);
+    if (Index < 0)
+      continue;
 
-      MyRefs[i] = Arg;
-    }
+    if (MyRefs.size() <= Index)
+      MyRefs.resize(Index + 1);
+
+    MyRefs[Index] = Arg;
+  }
 
   auto& FromRefs = From.References();
   const size_t Size = FromRefs.size();
@@ -240,9 +244,16 @@ int Transition::NewArgMask() const {
   auto NewArgs(NewArguments());
   int Mask = 0;
 
-  for (int i = 0; i < NewArgs.size(); i++)
-    if ((NewArgs[i] != NULL) && (NewArgs[i]->type() == Argument::Variable))
-      Mask += (1 << i);
+  for (int i = 0; i < NewArgs.size(); i++) {
+    if (NewArgs[i] == NULL)
+      continue;
+
+    int Index = ArgIndex(*NewArgs[i]);
+    if (Index < 0)
+      continue;
+
+    Mask += (1 << Index);
+  }
 
   return Mask;
 }

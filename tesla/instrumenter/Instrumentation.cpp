@@ -58,6 +58,9 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
+llvm::Value* GetArgumentValue(llvm::Value* Param, const Argument& ArgDescrip,
+                              llvm::IRBuilder<>& Builder);
+
 BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
                          BasicBlock *MatchTarget, BasicBlock *NonMatchTarget,
                          Value *Val, const tesla::Argument& Pattern);
@@ -490,6 +493,33 @@ Constant* tesla::TeslaContext(AutomatonDescription::Context Context,
 }
 
 
+Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
+                               IRBuilder<>& Builder) {
+
+  switch (ArgDescrip.type()) {
+  case Argument::Constant:
+    /* constants are handled by instrumentation pattern matchers */
+    return NULL;
+
+  case Argument::Any:
+    /* ignore: we don't care about this parameter */
+    return NULL;
+
+  case Argument::Variable:
+    assert(ArgDescrip.has_index());
+    return Param;
+
+  case Argument::Indirect:
+    Param = Builder.CreateLoad(Param);
+    return GetArgumentValue(Param, ArgDescrip.indirection(), Builder);
+
+  case Argument::Field:
+    /* TODO: finish implementing this */
+    llvm_unreachable("TESLA: field-indirect instrumentation not implemented");
+    return NULL;
+  }
+}
+
 Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
                            Function::ArgumentListType& InstrArgs,
                            FunctionEvent FnEvent) {
@@ -516,13 +546,12 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
       : FnEvent.argument(i);
     ++i;
 
-    if (Arg.type() != Argument::Variable)
+    int Index = ArgIndex(Arg);
+    if (Index < 0)
       continue;
 
-    size_t Index = Arg.index();
-
     assert(Index < TotalArgs);
-    Args[Index] = &InstrArg;
+    Args[Index] = GetArgumentValue(&InstrArg, Arg, Builder);
   }
 
   return ConstructKey(Builder, M, Args);
