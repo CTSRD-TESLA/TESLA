@@ -239,7 +239,7 @@ message Argument {
    * arguments to foo are [0,1] within the automata and the arguments to bar
    * are [1,2].
    *
-   * Only applicable when type == Variable.
+   * Only applicable when type == { Variable | Indirect | Field }.
    */
   optional int32 index = 2;
 
