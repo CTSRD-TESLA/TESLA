@@ -16,19 +16,23 @@ include(cmake/CopyFiles.cmake)
 find_package(LLVM REQUIRED)
 include(AddLLVM)
 
+if(NOT CMAKE_LLVM_CONFIG)
+	set(CMAKE_LLVM_CONFIG llvm-config)
+endif()
+
 # Make sure we can find llvm-config!
-exec_program(llvm-config ARGS --version  OUTPUT_VARIABLE LLVM_VERSION)
+exec_program(${CMAKE_LLVM_CONFIG} ARGS --version  OUTPUT_VARIABLE LLVM_VERSION)
 if("${LLVM_VERSION}" MATCHES "not found")
   message(FATAL_ERROR "llvm-config not found; may need to set PATH?")
 endif()
 
-exec_program(llvm-config ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
-exec_program(llvm-config ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
-exec_program(llvm-config ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
+exec_program(${CMAKE_LLVM_CONFIG} ARGS --prefix   OUTPUT_VARIABLE LLVM_PREFIX)
+exec_program(${CMAKE_LLVM_CONFIG} ARGS --src-root OUTPUT_VARIABLE LLVM_SRC)
+exec_program(${CMAKE_LLVM_CONFIG} ARGS --obj-root OUTPUT_VARIABLE LLVM_OBJ)
 
 # Find the Clang "resource dir" (contains include/stdarg.h, etc.).
 if(NOT CLANG_RESOURCE_DIR)
-	exec_program(llvm-config ARGS --bindir OUTPUT_VARIABLE LLVM_BIN)
+	exec_program(${CMAKE_LLVM_CONFIG} ARGS --bindir OUTPUT_VARIABLE LLVM_BIN)
 	exec_program(${LLVM_BIN}/clang ARGS --version OUTPUT_VARIABLE VERSION)
 
 	string(REPLACE "clang version " "" VERSION ${VERSION})
