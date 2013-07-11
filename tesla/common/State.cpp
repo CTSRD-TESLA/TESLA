@@ -97,6 +97,13 @@ void State::UpdateReferences(const Transition& T)
 
       assert(Arg->type() == Argument::Variable);
       assert(((size_t) Arg->index()) <= Len);
+
+      uint32_t Index = Arg->index();
+      const Argument *Existing = Refs[Index];
+
+      // New variable references should be a subset of existing ones.
+      if (Existing)
+        assert(*Arg == *Existing);
     }
 
     uint32_t NewMask = 0;
