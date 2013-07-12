@@ -71,6 +71,10 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
         continue;
 
       auto& FnEvent = Head->FnEvent();
+
+      // For now, skip Objective-C message sends.
+      if (FnEvent.kind() != FunctionEvent::CCall) continue;
+
       if (FnEvent.context() != FunctionEvent::Callee)
         continue;
 

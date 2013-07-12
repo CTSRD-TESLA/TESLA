@@ -79,6 +79,17 @@ protected:
   FunctionEvent::Direction Dir;     //!< Which way we instrument (in or out).
 };
 
+/**
+ * Creates a new instrumentation function for a callable object (a function, an
+ * Objective-C method).
+ */
+llvm::Function* CallableInstrumentation(llvm::Module& Mod,
+                                        llvm::StringRef Name,
+                                        llvm::FunctionType*,
+                                        FunctionEvent::Direction Dir,
+                                        FunctionEvent::CallContext Context,
+                                        bool SuppressDebugInstr);
+
 /// Instrumentation on a single instruction that does not change control flow.
 class InstInstrumentation {
 public:
@@ -147,11 +158,20 @@ llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
 llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
                                      const TEquivalenceClass&);
 
+
 //! Find (or create) one function-event instrumentation function.
 llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,
                                         FunctionEvent::Direction,
                                         FunctionEvent::CallContext,
                                         bool SuppressDebugInstr);
+
+//! Find (or create) one function-event instrumentation function given a 
+llvm::Function* ObjCMethodInstrumentation(llvm::Module&, 
+                                          llvm::StringRef Selector,
+                                          llvm::FunctionType*,
+                                          FunctionEvent::Direction,
+                                          FunctionEvent::CallContext,
+                                          bool SuppressDebugInstr);
 
 //! Find (or create) one struct-field-event instrumentation function.
 llvm::Function* StructInstrumentation(llvm::Module&, llvm::StructType*,

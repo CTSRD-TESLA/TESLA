@@ -40,12 +40,50 @@
 #include "llvm/IR/Module.h"
 
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/InstVisitor.h"
 
 using namespace llvm;
 
 using std::string;
 
 namespace tesla {
+
+namespace {
+  class MsgSendInstrumenter : public InstVisitor<MsgSendInstrumenter> {
+    Module *Mod;
+    FunctionType *FTy;
+    MDNode *MD;
+    unsigned MDKind;
+    std::string &SelName;
+    FunctionEvent::Direction Dir;
+    bool SuppressDebugInstr;
+    CallerInstrumentation *Inst;
+    public:
+    MsgSendInstrumenter(unsigned kind, MDNode *md, std::string &sel,
+        FunctionEvent::Direction dir, bool suppressDebug) : 
+      FTy(0), MD(md), MDKind(kind), SelName(sel), Dir(dir),
+      SuppressDebugInstr(suppressDebug) {}
+    void visitCallSite(CallSite CS) {
+      MDNode *CallMD = CS->getMetadata(MDKind);
+      if (MD != CallMD) return;
+      if (Function *Fn = CS.getCalledFunction()) {
+        StringRef Name = Fn->getName();
+        // Skip this if it's the lookup function not a direct send or an IMP
+        // call
+        if ((Name == "objc_msg_lookup") ||
+            (Name == "objc_msg_lookup_sender"))
+          return;
+      }
+      if (!FTy) {
+        FTy = cast<FunctionType>(
+            cast<PointerType>(CS.getCalledValue()->getType())->getElementType());
+        Inst = CallerInstrumentation::Build(*Mod, SelName, FTy, Dir, SuppressDebugInstr);
+      }
+      Inst->Instrument(*CS.getInstruction());
+    }
+    void visitModule(Module &M) { Mod = &M; }
+  };
+}
 
 // ==== FnCallerInstrumenter implementation =================================
 char FnCallerInstrumenter::ID = 0;
@@ -56,6 +94,10 @@ FnCallerInstrumenter::~FnCallerInstrumenter() {
 
 bool FnCallerInstrumenter::doInitialization(Module &Mod) {
   bool ModifiedIR = true;
+  llvm::LLVMContext &Ctx = Mod.getContext();
+  
+  unsigned ObjCMsgSendMDKind = Ctx.getMDKindID("GNUObjCMessageSend");
+
 
   for (auto i : M.RootAutomata()) {
     auto& A = *M.FindAutomaton(i->identifier());
@@ -70,14 +112,43 @@ bool FnCallerInstrumenter::doInitialization(Module &Mod) {
       if (FnEvent.context() != FunctionEvent::Caller)
         continue;
 
-      Function *Target = Mod.getFunction(FnEvent.function().name());
-      if (!Target)
-        continue;
+      bool isClassMessage = false;
+      std::string className = "";
 
-      GetOrCreateInstr(Mod, Target, FnEvent.direction())
-        ->AppendInstrumentation(A, FnEvent, EquivClass);
+      switch (FnEvent.kind()) {
+        case FunctionEvent::ObjCSuperMessage:
+        default:
+          llvm_unreachable("Unsupported instrumentation kind");
+        case FunctionEvent::ObjCClassMessage:
+          isClassMessage = true;
+          className = FnEvent.receiver().name();
+        case FunctionEvent::ObjCInstanceMessage: {
+          fprintf(stderr, "Trying to instrument message send\n");
+          std::string SelName = FnEvent.function().name();
+          llvm::Value *impMD[] = {
+            llvm::MDString::get(Ctx, SelName),
+            llvm::MDString::get(Ctx, isClassMessage ? className : ""),
+            llvm::ConstantInt::get(llvm::Type::getInt1Ty(Ctx), isClassMessage)
+          };
+          auto Metadata = llvm::MDNode::getIfExists(Ctx, impMD);
+          if (!Metadata) continue;
+          MsgSendInstrumenter MI(ObjCMsgSendMDKind, Metadata, SelName,
+              FnEvent.direction(), SuppressDebugInstr);
+          MI.visit(Mod);
 
-      ModifiedIR = true;
+          break;
+        }
+        case FunctionEvent::CCall: {
+          Function *Target = Mod.getFunction(FnEvent.function().name());
+          if (!Target)
+            continue;
+
+          GetOrCreateInstr(Mod, Target, FnEvent.direction())
+            ->AppendInstrumentation(A, FnEvent, EquivClass);
+
+        }
+        ModifiedIR = true;
+      }
     }
   }
 
@@ -148,6 +219,20 @@ CallerInstrumentation*
                                               SuppressDebugInstr);
 
   return new CallerInstrumentation(M, Target, InstrFn, Dir);
+}
+
+CallerInstrumentation*
+    CallerInstrumentation::Build(Module& M,
+                                 llvm::StringRef Selector,
+                                 llvm::FunctionType* Ty,
+                                 FunctionEvent::Direction Dir,
+                                 bool SuppressDebugInstr) {
+
+  Function *InstrFn = ObjCMethodInstrumentation(M, Selector, Ty, Dir,
+                                              FunctionEvent::Caller,
+                                              SuppressDebugInstr);
+
+  return new CallerInstrumentation(M, 0, InstrFn, Dir);
 }
 
 

@@ -87,6 +87,11 @@ public:
   static CallerInstrumentation* Build(llvm::Module&, llvm::Function *Target,
                                       FunctionEvent::Direction,
                                       bool SuppressDebugInstr);
+  static CallerInstrumentation* Build(llvm::Module& M,
+                                      llvm::StringRef Selector,
+                                      llvm::FunctionType* Ty,
+                                      FunctionEvent::Direction Dir,
+                                      bool SuppressDebugInstr);
 
   // InstInstrumentation implementation:
   bool Instrument(llvm::Instruction&);

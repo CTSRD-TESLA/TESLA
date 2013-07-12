@@ -77,10 +77,10 @@ BasicBlock *FindBlock(StringRef Name, Function& Fn) {
 void FnInstrumentation::AppendInstrumentation(
     const Automaton& A, const FunctionEvent& Ev, TEquivalenceClass& Trans) {
 
-  LLVMContext& Ctx = TargetFn->getContext();
+  LLVMContext& Ctx = M.getContext();
 
   auto Fn = Ev.function();
-  assert(Fn.name() == TargetFn->getName());
+  assert((Ev.kind() != FunctionEvent::CCall) || (Fn.name() == TargetFn->getName()));
   assert(Ev.direction() == Dir);
 
   // An instrumentation function should be a linear chain of event pattern
@@ -92,15 +92,16 @@ void FnInstrumentation::AppendInstrumentation(
 
   // We may need to check constant values (e.g. return values).
   size_t i = 0;
-  for (auto& InstrArg : InstrFn->getArgumentList()) {
-    const Argument& Arg = Ev.argument(i);
-    MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
-                 Instr, Exit, &InstrArg, Arg);
+  if (Ev.argument().size() > 0)
+    for (auto& InstrArg : InstrFn->getArgumentList()) {
+      const Argument& Arg = Ev.argument(i);
+      MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
+                   Instr, Exit, &InstrArg, Arg);
 
-    // Ignore the return value, which passed as an argument to InstrFn.
-    if (++i == Ev.argument_size())
-      break;
-  }
+      // Ignore the return value, which passed as an argument to InstrFn.
+      if (++i == Ev.argument_size())
+        break;
+    }
 
   if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
     const Argument &Arg = Ev.expectedreturnvalue();
@@ -180,19 +181,20 @@ const char* Format(Type *T) {
 
 } /* namespace tesla */
 
-
-Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
+Function* tesla::CallableInstrumentation(Module& Mod, llvm::StringRef CalledName,
+                                         FunctionType *SubType,
                                          FunctionEvent::Direction Dir,
                                          FunctionEvent::CallContext Context,
                                          bool SuppressDebugInstr) {
 
   LLVMContext& Ctx = Mod.getContext();
+  Type *RetType = SubType->getReturnType();
 
   string Name = (Twine()
     + INSTR_BASE
     + ((Context == FunctionEvent::Callee) ? CALLEE : CALLER)
     + ((Dir == FunctionEvent::Entry) ? ENTER : EXIT)
-    + Subject.getName()
+    + CalledName
   ).str();
 
   string Tag = (Twine()
@@ -204,11 +206,9 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
 
 
   // Build the instrumentation function's type.
-  FunctionType *SubType = Subject.getFunctionType();
   TypeVector Args(SubType->param_begin(), SubType->param_end());
 
   if (Dir == FunctionEvent::Exit) {
-    Type *RetType = Subject.getReturnType();
     if (!RetType->isVoidTy())
       Args.push_back(RetType);
   }
@@ -227,7 +227,7 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
   // Invariant: instrumentation blocks should have two exit blocks: one for
   // normal termination and one for abnormal termination.
   if (InstrFn->empty()) {
-    auto *Entry = CreateInstrPreamble(Mod, InstrFn, Tag + Subject.getName(),
+    auto *Entry = CreateInstrPreamble(Mod, InstrFn, Tag + CalledName,
                                       SuppressDebugInstr);
     auto *Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
     IRBuilder<>(Entry).CreateBr(Exit);
@@ -235,6 +235,40 @@ Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
   }
 
   return InstrFn;
+}
+
+llvm::Function* tesla::ObjCMethodInstrumentation(llvm::Module& Mod,
+                                                 llvm::StringRef Selector,
+                                                 llvm::FunctionType* Ty,
+                                                 FunctionEvent::Direction Dir,
+                                                 FunctionEvent::CallContext Context,
+                                                 bool SuppressDebugInstr) {
+
+  
+  // If this is a caller-context instrumentation, then just generate a single
+  // instrumentation function as if this were a function.
+  if (Context == FunctionEvent::Caller)
+    return CallableInstrumentation(Mod, (Twine() + ".objc" + Selector).str(),
+        Ty, Dir, Context, SuppressDebugInstr);
+ 
+  // If this is a callee-context instrumentation then we generate a link-once
+  // ODR function that we will attempt to register as an interposition method
+  // for the selector.  This function will then call a linked list of handlers.
+  // The handlers are all registered at load time by chaining them off a
+  // common-linkage variable.
+  //
+  // FIXME: None of the above is actually implemented...
+  llvm_unreachable("Callee-context instrumentation not yet supported for "
+      "Objective-C messages");
+}
+
+
+Function* tesla::FunctionInstrumentation(Module& Mod, const Function& Subject,
+                                         FunctionEvent::Direction Dir,
+                                         FunctionEvent::CallContext Context,
+                                         bool SuppressDebugInstr) {
+  return CallableInstrumentation(Mod, Subject.getName(),
+          Subject.getFunctionType(), Dir, Context, SuppressDebugInstr);
 }
 
 
