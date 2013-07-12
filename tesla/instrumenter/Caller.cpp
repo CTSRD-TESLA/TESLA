@@ -123,7 +123,6 @@ bool FnCallerInstrumenter::doInitialization(Module &Mod) {
           isClassMessage = true;
           className = FnEvent.receiver().name();
         case FunctionEvent::ObjCInstanceMessage: {
-          fprintf(stderr, "Trying to instrument message send\n");
           std::string SelName = FnEvent.function().name();
           llvm::Value *impMD[] = {
             llvm::MDString::get(Ctx, SelName),
