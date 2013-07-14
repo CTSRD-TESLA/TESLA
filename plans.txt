@@ -11,7 +11,8 @@ Things people are going to look at:
 * marinosi
   * marinosi's stack
 * avsm2
-  * OCaml GC (C interface)
+  * libtesla OCaml bindings
+  * equivalent automata from Mirage TCP -> FreeBSD TCP
 * bz
   * possibly ND6 or IPSEC assertions?
 * jon
