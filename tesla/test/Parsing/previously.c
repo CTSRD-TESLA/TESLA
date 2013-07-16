@@ -80,5 +80,5 @@ example_syscall(struct credential *cred)
 int
 main(int argc, char *argv[]) {
 	struct credential cred;
-	return example_syscall(&cred, 0, 0);
+	return example_syscall(&cred);
 }

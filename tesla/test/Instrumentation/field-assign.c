@@ -78,6 +78,5 @@ int main(int argc, char *argv[]) {
  * CHECK: define private [[STORE]].field1([[STRUCT]], i32, i32*){{.*}} {
  * CHECK:   [[UPDATE_STATE]]
  * CHECK:   [[UPDATE_STATE]]
- * CHECK:   [[UPDATE_STATE]]
  * CHECK: }
  */
