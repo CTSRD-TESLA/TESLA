@@ -52,13 +52,14 @@ namespace tesla {
 
 class CalleeInstr;
 class Manifest;
+class ObjCInstrumentation;
 
 /// Instruments function calls in the callee context.
 class FnCalleeInstrumenter : public Instrumenter, public llvm::ModulePass {
 public:
   static char ID;
   FnCalleeInstrumenter(const Manifest& M, bool SuppressDI)
-    : Instrumenter(M, SuppressDI), ModulePass(ID) {}
+    : Instrumenter(M, SuppressDI), ModulePass(ID), ObjC(0) {}
   ~FnCalleeInstrumenter();
 
   const char* getPassName() const {
@@ -68,6 +69,7 @@ public:
   virtual bool runOnModule(llvm::Module &M);
 
 private:
+  ObjCInstrumentation *ObjC;
   CalleeInstr* GetOrCreateInstr(llvm::Module&, llvm::Function*,
                                 FunctionEvent::Direction);
 
@@ -84,9 +86,20 @@ public:
                             FunctionEvent::Direction,
                             bool SuppressDebugInstr);
 
+  static CalleeInstr* Build(llvm::Module&, 
+                            const std::string&,
+                            llvm::FunctionType *,
+                            FunctionEvent::Direction,
+                            bool SuppressDebugInstr);
+
 private:
   CalleeInstr(llvm::Module&, llvm::Function *Fn, llvm::Function *Inst,
               FunctionEvent::Direction);
+
+  CalleeInstr(llvm::Module& M, llvm::Function *InstrFn,
+              FunctionEvent::Direction Dir)
+      : FnInstrumentation(M, 0, InstrFn, Dir) {}
+
 
   ArgVector Args;                   ///< Translated function arguments.
 };
