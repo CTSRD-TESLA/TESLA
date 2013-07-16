@@ -2,7 +2,7 @@ automaton {
   identifier {
     location {
       filename: "crypto.c"
-      line: 52
+      line: 50
       counter: 0
     }
   }
@@ -11,26 +11,7 @@ automaton {
     type: SEQUENCE
     sequence {
       expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "example_syscall"
-          }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Any
-            name: "cred"
-          }
-          argument {
-            type: Any
-            name: "index"
-          }
-          argument {
-            type: Any
-            name: "op"
-          }
-        }
+        type: NULL_EXPR
       }
       expression {
         type: FUNCTION
@@ -52,8 +33,9 @@ automaton {
           }
           expectedReturnValue {
             type: Constant
-            value: 1
+            value: 0
           }
+          strict: false
         }
       }
       expression {
@@ -61,7 +43,7 @@ automaton {
         now {
           location {
             filename: "crypto.c"
-            line: 52
+            line: 50
             counter: 0
           }
         }
@@ -81,6 +63,340 @@ automaton {
 }
 automaton {
   identifier {
+    name: "active_close"
+  }
+  context: Global
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: FIELD_ASSIGN
+        fieldAssign {
+          operation: SimpleAssign
+          value {
+            type: Constant
+            name: "TCPS_FIN_WAIT_1"
+            value: 6
+          }
+          strict: true
+          field {
+            type: "tcpcb"
+            base {
+              type: Variable
+              index: 0
+              name: "tp"
+            }
+            name: "t_state"
+            index: 5
+          }
+        }
+      }
+      expression {
+        type: BOOLEAN_EXPR
+        booleanExpr {
+          operation: BE_Xor
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: NULL_EXPR
+              }
+              expression {
+                type: FIELD_ASSIGN
+                fieldAssign {
+                  operation: SimpleAssign
+                  value {
+                    type: Constant
+                    name: "TCPS_CLOSING"
+                    value: 7
+                  }
+                  strict: true
+                  field {
+                    type: "tcpcb"
+                    base {
+                      type: Variable
+                      index: 0
+                      name: "tp"
+                    }
+                    name: "t_state"
+                    index: 5
+                  }
+                }
+              }
+              expression {
+                type: FIELD_ASSIGN
+                fieldAssign {
+                  operation: SimpleAssign
+                  value {
+                    type: Constant
+                    name: "TCPS_TIME_WAIT"
+                    value: 10
+                  }
+                  strict: true
+                  field {
+                    type: "tcpcb"
+                    base {
+                      type: Variable
+                      index: 0
+                      name: "tp"
+                    }
+                    name: "t_state"
+                    index: 5
+                  }
+                }
+              }
+            }
+          }
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: NULL_EXPR
+              }
+              expression {
+                type: FIELD_ASSIGN
+                fieldAssign {
+                  operation: SimpleAssign
+                  value {
+                    type: Constant
+                    name: "TCPS_FIN_WAIT_2"
+                    value: 9
+                  }
+                  strict: true
+                  field {
+                    type: "tcpcb"
+                    base {
+                      type: Variable
+                      index: 0
+                      name: "tp"
+                    }
+                    name: "t_state"
+                    index: 5
+                  }
+                }
+              }
+              expression {
+                type: FIELD_ASSIGN
+                fieldAssign {
+                  operation: SimpleAssign
+                  value {
+                    type: Constant
+                    name: "TCPS_TIME_WAIT"
+                    value: 10
+                  }
+                  strict: true
+                  field {
+                    type: "tcpcb"
+                    base {
+                      type: Variable
+                      index: 0
+                      name: "tp"
+                    }
+                    name: "t_state"
+                    index: 5
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      expression {
+        type: FIELD_ASSIGN
+        fieldAssign {
+          operation: SimpleAssign
+          value {
+            type: Constant
+            name: "TCPS_CLOSED"
+            value: 0
+          }
+          strict: true
+          field {
+            type: "tcpcb"
+            base {
+              type: Variable
+              index: 0
+              name: "tp"
+            }
+            name: "t_state"
+            index: 5
+          }
+        }
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "tcp_free"
+          }
+          direction: Entry
+          context: Callee
+          argument {
+            type: Variable
+            index: 0
+            name: "tp"
+          }
+          strict: true
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "tp"
+  }
+}
+automaton {
+  identifier {
+    name: "established"
+  }
+  context: Global
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: FIELD_ASSIGN
+        fieldAssign {
+          operation: SimpleAssign
+          value {
+            type: Constant
+            name: "TCPS_ESTABLISHED"
+            value: 4
+          }
+          strict: true
+          field {
+            type: "tcpcb"
+            base {
+              type: Variable
+              index: 0
+              name: "tp"
+            }
+            name: "t_state"
+            index: 5
+          }
+        }
+      }
+      expression {
+        type: BOOLEAN_EXPR
+        booleanExpr {
+          operation: BE_Xor
+          expression {
+            type: SUB_AUTOMATON
+            subAutomaton {
+              name: "active_close"
+            }
+          }
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: NULL_EXPR
+              }
+              expression {
+                type: FIELD_ASSIGN
+                fieldAssign {
+                  operation: SimpleAssign
+                  value {
+                    type: Constant
+                    name: "TCPS_CLOSE_WAIT"
+                    value: 5
+                  }
+                  strict: true
+                  field {
+                    type: "tcpcb"
+                    base {
+                      type: Variable
+                      index: 0
+                      name: "tp"
+                    }
+                    name: "t_state"
+                    index: 5
+                  }
+                }
+              }
+              expression {
+                type: FIELD_ASSIGN
+                fieldAssign {
+                  operation: SimpleAssign
+                  value {
+                    type: Constant
+                    name: "TCPS_LAST_ACK"
+                    value: 8
+                  }
+                  strict: true
+                  field {
+                    type: "tcpcb"
+                    base {
+                      type: Variable
+                      index: 0
+                      name: "tp"
+                    }
+                    name: "t_state"
+                    index: 5
+                  }
+                }
+              }
+              expression {
+                type: BOOLEAN_EXPR
+                booleanExpr {
+                  operation: BE_Xor
+                  expression {
+                    type: NULL_EXPR
+                  }
+                  expression {
+                    type: FIELD_ASSIGN
+                    fieldAssign {
+                      operation: SimpleAssign
+                      value {
+                        type: Constant
+                        value: 0
+                      }
+                      strict: true
+                      field {
+                        type: "tcpcb"
+                        base {
+                          type: Variable
+                          index: 0
+                          name: "tp"
+                        }
+                        name: "t_state"
+                        index: 5
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "tcp_free"
+          }
+          direction: Entry
+          context: Callee
+          argument {
+            type: Variable
+            index: 0
+            name: "tp"
+          }
+          strict: true
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "tp"
+  }
+}
+automaton {
+  identifier {
     name: "my_tcpcb_assertion"
   }
   context: Global
@@ -90,20 +406,23 @@ automaton {
       expression {
         type: FIELD_ASSIGN
         fieldAssign {
-          type: "tcpcb"
-          index: 5
-          base {
-            type: Variable
-            index: 0
-            name: "tp"
-          }
           operation: SimpleAssign
           value {
             type: Constant
             name: "TCPS_CLOSED"
             value: 0
           }
-          fieldName: "t_state"
+          strict: true
+          field {
+            type: "tcpcb"
+            base {
+              type: Variable
+              index: 0
+              name: "tp"
+            }
+            name: "t_state"
+            index: 5
+          }
         }
       }
       expression {
@@ -123,20 +442,23 @@ automaton {
                   expression {
                     type: FIELD_ASSIGN
                     fieldAssign {
-                      type: "tcpcb"
-                      index: 5
-                      base {
-                        type: Variable
-                        index: 0
-                        name: "tp"
-                      }
                       operation: SimpleAssign
                       value {
                         type: Constant
                         name: "TCPS_LISTEN"
                         value: 1
                       }
-                      fieldName: "t_state"
+                      strict: true
+                      field {
+                        type: "tcpcb"
+                        base {
+                          type: Variable
+                          index: 0
+                          name: "tp"
+                        }
+                        name: "t_state"
+                        index: 5
+                      }
                     }
                   }
                   expression {
@@ -149,19 +471,22 @@ automaton {
                       expression {
                         type: FIELD_ASSIGN
                         fieldAssign {
-                          type: "tcpcb"
-                          index: 5
-                          base {
-                            type: Variable
-                            index: 0
-                            name: "tp"
-                          }
                           operation: SimpleAssign
                           value {
                             type: Constant
                             value: 0
                           }
-                          fieldName: "t_state"
+                          strict: true
+                          field {
+                            type: "tcpcb"
+                            base {
+                              type: Variable
+                              index: 0
+                              name: "tp"
+                            }
+                            name: "t_state"
+                            index: 5
+                          }
                         }
                       }
                     }
@@ -179,6 +504,7 @@ automaton {
                         index: 0
                         name: "tp"
                       }
+                      strict: true
                     }
                   }
                 }
@@ -199,19 +525,22 @@ automaton {
                       expression {
                         type: FIELD_ASSIGN
                         fieldAssign {
-                          type: "tcpcb"
-                          index: 5
-                          base {
-                            type: Variable
-                            index: 0
-                            name: "tp"
-                          }
                           operation: SimpleAssign
                           value {
                             type: Constant
                             value: 2
                           }
-                          fieldName: "t_state"
+                          strict: true
+                          field {
+                            type: "tcpcb"
+                            base {
+                              type: Variable
+                              index: 0
+                              name: "tp"
+                            }
+                            name: "t_state"
+                            index: 5
+                          }
                         }
                       }
                     }
@@ -229,19 +558,22 @@ automaton {
                           expression {
                             type: FIELD_ASSIGN
                             fieldAssign {
-                              type: "tcpcb"
-                              index: 5
-                              base {
-                                type: Variable
-                                index: 0
-                                name: "tp"
-                              }
                               operation: SimpleAssign
                               value {
                                 type: Constant
                                 value: 3
                               }
-                              fieldName: "t_state"
+                              strict: true
+                              field {
+                                type: "tcpcb"
+                                base {
+                                  type: Variable
+                                  index: 0
+                                  name: "tp"
+                                }
+                                name: "t_state"
+                                index: 5
+                              }
                             }
                           }
                           expression {
@@ -289,309 +621,8 @@ automaton {
                 index: 0
                 name: "tp"
               }
+              strict: true
             }
-          }
-        }
-      }
-    }
-  }
-  argument {
-    type: Variable
-    index: 0
-    name: "tp"
-  }
-}
-automaton {
-  identifier {
-    name: "active_close"
-  }
-  context: Global
-  expression {
-    type: SEQUENCE
-    sequence {
-      expression {
-        type: FIELD_ASSIGN
-        fieldAssign {
-          type: "tcpcb"
-          index: 5
-          base {
-            type: Variable
-            index: 0
-            name: "tp"
-          }
-          operation: SimpleAssign
-          value {
-            type: Constant
-            name: "TCPS_FIN_WAIT_1"
-            value: 6
-          }
-          fieldName: "t_state"
-        }
-      }
-      expression {
-        type: BOOLEAN_EXPR
-        booleanExpr {
-          operation: BE_Xor
-          expression {
-            type: SEQUENCE
-            sequence {
-              expression {
-                type: NULL_EXPR
-              }
-              expression {
-                type: FIELD_ASSIGN
-                fieldAssign {
-                  type: "tcpcb"
-                  index: 5
-                  base {
-                    type: Variable
-                    index: 0
-                    name: "tp"
-                  }
-                  operation: SimpleAssign
-                  value {
-                    type: Constant
-                    name: "TCPS_CLOSING"
-                    value: 7
-                  }
-                  fieldName: "t_state"
-                }
-              }
-              expression {
-                type: FIELD_ASSIGN
-                fieldAssign {
-                  type: "tcpcb"
-                  index: 5
-                  base {
-                    type: Variable
-                    index: 0
-                    name: "tp"
-                  }
-                  operation: SimpleAssign
-                  value {
-                    type: Constant
-                    name: "TCPS_TIME_WAIT"
-                    value: 10
-                  }
-                  fieldName: "t_state"
-                }
-              }
-            }
-          }
-          expression {
-            type: SEQUENCE
-            sequence {
-              expression {
-                type: NULL_EXPR
-              }
-              expression {
-                type: FIELD_ASSIGN
-                fieldAssign {
-                  type: "tcpcb"
-                  index: 5
-                  base {
-                    type: Variable
-                    index: 0
-                    name: "tp"
-                  }
-                  operation: SimpleAssign
-                  value {
-                    type: Constant
-                    name: "TCPS_FIN_WAIT_2"
-                    value: 9
-                  }
-                  fieldName: "t_state"
-                }
-              }
-              expression {
-                type: FIELD_ASSIGN
-                fieldAssign {
-                  type: "tcpcb"
-                  index: 5
-                  base {
-                    type: Variable
-                    index: 0
-                    name: "tp"
-                  }
-                  operation: SimpleAssign
-                  value {
-                    type: Constant
-                    name: "TCPS_TIME_WAIT"
-                    value: 10
-                  }
-                  fieldName: "t_state"
-                }
-              }
-            }
-          }
-        }
-      }
-      expression {
-        type: FIELD_ASSIGN
-        fieldAssign {
-          type: "tcpcb"
-          index: 5
-          base {
-            type: Variable
-            index: 0
-            name: "tp"
-          }
-          operation: SimpleAssign
-          value {
-            type: Constant
-            name: "TCPS_CLOSED"
-            value: 0
-          }
-          fieldName: "t_state"
-        }
-      }
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "tcp_free"
-          }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Variable
-            index: 0
-            name: "tp"
-          }
-        }
-      }
-    }
-  }
-  argument {
-    type: Variable
-    index: 0
-    name: "tp"
-  }
-}
-automaton {
-  identifier {
-    name: "established"
-  }
-  context: Global
-  expression {
-    type: SEQUENCE
-    sequence {
-      expression {
-        type: FIELD_ASSIGN
-        fieldAssign {
-          type: "tcpcb"
-          index: 5
-          base {
-            type: Variable
-            index: 0
-            name: "tp"
-          }
-          operation: SimpleAssign
-          value {
-            type: Constant
-            name: "TCPS_ESTABLISHED"
-            value: 4
-          }
-          fieldName: "t_state"
-        }
-      }
-      expression {
-        type: BOOLEAN_EXPR
-        booleanExpr {
-          operation: BE_Xor
-          expression {
-            type: SUB_AUTOMATON
-            subAutomaton {
-              name: "active_close"
-            }
-          }
-          expression {
-            type: SEQUENCE
-            sequence {
-              expression {
-                type: NULL_EXPR
-              }
-              expression {
-                type: FIELD_ASSIGN
-                fieldAssign {
-                  type: "tcpcb"
-                  index: 5
-                  base {
-                    type: Variable
-                    index: 0
-                    name: "tp"
-                  }
-                  operation: SimpleAssign
-                  value {
-                    type: Constant
-                    name: "TCPS_CLOSE_WAIT"
-                    value: 5
-                  }
-                  fieldName: "t_state"
-                }
-              }
-              expression {
-                type: FIELD_ASSIGN
-                fieldAssign {
-                  type: "tcpcb"
-                  index: 5
-                  base {
-                    type: Variable
-                    index: 0
-                    name: "tp"
-                  }
-                  operation: SimpleAssign
-                  value {
-                    type: Constant
-                    name: "TCPS_LAST_ACK"
-                    value: 8
-                  }
-                  fieldName: "t_state"
-                }
-              }
-              expression {
-                type: BOOLEAN_EXPR
-                booleanExpr {
-                  operation: BE_Xor
-                  expression {
-                    type: NULL_EXPR
-                  }
-                  expression {
-                    type: FIELD_ASSIGN
-                    fieldAssign {
-                      type: "tcpcb"
-                      index: 5
-                      base {
-                        type: Variable
-                        index: 0
-                        name: "tp"
-                      }
-                      operation: SimpleAssign
-                      value {
-                        type: Constant
-                        value: 0
-                      }
-                      fieldName: "t_state"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "tcp_free"
-          }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Variable
-            index: 0
-            name: "tp"
           }
         }
       }
@@ -607,7 +638,7 @@ automaton {
   identifier {
     location {
       filename: "example.c"
-      line: 46
+      line: 45
       counter: 0
     }
   }
@@ -616,25 +647,460 @@ automaton {
     type: SEQUENCE
     sequence {
       expression {
+        type: NULL_EXPR
+      }
+      expression {
         type: FUNCTION
         function {
           function {
-            name: "example_syscall"
+            name: "security_check"
+          }
+          direction: Exit
+          context: Callee
+          argument {
+            type: Any
+          }
+          argument {
+            type: Variable
+            index: 0
+            name: "o"
+          }
+          argument {
+            type: Variable
+            index: 1
+            name: "op"
+          }
+          expectedReturnValue {
+            type: Constant
+            value: 0
+          }
+          strict: false
+        }
+      }
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "example.c"
+            line: 45
+            counter: 0
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "o"
+  }
+  argument {
+    type: Variable
+    index: 1
+    name: "op"
+  }
+}
+automaton {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 48
+      counter: 1
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "security_check"
           }
           direction: Entry
           context: Callee
           argument {
             type: Any
-            name: "cred"
+            name: "subject"
           }
           argument {
             type: Any
-            name: "index"
+            name: "object"
           }
           argument {
             type: Any
             name: "op"
           }
+          strict: false
+        }
+      }
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "example.c"
+            line: 48
+            counter: 1
+          }
+        }
+      }
+    }
+  }
+}
+automaton {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 51
+      counter: 2
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "hold"
+          }
+          direction: Entry
+          context: Callee
+          argument {
+            type: Variable
+            index: 0
+            name: "o"
+          }
+          strict: false
+        }
+      }
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "example.c"
+            line: 51
+            counter: 2
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "o"
+  }
+}
+automaton {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 52
+      counter: 3
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "hold"
+          }
+          direction: Exit
+          context: Callee
+          argument {
+            type: Variable
+            index: 0
+            name: "o"
+          }
+          strict: false
+        }
+      }
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "example.c"
+            line: 52
+            counter: 3
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "o"
+  }
+}
+automaton {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 53
+      counter: 4
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "example.c"
+            line: 53
+            counter: 4
+          }
+        }
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "release"
+          }
+          direction: Entry
+          context: Callee
+          argument {
+            type: Variable
+            index: 0
+            name: "o"
+          }
+          strict: false
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "o"
+  }
+}
+automaton {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 56
+      counter: 5
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FIELD_ASSIGN
+        fieldAssign {
+          operation: PlusEqual
+          value {
+            type: Constant
+            value: 1
+          }
+          strict: false
+          field {
+            type: "object"
+            base {
+              type: Variable
+              index: 0
+              name: "o"
+            }
+            name: "refcount"
+            index: 0
+          }
+        }
+      }
+      expression {
+        type: NOW
+        now {
+          location {
+            filename: "example.c"
+            line: 56
+            counter: 5
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "o"
+  }
+}
+automaton {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 63
+      counter: 6
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: BOOLEAN_EXPR
+    booleanExpr {
+      operation: BE_Or
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "security_check"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+              }
+              argument {
+                type: Variable
+                index: 0
+                name: "o"
+              }
+              argument {
+                type: Variable
+                index: 1
+                name: "op"
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: NOW
+            now {
+              location {
+                filename: "example.c"
+                line: 63
+                counter: 6
+              }
+            }
+          }
+        }
+      }
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: NOW
+            now {
+              location {
+                filename: "example.c"
+                line: 63
+                counter: 6
+              }
+            }
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "log_audit_record"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Variable
+                index: 0
+                name: "o"
+              }
+              argument {
+                type: Variable
+                index: 1
+                name: "op"
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "o"
+  }
+  argument {
+    type: Variable
+    index: 1
+    name: "op"
+  }
+}
+automaton {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 75
+      counter: 7
+    }
+  }
+  context: Global
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "get_object"
+          }
+          direction: Exit
+          context: Callee
+          argument {
+            type: Any
+          }
+          argument {
+            type: Any
+          }
+          expectedReturnValue {
+            type: Constant
+            value: 0
+          }
+          strict: false
         }
       }
       expression {
@@ -662,146 +1128,81 @@ automaton {
             type: Constant
             value: 0
           }
+          strict: false
         }
       }
       expression {
-        type: NOW
-        now {
-          location {
-            filename: "example.c"
-            line: 46
-            counter: 0
+        type: BOOLEAN_EXPR
+        booleanExpr {
+          operation: BE_Or
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "some_helper"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Variable
+                index: 1
+                name: "op"
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
           }
-        }
-      }
-    }
-  }
-  argument {
-    type: Variable
-    index: 0
-    name: "o"
-  }
-  argument {
-    type: Variable
-    index: 1
-    name: "op"
-  }
-}
-automaton {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 49
-      counter: 1
-    }
-  }
-  context: ThreadLocal
-  expression {
-    type: SEQUENCE
-    sequence {
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "example_syscall"
-          }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Any
-            name: "cred"
-          }
-          argument {
-            type: Any
-            name: "index"
-          }
-          argument {
-            type: Any
-            name: "op"
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "never_actually_called"
+              }
+              direction: Entry
+              context: Callee
+              strict: false
+            }
           }
         }
       }
       expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "security_check"
+        type: BOOLEAN_EXPR
+        booleanExpr {
+          operation: BE_Xor
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "void_helper"
+              }
+              direction: Entry
+              context: Callee
+              argument {
+                type: Variable
+                index: 0
+                name: "o"
+              }
+              strict: false
+            }
           }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Any
-            name: "subject"
-          }
-          argument {
-            type: Any
-            name: "object"
-          }
-          argument {
-            type: Any
-            name: "op"
-          }
-        }
-      }
-      expression {
-        type: NOW
-        now {
-          location {
-            filename: "example.c"
-            line: 49
-            counter: 1
-          }
-        }
-      }
-    }
-  }
-}
-automaton {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 52
-      counter: 2
-    }
-  }
-  context: ThreadLocal
-  expression {
-    type: SEQUENCE
-    sequence {
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "example_syscall"
-          }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Any
-            name: "cred"
-          }
-          argument {
-            type: Any
-            name: "index"
-          }
-          argument {
-            type: Any
-            name: "op"
-          }
-        }
-      }
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "hold"
-          }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Variable
-            index: 0
-            name: "o"
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "void_helper2"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Variable
+                index: 0
+                name: "o"
+              }
+              strict: false
+            }
           }
         }
       }
@@ -810,105 +1211,8 @@ automaton {
         now {
           location {
             filename: "example.c"
-            line: 52
-            counter: 2
-          }
-        }
-      }
-    }
-  }
-  argument {
-    type: Variable
-    index: 0
-    name: "o"
-  }
-}
-automaton {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 53
-      counter: 3
-    }
-  }
-  context: ThreadLocal
-  expression {
-    type: SEQUENCE
-    sequence {
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "example_syscall"
-          }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Any
-            name: "cred"
-          }
-          argument {
-            type: Any
-            name: "index"
-          }
-          argument {
-            type: Any
-            name: "op"
-          }
-        }
-      }
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "hold"
-          }
-          direction: Exit
-          context: Callee
-          argument {
-            type: Variable
-            index: 0
-            name: "o"
-          }
-        }
-      }
-      expression {
-        type: NOW
-        now {
-          location {
-            filename: "example.c"
-            line: 53
-            counter: 3
-          }
-        }
-      }
-    }
-  }
-  argument {
-    type: Variable
-    index: 0
-    name: "o"
-  }
-}
-automaton {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 54
-      counter: 4
-    }
-  }
-  context: ThreadLocal
-  expression {
-    type: SEQUENCE
-    sequence {
-      expression {
-        type: NOW
-        now {
-          location {
-            filename: "example.c"
-            line: 54
-            counter: 4
+            line: 75
+            counter: 7
           }
         }
       }
@@ -918,535 +1222,14 @@ automaton {
           function {
             name: "release"
           }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Variable
-            index: 0
-            name: "o"
-          }
-        }
-      }
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "example_syscall"
-          }
           direction: Exit
           context: Callee
           argument {
-            type: Any
-            name: "cred"
-          }
-          argument {
-            type: Any
-            name: "index"
-          }
-          argument {
-            type: Any
-            name: "op"
-          }
-          expectedReturnValue {
-            type: Any
-          }
-        }
-      }
-    }
-  }
-  argument {
-    type: Variable
-    index: 0
-    name: "o"
-  }
-}
-automaton {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 57
-      counter: 5
-    }
-  }
-  context: ThreadLocal
-  expression {
-    type: SEQUENCE
-    sequence {
-      expression {
-        type: FUNCTION
-        function {
-          function {
-            name: "example_syscall"
-          }
-          direction: Entry
-          context: Callee
-          argument {
-            type: Any
-            name: "cred"
-          }
-          argument {
-            type: Any
-            name: "index"
-          }
-          argument {
-            type: Any
-            name: "op"
-          }
-        }
-      }
-      expression {
-        type: FIELD_ASSIGN
-        fieldAssign {
-          type: "object"
-          index: 0
-          base {
             type: Variable
             index: 0
             name: "o"
           }
-          operation: PlusEqual
-          value {
-            type: Constant
-            value: 1
-          }
-          fieldName: "refcount"
-        }
-      }
-      expression {
-        type: NOW
-        now {
-          location {
-            filename: "example.c"
-            line: 57
-            counter: 5
-          }
-        }
-      }
-    }
-  }
-  argument {
-    type: Variable
-    index: 0
-    name: "o"
-  }
-}
-automaton {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 64
-      counter: 6
-    }
-  }
-  context: ThreadLocal
-  expression {
-    type: BOOLEAN_EXPR
-    booleanExpr {
-      operation: BE_Xor
-      expression {
-        type: SEQUENCE
-        sequence {
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "example_syscall"
-              }
-              direction: Entry
-              context: Callee
-              argument {
-                type: Any
-                name: "cred"
-              }
-              argument {
-                type: Any
-                name: "index"
-              }
-              argument {
-                type: Any
-                name: "op"
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "security_check"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Any
-              }
-              argument {
-                type: Variable
-                index: 0
-                name: "o"
-              }
-              argument {
-                type: Variable
-                index: 1
-                name: "op"
-              }
-              expectedReturnValue {
-                type: Constant
-                value: 0
-              }
-            }
-          }
-          expression {
-            type: NOW
-            now {
-              location {
-                filename: "example.c"
-                line: 64
-                counter: 6
-              }
-            }
-          }
-        }
-      }
-      expression {
-        type: SEQUENCE
-        sequence {
-          expression {
-            type: NOW
-            now {
-              location {
-                filename: "example.c"
-                line: 64
-                counter: 6
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "log_audit_record"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Variable
-                index: 0
-                name: "o"
-              }
-              argument {
-                type: Variable
-                index: 1
-                name: "op"
-              }
-              expectedReturnValue {
-                type: Constant
-                value: 0
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "example_syscall"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Any
-                name: "cred"
-              }
-              argument {
-                type: Any
-                name: "index"
-              }
-              argument {
-                type: Any
-                name: "op"
-              }
-              expectedReturnValue {
-                type: Any
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  argument {
-    type: Variable
-    index: 0
-    name: "o"
-  }
-  argument {
-    type: Variable
-    index: 1
-    name: "op"
-  }
-}
-automaton {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 79
-      counter: 7
-    }
-  }
-  context: Global
-  expression {
-    type: BOOLEAN_EXPR
-    booleanExpr {
-      operation: BE_Xor
-      expression {
-        type: SEQUENCE
-        sequence {
-          expression {
-            type: NULL_EXPR
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "example_syscall"
-              }
-              direction: Entry
-              context: Callee
-              argument {
-                type: Any
-                name: "cred"
-              }
-              argument {
-                type: Any
-                name: "index"
-              }
-              argument {
-                type: Any
-                name: "op"
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "get_object"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Any
-              }
-              argument {
-                type: Any
-              }
-              expectedReturnValue {
-                type: Constant
-                value: 0
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "security_check"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Any
-              }
-              argument {
-                type: Variable
-                index: 0
-                name: "o"
-              }
-              argument {
-                type: Variable
-                index: 1
-                name: "op"
-              }
-              expectedReturnValue {
-                type: Constant
-                value: 0
-              }
-            }
-          }
-          expression {
-            type: BOOLEAN_EXPR
-            booleanExpr {
-              operation: BE_Xor
-              expression {
-                type: FUNCTION
-                function {
-                  function {
-                    name: "some_helper"
-                  }
-                  direction: Exit
-                  context: Callee
-                  argument {
-                    type: Variable
-                    index: 1
-                    name: "op"
-                  }
-                  expectedReturnValue {
-                    type: Constant
-                    value: 0
-                  }
-                }
-              }
-              expression {
-                type: FUNCTION
-                function {
-                  function {
-                    name: "never_actually_called"
-                  }
-                  direction: Entry
-                  context: Callee
-                }
-              }
-            }
-          }
-          expression {
-            type: BOOLEAN_EXPR
-            booleanExpr {
-              operation: BE_Xor
-              expression {
-                type: FUNCTION
-                function {
-                  function {
-                    name: "void_helper"
-                  }
-                  direction: Entry
-                  context: Callee
-                  argument {
-                    type: Variable
-                    index: 0
-                    name: "o"
-                  }
-                }
-              }
-              expression {
-                type: FUNCTION
-                function {
-                  function {
-                    name: "void_helper2"
-                  }
-                  direction: Exit
-                  context: Callee
-                  argument {
-                    type: Variable
-                    index: 0
-                    name: "o"
-                  }
-                }
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "release"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Variable
-                index: 0
-                name: "o"
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "example_syscall"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Any
-                name: "cred"
-              }
-              argument {
-                type: Any
-                name: "index"
-              }
-              argument {
-                type: Any
-                name: "op"
-              }
-              expectedReturnValue {
-                type: Any
-              }
-            }
-          }
-        }
-      }
-      expression {
-        type: SEQUENCE
-        sequence {
-          expression {
-            type: NOW
-            now {
-              location {
-                filename: "example.c"
-                line: 79
-                counter: 7
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "log_audit_record"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Variable
-                index: 0
-                name: "o"
-              }
-              argument {
-                type: Variable
-                index: 1
-                name: "op"
-              }
-              expectedReturnValue {
-                type: Constant
-                value: 0
-              }
-            }
-          }
-          expression {
-            type: FUNCTION
-            function {
-              function {
-                name: "example_syscall"
-              }
-              direction: Exit
-              context: Callee
-              argument {
-                type: Any
-                name: "cred"
-              }
-              argument {
-                type: Any
-                name: "index"
-              }
-              argument {
-                type: Any
-                name: "op"
-              }
-              expectedReturnValue {
-                type: Any
-              }
-            }
-          }
+          strict: false
         }
       }
     }
@@ -1473,12 +1256,15 @@ automaton {
       expression {
         type: FIELD_ASSIGN
         fieldAssign {
-          type: "some_structure"
-          index: 0
-          base {
-            type: Variable
+          field {
+            type: "some_structure"
             index: 0
-            name: "s"
+            base {
+              type: Variable
+              index: 0
+              name: "s"
+            }
+            name: "field0"
           }
           operation: SimpleAssign
           value {
@@ -1486,61 +1272,66 @@ automaton {
             name: "DIGITS_OF_PI"
             value: 314159265358979
           }
-          fieldName: "field0"
         }
       }
       expression {
         type: FIELD_ASSIGN
         fieldAssign {
-          type: "some_structure"
-          index: 1
-          base {
-            type: Variable
-            index: 0
-            name: "s"
+          field {
+            type: "some_structure"
+            index: 1
+            base {
+              type: Variable
+              index: 0
+              name: "s"
+            }
+            name: "field0"
           }
           operation: SimpleAssign
           value {
             type: Constant
             value: 42
           }
-          fieldName: "field1"
         }
       }
       expression {
         type: FIELD_ASSIGN
         fieldAssign {
-          type: "some_structure"
-          index: 1
-          base {
-            type: Variable
-            index: 0
-            name: "s"
+          field {
+            type: "some_structure"
+            index: 1
+            base {
+              type: Variable
+              index: 0
+              name: "s"
+            }
+            name: "field1"
           }
           operation: PlusEqual
           value {
             type: Constant
             value: 1
           }
-          fieldName: "field1"
         }
       }
       expression {
         type: FIELD_ASSIGN
         fieldAssign {
-          type: "some_structure"
-          index: 1
-          base {
-            type: Variable
-            index: 0
-            name: "s"
+          field {
+            type: "some_structure"
+            index: 1
+            base {
+              type: Variable
+              index: 0
+              name: "s"
+            }
+            name: "field1"
           }
           operation: MinusEqual
           value {
             type: Constant
             value: 1
           }
-          fieldName: "field1"
         }
       }
     }
@@ -1553,11 +1344,6 @@ automaton {
 }
 root {
   identifier {
-    name: "my_tcpcb_assertion"
-  }
-}
-root {
-  identifier {
     name: "some_structure_assertion"
   }
 }
@@ -1565,8 +1351,94 @@ root {
   identifier {
     location {
       filename: "crypto.c"
-      line: 52
+      line: 50
       counter: 0
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    name: "my_tcpcb_assertion"
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "tcp_init"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Variable
+        index: 0
+        name: "tp"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "tcp_free"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Variable
+        index: 0
+        name: "tp"
+      }
+      strict: false
     }
   }
 }
@@ -1574,8 +1446,57 @@ root {
   identifier {
     location {
       filename: "example.c"
-      line: 46
+      line: 45
       counter: 0
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
     }
   }
 }
@@ -1583,17 +1504,173 @@ root {
   identifier {
     location {
       filename: "example.c"
-      line: 49
+      line: 48
       counter: 1
     }
   }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 51
+      counter: 2
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
+    }
+  }
 }
 root {
   identifier {
     location {
       filename: "example.c"
       line: 52
-      counter: 2
+      counter: 3
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
     }
   }
 }
@@ -1602,34 +1679,114 @@ root {
     location {
       filename: "example.c"
       line: 53
-      counter: 3
-    }
-  }
-}
-root {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 54
       counter: 4
     }
   }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
+    }
+  }
 }
 root {
   identifier {
     location {
       filename: "example.c"
-      line: 57
+      line: 56
       counter: 5
     }
   }
-}
-root {
-  identifier {
-    location {
-      filename: "example.c"
-      line: 64
-      counter: 6
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
     }
   }
 }
@@ -1637,8 +1794,115 @@ root {
   identifier {
     location {
       filename: "example.c"
-      line: 79
+      line: 63
+      counter: 6
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "example.c"
+      line: 75
       counter: 7
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "example_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: "cred"
+      }
+      argument {
+        type: Any
+        name: "index"
+      }
+      argument {
+        type: Any
+        name: "op"
+      }
+      expectedReturnValue {
+        type: Any
+      }
+      strict: false
     }
   }
 }
