@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+
+import argparse
+import collections
+import os
+import re
+import sys
+
+args = argparse.ArgumentParser()
+
+args.add_argument('dot', nargs='+',
+	help = 'TESLA .dot graphs to apply weights to')
+
+args.add_argument('-t', '--transitions', required = True,
+	help = 'file containing TESLA transition counts')
+
+args.add_argument('-o', '--output',
+	help = 'file to put weighted graphs in')
+
+args.add_argument('-f', '--filter', default = '.*',
+	help = 'only output automata whose names match this regex')
+
+args = args.parse_args()
+
+
+tmp_suffix = '.tesla-tmp'
+out = open(args.output + tmp_suffix, 'w') if args.output else sys.stdout
+
+#
+# Some useful regexps:
+#
+
+# The automata we're interested in.
+name_filter = re.compile(args.filter)
+
+# Automata are preceeded by a comment containing their name.
+automaton_name_in_comment = re.compile(' \* .*[\/a-zA-Z0-9\.]+:[0-9]+#[0-9]+')
+
+# A transition from one numbered state to another.
+transition_pattern = re.compile('\t[0-9]+ -> [0-9]+;')
+
+# A data line in a transitions file looks like:
+#
+# /home/jonathan/.../foo.c:42#0    (5->6)    172
+# some_named_automaton             (1->2)    314
+line = re.compile(
+	'[_\./a-zA-Z0-9]+(:[0-9]+#[0-9]+)?\s+\([0-9]+->[0-9]+\)\s+[0-9]+')
+
+
+#
+# Parse the transitions that have actually been taken.
+#
+transitions_taken = collections.defaultdict(dict)
+
+for l in open(args.transitions, 'r'):
+	l = l.strip()
+
+	if not line.match(l):
+		continue
+
+	(name, transition, count) = l.split()
+	if not re.match('\([0-9]+->[0-9]+\)', transition):
+		print transition
+		continue
+
+	transition = tuple([ int(i) for i in transition[1:-1].split('->') ])
+	count = int(count)
+
+	transitions_taken[name][transition] = count
+
+
+for filename in args.dot:
+	#
+	# Transitions for the automaton we're currently processing
+	# (the file can contain more than one).
+	#
+	trans = {}
+	name = None
+
+	for line in open(filename, 'r'):
+		#
+		# Find the transitions that apply to this automaton.
+		#
+		if automaton_name_in_comment.match(line):
+			name = line.strip()[2:]
+			trans = transitions_taken[name]
+
+			if len(trans) == 0: max_count = 0
+			else: max_count = max(trans.values())
+
+		if name and not name_filter.match(name):
+			continue
+
+		#
+		# Pass all non-transition lines straight through
+		# (including the name comments we matched above).
+		#
+		if not transition_pattern.match(line):
+			out.write(line)
+			continue
+
+		#
+		# The line does contain a transition; weight it by how often
+		# the transition has been taken.
+		#
+		(source,dest) = tuple([
+			int(i) for i in line.strip()[:-1].split(' -> ')
+		])
+
+		#
+		# If never taken, grey it out.
+		#
+		if (source,dest) not in trans:
+			attrs = { 'color': '"#00000011"' }
+
+		#
+		# If the transition has been taken, let it assume its normal
+		# colour but set its width according to transition count.
+		#
+		else:
+			count = trans[(source,dest)]
+			width = float(count) / max_count
+			attrs = { 'penwidth': 10 * width }
+
+
+		attrs = ', '.join([ '%s = %s' % a for a in attrs.items() ])
+		out.write('\t%d -> %d [ %s ];\n' % (source, dest, attrs))
+
+if args.output:
+	os.rename(args.output + tmp_suffix, args.output)
