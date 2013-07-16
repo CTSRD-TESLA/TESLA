@@ -32,33 +32,15 @@
  * SUCH DAMAGE.
  */
 
-tesla::instance:create
+
+tesla::success:
 {
-	cls = args[0];
-	instance = args[1];
-
-	@transitions[stringof(cls->tc_name), 0, instance->ti_state] = count();
-}
-
-tesla::instance:clone
-{
-	cls = args[0];
-	trans = args[3];
-
-	@transitions[stringof(cls->tc_name), trans->from, trans->to] = count();
-}
-
-tesla::event:state-transition
-{
-	cls = args[0];
-	instance = args[1];
-	trans = args[2];
-
-	@transitions[stringof(cls->tc_name), trans->from, trans->to] = count();
+	c = (struct tesla_class*) args[0];
+	@successes[stringof(c->tc_name)] = count();
 }
 
 END
 {
 	printf("\n");
-	printa("%-55s  (%u->%u)   %@14u\n", @transitions);
+	printa("%-55s   %@10u\n", @successes);
 }
