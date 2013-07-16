@@ -8,6 +8,7 @@ usage() {
 	echo "    - cat           (combine several TESLA IR files)"
 	echo "    - get-triple    (get the host's LLVM triple)"
 	echo "    - graph         (convert TESLA IR into GraphViz .dot format)"
+	echo "    - highlight     (show transitions taken in a .dot graph)"
 	echo "    - instrument    (add TESLA instrumention to LLVM IR)"
 	echo "    - read          (read information from TESLA IR)"
 	echo
