@@ -135,6 +135,7 @@ struct __tesla_event* __tesla_now;
 struct __tesla_event* __tesla_optional(__tesla_event*, ...);
 
 /** A value that could match a lot of function parameters. Maybe anything? */
+id 		__tesla_any_id();
 void*		__tesla_any_ptr();
 int		__tesla_any_int();
 long		__tesla_any_long();

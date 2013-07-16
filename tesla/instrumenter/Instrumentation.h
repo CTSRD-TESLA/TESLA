@@ -66,6 +66,7 @@ public:
   void AppendInstrumentation(const Automaton&, const FunctionEvent&,
                              TEquivalenceClass&);
 
+  llvm::Function *getInstrumentationFunction() { return InstrFn; }
 protected:
   FnInstrumentation(llvm::Module& M, const llvm::Function *TargetFn,
                     llvm::Function *InstrFn, FunctionEvent::Direction Dir)

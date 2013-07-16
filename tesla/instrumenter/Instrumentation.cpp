@@ -245,21 +245,10 @@ llvm::Function* tesla::ObjCMethodInstrumentation(llvm::Module& Mod,
                                                  bool SuppressDebugInstr) {
 
   
-  // If this is a caller-context instrumentation, then just generate a single
-  // instrumentation function as if this were a function.
-  if (Context == FunctionEvent::Caller)
-    return CallableInstrumentation(Mod, (Twine() + ".objc" + Selector).str(),
+  return CallableInstrumentation(Mod, (Twine() + ".objc_" + Selector +
+        ((Context == FunctionEvent::Caller) ? "_caller" : "_callee")).str(),
         Ty, Dir, Context, SuppressDebugInstr);
  
-  // If this is a callee-context instrumentation then we generate a link-once
-  // ODR function that we will attempt to register as an interposition method
-  // for the selector.  This function will then call a linked list of handlers.
-  // The handlers are all registered at load time by chaining them off a
-  // common-linkage variable.
-  //
-  // FIXME: None of the above is actually implemented...
-  llvm_unreachable("Callee-context instrumentation not yet supported for "
-      "Objective-C messages");
 }
 
 
@@ -559,7 +548,11 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
                            FunctionEvent FnEvent) {
 
   bool HaveRetVal = FnEvent.has_expectedreturnvalue();
-  const size_t TotalArgs = FnEvent.argument_size() + (HaveRetVal ? 1 : 0);
+  // The number of hidden arguments, i.e. those that are passed to the function
+  // but not present explicitly in the source language.
+  const size_t HiddenArgs = ((FnEvent.kind() == FunctionEvent::CCall) ? 0 : 2);
+  const size_t TotalArgs = FnEvent.argument_size() + (HaveRetVal ? 1 : 0)
+    + HiddenArgs;
 
   if (InstrArgs.size() != TotalArgs)
     panic(
@@ -572,17 +565,34 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 
   vector<Value*> Args(TotalArgs, NULL);
 
+  // If this is an Objective-C event, then we need to construct the `self` and
+  // `_cmd` hidden arguments.  We never care about `_cmd` (it is only relevant
+  // for forwarding), but we may care about the receiver.
+  // TODO: If we ever care about C++, we should handle `this` here as well.
+  if (FnEvent.kind() != FunctionEvent::CCall) {
+    Args.push_back(GetArgumentValue(InstrArgs.begin(), FnEvent.receiver(), Builder));
+    Args.push_back(0); // _cmd can be anything
+  }
+
   size_t i = 0;
 
   for (auto& InstrArg : InstrArgs) {
+    // Skip the LLVM arguments that refer to hidden source-language arguments
+    // here, as they've already been processed.
+    if (i < HiddenArgs) {
+      i++;
+      continue;
+    }
+
     auto& Arg = (HaveRetVal && (i == (TotalArgs - 1)))
       ? FnEvent.expectedreturnvalue()
-      : FnEvent.argument(i);
+      : FnEvent.argument(i - HiddenArgs);
     ++i;
 
     int Index = ArgIndex(Arg);
     if (Index < 0)
       continue;
+    Index += HiddenArgs;
 
     assert(Index < TotalArgs);
     Args[Index] = GetArgumentValue(&InstrArg, Arg, Builder);
