@@ -50,7 +50,9 @@ if [ -z "$TOOL" ]; then
 fi
 
 $TOOL "$@"
-if [ $? != 0 ] ; then
+ret=$?
+if [ $ret != 0 ] ; then
 	echo Invocation was $TOOL "$@"
+	exit $ret
 fi
 
