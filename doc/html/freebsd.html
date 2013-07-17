@@ -20,13 +20,14 @@ mv unsafe/*intrin*.h unsafe/mm3dnow.h unsafe/mm_malloc.h .
 Then run make in the FreeBSD source tree with the following variables:
 </p>
 
-<div class="console">CONFIGARGS=-t -DNO_MODULES -DWITHOUT_FORMAT_EXTENSIONS \
+<div class="console">-D WITH_TESLA -D WITHOUT_FORMAT_EXTENSIONS \
     XCC=<span class="green">$LLVM_BIN</span>/clang \
     XCXX=<span class="green">$LLVM_BIN</span>/clang++ \
     XCPP=/usr/bin/clang-cpp \
     XLLC=<span class="green">$LLVM_BIN</span>/llc \
     TESLA=<span class="green">$TESLA_SOURCE_DIR</span>/scripts/tesla \
-    KERNCONF=TESLA
+    KERNCONF=TESLA \
+    buildworld buildkernel
 </div>
 
 <p>
