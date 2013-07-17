@@ -62,11 +62,9 @@ typedef	int	__tesla_count;
  *  * a counter to ensure uniqueness (__COUNTER__)
  *  * the TESLA context (per-thread or global)
  */
-inline void
+void
 __tesla_inline_assertion(const char *filename, int line, int count,
-	__tesla_locality *loc, ...)
-{
-}
+	__tesla_locality *loc, ...);
 
 
 /* Only define the following things if doing TESLA analysis, not compiling. */
