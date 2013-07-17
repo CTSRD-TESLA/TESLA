@@ -67,8 +67,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "/home/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
             line: 668

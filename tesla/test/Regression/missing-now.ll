@@ -3,7 +3,7 @@
 ; RUN: FileCheck -input-file %t.err %s
 
 ; Ensure that we output a sensible error message:
-; CHECK: TESLA: automaton '{{.*}}' contains no NOW event
+; CHECK: TESLA: automaton '{{.*}}' has no assertion site event
 
 %struct.__tesla_locality = type {}
 

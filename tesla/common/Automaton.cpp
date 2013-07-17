@@ -101,7 +101,7 @@ private:
 
   State* Parse(const BooleanExpr&, State& InitialState);
   State* Parse(const Sequence&, State& InitialState);
-  State* Parse(const NowEvent&, State& InitialState, bool, bool);
+  State* Parse(const AssertionSite&, State& InitialState, bool, bool);
   State* Parse(const FunctionEvent&, State& InitialState, bool, bool);
   State* Parse(const FieldAssignment&, State& InitialState, bool, bool);
   State* SubAutomaton(const Identifier&, State& InitialState);
@@ -352,8 +352,8 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
     State& Destination = *(T->RequiresCleanup() ? End : Start);
 
     switch (T->getKind()) {
-    case Transition::Now:   // fall through
-    case Transition::Null:  // fall through
+    case Transition::AssertSite:    // fall through
+    case Transition::Null:          // fall through
     case Transition::SubAutomaton:
       break;
 
@@ -408,8 +408,8 @@ State* NFAParser::Parse(const Expression& Expr, State& Start,
 
     return &Start;
 
-  case Expression::NOW:
-    return Parse(Expr.now(), Start, Init, Cleanup);
+  case Expression::ASSERTION_SITE:
+    return Parse(Expr.assertsite(), Start, Init, Cleanup);
 
   case Expression::FUNCTION:
     return Parse(Expr.function(), Start, Init, Cleanup);
@@ -478,10 +478,10 @@ State* NFAParser::Parse(const Sequence& Seq, State& Start) {
   return Current;
 }
 
-State* NFAParser::Parse(const NowEvent& now, State& InitialState,
+State* NFAParser::Parse(const AssertionSite& Site, State& InitialState,
                         bool Init, bool Cleanup) {
   State *Final = State::NewBuilder(States).SetAccepting(Cleanup).Build();
-  Transition::Create(InitialState, *Final, now, Automaton, Transitions,
+  Transition::Create(InitialState, *Final, Site, Automaton, Transitions,
                      Init, Cleanup);
   return Final;
 }

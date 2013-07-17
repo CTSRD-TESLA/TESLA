@@ -63,7 +63,7 @@ const std::string PERTHREAD         = TESLA_BASE + "perthread";
 const std::string ANY               = TESLA_BASE + "any";
 const std::string EVENT             = TESLA_BASE + "event";
 const std::string IGNORE            = TESLA_BASE + "ignore";
-const std::string NOW               = TESLA_BASE + "now";
+const std::string ASSERTION_SITE    = TESLA_BASE + "assertion_site";
 const std::string OPTIONAL          = TESLA_BASE + "optional";
 const std::string SEQUENCE          = TESLA_BASE + "sequence";
 

@@ -46,11 +46,11 @@
 namespace tesla {
 
 // TESLA IR classes
+class AssertionSite;
 class FieldAssignment;
 class FunctionEvent;
 class Identifier;
 class Location;
-class NowEvent;
 
 typedef llvm::MutableArrayRef<const Argument*> MutableReferenceVector;
 
@@ -118,7 +118,7 @@ public:
                      TransitionVector&, bool Init, bool Cleanup,
                      bool OutOfScope = false);
 
-  static void Create(State& From, State& To, const NowEvent&,
+  static void Create(State& From, State& To, const AssertionSite&,
                      const AutomatonDescription&, TransitionVector&,
                      bool Init, bool Cleanup);
 
@@ -183,7 +183,7 @@ public:
   bool InScope() const { return !OutOfScope; }
 
   //! Information for LLVM's RTTI (isa<>, cast<>, etc.).
-  enum TransitionKind { Null, Now, Fn, FieldAssign, SubAutomaton };
+  enum TransitionKind { Null, AssertSite, Fn, FieldAssign, SubAutomaton };
   virtual TransitionKind getKind() const = 0;
 
 protected:
@@ -246,40 +246,40 @@ private:
 
 
 /// The "now" event transition.
-class NowTransition : public Transition {
+class AssertTransition : public Transition {
 public:
   bool IsRealisable() const { return true; }
-  std::string ShortLabel() const { return "NOW"; }
-  std::string DotLabel() const { return "NOW"; }
+  std::string ShortLabel() const { return "<<assertion>>"; }
+  std::string DotLabel() const { return "&laquo;assertion&raquo;"; }
 
   const ReferenceVector Arguments() const { return Refs; }
-  const Location& Location() const { return Ev.location(); }
+  const Location& Location() const { return A.location(); }
 
   bool EquivalentExpression(const Transition* Other) const {
-    auto *T = llvm::dyn_cast<NowTransition>(Other);
+    auto *T = llvm::dyn_cast<AssertTransition>(Other);
     if (!T) return false;
 
-    return T->Ev == Ev;
+    return T->A == A;
   }
 
   static bool classof(const Transition *T) {
-    return T->getKind() == Now;
+    return T->getKind() == AssertSite;
   }
-  virtual TransitionKind getKind() const { return Now; };
+  virtual TransitionKind getKind() const { return AssertSite; };
 
 protected:
   virtual bool EquivalentTo(const Transition &T) const {
-    return T.getKind() == Now;
+    return T.getKind() == AssertSite;
   }
 
 private:
-  NowTransition(const State& From, const State& To, const NowEvent& Ev,
-                const ReferenceVector& Refs, bool Init, bool Cleanup)
-    : Transition(From, To, Init, Cleanup, false), Ev(Ev), Refs(Refs)
+  AssertTransition(const State& From, const State& To, const AssertionSite& A,
+                   const ReferenceVector& Refs, bool Init, bool Cleanup)
+    : Transition(From, To, Init, Cleanup, false), A(A), Refs(Refs)
   {
   }
 
-  const NowEvent& Ev;
+  const AssertionSite& A;
   const ReferenceVector Refs;
 
   friend class Transition;

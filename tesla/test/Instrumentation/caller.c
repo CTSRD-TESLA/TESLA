@@ -23,7 +23,7 @@ main(int argc, char *argv[])
 		TSEQUENCE(
 			caller(called(foo)),
 			caller(returned(bar)),
-			TESLA_NOW
+			TESLA_ASSERTION_SITE
 		)
 	);
 

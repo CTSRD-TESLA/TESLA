@@ -41,8 +41,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "threading.c"
             line: 56
@@ -74,8 +74,8 @@ automaton {
         type: NULL_EXPR
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "threading.c"
             line: 57

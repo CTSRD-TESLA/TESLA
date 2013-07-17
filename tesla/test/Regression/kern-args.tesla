@@ -45,8 +45,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2158
@@ -89,8 +89,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2158
@@ -138,8 +138,8 @@ automaton {
             }
           }
           expression {
-            type: NOW
-            now {
+            type: ASSERTION_SITE
+            assertSite {
               location {
                 filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                 line: 2158
@@ -173,8 +173,8 @@ automaton {
         type: NULL_EXPR
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
             line: 2159
@@ -247,8 +247,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2182
@@ -291,8 +291,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2182
@@ -340,8 +340,8 @@ automaton {
             }
           }
           expression {
-            type: NOW
-            now {
+            type: ASSERTION_SITE
+            assertSite {
               location {
                 filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                 line: 2182
@@ -375,8 +375,8 @@ automaton {
         type: NULL_EXPR
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
             line: 2183
@@ -449,8 +449,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2206
@@ -493,8 +493,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2206
@@ -542,8 +542,8 @@ automaton {
             }
           }
           expression {
-            type: NOW
-            now {
+            type: ASSERTION_SITE
+            assertSite {
               location {
                 filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                 line: 2206
@@ -577,8 +577,8 @@ automaton {
         type: NULL_EXPR
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
             line: 2207
@@ -651,8 +651,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2232
@@ -695,8 +695,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2232
@@ -744,8 +744,8 @@ automaton {
             }
           }
           expression {
-            type: NOW
-            now {
+            type: ASSERTION_SITE
+            assertSite {
               location {
                 filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                 line: 2232
@@ -779,8 +779,8 @@ automaton {
         type: NULL_EXPR
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
             line: 2233
@@ -851,8 +851,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2253
@@ -893,8 +893,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2253
@@ -940,8 +940,8 @@ automaton {
             }
           }
           expression {
-            type: NOW
-            now {
+            type: ASSERTION_SITE
+            assertSite {
               location {
                 filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                 line: 2253
@@ -970,8 +970,8 @@ automaton {
         type: NULL_EXPR
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
             line: 2254
@@ -1042,8 +1042,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2274
@@ -1084,8 +1084,8 @@ automaton {
                 }
               }
               expression {
-                type: NOW
-                now {
+                type: ASSERTION_SITE
+                assertSite {
                   location {
                     filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                     line: 2274
@@ -1131,8 +1131,8 @@ automaton {
             }
           }
           expression {
-            type: NOW
-            now {
+            type: ASSERTION_SITE
+            assertSite {
               location {
                 filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
                 line: 2274
@@ -1161,8 +1161,8 @@ automaton {
         type: NULL_EXPR
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
             line: 2275

@@ -58,7 +58,7 @@ main(int argc, char *argv[])
 	get_object(0, &o);
 
 	/*
-	 * CHECK: [NOW]  automaton 0
+	 * CHECK: [ASRT] automaton 0
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state

@@ -69,7 +69,7 @@ perform_operation(int op, struct object *o)
 			security_check(ANY(ptr), o, op) == 0,
 			some_helper(op) == 0 || called(never_actually_called),
 			optional(called(void_helper(o))),
-			TESLA_NOW,
+			TESLA_ASSERTION_SITE,
 			returned(release, o)
 		)
 	);

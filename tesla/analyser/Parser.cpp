@@ -423,9 +423,9 @@ bool Parser::Parse(Expression *E, const DeclRefExpr *Ref, Flags F) {
   auto D = Ref->getDecl();
   assert(D != NULL);
 
-  if (D->getName() == NOW) {
-    E->set_type(Expression::NOW);
-    *E->mutable_now()->mutable_location() = ID.location();
+  if (D->getName() == ASSERTION_SITE) {
+    E->set_type(Expression::ASSERTION_SITE);
+    *E->mutable_assertsite()->mutable_location() = ID.location();
     return true;
   }
 

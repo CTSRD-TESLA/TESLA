@@ -21,7 +21,7 @@ main(int argc, char *argv[])
 	TESLA_WITHIN(main,
 		TSEQUENCE(
 			callee(called(foo)),
-			TESLA_NOW,
+			TESLA_ASSERTION_SITE,
 			callee(returned(bar))
 		)
 	);
@@ -33,7 +33,7 @@ main(int argc, char *argv[])
 		TSEQUENCE(
 			caller(called(foo)),
 			caller(returned(bar)),
-			TESLA_NOW
+			TESLA_ASSERTION_SITE
 		)
 	);
 

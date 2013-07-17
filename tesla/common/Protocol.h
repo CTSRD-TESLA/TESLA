@@ -89,7 +89,7 @@ inline bool operator==(const Argument &A1, const Argument &A2) {
   return true;
 }
 
-inline bool operator==(const NowEvent &X, const NowEvent &Y) {
+inline bool operator==(const AssertionSite &X, const AssertionSite &Y) {
   return X.location() == Y.location();
 }
 

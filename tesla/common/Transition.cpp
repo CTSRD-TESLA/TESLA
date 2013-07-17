@@ -52,7 +52,7 @@ void Transition::Create(State& From, State& To, TransitionVector& Transitions,
   Register(T, From, To, Transitions);
 }
 
-void Transition::Create(State& From, State& To, const NowEvent& Ev,
+void Transition::Create(State& From, State& To, const AssertionSite& A,
                         const AutomatonDescription& Automaton,
                         TransitionVector& Transitions,
                         bool Init, bool Cleanup) {
@@ -60,7 +60,8 @@ void Transition::Create(State& From, State& To, const NowEvent& Ev,
   ReferenceVector Refs(Automaton.argument().data(),
                                  Automaton.argument_size());
 
-  OwningPtr<Transition> T(new NowTransition(From, To, Ev, Refs, Init, Cleanup));
+  OwningPtr<Transition> T(
+    new AssertTransition(From, To, A, Refs, Init, Cleanup));
   Register(T, From, To, Transitions);
 }
 
@@ -107,10 +108,10 @@ void Transition::Copy(State &From, State& To, const Transition* Other,
     assert(!OutOfScope);
     return;
 
-  case Now: {
+  case AssertSite: {
     assert(!OutOfScope);
-    auto O = cast<NowTransition>(Other);
-    New.reset(new NowTransition(From, To, O->Ev, O->Refs, Init, Cleanup));
+    auto O = cast<AssertTransition>(Other);
+    New.reset(new AssertTransition(From, To, O->A, O->Refs, Init, Cleanup));
     break;
   }
 

@@ -42,9 +42,9 @@ namespace llvm {
 
 namespace tesla {
 
+class AssertTransition;
 class Automaton;
 class Manifest;
-class NowTransition;
 class Location;
 
 /// Converts calls to TESLA pseudo-assertions into instrumentation sites.
@@ -65,7 +65,7 @@ private:
   //! Convert assertion declarations into instrumentation calls.
   bool ConvertAssertions(std::set<llvm::CallInst*>&, llvm::Module&);
 
-  //! Add instrumentation for a single @ref NowTransition.
+  //! Add instrumentation for a single @ref AssertTransition.
   llvm::Function* CreateInstrumentation(const Automaton&,
                                         const TEquivalenceClass&,
                                         llvm::Module&);

@@ -74,7 +74,7 @@ main(int argc, char *argv[])
 	TESLA_WITHIN(main,
 		TSEQUENCE(
 			called(foo),
-			TESLA_NOW,
+			TESLA_ASSERTION_SITE,
 			called(foo)
 		)
 	);

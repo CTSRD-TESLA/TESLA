@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 		// initialisation not described; bad idea to mix '=' with '+='
 		sp->field1++,
 		sp->field1--,
-		TESLA_NOW,
+		TESLA_ASSERTION_SITE,
 		sp->field1--
 	)));
 

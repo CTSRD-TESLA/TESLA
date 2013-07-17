@@ -49,7 +49,7 @@ perform_operation(struct object *o)
 	 * CHECK: 1 -> 2;
 	 * CHECK: 1 -> 1;
 	 *
-	 * CHECK: NOW
+	 * CHECK: assertion
 	 * CHECK: 2 -> 3;
 	 *
 	 * CHECK: example_syscall(X) == X

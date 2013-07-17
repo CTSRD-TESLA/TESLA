@@ -39,8 +39,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "crypto.c"
             line: 50
@@ -678,8 +678,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "example.c"
             line: 45
@@ -739,8 +739,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "example.c"
             line: 48
@@ -783,8 +783,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "example.c"
             line: 51
@@ -832,8 +832,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "example.c"
             line: 52
@@ -865,8 +865,8 @@ automaton {
         type: NULL_EXPR
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "example.c"
             line: 53
@@ -935,8 +935,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "example.c"
             line: 56
@@ -1000,8 +1000,8 @@ automaton {
             }
           }
           expression {
-            type: NOW
-            now {
+            type: ASSERTION_SITE
+            assertSite {
               location {
                 filename: "example.c"
                 line: 63
@@ -1018,8 +1018,8 @@ automaton {
             type: NULL_EXPR
           }
           expression {
-            type: NOW
-            now {
+            type: ASSERTION_SITE
+            assertSite {
               location {
                 filename: "example.c"
                 line: 63
@@ -1207,8 +1207,8 @@ automaton {
         }
       }
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "example.c"
             line: 75

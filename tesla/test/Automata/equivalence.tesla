@@ -124,12 +124,12 @@ automaton {
         }
       }
       /*
-       * CHECK: label = "NOW"
+       * CHECK: label = "{{.*}}assertion{{.*}}"
        * CHECK: 3 -> 4;
        */
       expression {
-        type: NOW
-        now {
+        type: ASSERTION_SITE
+        assertSite {
           location {
             filename: "example.c"
             line: 46

@@ -110,14 +110,14 @@ message Location {
 message Expression {
   enum Type {
     BOOLEAN_EXPR = 1; SEQUENCE = 2; NULL_EXPR = 3;
-    NOW = 4; FUNCTION = 5; FIELD_ASSIGN = 6;
+    ASSERTION_SITE = 4; FUNCTION = 5; FIELD_ASSIGN = 6;
     SUB_AUTOMATON = 7;
   };
   required Type type = 1;
 
   optional BooleanExpr booleanExpr = 2;
   optional Sequence sequence = 3;
-  optional NowEvent now = 4;
+  optional AssertionSite assertSite = 4;
   optional FunctionEvent function = 5;
   optional FieldAssignment fieldAssign = 6;
   optional Identifier subAutomaton = 7;
@@ -140,7 +140,7 @@ message Sequence {
  * Execution has reached the point in the instrumented code where an
  * inline assertion was defined.
  */
-message NowEvent {
+message AssertionSite {
   required Location location = 1;
 }
 

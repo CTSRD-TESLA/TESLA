@@ -96,28 +96,28 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
     assert(A);
 
     // Implement the assertion instrumentation.
-    const NowTransition *NowTrans = NULL;
+    const AssertTransition *AssertTrans = NULL;
     Function *InstrFn;
 
     for (auto EquivClass : *A) {
       auto *Head = *EquivClass.begin();
-      NowTrans = dyn_cast<NowTransition>(Head);
-      if (!NowTrans)
+      AssertTrans = dyn_cast<AssertTransition>(Head);
+      if (!AssertTrans)
         continue;
 
-      if (NowTrans->Location() != Loc)
+      if (AssertTrans->Location() != Loc)
         panic("automaton '" + ShortName(Loc)
-          + "' contains NOW event with location '"
-          + ShortName(NowTrans->Location()) + "'");
+          + "' contains ASSERT_SITE event with location '"
+          + ShortName(AssertTrans->Location()) + "'");
 
       if (!(InstrFn = CreateInstrumentation(*A, EquivClass, Mod)))
-        panic("error instrumenting NOW event");
+        panic("error instrumenting ASSERT_SITE event");
 
       break;
     }
 
-    if (!NowTrans)
-      panic("automaton '" + ShortName(Loc) + "' contains no NOW event");
+    if (!AssertTrans)
+      panic("automaton '" + ShortName(Loc) + "' has no assertion site event");
 
     // Record named values that might be passed to instrumentation, such as
     // function parameters and StoreInst results in the current BasicBlock.
@@ -202,7 +202,7 @@ Function* AssertionSiteInstrumenter::CreateInstrumentation(
   Type *Void = Type::getVoidTy(Ctx);
   Type *IntPtrTy = IntPtrType(M);
 
-  // NOW events only take arguments of type intptr_t.
+  // Assertion site events only take arguments of type intptr_t.
   std::vector<Type*> ArgTypes(ArgCount, IntPtrTy);
   FunctionType *FnType = FunctionType::get(Void, ArgTypes, false);
   string Name = (ASSERTION_REACHED + "_" + Twine(A.ID())).str();
@@ -210,7 +210,7 @@ Function* AssertionSiteInstrumenter::CreateInstrumentation(
   Function *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, FnType));
   assert(InstrFn != NULL && "instrumentation function not a Function!");
 
-  string Message = ("[NOW]  automaton " + Twine(A.ID())).str();
+  string Message = ("[ASRT] automaton " + Twine(A.ID())).str();
 
   BasicBlock *Instr = CreateInstrPreamble(M, InstrFn, Message,
                                           SuppressDebugInstr);
