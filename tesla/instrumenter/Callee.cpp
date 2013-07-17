@@ -115,6 +115,7 @@ class ObjCInstrumentation
   Constant *ObjCRegisterHook;
   llvm::StringMap<CalleeInstr*> Entry;
   llvm::StringMap<CalleeInstr*> Exit;
+  bool SuppressDebugInstr;
 
 
   FunctionType *typesForSelector(const std::string &Sel) {
@@ -288,12 +289,15 @@ class ObjCInstrumentation
     CalleeInstr *Instr = Map[SelName];
     didCreate = !Instr;
     if (!Instr)
-      Instr = Map[SelName] = CalleeInstr::Build(Mod, SelName, FTy, Dir, true);
+      Instr = Map[SelName] = CalleeInstr::Build(Mod, SelName, FTy, Dir,
+              SuppressDebugInstr);
     return Instr;
   }
 
 public:
-  ObjCInstrumentation(Module &M) : Mod(M), Ctx(M.getContext()) {
+  ObjCInstrumentation(Module &M, bool SuppressDebugInstr) : Mod(M),
+    Ctx(M.getContext()) {
+
     PtrTy = Type::getInt8PtrTy(Ctx);
     // Note: These are not correct on CHERI
     SelTy = PtrTy;
@@ -417,7 +421,7 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
       // For now, skip Objective-C message sends.
       if (FnEvent.kind() != FunctionEvent::CCall) {
         if (!ObjC) 
-          ObjC = new ObjCInstrumentation(Mod);
+          ObjC = new ObjCInstrumentation(Mod, SuppressDebugInstr);
         ModifiedIR |= ObjC->instrument(A, FnEvent, EquivClass);
         continue;
       }
