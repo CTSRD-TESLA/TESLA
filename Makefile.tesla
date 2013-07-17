@@ -2,17 +2,17 @@ SRC= tesla_class.c tesla_class_global.c tesla_class_perthread.c \
      tesla_debug.c tesla_key.c tesla_notification.c tesla_store.c \
      tesla_update.c tesla_util.c
 
-OBJ= $(SRC:%.c=src/%.o)
-CFLAGS= -I../include -DHAVE_STRNLEN -Wall
+OBJ= $(SRC:%.c=libtesla/src/%.o)
+CFLAGS= -Iinclude -DHAVE_STRNLEN -Wall
 
 .PHONY: all clean
 
-all: libtesla.a
+all: libtesla/libtesla.a
 	@ :
 
-libtesla.a: $(OBJ)
+libtesla/libtesla.a: $(OBJ)
 	rm -f $@
 	ar rc $@ $^
 
 clean:
-	rm -f src/*.o src/*.a
+	rm -f libtesla/src/*.o libtesla/src/*.a
