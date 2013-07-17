@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# RUN: %s > %t.out 2>&1
+# RUN: %s %cflags > %t.out 2>&1
 # RUN: FileCheck --check-prefix NORMAL -input-file %t.out %s
 #
-# RUN: %s -D TESLA > %t.tesla.out 2>&1
+# RUN: %s %cflags -D TESLA > %t.tesla.out 2>&1
 # RUN: FileCheck --check-prefix DTESLA -input-file %t.tesla.out %s
 #
 
