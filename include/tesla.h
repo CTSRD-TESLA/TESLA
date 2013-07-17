@@ -136,7 +136,7 @@ struct __tesla_event* __tesla_optional(__tesla_event*, ...);
 
 /** A value that could match a lot of function parameters. Maybe anything? */
 #ifdef SOMETHING_THAT_MEANS_WE_ARE_COMPILING_OBJECTIVE_C
-id 		__tesla_any_id();
+id		__tesla_any_id();
 #endif
 void*		__tesla_any_ptr();
 int		__tesla_any_int();

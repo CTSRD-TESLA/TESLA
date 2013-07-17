@@ -54,7 +54,8 @@ void Transition::Create(State& From, State& To, TransitionVector& Transitions,
 
 void Transition::Create(State& From, State& To, const NowEvent& Ev,
                         const AutomatonDescription& Automaton,
-                        TransitionVector& Transitions, bool Init, bool Cleanup) {
+                        TransitionVector& Transitions,
+                        bool Init, bool Cleanup) {
 
   ReferenceVector Refs(Automaton.argument().data(),
                                  Automaton.argument_size());
