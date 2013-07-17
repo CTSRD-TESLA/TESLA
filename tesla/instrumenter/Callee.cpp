@@ -178,11 +178,26 @@ class ObjCInstrumentation
       new GlobalVariable(Mod, C->getType(), true,
                                GlobalValue::PrivateLinkage,
                                C, "TESLAInstrumentedSelName");
+    BasicBlock *End = BasicBlock::Create(Ctx, "ret", RegisterFn);
+    BasicBlock *Fail = BasicBlock::Create(Ctx, "error", RegisterFn);
     // Get the selector
     Value *Sel = B.CreateCall(SelRegisterName, 
         B.CreateBitCast(GV, PtrTy));
     // Register it
-    B.CreateCall2(ObjCRegisterHook, Sel, Fn);
+    B.CreateCondBr(B.CreateIsNull(B.CreateCall2(ObjCRegisterHook, Sel, Fn)), End, Fail);
+    // Return on success
+    B.SetInsertPoint(End);
+    B.CreateRetVoid();
+    // On failure, print an error message
+    std::string ErrMsg =
+      std::string("Failed to register tracing hook for selector ") + SelName +
+      "\n";
+    B.CreateCall(
+        Mod.getOrInsertFunction("puts",
+          FunctionType::get(Type::getInt32Ty(Ctx),
+                            Type::getInt8PtrTy(Ctx), false)),
+        B.CreateGlobalStringPtr(ErrMsg));
+    B.CreateBr(End);
     // Make sure this function is called on module load
     appendToGlobalCtors(Mod, RegisterFn, 0);
 
@@ -198,7 +213,8 @@ class ObjCInstrumentation
     if (!MethodCache) {
       MethodCache = new GlobalVariable(Mod, IMPTy, false,
                                GlobalValue::LinkOnceODRLinkage,
-                               0, "__tesla_called_imp", 0,
+                               Constant::getNullValue(IMPTy),
+                               "__tesla_called_imp", 0,
                                GlobalVariable::GeneralDynamicTLSModel);
     }
     auto AI = Fn->arg_begin();
@@ -226,11 +242,13 @@ class ObjCInstrumentation
     GlobalVariable *EnterList =
       new GlobalVariable(Mod, PointerType::getUnqual(EnterListTy), false,
                                GlobalValue::LinkOnceODRLinkage,
-                               0, interpositionName(SelName, "_enter_list"));
+                               Constant::getNullValue(PointerType::getUnqual(EnterListTy)),
+                               interpositionName(SelName, "_enter_list"));
     GlobalVariable *ExitList =
       new GlobalVariable(Mod, PointerType::getUnqual(ExitListTy), false,
                                GlobalValue::LinkOnceODRLinkage,
-                               0, interpositionName(SelName, "_exit_list"));
+                               Constant::getNullValue(PointerType::getUnqual(ExitListTy)),
+                               interpositionName(SelName, "_exit_list"));
     
     // In the interposition function, call the entry functions, call the real
     // function, then call the exit functions
@@ -243,6 +261,7 @@ class ObjCInstrumentation
     for (auto I=Interpose->arg_begin(), E=Interpose->arg_end() ; I!=E ; ++I) {
       Args.push_back(I);
     }
+
     createCallLoop(Args, Entry, EnterLoop, Call, EnterList);
 
     B.SetInsertPoint(Call);
@@ -288,7 +307,7 @@ public:
     SelRegisterName =
       Mod.getOrInsertFunction("sel_registerName", SelTy, PtrTy, NULL);
     ObjCRegisterHook =
-      Mod.getOrInsertFunction("objc_tracing_hook", Type::getInt32Ty(Ctx),
+      Mod.getOrInsertFunction("objc_registerTracingHook", Type::getInt32Ty(Ctx),
           SelTy, PointerType::getUnqual(HookTy), NULL);
   }
 
@@ -316,6 +335,7 @@ public:
 
     if (didCreate) {
       Function *Fn = Instr->getInstrumentationFunction();
+
       // We must make this link-once ODR, because we'll potentially also be
       // emitting copies of it in other compilation units and we only want one
       // in the final code.
@@ -325,7 +345,8 @@ public:
       GlobalVariable *Guard =
         new GlobalVariable(Mod, Type::getInt32Ty(Ctx), false,
                                GlobalValue::LinkOnceODRLinkage,
-                               0, interpositionName(SelName, "_guard"));
+                               Constant::getNullValue(Type::getInt32Ty(Ctx)),
+                               interpositionName(SelName, "_guard"));
       // Create the linked list entry for this function
       GlobalVariable *List = Mod.getNamedGlobal(interpositionName(SelName,
             (FnEvent.direction() == FunctionEvent::Entry) ? "_enter_list" :

@@ -570,8 +570,10 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   // for forwarding), but we may care about the receiver.
   // TODO: If we ever care about C++, we should handle `this` here as well.
   if (FnEvent.kind() != FunctionEvent::CCall) {
-    Args.push_back(GetArgumentValue(InstrArgs.begin(), FnEvent.receiver(), Builder));
-    Args.push_back(0); // _cmd can be anything
+    int Index = ArgIndex(FnEvent.receiver());
+    if (Index >= 0)
+      Args[Index] = GetArgumentValue(InstrArgs.begin(), FnEvent.receiver(),
+              Builder);
   }
 
   size_t i = 0;
@@ -592,7 +594,6 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
     int Index = ArgIndex(Arg);
     if (Index < 0)
       continue;
-    Index += HiddenArgs;
 
     assert(Index < TotalArgs);
     Args[Index] = GetArgumentValue(&InstrArg, Arg, Builder);
