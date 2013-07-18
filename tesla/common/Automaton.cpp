@@ -163,12 +163,18 @@ string Automaton::String() const {
 string Automaton::Dot() const {
   static const string GraphAttributes(
     "truecolor=true"
-    ","
+    ", "
     "bgcolor=\"transparent\""
-    ","
+    ", "
     "dpi=60"
-    ","
+    ", "
     "size=\"8,10\""
+    ", "
+    "fontname = \"Monospace\""
+    ", "
+    "labeljust = \"l\""
+    ", "
+    "labelloc = bottom"
   );
 
   stringstream ss;
@@ -232,9 +238,6 @@ string Automaton::Dot() const {
     << "\n\t/*\n"
     << "\t * Footer:\n"
     << "\t */\n"
-    << "\tfontname = \"Monospace\";\n"
-    << "\tlabelloc = top;\n"
-    << "\tlabeljust = left;\n"
     << "\tlabel = \"" << Name() << Src << "\";\n"
     << "}";
 
