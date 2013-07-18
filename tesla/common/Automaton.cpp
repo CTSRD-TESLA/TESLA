@@ -161,13 +161,21 @@ string Automaton::String() const {
 }
 
 string Automaton::Dot() const {
+  static const string GraphAttributes(
+    "truecolor=true"
+    ","
+    "bgcolor=\"transparent\""
+    ","
+    "dpi=60"
+  );
+
   stringstream ss;
   ss
     << "/*\n"
     << " * " << Name() << "\n"
     << " */\n"
     << "digraph automaton_" << id << " {\n"
-    << "\tgraph [ truecolor=true, bgcolor=\"transparent\", dpi = 60 ];\n"
+    << "\tgraph [ " << GraphAttributes << " ];\n"
     << "\tnode ["
     << " shape = circle,"
     << " fontname = \"Monospace\","
