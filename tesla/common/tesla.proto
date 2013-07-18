@@ -79,6 +79,9 @@ message AutomatonDescription {
 
   /** Program variables referenced by the automaton. */
   repeated Argument argument = 5;
+
+  /** Source code that originally defined the automaton. */
+  optional string source = 6;
 }
 
 

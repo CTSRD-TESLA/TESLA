@@ -221,14 +221,21 @@ string Automaton::Dot() const {
         ;
   }
 
+  string Src;
+  if (assertion.has_source()) {
+    Src = "\n" + assertion.source();
+    for (size_t i = Src.find("\n"); i != string::npos; i = Src.find("\n", i))
+      Source.replace(i, 1, "\\l");
+  }
+
   ss
     << "\n\t/*\n"
     << "\t * Footer:\n"
     << "\t */\n"
     << "\tfontname = \"Monospace\";\n"
-    << "\tlabel = \"" << Name() << "\";\n"
     << "\tlabelloc = top;\n"
     << "\tlabeljust = left;\n"
+    << "\tlabel = \"" << Name() << Src << "\";\n"
     << "}";
 
   return ss.str();

@@ -82,7 +82,10 @@ Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
   RootFlags.OrOperator = BooleanExpr::BE_Or;
   RootFlags.StrictMode = false;
 
-  return new Parser(Ctx, ID, TeslaContext, Beginning, End, Expression, RootFlags);
+  StringRef SourceCode(Bootstrap->FindOriginalSource(Call->getSourceRange()));
+
+  return new Parser(Ctx, ID, TeslaContext, Beginning, End, Expression,
+                    RootFlags, SourceCode);
 }
 
 
@@ -117,7 +120,10 @@ Parser* Parser::AutomatonParser(FunctionDecl *F, ASTContext& Ctx) {
   RootFlags.OrOperator = BooleanExpr::BE_Xor;
   RootFlags.StrictMode = true;
 
-  return new Parser(Ctx, ID, Context, NULL, NULL, F->getBody(), RootFlags);
+  StringRef SourceCode(Bootstrap->FindOriginalSource(F->getSourceRange()));
+
+  return new Parser(Ctx, ID, Context, NULL, NULL, F->getBody(), RootFlags,
+                    SourceCode);
 }
 
 
@@ -280,6 +286,9 @@ bool Parser::Parse(OwningPtr<AutomatonDescription>& Description,
 
   OwningPtr<Usage> U(new Usage);
   *U->mutable_identifier() = ID;
+
+  if (!SourceCode.empty())
+    A->set_source(SourceCode.str());
 
   // Parse the automaton's [beginning,end] bounds.
   if (Beginning && !Parse(U->mutable_beginning(), Beginning, RootFlags))
@@ -1110,3 +1119,20 @@ llvm::APInt Parser::ParseIntegerLiteral(const Expr* E) {
   return LiteralValue->getValue();
 }
 
+
+llvm::StringRef Parser::FindOriginalSource(const SourceRange& Range)
+{
+  auto& SM = Ctx.getSourceManager();
+  auto *Begin = SM.getCharacterData(SM.getExpansionLoc(Range.getBegin()));
+
+  // TODO: Correctly find the end of the range, in the original source file,
+  //       robust against macro expansion, etc.
+  //
+  //       Note that the API that looks like it ought to do it,
+  //       SourceManager::getExpansion____(), doesn't do what you'd expect.
+  StringRef Raw(Begin, 1000);
+  auto End = Raw.find(';');
+  if (End != std::string::npos) End += 1;
+
+  return Raw.substr(0, End);
+}

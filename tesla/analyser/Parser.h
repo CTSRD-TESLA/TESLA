@@ -110,9 +110,10 @@ private:
   Parser(clang::ASTContext& Ctx, Identifier ID = Identifier(),
          AutomatonDescription::Context C = AutomatonDescription::Global,
          clang::Expr* Begin = NULL, clang::Expr* End = NULL,
-         clang::Stmt *Root = NULL, Flags InitialFlags = Flags())
+         clang::Stmt *Root = NULL, Flags InitialFlags = Flags(),
+         llvm::StringRef SourceCode = llvm::StringRef())
     : Ctx(Ctx), ID(ID), TeslaContext(C), Beginning(Begin), End(End),
-      Root(Root), RootFlags(InitialFlags)
+      Root(Root), RootFlags(InitialFlags), SourceCode(SourceCode)
   {
   }
 
@@ -171,6 +172,8 @@ private:
   //! Parse an Integer Constant Expression (ICE).
   llvm::APInt ParseIntegerLiteral(const clang::Expr*);
 
+  //! Get the original source (as spelled by the programmer) for a range.
+  llvm::StringRef FindOriginalSource(const clang::SourceRange& Range);
 
   //! The index of a variable in our set of unique variable references.
   size_t ReferenceIndex(const clang::ValueDecl*);
@@ -192,6 +195,7 @@ private:
   const clang::Expr *End;           //!< End bound for automaton.
   const clang::Stmt *Root;          //!< Expression describing the automaton.
   const Flags RootFlags;
+  const llvm::StringRef SourceCode; //!< Source code of automaton definition.
 
   std::map<const clang::ValueDecl*, const clang::Expr*> FieldAssignments;
   RefVector References;
