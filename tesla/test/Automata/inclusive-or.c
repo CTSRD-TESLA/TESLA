@@ -57,7 +57,7 @@ void ab() {
 
   /*
    * Graph footer:
-   * CHECK: label = "{{.*inclusive-or.c:[0-9]+#[0-9]+}}"
+   * CHECK: label = "{{.*inclusive-or.c:[0-9]+#[0-9]+}}
    */
 }
 

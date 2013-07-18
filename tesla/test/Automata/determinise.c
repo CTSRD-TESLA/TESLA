@@ -38,7 +38,7 @@ int foo(int x) {
 
 	/*
 	 * Graph footer:
-	 * NFA: label = "{{.*determinise.c:[0-9]+#[0-9]+}}"
-	 * DFA: label = "{{.*determinise.c:[0-9]+#[0-9]+}}"
+	 * NFA: label = "{{.*determinise.c:[0-9]+#[0-9]+}}
+	 * DFA: label = "{{.*determinise.c:[0-9]+#[0-9]+}}
 	 */
 }

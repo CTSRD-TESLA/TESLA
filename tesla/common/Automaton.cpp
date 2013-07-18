@@ -231,7 +231,7 @@ string Automaton::Dot() const {
   if (assertion.has_source()) {
     Src = "\n" + assertion.source();
     for (size_t i = Src.find("\n"); i != string::npos; i = Src.find("\n", i))
-      Source.replace(i, 1, "\\l");
+      Src.replace(i, 1, "\\l");
   }
 
   ss
