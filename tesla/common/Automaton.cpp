@@ -167,6 +167,8 @@ string Automaton::Dot() const {
     "bgcolor=\"transparent\""
     ","
     "dpi=60"
+    ","
+    "size=\"8,10\""
   );
 
   stringstream ss;
