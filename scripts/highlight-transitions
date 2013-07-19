@@ -36,6 +36,9 @@ name_filter = re.compile(args.filter)
 # Automata are preceeded by a comment containing their name.
 automaton_name_in_comment = re.compile(' \* .*[\/a-zA-Z0-9\.]+:[0-9]+#[0-9]+')
 
+# A line that defines the labels for subsequent edges.
+edge_label = re.compile('.*edge \[ label = "(.*)",')
+
 # A transition from one numbered state to another.
 transition_pattern = re.compile('\t[0-9]+ -> [0-9]+;')
 
@@ -91,6 +94,10 @@ for filename in args.dot:
 		if name and not name_filter.match(name):
 			continue
 
+		# Does this line have a label for the following edges?
+		m = edge_label.match(line)
+		if m: (trans_label,) = m.groups()
+
 		#
 		# Pass all non-transition lines straight through
 		# (including the name comments we matched above).
@@ -120,7 +127,10 @@ for filename in args.dot:
 		else:
 			count = trans[(source,dest)]
 			width = float(count) / max_count
-			attrs = { 'penwidth': 10 * width }
+			attrs = {
+				'label': '"%s\\n[%dx]"' % (trans_label, count),
+				'penwidth': 10 * width
+			}
 
 
 		attrs = ', '.join([ '%s = %s' % a for a in attrs.items() ])

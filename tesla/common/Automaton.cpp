@@ -207,9 +207,8 @@ string Automaton::Dot() const {
       << "\t * " << Head->ShortLabel() << "\n"
       << "\t */\n"
       << "\tedge [ "
-      << "color = " << color << ", "
-      << "fontcolor = " << color << ",\n\t\t"
-      << "label = \"" << Head->DotLabel();
+      << "label = \"" << Head->DotLabel()
+      ;
 
     if (Head->RequiresInit())
       ss << "\\n&laquo;init&raquo;";
@@ -218,7 +217,9 @@ string Automaton::Dot() const {
       ss << "\\n&laquo;cleanup&raquo;";
 
     ss
-      << "\""
+      << "\",\n\t\t"
+      << "color = " << color << ", "
+      << "fontcolor = " << color
       << " ];\n";
 
     for (auto *T : EquivalenceClass)
