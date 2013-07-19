@@ -354,12 +354,16 @@ StructType* tesla::TransitionSetType(Module& M) {
     return T;
 
   // We don't already have it; go find it!
-  Type *IntTy = IntegerType::get(M.getContext(), 32);
+  auto& Ctx = M.getContext();
+
+  Type *IntTy = IntegerType::get(Ctx, 32);
   Type *TransStar = PointerType::getUnqual(TransitionType(M));
+  Type *CharStar = PointerType::getUnqual(IntegerType::get(Ctx, 8));
 
   return StructType::create(Name,
                             IntTy,      // number of possible transitions
                             TransStar,  // transition array
+                            CharStar,   // description
                             NULL);
 }
 
@@ -683,7 +687,13 @@ Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
   // Create a global variable that points to this structure.
   Constant *ArrayPtr = ConstantExpr::getInBoundsGetElementPtr(Array, Zeroes);
 
-  Constant *TransitionsInit = ConstantStruct::get(T, Count, ArrayPtr, NULL);
+  string Description;
+  raw_string_ostream D(Description);
+  D << Tr;
+  auto *Desc = Builder.CreateGlobalStringPtr(D.str(), Name + "_description");
+
+  Constant *TransitionsInit =
+    ConstantStruct::get(T, Count, ArrayPtr, Desc, NULL);
 
   return new GlobalVariable(M, T, true, GlobalValue::PrivateLinkage,
                             TransitionsInit, "transitions");

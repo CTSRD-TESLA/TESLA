@@ -37,6 +37,7 @@
 #include "tesla.pb.h"
 
 #include <llvm/ADT/Twine.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <sstream>
 
@@ -281,6 +282,36 @@ string Transition::String() const {
     + Twine(To.ID())
     + ")"
   ).str();
+}
+
+
+raw_ostream& operator << (raw_ostream& Out, const TEquivalenceClass& TEq) {
+  auto *Head = *TEq.begin();
+
+  Out << Head->ShortLabel();
+  Out << " : [";
+
+  for (auto *T : TEq) {
+    auto& Source = T->Source();
+    auto& Dest = T->Destination();
+
+    // llvm::raw_ostream doesn't support control tokens like std::hex.
+    Out
+      << " ("
+      << Source.ID() << ":0x"
+      ;
+    Out.write_hex(Source.Mask());
+    Out
+      << " -> "
+      << Dest.ID() << ":0x"
+      ;
+    Out.write_hex(Dest.Mask());
+    Out << ")";
+  }
+
+  Out << " ]";
+
+  return Out;
 }
 
 
