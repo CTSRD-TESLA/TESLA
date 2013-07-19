@@ -173,7 +173,7 @@ void Transition::GroupClasses(const TransitionVector& Ungrouped,
     }
 
     if (!FoundEquivalent) {
-      SmallPtrSet<const Transition*, 4> New;
+      TEquivalenceClass New;
       New.insert(T);
       EquivalenceClasses.push_back(New);
     }
