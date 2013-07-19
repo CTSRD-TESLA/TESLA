@@ -418,4 +418,3 @@ const ReferenceVector SubAutomatonTransition::Arguments() const {
 }
 
 } // namespace tesla
-
