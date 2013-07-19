@@ -37,6 +37,7 @@
 #include "tesla.pb.h"
 
 #include <llvm/ADT/Twine.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <sstream>
 
@@ -173,7 +174,7 @@ void Transition::GroupClasses(const TransitionVector& Ungrouped,
     }
 
     if (!FoundEquivalent) {
-      SmallPtrSet<const Transition*, 4> New;
+      TEquivalenceClass New;
       New.insert(T);
       EquivalenceClasses.push_back(New);
     }
@@ -284,6 +285,36 @@ string Transition::String() const {
 }
 
 
+raw_ostream& operator << (raw_ostream& Out, const TEquivalenceClass& TEq) {
+  auto *Head = *TEq.begin();
+
+  Out << Head->ShortLabel();
+  Out << " : [";
+
+  for (auto *T : TEq) {
+    auto& Source = T->Source();
+    auto& Dest = T->Destination();
+
+    // llvm::raw_ostream doesn't support control tokens like std::hex.
+    Out
+      << " ("
+      << Source.ID() << ":0x"
+      ;
+    Out.write_hex(Source.Mask());
+    Out
+      << " -> "
+      << Dest.ID() << ":0x"
+      ;
+    Out.write_hex(Dest.Mask());
+    Out << ")";
+  }
+
+  Out << " ]";
+
+  return Out;
+}
+
+
 const ReferenceVector FnTransition::Arguments() const {
   const Argument* const *Args = Ev.argument().data();
   size_t Len = Ev.argument_size();
@@ -387,4 +418,3 @@ const ReferenceVector SubAutomatonTransition::Arguments() const {
 }
 
 } // namespace tesla
-

@@ -36,20 +36,25 @@ tesla::fail:bad-transition
 {
 	name = stringof(args[0]->tc_name);
 	inst = args[1];
+	transitions = args[2];
 
 	printf("%s:%s", execname, name);
 	@bad_transition[execname, name,
-	                inst->ti_key.tk_mask, inst->ti_state] = count();
+	                inst->ti_key.tk_mask, inst->ti_state,
+	                stringof(transitions->description), stack()] = count();
 }
 
 tesla::fail:no-instance-match
 {
 	name = stringof(args[0]->tc_name);
-	key = args[1];
-	transitions = args[2];
+	instances = args[1];
+	key = args[2];
+	transitions = args[3];
 
 	printf("%s:%s", execname, name);
-	@no_instance[execname, name, key] = count();
+	@no_instance[execname, name, stringof(key),
+	             stringof(transitions->description), stringof(instances),
+	             stack()] = count();
 }
 
 tesla::fail:other-error
@@ -59,47 +64,38 @@ tesla::fail:other-error
 	message = stringof(args[2]);
 
 	printf("%s:%s - error %d; %s", execname, name, errnum, message);
-	@other[execname, name, errnum, message] = count();
+	@other[execname, name, errnum, message, stack()] = count();
 }
 
 END
 {
-	printf("\n===============================================");
-	printf("==============================================\n");
+	printf("\n");
+        printf("=======================================");
+	printf("=======================================\n");
 	printf("Bad transition:\n");
-	printf("-----------------------------------------------");
-	printf("----------------------------------------------\n");
-	printf("  execname                                           ");
-	printf("       automaton    mask  state   count\n");
-	printf("-----------------------------------------------");
-	printf("----------------------------------------------\n");
-	printa("%10s    %55s    0x%x   %6u  %@u\n", @bad_transition);
-	printf("===============================================");
-	printf("==============================================\n");
+	printf("---------------------------------------");
+	printf("---------------------------------------\n");
+	printa("%@6u:%-12s  %s\n%6d:0x%-10x  %s%k\n", @bad_transition);
+	printf("=======================================");
+	printf("=======================================\n");
 
-	printf("\n===============================================");
-	printf("==============================================\n");
+	printf("\n");
+        printf("=======================================");
+	printf("=======================================\n");
 	printf("No instance:\n");
-	printf("-----------------------------------------------");
-	printf("----------------------------------------------\n");
-	printf("  execname                                           ");
-	printf("       automaton    key   count\n");
-	printf("-----------------------------------------------");
-	printf("----------------------------------------------\n");
-	printa("%10s    %55s    %a  %@u\n", @no_instance);
-	printf("===============================================");
-	printf("==============================================\n");
+	printf("---------------------------------------");
+	printf("---------------------------------------\n");
+	printa("%@6u:%-12s  %s\n%-20s %s\n%s%k\n", @no_instance);
+	printf("=======================================");
+	printf("=======================================\n");
 
-	printf("\n===============================================");
-	printf("==============================================\n");
+	printf("\n");
+        printf("=======================================");
+	printf("=======================================\n");
 	printf("Other TESLA errors:\n");
-	printf("-----------------------------------------------");
-	printf("----------------------------------------------\n");
-	printf("  execname                                           ");
-	printf("       automaton    errno message  count\n");
-	printf("-----------------------------------------------");
-	printf("----------------------------------------------\n");
-	printa("%10s    %55s    %3d   %s  %@u\n", @other);
-	printf("===============================================");
-	printf("==============================================\n");
+	printf("---------------------------------------");
+	printf("---------------------------------------\n");
+	printa("%10s    %55s    %3d   %s  %@u%k\n", @other);
+	printf("=======================================");
+	printf("=======================================\n");
 }

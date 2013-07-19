@@ -43,6 +43,10 @@
 
 #include <string>
 
+namespace llvm {
+  class raw_ostream;
+}
+
 namespace tesla {
 
 // TESLA IR classes
@@ -59,6 +63,9 @@ typedef llvm::SmallVector<Transition*,10> TransitionVector;
 
 //! A set of TESLA transitions that are considered equivalent.
 typedef llvm::SmallPtrSet<const Transition*,4> TEquivalenceClass;
+
+//! Get a string representation of a @ref TEquivalenceClass.
+llvm::raw_ostream& operator << (llvm::raw_ostream&, const TEquivalenceClass&);
 
 //! Sets of transition equivalence classes.
 typedef std::vector<TEquivalenceClass> TransitionSets;
