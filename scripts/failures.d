@@ -47,12 +47,14 @@ tesla::fail:bad-transition
 tesla::fail:no-instance-match
 {
 	name = stringof(args[0]->tc_name);
-	key = args[1];
-	transitions = args[2];
+	instances = args[1];
+	key = args[2];
+	transitions = args[3];
 
 	printf("%s:%s", execname, name);
 	@no_instance[execname, name, stringof(key),
-	             stringof(transitions->description), stack()] = count();
+	             stringof(transitions->description), stringof(instances),
+	             stack()] = count();
 }
 
 tesla::fail:other-error
@@ -83,7 +85,7 @@ END
 	printf("No instance:\n");
 	printf("---------------------------------------");
 	printf("---------------------------------------\n");
-	printa("%@6u:%-12s  %s\n%-20s %s%k\n", @no_instance);
+	printa("%@6u:%-12s  %s\n%-20s %s\n%s%k\n", @no_instance);
 	printf("=======================================");
 	printf("=======================================\n");
 
