@@ -1,0 +1,172 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Tesla_internal" rel="Chapter" href="Tesla_internal.html">
+<link title="Tesla" rel="Chapter" href="Tesla.html"><title>Index of values</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Index of values</h1>
+<table>
+<tr><td align="left"><br>C</td></tr>
+<tr><td><a href="Tesla_internal.html#VALcheck">check</a> [<a href="Tesla_internal.html">Tesla_internal</a>]</td>
+<td><div class="info">
+Check the return code is <code class="code">TESLA_SUCCESS</code>, and raise a
+    <a href="Tesla_internal.html#EXCEPTIONTesla_error"><code class="code">Tesla_internal.Tesla_error</code></a> if it is non-zero.
+</div>
+</td></tr>
+<tr><td align="left"><br>E</td></tr>
+<tr><td><a href="Tesla.html#VALerr_to_string">err_to_string</a> [<a href="Tesla.html">Tesla</a>]</td>
+<td><div class="info">
+Provide a human-readable version of TESLA errors.
+</div>
+</td></tr>
+<tr><td align="left"><br>G</td></tr>
+<tr><td><a href="Tesla.Class.html#VALget">get</a> [<a href="Tesla.Class.html">Tesla.Class</a>]</td>
+<td><div class="info">
+Retrieve (or create) a <a href="Tesla.Class.html#TYPEt"><code class="code">Tesla.Class.t</code></a> from a <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a>.
+</div>
+</td></tr>
+<tr><td><a href="Tesla.Store.html#VALget">get</a> [<a href="Tesla.Store.html">Tesla.Store</a>]</td>
+<td><div class="info">
+Retrieve the <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> for a context (e.g., a thread).
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Class.html#VALget">get</a> [<a href="Tesla_internal.Class.html">Tesla_internal.Class</a>]</td>
+<td><div class="info">
+Retrieve (or create) a <a href="Tesla_internal.Class.html#VALt"><code class="code">Tesla_internal.Class.t</code></a> from a <a href="Tesla_internal.Store.html#VALt"><code class="code">Tesla_internal.Store.t</code></a>.
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Store.html#VALget">get</a> [<a href="Tesla_internal.Store.html">Tesla_internal.Store</a>]</td>
+<td><div class="info">
+Retrieve the <code class="code">tesla_store</code> for a context (e.g., a thread).
+</div>
+</td></tr>
+<tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Tesla_internal.Class.html#VALid">id</a> [<a href="Tesla_internal.Class.html">Tesla_internal.Class</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla.Store.html#VALinstances">instances</a> [<a href="Tesla.Store.html">Tesla.Store</a>]</td>
+<td><div class="info">
+Retrieve the maximum number of instances that this <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> was
+      initialized to support.
+</div>
+</td></tr>
+<tr><td align="left"><br>K</td></tr>
+<tr><td><a href="Tesla_internal.Key.html#VALkey">key</a> [<a href="Tesla_internal.Key.html">Tesla_internal.Key</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Key.html#VALkey_size">key_size</a> [<a href="Tesla_internal.Key.html">Tesla_internal.Key</a>]</td>
+<td><div class="info">
+The <code class="code">key_size</code> is the same as the <code class="code">TESLA_KEY_SIZE</code> define
+      in <code class="code">tesla.h</code> (currently 4)
+</div>
+</td></tr>
+<tr><td align="left"><br>M</td></tr>
+<tr><td><a href="Tesla_internal.Transition.html#VALmask_cleanup">mask_cleanup</a> [<a href="Tesla_internal.Transition.html">Tesla_internal.Transition</a>]</td>
+<td><div class="info">
+Clean up the class immediately
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Transition.html#VALmask_init">mask_init</a> [<a href="Tesla_internal.Transition.html">Tesla_internal.Transition</a>]</td>
+<td><div class="info">
+May need to initialize the class
+</div>
+</td></tr>
+<tr><td align="left"><br>N</td></tr>
+<tr><td><a href="Tesla_internal.Class.html#VALnull">null</a> [<a href="Tesla_internal.Class.html">Tesla_internal.Class</a>]</td>
+<td><div class="info">
+Allocate a null pointer to a <a href="Tesla_internal.Class.html#VALt"><code class="code">Tesla_internal.Class.t</code></a>, suitable for passing into
+      a function that mutates the pointer to point to a class.
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Store.html#VALnull">null</a> [<a href="Tesla_internal.Store.html">Tesla_internal.Store</a>]</td>
+<td><div class="info">
+Allocate a null pointer to a store, suitable for passing into
+      a function that mutates the pointer to point to a store.
+</div>
+</td></tr>
+<tr><td align="left"><br>P</td></tr>
+<tr><td><a href="Tesla.Class.html#VALput">put</a> [<a href="Tesla.Class.html">Tesla.Class</a>]</td>
+<td><div class="info">
+Release the resources that were associated with the <a href="Tesla.Class.html#TYPEt"><code class="code">Tesla.Class.t</code></a>
+      that was retrieved via <a href="Tesla.Class.html#VALget"><code class="code">Tesla.Class.get</code></a>.
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Class.html#VALput">put</a> [<a href="Tesla_internal.Class.html">Tesla_internal.Class</a>]</td>
+<td><div class="info">
+Release the resources that were associated with the <a href="Tesla_internal.Class.html#VALt"><code class="code">Tesla_internal.Class.t</code></a>
+      that was retrieved via <a href="Tesla_internal.Class.html#VALget"><code class="code">Tesla_internal.Class.get</code></a>.
+</div>
+</td></tr>
+<tr><td align="left"><br>S</td></tr>
+<tr><td><a href="Tesla.Store.html#VALsize">size</a> [<a href="Tesla.Store.html">Tesla.Store</a>]</td>
+<td><div class="info">
+Retrieve the maximum size that this <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> was created with.
+</div>
+</td></tr>
+<tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Tesla_internal.Key.html#VALt">t</a> [<a href="Tesla_internal.Key.html">Tesla_internal.Key</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Transitions.html#VALt">t</a> [<a href="Tesla_internal.Transitions.html">Tesla_internal.Transitions</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Transition.html#VALt">t</a> [<a href="Tesla_internal.Transition.html">Tesla_internal.Transition</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Class.html#VALt">t</a> [<a href="Tesla_internal.Class.html">Tesla_internal.Class</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Store.html#VALt">t</a> [<a href="Tesla_internal.Store.html">Tesla_internal.Store</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Transition.html#VALt_flags">t_flags</a> [<a href="Tesla_internal.Transition.html">Tesla_internal.Transition</a>]</td>
+<td><div class="info">
+Things that may need to be done on this transition.
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Transition.html#VALt_from">t_from</a> [<a href="Tesla_internal.Transition.html">Tesla_internal.Transition</a>]</td>
+<td><div class="info">
+The state we are moving from.
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Transition.html#VALt_from_mask">t_from_mask</a> [<a href="Tesla_internal.Transition.html">Tesla_internal.Transition</a>]</td>
+<td><div class="info">
+The mask of the state we're moving from.
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Key.html#VALt_keys">t_keys</a> [<a href="Tesla_internal.Key.html">Tesla_internal.Key</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Transitions.html#VALt_length">t_length</a> [<a href="Tesla_internal.Transitions.html">Tesla_internal.Transitions</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Key.html#VALt_mask">t_mask</a> [<a href="Tesla_internal.Key.html">Tesla_internal.Key</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Transitions.html#VALt_ptr">t_ptr</a> [<a href="Tesla_internal.Transitions.html">Tesla_internal.Transitions</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tesla_internal.Transition.html#VALt_to">t_to</a> [<a href="Tesla_internal.Transition.html">Tesla_internal.Transition</a>]</td>
+<td><div class="info">
+The state we are moving to.
+</div>
+</td></tr>
+<tr><td><a href="Tesla_internal.Transition.html#VALt_to_mask">t_to_mask</a> [<a href="Tesla_internal.Transition.html">Tesla_internal.Transition</a>]</td>
+<td><div class="info">
+A mask of the keys that the 'to' state should have set.
+</div>
+</td></tr>
+<tr><td align="left"><br>U</td></tr>
+<tr><td><a href="Tesla_internal.html#VALupdate_state">update_state</a> [<a href="Tesla_internal.html">Tesla_internal</a>]</td>
+<td><div class="info">
+Update all automata instances that match a given key to a
+    new state.
+</div>
+</td></tr>
+<tr><td align="left"><br>W</td></tr>
+<tr><td><a href="Tesla.html#VALwith_class">with_class</a> [<a href="Tesla.html">Tesla</a>]</td>
+<td><div class="info">
+Retrieve a <a href="Tesla.Class.html#TYPEt"><code class="code">Tesla.Class.t</code></a> with the given <code class="code">id</code> and apply <code class="code">f</code> on it.
+</div>
+</td></tr>
+</table>
+</body>
+</html>

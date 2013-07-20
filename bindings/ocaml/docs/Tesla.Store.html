@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="Tesla.Class.html">
+<link rel="Up" href="Tesla.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Tesla_internal" rel="Chapter" href="Tesla_internal.html">
+<link title="Tesla" rel="Chapter" href="Tesla.html"><title>Tesla.Store</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="Tesla.html" title="Tesla">Up</a>
+&nbsp;<a class="post" href="Tesla.Class.html" title="Tesla.Class">Next</a>
+</div>
+<h1>Module <a href="type_Tesla.Store.html">Tesla.Store</a></h1>
+<pre><span class="keyword">module</span> Store: <code class="code">sig</code> <a href="Tesla.Store.html">..</a> <code class="code">end</code></pre><div class="info">
+A storage container for one or more <a href="Tesla.Class.html#TYPEt"><code class="code">Tesla.Class.t</code></a> values.
+    There may be one <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> for each thread (for storing 
+    thread-local automata) plus a single global <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> that
+    is retrieved using <code class="code">Global</code>.<br>
+</div>
+<hr width="100%">
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+
+<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type">ctx:<a href="Tesla.html#TYPEctx">Tesla.ctx</a> -> size:int -> instances:int -> <a href="Tesla.Store.html#TYPEt">t</a></code></pre><div class="info">
+Retrieve the <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> for a context (e.g., a thread).
+      If the <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> does not exist yet, it will be created.<br>
+</div>
+<pre><span id="VALsize"><span class="keyword">val</span> size</span> : <code class="type"><a href="Tesla.Store.html#TYPEt">t</a> -> int</code></pre><div class="info">
+Retrieve the maximum size that this <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> was created with.<br>
+</div>
+<pre><span id="VALinstances"><span class="keyword">val</span> instances</span> : <code class="type"><a href="Tesla.Store.html#TYPEt">t</a> -> int</code></pre><div class="info">
+Retrieve the maximum number of instances that this <a href="Tesla.Store.html#TYPEt"><code class="code">Tesla.Store.t</code></a> was
+      initialized to support.<br>
+</div>
+</body></html>

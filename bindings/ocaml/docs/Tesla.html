@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Tesla_internal.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Tesla_internal" rel="Chapter" href="Tesla_internal.html">
+<link title="Tesla" rel="Chapter" href="Tesla.html"><title>Tesla</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Tesla_internal.html" title="Tesla_internal">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Tesla.html">Tesla</a></h1>
+<pre><span class="keyword">module</span> Tesla: <code class="code">sig</code> <a href="Tesla.html">..</a> <code class="code">end</code></pre><div class="info">
+High-level bindings to <code class="code">libtesla</code> that expose a more OCaml-like
+    interface to constructing automata.<br>
+</div>
+<hr width="100%">
+<pre><code><span id="TYPEerr"><span class="keyword">type</span> <code class="type"></code>err</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTerr.ENOENT"><span class="constructor">ENOENT</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Entry not found.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTerr.ENOMEM"><span class="constructor">ENOMEM</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Insufficient memory.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTerr.EINVAL"><span class="constructor">EINVAL</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Invalid parameters.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTerr.UNKNOWN"><span class="constructor">UNKNOWN</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >An unknown (e.g. platform) error.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+<div class="info">
+Error codes from <code class="code">libtesla</code><br>
+</div>
+
+<pre><span id="EXCEPTIONError"><span class="keyword">exception</span> Error</span> <span class="keyword">of</span> <code class="type"><a href="Tesla.html#TYPEerr">err</a></code></pre>
+<div class="info">
+Exception raised by functions in this module<br>
+</div>
+<pre><span id="VALerr_to_string"><span class="keyword">val</span> err_to_string</span> : <code class="type"><a href="Tesla.html#TYPEerr">err</a> -> string</code></pre><div class="info">
+Provide a human-readable version of TESLA errors.<br>
+</div>
+<pre><code><span id="TYPEctx"><span class="keyword">type</span> <code class="type"></code>ctx</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTctx.Global"><span class="constructor">Global</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >The single global context</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTctx.Thread"><span class="constructor">Thread</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >A per-thread context</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+<div class="info">
+A context where TESLA data is stored.
+<p>
+
+    TESLA data can be stored in a number of places that imply different
+    synchronisation requirements. For instance, thread-local storage does not
+    require synchronisation on access, whereas global storage does.
+    On the other hand, thread-local storage cannot be used to track events
+    across multiple threads.<br>
+</div>
+
+<pre><span class="keyword">module</span> <a href="Tesla.Store.html">Store</a>: <code class="code">sig</code> <a href="Tesla.Store.html">..</a> <code class="code">end</code></pre><div class="info">
+A storage container for one or more <a href="Tesla.Class.html#TYPEt"><code class="code">Tesla.Class.t</code></a> values.
+</div>
+<pre><span class="keyword">module</span> <a href="Tesla.Class.html">Class</a>: <code class="code">sig</code> <a href="Tesla.Class.html">..</a> <code class="code">end</code></pre><div class="info">
+A description of a TESLA automaton, which may be instantiated a
+    number of times with different names and current states.
+</div>
+<pre><span id="VALwith_class"><span class="keyword">val</span> with_class</span> : <code class="type">store:<a href="Tesla.Store.html#TYPEt">Store.t</a> -><br>       id:<a href="Tesla.Class.html#TYPEid">Class.id</a> -><br>       name:string -> descr:string -> f:(<a href="Tesla.Class.html#TYPEt">Class.t</a> -> 'a) -> 'a</code></pre><div class="info">
+Retrieve a <a href="Tesla.Class.html#TYPEt"><code class="code">Tesla.Class.t</code></a> with the given <code class="code">id</code> and apply <code class="code">f</code> on it.
+    The class will always be released when <code class="code">f</code> terminates, even if
+    <code class="code">f</code> raises an exception. However, <code class="code">f</code> should not attempt to
+    retrieve the same class name in the same thread or global context,
+    or the function will deadlock.<br>
+</div>
+</body></html>
