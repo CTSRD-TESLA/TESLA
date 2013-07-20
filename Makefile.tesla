@@ -7,12 +7,16 @@ CFLAGS= -Iinclude -DHAVE_STRNLEN -Wall
 
 .PHONY: all clean
 
-all: libtesla/libtesla.a
+all: libtesla/libtesla.a libtesla/libtesla.so
 	@ :
 
 libtesla/libtesla.a: $(OBJ)
 	rm -f $@
 	ar rc $@ $^
+	ranlib $@
+
+libtesla/libtesla.so: $(OBJ)
+	$(CC) -shared -o $@ $^
 
 clean:
 	rm -f libtesla/src/*.o libtesla/src/*.a
