@@ -1,2 +1,6 @@
 build
 doxygen
+bindings/ocaml/_build
+bindings/ocaml/*.native
+bindings/ocaml/*.docdir
+.*.swp
