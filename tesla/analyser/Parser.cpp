@@ -386,14 +386,14 @@ bool Parser::Parse(Expression *E, const CallExpr *Call, Flags F) {
 
   const FunctionDecl *Fun = Call->getDirectCallee();
   if (!Fun) {
-    ReportError("expected direct call to predicate or sub-automaton", Call);
+    ReportError("expected direct call to modifier or sub-automaton", Call);
     return false;
   }
 
   const Type *RetTy = Fun->getResultType().getTypePtr();
   auto *PtrTy = dyn_cast<PointerType>(RetTy);
   if (!PtrTy) {
-     ReportError("expected predicate or sub-automaton", Call);
+     ReportError("expected modifier or sub-automaton", Call);
      return false;
   }
 
@@ -407,7 +407,7 @@ bool Parser::Parse(Expression *E, const CallExpr *Call, Flags F) {
 
   auto Parse = llvm::StringSwitch<CallParser>(Struct->getName())
      .Case("__tesla_automaton_description", &Parser::ParseSubAutomaton)
-     .Case("__tesla_event", &Parser::ParsePredicate)
+     .Case("__tesla_event", &Parser::ParseModifier)
      .Default(NULL);
 
   if (Parse == NULL) {
@@ -499,7 +499,7 @@ bool Parser::ParseSubAutomaton(Expression *E, const CallExpr *Call, Flags F) {
 }
 
 
-bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
+bool Parser::ParseModifier(Expression *E, const CallExpr *Call, Flags F) {
   const FunctionDecl *Fun = Call->getDirectCallee();
   assert(Fun != NULL);
 
@@ -515,7 +515,7 @@ bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
     .Default(NULL);
 
   if (Parse == NULL) {
-    ReportError("unsupported predicate", Call);
+    ReportError("unsupported modifier", Call);
     return false;
   }
 
@@ -525,11 +525,11 @@ bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
 
 bool Parser::ParseOptional(Expression *E, const CallExpr *Call, Flags F) {
 
-  // The 'optional' predicate actually takes two arguments ('ignore' and
+  // The 'optional' modifier actually takes two arguments ('ignore' and
   // a programmer-supplied argument); only talk about the user argument in
   // the error message.
   if (Call->getNumArgs() != 2) {
-    ReportError("'optional' predicate takes exactly one user argument", Call);
+    ReportError("'optional' modifier takes exactly one user argument", Call);
     return false;
   }
 
@@ -603,7 +603,7 @@ bool Parser::ParseFunctionCall(Expression *E, const CallExpr *Call, Flags F) {
   FnEvent->set_direction(FunctionEvent::Entry);
   FnEvent->set_strict(F.StrictMode);
 
-  return ParseFunctionPredicate(FnEvent, Call, false, F);
+  return ParseFunctionModifier(FnEvent, Call, false, F);
 }
 
 
@@ -615,7 +615,7 @@ bool Parser::ParseFunctionReturn(Expression *E, const CallExpr *Call, Flags F) {
   FnEvent->set_direction(FunctionEvent::Exit);
   FnEvent->set_strict(F.StrictMode);
 
-  return ParseFunctionPredicate(FnEvent, Call, true, F);
+  return ParseFunctionModifier(FnEvent, Call, true, F);
 }
 
 
@@ -675,7 +675,7 @@ bool Parser::ParseConditional(Expression *E, const clang::CallExpr *Call,
 }
 
 
-bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
+bool Parser::ParseFunctionModifier(FunctionEvent *Event, const CallExpr *Call,
                                     bool ParseRetVal, Flags F) {
 
   Event->set_context(F.FnInstrContext);
@@ -895,7 +895,7 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
   if (auto Call = dyn_cast<CallExpr>(P)) {
     auto Fn = Call->getDirectCallee();
     if (!Fn) {
-      ReportError("expected TESLA predicate", P);
+      ReportError("expected TESLA modifier", P);
       return false;
     }
 

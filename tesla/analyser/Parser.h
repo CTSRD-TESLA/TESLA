@@ -133,10 +133,10 @@ private:
 
   bool ParseStructField(StructField*, const clang::MemberExpr*, Flags);
   bool ParseSubAutomaton(Expression*, const clang::CallExpr*, Flags);
-  bool ParsePredicate(Expression*, const clang::CallExpr*, Flags);
+  bool ParseModifier(Expression*, const clang::CallExpr*, Flags);
 
-  // TESLA predicates:
-  //! A method that parses @ref clang::CallExpr (predicate, sub-automaton...).
+  // TESLA modifiers:
+  //! A method that parses @ref clang::CallExpr (modifier, sub-automaton...).
   typedef bool (Parser::*CallParser)(Expression*, const clang::CallExpr*,
                                      Flags);
 
@@ -150,7 +150,7 @@ private:
   bool ParseSequence(Expression*, const clang::CallExpr*, Flags);
 
   //! Helper for @ref ParseFunctionCall and @ref ParseFunctionReturn.
-  bool ParseFunctionPredicate(FunctionEvent*, const clang::CallExpr*,
+  bool ParseFunctionModifier(FunctionEvent*, const clang::CallExpr*,
                               bool ParseRetVal, Flags);
 
   //! Parse 'foo(x) == y'.
