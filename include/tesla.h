@@ -71,6 +71,7 @@ __tesla_inline_assertion(const char *filename, int line, int count,
 #ifdef	__TESLA_ANALYSER__
 
 #include <sys/types.h>
+#include <limits.h>
 
 /**
  * TESLA events can be serialised either with respect to the current thread
@@ -82,6 +83,8 @@ extern __tesla_locality *__tesla_perthread;
 /** A sequence of TESLA events. Can be combined with && or ||. */
 struct __tesla_event* __tesla_sequence(__tesla_event*, ...);
 
+/** A sequence of events that repeats. */
+struct __tesla_event* __tesla_repeat(int min, int max, __tesla_event*, ...);
 
 /* TESLA events: */
 /** Entering a function (with optionally-specified arguments). */

@@ -492,6 +492,35 @@ bool Parser::ParseSequence(Expression *E, const CallExpr *Call, Flags F) {
 }
 
 
+bool Parser::ParseRepetition(Expression *E, const CallExpr *Call, Flags F) {
+
+  E->set_type(Expression::SEQUENCE);
+  Sequence *Seq = E->mutable_sequence();
+
+  if (Call->getNumArgs() < 3) {
+    ReportError(
+      "repetition should have at least three arguments (min, max, expr)",
+      Call);
+    return false;
+  }
+
+  const Expr* const *Args = Call->getArgs();
+  auto Min = ParseIntegerLiteral(Args[0]).getLimitedValue();
+  if (Min > 1)
+    Seq->set_minreps(Min);
+
+  auto Max = ParseIntegerLiteral(Args[1]);
+  if (!Max.isMaxSignedValue())
+    Seq->set_maxreps(Max.getLimitedValue());
+
+  for (size_t i = 2; i < Call->getNumArgs(); i++)
+    if (!Parse(Seq->add_expression(), Args[i], F))
+      return false;
+
+  return true;
+}
+
+
 bool Parser::ParseSubAutomaton(Expression *E, const CallExpr *Call, Flags F) {
   E->set_type(Expression::SUB_AUTOMATON);
   E->mutable_subautomaton()->set_name(Call->getDirectCallee()->getName());
@@ -511,6 +540,7 @@ bool Parser::ParseModifier(Expression *E, const CallExpr *Call, Flags F) {
     .Case("__tesla_strict",       &Parser::ParseStrictMode)
     .Case("__tesla_conditional",  &Parser::ParseConditional)
     .Case("__tesla_sequence",     &Parser::ParseSequence)
+    .Case("__tesla_repeat",       &Parser::ParseRepetition)
     .Case("__tesla_optional",     &Parser::ParseOptional)
     .Default(NULL);
 

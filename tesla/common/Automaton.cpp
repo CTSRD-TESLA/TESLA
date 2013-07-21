@@ -478,10 +478,29 @@ State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
 
 State* NFAParser::Parse(const Sequence& Seq, State& Start) {
   State *Current = &Start;
-  for (const Expression& E : Seq.expression())
-    Current = Parse(E, *Current);
+  State *Final = State::NewBuilder(States).Build();
 
-  return Current;
+  int Min = Seq.minreps();
+  int Max = Seq.maxreps();
+
+  for (int i = 0; i < std::max(Min, Max); i++) {
+    for (const Expression& E : Seq.expression()) {
+      if (i >= Min) {
+        Transition::Create(*Current, *Final, Transitions);
+      }
+
+      Current = Parse(E, *Current);
+
+      if (i == Max) {
+        auto *Loopback = Parse(E, *Current);
+        Transition::Create(*Loopback, *Current, Transitions);
+      }
+    }
+  }
+
+  Transition::Create(*Current, *Final, Transitions);
+
+  return Final;
 }
 
 State* NFAParser::Parse(const AssertionSite& Site, State& InitialState,

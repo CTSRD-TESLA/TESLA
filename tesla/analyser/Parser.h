@@ -148,6 +148,7 @@ private:
   bool ParseConditional(Expression*, const clang::CallExpr*, Flags);
   bool ParseOptional(Expression*, const clang::CallExpr*, Flags);
   bool ParseSequence(Expression*, const clang::CallExpr*, Flags);
+  bool ParseRepetition(Expression*, const clang::CallExpr*, Flags);
 
   //! Helper for @ref ParseFunctionCall and @ref ParseFunctionReturn.
   bool ParseFunctionModifier(FunctionEvent*, const clang::CallExpr*,
