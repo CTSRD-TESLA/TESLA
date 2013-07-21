@@ -231,8 +231,13 @@ string Automaton::Dot() const {
   string Src;
   if (assertion.has_source()) {
     Src = "\n" + assertion.source();
+
     for (size_t i = Src.find("\n"); i != string::npos; i = Src.find("\n", i))
       Src.replace(i, 1, "\\l");
+
+    /* Poor man's quote-escaping (std::string is so under-featured!): */
+    for (size_t i = Src.find('"'); i != string::npos; i = Src.find('"', i + 2))
+      Src.replace(i, 1, "\\");
   }
 
   ss
