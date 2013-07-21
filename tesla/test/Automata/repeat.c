@@ -32,24 +32,23 @@ int foo() {
 			 *       hard-code in a test!
 			 *
 			 * CHECK:    edge [ label = "foo()
+			 * CHECK:    [[INIT]] -> [[FOO1:[0-9]+]]
+			 * CHECK:    [[FOO1]] -> [[FOO2:[0-9]+]]
 			 * CHECK:    [[INIT]] -> [[INIT]]
-			 * CHECK:    [[FOO2:[0-9]+]] -> [[FOOn:[0-9]+]]
-			 * CHECK:    [[FOO1:[0-9]+]] -> [[FOO2]]
-			 * CHECK:    [[INIT]] -> [[FOO1]]
 			 */
 			ATLEAST(2, called(foo)),
 
 			/*
 			 * CHECK:    edge [ label = "[[EPISLON:&#949;]]
-			 * CHECK:    [[FOOn]] -> [[FOO2]]
 			 * CHECK:    [[FOO2]] -> [[BAR0:[0-9]+]]
+			 * CHECK:    [[FOO2]] -> [[IGNORE:[0-9]+]]
 			 */
 
 			/*
 			 * CHECK:    edge [ label = "bar()
-			 * CHECK:    [[BAR2:[0-9]+]] -> [[BAR3:[0-9]+]]
-			 * CHECK:    [[BAR1:[0-9]+]] -> [[BAR2]]
+			 * CHECK:    [[BAR1:[0-9]+]] -> [[BAR2:[0-9]+]]
 			 * CHECK:    [[BAR0]] -> [[BAR1]]
+			 * CHECK:    [[BAR2]] -> [[BAR3:[0-9]+]]
 			 * CHECK:    [[INIT]] -> [[INIT]]
 			 */
 			UPTO(3, called(bar)),
@@ -57,9 +56,9 @@ int foo() {
 			/*
 			 * CHECK:    edge [ label = "baz()
 			 * CHECK:    [[INIT]] -> [[INIT]]
-			 * CHECK:    [[BAZ2:[0-9]+]] -> [[BAZ3:[0-9]+]]
-			 * CHECK:    [[BAZ0:[0-9]+]] -> [[BAZ1:[0-9]+]]
-			 * CHECK:    [[BAZ1]] -> [[BAZ2]]
+			 * CHECK:    [[BAZ1:[0-9]+]] -> [[BAZ2:[0-9]+]]
+			 * CHECK:    [[BAZ0:[0-9]+]] -> [[BAZ1]]
+			 * CHECK:    [[BAZ2]] -> [[BAZ3:[0-9]+]]
 			 */
 			REPEAT(2, 3, called(baz))
 		)

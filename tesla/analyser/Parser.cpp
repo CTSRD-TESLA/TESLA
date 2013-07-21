@@ -505,13 +505,8 @@ bool Parser::ParseRepetition(Expression *E, const CallExpr *Call, Flags F) {
   }
 
   const Expr* const *Args = Call->getArgs();
-  auto Min = ParseIntegerLiteral(Args[0]).getLimitedValue();
-  if (Min > 1)
-    Seq->set_minreps(Min);
-
-  auto Max = ParseIntegerLiteral(Args[1]);
-  if (!Max.isMaxSignedValue())
-    Seq->set_maxreps(Max.getLimitedValue());
+  Seq->set_minreps(ParseIntegerLiteral(Args[0]).getLimitedValue());
+  Seq->set_maxreps(ParseIntegerLiteral(Args[1]).getLimitedValue());
 
   for (size_t i = 2; i < Call->getNumArgs(); i++)
     if (!Parse(Seq->add_expression(), Args[i], F))

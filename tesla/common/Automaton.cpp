@@ -37,6 +37,8 @@
 
 #include "tesla.pb.h"
 
+#include <tesla.h>
+
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Twine.h>
 #include <llvm/Support/raw_ostream.h>   // TODO: remove once TODOs below fixed
@@ -480,22 +482,22 @@ State* NFAParser::Parse(const Sequence& Seq, State& Start) {
   State *Current = &Start;
   State *Final = State::NewBuilder(States).Build();
 
-  int Min = Seq.minreps();
-  int Max = Seq.maxreps();
+  const int Min = Seq.minreps();
+
+  const bool InfiniteLoop = (Seq.maxreps() == __TESLA_INFINITE_REPETITIONS);
+
+  const int Max = InfiniteLoop ? 1 : Seq.maxreps();
 
   for (int i = 0; i < std::max(Min, Max); i++) {
-    for (const Expression& E : Seq.expression()) {
-      if (i >= Min) {
-        Transition::Create(*Current, *Final, Transitions);
-      }
+    State *RepStart = Current;
+    if (i >= Min)
+      Transition::Create(*Current, *Final, Transitions);
 
+    for (const Expression& E : Seq.expression())
       Current = Parse(E, *Current);
 
-      if (i == Max) {
-        auto *Loopback = Parse(E, *Current);
-        Transition::Create(*Loopback, *Current, Transitions);
-      }
-    }
+    if (InfiniteLoop || (i > Max))
+      Transition::Create(*Current, *RepStart, Transitions);
   }
 
   Transition::Create(*Current, *Final, Transitions);

@@ -66,6 +66,8 @@ void
 __tesla_inline_assertion(const char *filename, int line, int count,
 	__tesla_locality *loc, ...);
 
+#define	__TESLA_INFINITE_REPETITIONS	INT_MAX
+
 
 /* Only define the following things if doing TESLA analysis, not compiling. */
 #ifdef	__TESLA_ANALYSER__
@@ -84,7 +86,7 @@ extern __tesla_locality *__tesla_perthread;
 struct __tesla_event* __tesla_sequence(__tesla_event*, ...);
 
 /** A sequence of events that repeats. */
-struct __tesla_event* __tesla_repeat(int min, int max, __tesla_event*, ...);
+struct __tesla_event* __tesla_repeat(int min, int max, ...);
 
 /* TESLA events: */
 /** Entering a function (with optionally-specified arguments). */
