@@ -4,7 +4,7 @@
  *
  * RUN: tesla analyse %s -o %t -- %cflags
  * RUN: FileCheck -input-file=%t %s
- * RUN: tesla graph %t -o %t.dot
+ * RUN: tesla graph -d %t -o %t.dot
  * RUN: FileCheck -check-prefix=DOT -input-file=%t.dot %s
  */
 
@@ -26,10 +26,10 @@ void foo(struct object *o) {
 	 * CHECK:         expression {
 	 *
 	 * DOT: digraph automaton
-	 * DOT:  0 [ label = "state 0\n([[ANY:&#[0-9]+;]])" ];
-	 * DOT:  [[INIT:[0-9]+]] [ label = "state [[INIT]]\n([[ANY]])" ];
-	 * DOT:  [[OBJ:[0-9]+]]  [ label = "state [[OBJ]]\n(o)" ];
-	 * DOT:  [[DONE:[0-9]+]] [ label = "state [[DONE]]\n({{.*}})", shape = doublecircle ];
+	 * DOT:  0 [ label = "state 0\n{{.*}}([[ANY:&#[0-9]+;]])" ];
+	 * DOT:  [[INIT:[0-9]+]] [ label = "state [[INIT]]\n{{.*}}([[ANY]])" ];
+	 * DOT:  [[OBJ:[0-9]+]]  [ label = "state [[OBJ]]\n{{.*}}(o)" ];
+	 * DOT:  [[DONE:[0-9]+]] [ label = "state [[DONE]]\n{{.*}}", shape = doublecircle ];
 	 */
 	TESLA_WITHIN(context,
 		TSEQUENCE(
@@ -56,8 +56,9 @@ void foo(struct object *o) {
 			 *
 			 * DOT:        0 -> [[INIT]];
 			 * DOT: [[INIT]] -> [[OBJ]];
-			 * DOT: [[OBJ]]  -> [[DONE]];
+			 * DOT: [[OBJ]] -> [[OBJ]];
 			 * DOT: [[INIT]] -> [[DONE]];
+			 * DOT: [[OBJ]]  -> [[DONE]];
 			 */
 			get_object(&o) == 0
 		)
