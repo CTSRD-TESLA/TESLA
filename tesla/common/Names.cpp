@@ -149,6 +149,9 @@ std::string tesla::ShortName(const Location& Loc) {
 std::string tesla::InstanceName(const ReferenceVector& Refs,
                                 bool PlainAscii, bool DecorateIndirection) {
 
+  if (Refs.size() == 0)
+    return "";
+
   std::stringstream InstanceName;
 
   InstanceName << "(";
