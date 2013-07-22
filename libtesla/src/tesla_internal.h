@@ -408,7 +408,7 @@ char*	sprint_transitions(char *buffer, const char *end,
     const struct tesla_transitions *);
 
 /** Flag indicating whether ev_transition should be called. */
-int have_transitions;
+extern int have_transitions;
 
 /** @} */
 

@@ -34,6 +34,12 @@
 
 #define	ERROR_BUFFER_LENGTH	1024
 
+#ifndef NDEBUG
+int have_transitions = 1;
+#else
+int have_transitions = 0;
+#endif
+
 /**
  * The currently-active event handlers.
  */
@@ -68,8 +74,7 @@ tesla_set_event_handler(struct tesla_event_handlers *tehp)
 		.tem_mask = 1,
 		.tem_handlers = singleton,
 	};
-	if (tehp->teh_transition)
-		have_transitions = 1;
+	have_transitions = (tehp->teh_transition != 0);
 
 	singleton[0] = tehp;
 	event_handlers = &singleton_handler;
@@ -368,7 +373,9 @@ static const struct tesla_event_handlers failstop_handlers = {
  * either use DTrace or fail-stop if DTrace is not available.
  */
 const static struct tesla_event_handlers* const default_handlers[] = {
+#ifndef NDEBUG
 	&printf_handlers,
+#endif
 	&printf_on_failure,
 #if defined(_KERNEL) && defined(KDTRACE_HOOKS)
 	&dtrace_handlers,
