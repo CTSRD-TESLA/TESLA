@@ -346,15 +346,16 @@ void	ev_ignored(const struct tesla_class *, const struct tesla_key *,
 #define error(...)	fprintf(stderr, __VA_ARGS__)
 #endif
 
-#ifndef NDEBUG
-
-#define __debug
-
 #ifdef _KERNEL
 #include <sys/systm.h>
 #else
 #include <stdio.h>
 #endif
+
+#ifndef NDEBUG
+
+#define __debug
+
 
 /** Are we in (verbose) debug mode? */
 int32_t	tesla_debugging(const char*);
@@ -369,7 +370,9 @@ int32_t	tesla_debugging(const char*);
 #define __debug __unused
 
 #define DEBUG(...)
-int32_t	tesla_debugging(const char*) { return 0; }
+#define tesla_debugging(...) 0
+#define print_key(...)
+#define print_class(...)
 
 #endif
 

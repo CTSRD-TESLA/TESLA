@@ -257,5 +257,11 @@ print_key(const char *debug_name, const struct tesla_key *key)
 	print("%s", buffer);
 }
 
+#else
+
+#undef tesla_debugging
+int32_t
+tesla_debugging(const char *name) { return 0; }
+
 #endif /* !NDEBUG */
 
