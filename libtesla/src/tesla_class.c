@@ -119,14 +119,6 @@ tesla_match(struct tesla_class *tclass, const struct tesla_key *pattern,
 }
 
 
-int
-tesla_instance_active(const struct tesla_instance *i)
-{
-	assert(i != NULL);
-
-	return ((i->ti_state != 0) || (i->ti_key.tk_mask != 0));
-}
-
 
 int32_t
 tesla_instance_new(struct tesla_class *tclass, const struct tesla_key *name,

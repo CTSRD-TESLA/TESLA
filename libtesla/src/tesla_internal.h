@@ -113,7 +113,14 @@ int32_t	tesla_instance_new(struct tesla_class *tclass,
  *
  * @returns     1 if active, 0 if inactive
  */
-int32_t	tesla_instance_active(const struct tesla_instance *i);
+static inline int32_t
+tesla_instance_active(const struct tesla_instance *i)
+{
+	assert(i != NULL);
+
+	return ((i->ti_state != 0) || (i->ti_key.tk_mask != 0));
+}
+
 
 
 /** Clone an existing instance into a new instance. */
@@ -411,5 +418,6 @@ char*	sprint_transitions(char *buffer, const char *end,
     const struct tesla_transitions *);
 
 /** @} */
+
 
 #endif /* TESLA_INTERNAL_H */
