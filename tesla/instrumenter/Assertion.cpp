@@ -148,9 +148,19 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
     std::vector<Value*> Args(ArgCount, NULL);
     for (const Argument& Arg : Descrip.argument()) {
       Value *V = ValuesInScope[Arg.name()];
-      if (V == NULL)
+      if (V == NULL) {
+        string s;
+        raw_string_ostream Out(s);
+
+        for (auto Name : ValuesInScope) {
+          Out << "  '" << Name.first << "': ";
+          Name.second->print(Out);
+          Out << "\n";
+        }
+
         panic("assertion references non-existent variable '" + Arg.name()
-           + "'; was it defined under '#ifdef TESLA'?");
+           + "'; was it defined under '#ifdef TESLA'?\n\nVariables in scope are:\n" + Out.str());
+      }
 
       // Find the pointer to the variable we care about, which is either a
       // stack-allocated store target or else, if there is no address-taking,
