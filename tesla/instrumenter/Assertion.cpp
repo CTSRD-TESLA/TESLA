@@ -121,24 +121,19 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
 
     // Record named values that might be passed to instrumentation, such as
     // function parameters and StoreInst results in the current BasicBlock.
-    std::map<string,Value*> ValuesInScope;
+    std::map<string,Value*> FnVariables;
     BasicBlock *Block = Assert->getParent();
     Function *Fn = Block->getParent();
 
     for (llvm::Argument& A : Fn->getArgumentList())
-      ValuesInScope[A.getName()] = &A;
+      FnVariables[A.getName()] = &A;
 
-    for (auto& B : *Fn)
-      for (Instruction& I : B) {
-        if (&I == Assert)
-          break;
-
-        if (StoreInst *Store = dyn_cast<StoreInst>(&I)) {
-          Value *V = Store->getPointerOperand();
-          if (V->hasName())
-            ValuesInScope[V->getName()] = V;
-        }
+    for (Instruction& I : *Fn->begin()) {
+      if (auto *Alloc = dyn_cast<AllocaInst>(&I)) {
+        assert(Alloc->hasName());
+        FnVariables[Alloc->getName()] = Alloc;
       }
+    }
 
     // Find the arguments to the relevant 'now' instrumentation function.
     const AutomatonDescription& Descrip = A->getAssertion();
@@ -147,12 +142,12 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
 
     std::vector<Value*> Args(ArgCount, NULL);
     for (const Argument& Arg : Descrip.argument()) {
-      Value *V = ValuesInScope[Arg.name()];
+      Value *V = FnVariables[Arg.name()];
       if (V == NULL) {
         string s;
         raw_string_ostream Out(s);
 
-        for (auto Name : ValuesInScope) {
+        for (auto Name : FnVariables) {
           Out << "  '" << Name.first << "': ";
           Name.second->print(Out);
           Out << "\n";
@@ -165,7 +160,7 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
       // Find the pointer to the variable we care about, which is either a
       // stack-allocated store target or else, if there is no address-taking,
       // the variable we already have must be the pointer.
-      Value *Ptr;
+      Value *Ptr = NULL;
       for (auto i = V->use_begin(); i != V->use_end(); i++) {
         auto *Store = dyn_cast<StoreInst>(*i);
         if (!Store)

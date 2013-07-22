@@ -1,0 +1,109 @@
+automaton {
+  identifier {
+    location {
+      filename: "/home/jra40/P4/tesla/sys/kern/kern_cpuset.c"
+      line: 720
+      counter: 0
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "p_cansched"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+              }
+              argument {
+                type: Variable
+                index: 0
+                name: "p"
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
+          }
+        }
+      }
+      expression {
+        type: ASSERTION_SITE
+        assertSite {
+          location {
+            filename: "/home/jra40/P4/tesla/sys/kern/kern_cpuset.c"
+            line: 720
+            counter: 0
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "p"
+  }
+  source: "TESLA_SYSCALL(previously(p_cansched(ANY(ptr), p) == 0));"
+}
+root {
+  identifier {
+    location {
+      filename: "/home/jra40/P4/tesla/sys/kern/kern_cpuset.c"
+      line: 720
+      counter: 0
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
