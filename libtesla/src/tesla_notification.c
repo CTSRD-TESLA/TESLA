@@ -101,21 +101,18 @@ tesla_set_event_handlers(struct tesla_event_metahandler *temp)
 /*
  * generic event handlers:
  */
-#define	FOREACH_ERROR_HANDLER() \
+#define	FOREACH_ERROR_HANDLER(x, ...) \
 	for (uint32_t i = 0; i < event_handlers->tem_length; i++) \
 		if (event_handlers->tem_mask & (1 << i)) \
-			event_handlers->tem_handlers[i]
+			if (event_handlers->tem_handlers[i]->x) \
+				event_handlers->tem_handlers[i]->x(__VA_ARGS__)
 
-static void
-ev_noop()
-{
-}
 
 void
 ev_new_instance(struct tesla_class *tcp, struct tesla_instance *tip)
 {
 
-	FOREACH_ERROR_HANDLER()->teh_init(tcp, tip);
+	FOREACH_ERROR_HANDLER(teh_init, tcp, tip);
 }
 
 void
@@ -123,7 +120,7 @@ ev_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 	const struct tesla_transition *ttp)
 {
 
-	FOREACH_ERROR_HANDLER()->teh_transition(tcp, tip, ttp);
+	FOREACH_ERROR_HANDLER(teh_transition, tcp, tip, ttp);
 }
 
 void
@@ -131,7 +128,7 @@ ev_clone(struct tesla_class *tcp, struct tesla_instance *orig,
 	struct tesla_instance *copy, const struct tesla_transition *ttp)
 {
 
-	FOREACH_ERROR_HANDLER()->teh_clone(tcp, orig, copy, ttp);
+	FOREACH_ERROR_HANDLER(teh_clone, tcp, orig, copy, ttp);
 }
 
 void
@@ -139,7 +136,7 @@ ev_no_instance(struct tesla_class *tcp, const struct tesla_key *tkp,
 	const struct tesla_transitions *ttp)
 {
 
-	FOREACH_ERROR_HANDLER()->teh_fail_no_instance(tcp, tkp, ttp);
+	FOREACH_ERROR_HANDLER(teh_fail_no_instance, tcp, tkp, ttp);
 }
 
 void
@@ -147,21 +144,21 @@ ev_bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 	const struct tesla_transitions *ttp)
 {
 
-	FOREACH_ERROR_HANDLER()->teh_bad_transition(tcp, tip, ttp);
+	FOREACH_ERROR_HANDLER(teh_bad_transition, tcp, tip, ttp);
 }
 
 void
 ev_err(struct tesla_class *tcp, int errno, const char *message)
 {
 
-	FOREACH_ERROR_HANDLER()->teh_err(tcp, errno, message);
+	FOREACH_ERROR_HANDLER(teh_err, tcp, errno, message);
 }
 
 void
 ev_accept(struct tesla_class *tcp, struct tesla_instance *tip)
 {
 
-	FOREACH_ERROR_HANDLER()->teh_accept(tcp, tip);
+	FOREACH_ERROR_HANDLER(teh_accept, tcp, tip);
 }
 
 void
@@ -169,7 +166,7 @@ ev_ignored(const struct tesla_class *tcp, const struct tesla_key *tkp,
 	const struct tesla_transitions *ttp)
 {
 
-	FOREACH_ERROR_HANDLER()->teh_ignored(tcp, tkp, ttp);
+	FOREACH_ERROR_HANDLER(teh_ignored, tcp, tkp, ttp);
 }
 
 
@@ -309,14 +306,14 @@ static const struct tesla_event_handlers printf_handlers = {
 };
 
 static const struct tesla_event_handlers printf_on_failure = {
-	.teh_init		= ev_noop,
-	.teh_transition		= ev_noop,
-	.teh_clone		= ev_noop,
+	.teh_init		= 0,
+	.teh_transition		= 0,
+	.teh_clone		= 0,
 	.teh_fail_no_instance	= print_no_instance,
 	.teh_bad_transition	= print_bad_transition,
 	.teh_err		= print_error,
-	.teh_accept		= ev_noop,
-	.teh_ignored		= ev_noop,
+	.teh_accept		= 0,
+	.teh_ignored		= 0,
 };
 
 /*
@@ -349,14 +346,14 @@ panic_errno(struct tesla_class *tcp, int errno, const char *message)
 }
 
 static const struct tesla_event_handlers failstop_handlers = {
-	.teh_init		= ev_noop,
-	.teh_transition		= ev_noop,
-	.teh_clone		= ev_noop,
+	.teh_init		= 0,
+	.teh_transition		= 0,
+	.teh_clone		= 0,
 	.teh_fail_no_instance	= panic_no_instance,
 	.teh_bad_transition	= panic_bad_transition,
 	.teh_err		= panic_errno,
-	.teh_accept		= ev_noop,
-	.teh_ignored		= ev_noop,
+	.teh_accept		= 0,
+	.teh_ignored		= 0,
 };
 
 

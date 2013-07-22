@@ -101,6 +101,7 @@ tesla_update_state(enum tesla_context tesla_context, uint32_t class_id,
 	// Iterate over existing instances, figure out what to do with each.
 	int err = TESLA_SUCCESS;
 	int expected = class->tc_limit - class->tc_free;
+	int ignored = 0;
 	for (uint32_t i = 0; expected > 0 && (i < class->tc_limit); i++) {
 		assert(class->tc_instances != NULL);
 		tesla_instance *inst = class->tc_instances + i;
