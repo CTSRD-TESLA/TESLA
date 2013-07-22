@@ -120,7 +120,8 @@ tesla_update_state(enum tesla_context tesla_context, uint32_t class_id,
 			break;
 
 		case UPDATE:
-			ev_transition(class, inst, trigger);
+			if (have_transitions)
+				ev_transition(class, inst, trigger);
 			inst->ti_state = trigger->to;
 			matched_something = true;
 

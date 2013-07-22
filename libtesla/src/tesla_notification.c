@@ -68,6 +68,8 @@ tesla_set_event_handler(struct tesla_event_handlers *tehp)
 		.tem_mask = 1,
 		.tem_handlers = singleton,
 	};
+	if (tehp->teh_transition)
+		have_transitions = 1;
 
 	singleton[0] = tehp;
 	event_handlers = &singleton_handler;
@@ -79,6 +81,7 @@ int
 tesla_set_event_handlers(struct tesla_event_metahandler *temp)
 {
 	int error = TESLA_SUCCESS;
+	int will_have_transitions = 0;
 
 	if (!temp)
 		return (TESLA_ERROR_EINVAL);
@@ -91,8 +94,11 @@ tesla_set_event_handlers(struct tesla_event_metahandler *temp)
 		error = check_event_handler(temp->tem_handlers[i]);
 		if (error != TESLA_SUCCESS)
 			return (error);
+		if (temp->tem_handlers[i]->teh_transition)
+			will_have_transitions = 1;
 	}
 
+	have_transitions = will_have_transitions;
 	event_handlers = temp;
 	return (TESLA_SUCCESS);
 }
