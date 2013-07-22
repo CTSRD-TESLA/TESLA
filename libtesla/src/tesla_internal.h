@@ -146,13 +146,6 @@ void	tesla_instance_clear(struct tesla_instance *tip);
 int32_t	tesla_match(struct tesla_class *tclass, const struct tesla_key *key,
 	    struct tesla_instance **array, uint32_t *size);
 
-/**
- * Check to see if a key matches a pattern.
- *
- * @returns  1 if @a k matches @a pattern, 0 otherwise
- */
-int32_t	tesla_key_matches(
-	    const struct tesla_key *pattern, const struct tesla_key *k);
 
 
 /** Actions that can be taken by @ref tesla_update_state. */
@@ -182,9 +175,6 @@ enum tesla_action_t {
 enum tesla_action_t	tesla_action(const struct tesla_instance*,
 	    const struct tesla_key*, const struct tesla_transitions*,
 	    const struct tesla_transition** trigger);
-
-/** Copy new entries from @a source into @a dest. */
-int32_t	tesla_key_union(struct tesla_key *dest, const struct tesla_key *source);
 
 
 #ifndef __unused

@@ -31,6 +31,7 @@
  */
 
 #include "tesla_internal.h"
+#include "tesla_key.h"
 
 #ifndef _KERNEL
 #include <stdbool.h>

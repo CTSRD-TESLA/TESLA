@@ -40,7 +40,12 @@
 
 #define	IS_SET(mask, index) (mask & (1 << index))
 
-int
+/**
+ * Check to see if a key matches a pattern.
+ *
+ * @returns  1 if @a k matches @a pattern, 0 otherwise
+ */
+static inline int
 tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)
 {
 	assert(pattern != NULL);
@@ -65,7 +70,8 @@ tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)
 	return (1);
 }
 
-int32_t
+/** Copy new entries from @a source into @a dest. */
+static inline int32_t
 tesla_key_union(tesla_key *dest, const tesla_key *source)
 {
 	for (uint32_t i = 0; i < TESLA_KEY_SIZE; i++) {
