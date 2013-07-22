@@ -40,35 +40,6 @@
 using llvm::Twine;
 
 
-std::string tesla::ArgString(const Argument* A) {
-  if (A == NULL)
-    return "NULL";
-
-  switch (A->type()) {
-  case Argument::Constant:
-    return A->name();
-
-  case Argument::Variable:
-    return (Twine()
-      + Twine(A->index())
-      + "('"
-      + A->name()
-      + "')"
-    ).str();
-
-  case Argument::Any:
-    return "<anything>";
-
-  case Argument::Indirect:
-    assert(A->has_indirection());
-    return "*" + ShortName(&A->indirection());
-
-  case Argument::Field:
-    assert(A->has_field());
-    return ShortName(&A->field().base()) + "." + A->field().name();
-  }
-}
-
 static std::string ConstantName(const tesla::Argument* A) {
   assert(A->type() == tesla::Argument::Constant);
 
