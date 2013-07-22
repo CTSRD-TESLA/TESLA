@@ -222,6 +222,7 @@ __tesla_struct_uses_automaton(const char *automaton,
 
 #define	__tesla_strict(...)		0
 #define	__tesla_conditional(...)	0
+#define	__tesla_repeat(...)	0
 
 #endif	/* __TESLA_ANALYSER__ */
 
