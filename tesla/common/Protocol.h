@@ -92,6 +92,21 @@ inline bool operator==(const Argument &A1, const Argument &A2) {
   if (A1.has_value() && (A1.value() != A2.value()))
     return false;
 
+  if (A1.has_constantmatch() ^ A2.has_constantmatch())
+    return false;
+
+  if (A1.has_indirection() ^ A2.has_indirection())
+    return false;
+
+  if (A1.has_value() && (A1.indirection() != A2.indirection()))
+    return false;
+
+  if (A1.has_field() ^ A2.has_field())
+    return false;
+
+  if (A1.has_field() && (A1.field() != A2.field()))
+    return false;
+
   return true;
 }
 
