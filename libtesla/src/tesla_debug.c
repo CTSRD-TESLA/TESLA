@@ -161,7 +161,9 @@ tesla_debugging(const char *name)
 		return 0;
 #endif
 
-	const char *env = getenv("TESLA_DEBUG");
+	static const char *env = (char*)-1;
+	if (env == (char*)-1)
+		env = getenv("TESLA_DEBUG");
 
 	/* If TESLA_DEBUG is not set, we're definitely not debugging. */
 	if (env == NULL)
