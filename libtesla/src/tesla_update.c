@@ -38,7 +38,8 @@
 #endif
 
 #define	DEBUG_NAME	"libtesla.state.update"
-#define PRINT(...) DEBUG(libtesla.state.update, __VA_ARGS__)
+//#define PRINT(...) DEBUG(libtesla.state.update, __VA_ARGS__)
+#define PRINT(...) 
 
 void
 tesla_update_state(enum tesla_context tesla_context, uint32_t class_id,
@@ -72,14 +73,15 @@ tesla_update_state(enum tesla_context tesla_context, uint32_t class_id,
 	PRINT("\n----\n");
 
 	struct tesla_store *store;
-	assert(tesla_store_get(tesla_context, TESLA_MAX_CLASSES,
-			TESLA_MAX_INSTANCES, &store) == TESLA_SUCCESS);
+	int ret = tesla_store_get(tesla_context, TESLA_MAX_CLASSES,
+			TESLA_MAX_INSTANCES, &store);
+	assert(ret == TESLA_SUCCESS);
 
 	PRINT("store: 0x%tx\n", (intptr_t) store);
 
 	struct tesla_class *class;
-	assert(tesla_class_get(store, class_id, &class, name, description)
-		== TESLA_SUCCESS);
+	ret = tesla_class_get(store, class_id, &class, name, description);
+	assert(ret == TESLA_SUCCESS);
 
 	print_class(class);
 
