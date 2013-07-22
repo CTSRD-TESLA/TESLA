@@ -157,7 +157,7 @@ tesla_debugging(const char *name)
 	 * Debugging paths could be more vulnerable to format string problems
 	 * than other code; don't allow when running setuid or setgid.
 		*/
-	int isnotme = -1;
+	static int isnotme = -1;
 
 	if (isnotme == -1)
 		isnotme = issetugid();
