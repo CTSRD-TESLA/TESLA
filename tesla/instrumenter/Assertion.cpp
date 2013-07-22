@@ -130,7 +130,7 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
 
     for (Instruction& I : *Fn->begin()) {
       if (auto *Alloc = dyn_cast<AllocaInst>(&I)) {
-        assert(Alloc->hasName());
+	if (!Alloc->hasName()) continue;
         FnVariables[Alloc->getName()] = Alloc;
       }
     }
