@@ -38,8 +38,7 @@
 #endif
 
 #define	DEBUG_NAME	"libtesla.state.update"
-//#define PRINT(...) DEBUG(libtesla.state.update, __VA_ARGS__)
-#define PRINT(...) 
+#define PRINT(...) DEBUG(libtesla.state.update, __VA_ARGS__)
 
 void
 tesla_update_state(enum tesla_context tesla_context, uint32_t class_id,
