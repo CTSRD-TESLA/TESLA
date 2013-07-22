@@ -44,6 +44,12 @@ namespace tesla {
 
 int ArgIndex(const Argument&);
 
+/**
+ * The name of the argument, or if it is an indirect argument, the name of
+ * the base variable from which we can look up the argument.
+ */
+std::string BaseName(const Argument&);
+
 template<class T>
 inline bool operator != (const T& x, const T& y) { return !(x == y); }
 

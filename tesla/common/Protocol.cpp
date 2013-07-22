@@ -47,3 +47,20 @@ int tesla::ArgIndex(const Argument& A) {
     return ArgIndex(A.indirection());
   }
 }
+
+std::string tesla::BaseName(const Argument& A) {
+  switch (A.type()) {
+  case Argument::Any:
+  case Argument::Constant:
+    assert(false && "called BaseName() on a non-variable Argument");
+
+  case Argument::Variable:
+    return A.name();
+
+  case Argument::Indirect:
+    return BaseName(A.indirection());
+
+  case Argument::Field:
+    return BaseName(A.field().base());
+  }
+}
