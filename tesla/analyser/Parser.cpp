@@ -874,9 +874,8 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
 
 bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
                               Flags F, bool DoNotRegisterBase) {
-  auto *Base =
-    dyn_cast<DeclRefExpr>(ME->getBase()->IgnoreImpCasts())->getDecl();
 
+  auto *Base = ME->getBase()->IgnoreImpCasts();
   auto BaseType = Base->getType();
 
   if (auto *BasePtrType = dyn_cast<PointerType>(BaseType))
@@ -898,7 +897,7 @@ bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
   Field->set_index(Member->getFieldIndex());
   Field->set_name(Member->getName());
 
-  return Parse(Field->mutable_base(), Base, false, F, DoNotRegisterBase);
+  return Parse(Field->mutable_base(), Base, F, DoNotRegisterBase);
 }
 
 
