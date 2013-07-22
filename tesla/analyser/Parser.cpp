@@ -314,9 +314,8 @@ bool Parser::Parse(OwningPtr<AutomatonDescription>& Description,
   }
 
   // Keep track of the variables we referenced.
-  for (const ValueDecl *D : References)
-    if (!Parse(A->add_argument(), D, false, RootFlags))
-      return false;
+  for (auto *R : References)
+    *A->add_argument() = *R;
 
   if (A->has_expression())
     Description.swap(A);
@@ -874,7 +873,7 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
 
 
 bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
-                              Flags F) {
+                              Flags F, bool DoNotRegisterBase) {
   auto *Base =
     dyn_cast<DeclRefExpr>(ME->getBase()->IgnoreImpCasts())->getDecl();
 
@@ -899,11 +898,11 @@ bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
   Field->set_index(Member->getFieldIndex());
   Field->set_name(Member->getName());
 
-  return Parse(Field->mutable_base(), Base, false, F);
+  return Parse(Field->mutable_base(), Base, false, F, DoNotRegisterBase);
 }
 
 
-bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
+bool Parser::Parse(Argument *Arg, const Expr *E, Flags F, bool DoNotRegister) {
   assert(Arg != NULL);
   assert(E != NULL);
 
@@ -947,14 +946,8 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
 
   }
 
-  if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
-    Arg->set_type(Argument::Variable);
-    const ValueDecl *D = DRE->getDecl();
-
-    *Arg->mutable_name() = DRE->getDecl()->getName();
-    Arg->set_index(ReferenceIndex(D));
-    return true;
-  }
+  if (auto DRE = dyn_cast<DeclRefExpr>(P))
+    return Parse(Arg, DRE->getDecl(), false, F, DoNotRegister);
 
   if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Arg->set_type(Argument::Constant);
@@ -1000,14 +993,18 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
   if (auto *UO = dyn_cast<UnaryOperator>(P)) {
     if (UO->getOpcode() == UO_AddrOf) {
       Arg->set_type(Argument::Indirect);
-      return Parse(Arg->mutable_indirection(), UO->getSubExpr(), F);
+      return
+        Parse(Arg->mutable_indirection(), UO->getSubExpr(), F, true)
+        && (DoNotRegister || RegisterArg(Arg));
     }
   }
 
   //  * structure field access: bar(s->x) => called bar() with s->x (TODO)
   if (auto *ME = dyn_cast<MemberExpr>(P)) {
     Arg->set_type(Argument::Field);
-    return ParseStructField(Arg->mutable_field(), ME, F);
+    return
+      ParseStructField(Arg->mutable_field(), ME, F, true)
+      && (DoNotRegister || RegisterArg(Arg));
   }
 
   P->dump();
@@ -1026,20 +1023,20 @@ bool Parser::Parse(FunctionRef *FnRef, const FunctionDecl *Fn, Flags F) {
 }
 
 
-bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F) {
+bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F,
+                   bool DoNotRegister) {
   assert(Arg != NULL);
   assert(D != NULL);
 
   *Arg->mutable_name() = D->getName();
 
-  if (AllowAny)
+  if (AllowAny) {
     Arg->set_type(Argument::Any);
-  else {
-    Arg->set_type(Argument::Variable);
-    Arg->set_index(ReferenceIndex(D));
+    return true;
   }
 
-  return true;
+  Arg->set_type(Argument::Variable);
+  return (DoNotRegister || RegisterArg(Arg));
 }
 
 
@@ -1086,18 +1083,20 @@ bool Parser::CheckAssignmentKind(const ValueDecl *Field, const Expr *E) {
 }
 
 
-size_t Parser::ReferenceIndex(const ValueDecl* D) {
+bool Parser::RegisterArg(Argument* A) {
   size_t Pos = 0;
+  A->set_index(Pos);
 
   for (auto I = References.begin(); I != References.end(); I++)
-    if (*I == D)
-      return Pos;
+    if (**I == *A)
+      break;
     else
-      ++Pos;
+      A->set_index(++Pos);
 
-  References.push_back(D);
+  if (Pos == References.size())
+    References.push_back(A);
 
-  return Pos;
+  return true;
 }
 
 

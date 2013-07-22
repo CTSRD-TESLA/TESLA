@@ -43,9 +43,9 @@ void foo(struct object *o) {
 			 * CHECK:           context: Callee
 			 * CHECK:           argument {
 			 * CHECK-NEXT:        type: Indirect
+			 * CHECK-NEXT:        index: 0
 			 * CHECK-NEXT:        indirection {
 			 * CHECK-NEXT:         type: Variable
-			 * CHECK-NEXT:         index: 0
 			 * CHECK-NEXT:         name: "o"
 			 * CHECK-NEXT:        }
 			 * CHECK-NEXT:      }

@@ -177,6 +177,9 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
       if (!Ptr)
         Ptr = V;
 
+      // Handle indirection, struct-field acquisition, etc.
+      V = GetArgumentValue(V, Arg, Builder);
+
       Value *Val = Builder.CreateLoad(Ptr, "intrumentation_" + Arg.name());
       Args[Arg.index()] = Cast(Val, Arg.name(), IntPtrTy, Builder);
     }

@@ -298,8 +298,7 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
 
   size_t VariableRefs = 0;
   for (auto A : Automaton.argument())
-    if (A.type() == Argument::Variable)
-      VariableRefs++;
+    VariableRefs++;
 
   Start = State::NewBuilder(States)
     .SetStartState()

@@ -58,9 +58,6 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
-llvm::Value* GetArgumentValue(llvm::Value* Param, const Argument& ArgDescrip,
-                              llvm::IRBuilder<>& Builder);
-
 BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
                          BasicBlock *MatchTarget, BasicBlock *NonMatchTarget,
                          Value *Val, const tesla::Argument& Pattern);
@@ -533,7 +530,6 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
     return NULL;
 
   case Argument::Variable:
-    assert(ArgDescrip.has_index());
     return Param;
 
   case Argument::Indirect:

@@ -58,8 +58,7 @@ void Transition::Create(State& From, State& To, const AssertionSite& A,
                         TransitionVector& Transitions,
                         bool Init, bool Cleanup) {
 
-  ReferenceVector Refs(Automaton.argument().data(),
-                                 Automaton.argument_size());
+  ReferenceVector Refs(Automaton.argument().data(), Automaton.argument_size());
 
   OwningPtr<Transition> T(
     new AssertTransition(From, To, A, Refs, Init, Cleanup));
@@ -265,8 +264,7 @@ int Transition::NewArgMask() const {
 string Transition::String() const {
   string NewArgs;
   for (auto A : NewArguments())
-    if ((A != NULL) && (A->type() == Argument::Variable))
-      NewArgs += " " + ShortName(A);
+    NewArgs += " " + ShortName(A);
 
   string Special =
     string(RequiresInit() ? "<<init>>" : "")

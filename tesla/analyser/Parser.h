@@ -67,9 +67,6 @@ namespace tesla {
 //! A parser for TESLA automata descriptions.
 class Parser {
 public:
-  //! Variables referenced by an automaton.
-  typedef std::vector<const clang::ValueDecl*> RefVector;
-
   //! Create a Parser for an inline assertion.
   static Parser* AssertionParser(clang::CallExpr*, clang::ASTContext&);
 
@@ -128,10 +125,12 @@ private:
   bool Parse(Expression*, const clang::UnaryOperator*, Flags);
 
   bool Parse(FunctionRef*, const clang::FunctionDecl*, Flags);
-  bool Parse(Argument*, const clang::Expr*, Flags);
-  bool Parse(Argument*, const clang::ValueDecl*, bool AllowAny, Flags);
+  bool Parse(Argument*, const clang::Expr*, Flags, bool DoNotRegister = false);
+  bool Parse(Argument*, const clang::ValueDecl*, bool AllowAny, Flags,
+             bool DoNotRegister = false);
+  bool ParseStructField(StructField*, const clang::MemberExpr*, Flags,
+                        bool DoNotRegisterBase = false);
 
-  bool ParseStructField(StructField*, const clang::MemberExpr*, Flags);
   bool ParseSubAutomaton(Expression*, const clang::CallExpr*, Flags);
   bool ParseModifier(Expression*, const clang::CallExpr*, Flags);
 
@@ -176,8 +175,8 @@ private:
   //! Get the original source (as spelled by the programmer) for a range.
   llvm::StringRef FindOriginalSource(const clang::SourceRange& Range);
 
-  //! The index of a variable in our set of unique variable references.
-  size_t ReferenceIndex(const clang::ValueDecl*);
+  //! Remember that we have seen an argument (and set its index).
+  bool RegisterArg(Argument*);
 
 
   //! Report a TESLA error.
@@ -199,7 +198,7 @@ private:
   const llvm::StringRef SourceCode; //!< Source code of automaton definition.
 
   std::map<const clang::ValueDecl*, const clang::Expr*> FieldAssignments;
-  RefVector References;
+  std::vector<const Argument*> References;
 };
 
 }

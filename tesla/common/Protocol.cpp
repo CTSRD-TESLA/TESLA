@@ -41,10 +41,8 @@ int tesla::ArgIndex(const Argument& A) {
 
   case Argument::Variable:
   case Argument::Field:
-    return A.index();
-
   case Argument::Indirect:
-    return ArgIndex(A.indirection());
+    return A.index();
   }
 }
 
