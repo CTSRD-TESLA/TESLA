@@ -89,9 +89,6 @@ const std::string MASK              = TESLA_BASE + "mask";
 
 const std::string ASSERTION_REACHED = INSTR_BASE + "assertion_reached";
 
-//! Convert an @ref Argument into something human-readable.
-std::string ArgString(const Argument*);
-
 //! Convert an @ref Argument into a very short, human-readable name.
 std::string ShortName(const Argument*, bool DecorateIndirection = true);
 

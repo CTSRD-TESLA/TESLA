@@ -199,8 +199,18 @@ class ObjCInstrumentation
                             Type::getInt8PtrTy(Ctx), false)),
         B.CreateGlobalStringPtr(ErrMsg));
     B.CreateBr(End);
+    bool Registered = false;
     // Make sure this function is called on module load
-    appendToGlobalCtors(Mod, RegisterFn, 0);
+    if (Function *Exec = Mod.getFunction("__objc_exec_class")) {
+      Value *Load = *Exec->use_begin();
+      if (CallInst *CI = dyn_cast<CallInst>(Load)) {
+        Instruction *End = CI->getParent()->getTerminator();
+        CallInst::Create(RegisterFn, "", End);
+        Registered = true;
+      }
+    }
+    if (!Registered)
+      appendToGlobalCtors(Mod, RegisterFn, 0);
 
     // Now set up the function that does the interposition:
     Function *Interpose = cast<Function>(Mod.getOrInsertFunction(

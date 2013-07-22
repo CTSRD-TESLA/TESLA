@@ -134,6 +134,12 @@ message BooleanExpr {
 /** A sequence of temporal events. */
 message Sequence {
   repeated Expression expression = 1;
+
+  /** Minimum repetitions (if applicable). */
+  optional int32 minReps = 2 [ default = 1 ];
+
+  /** Maximum repetitions (if applicable). */
+  optional int32 maxReps = 3 [ default = 1 ];
 }
 
 /**

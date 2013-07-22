@@ -7,6 +7,7 @@
 
 #include <libtesla.h>
 #include "tesla_internal.h"
+#include "tesla_key.h"
 
 #include <assert.h>
 #include <err.h>

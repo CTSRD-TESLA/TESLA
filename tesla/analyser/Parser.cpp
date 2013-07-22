@@ -314,9 +314,8 @@ bool Parser::Parse(OwningPtr<AutomatonDescription>& Description,
   }
 
   // Keep track of the variables we referenced.
-  for (const ValueDecl *D : References)
-    if (!Parse(A->add_argument(), D, false, RootFlags))
-      return false;
+  for (auto *R : References)
+    *A->add_argument() = *R;
 
   if (A->has_expression())
     Description.swap(A);
@@ -386,14 +385,14 @@ bool Parser::Parse(Expression *E, const CallExpr *Call, Flags F) {
 
   const FunctionDecl *Fun = Call->getDirectCallee();
   if (!Fun) {
-    ReportError("expected direct call to predicate or sub-automaton", Call);
+    ReportError("expected direct call to modifier or sub-automaton", Call);
     return false;
   }
 
   const Type *RetTy = Fun->getResultType().getTypePtr();
   auto *PtrTy = dyn_cast<PointerType>(RetTy);
   if (!PtrTy) {
-     ReportError("expected predicate or sub-automaton", Call);
+     ReportError("expected modifier or sub-automaton", Call);
      return false;
   }
 
@@ -407,7 +406,7 @@ bool Parser::Parse(Expression *E, const CallExpr *Call, Flags F) {
 
   auto Parse = llvm::StringSwitch<CallParser>(Struct->getName())
      .Case("__tesla_automaton_description", &Parser::ParseSubAutomaton)
-     .Case("__tesla_event", &Parser::ParsePredicate)
+     .Case("__tesla_event", &Parser::ParseModifier)
      .Default(NULL);
 
   if (Parse == NULL) {
@@ -492,6 +491,30 @@ bool Parser::ParseSequence(Expression *E, const CallExpr *Call, Flags F) {
 }
 
 
+bool Parser::ParseRepetition(Expression *E, const CallExpr *Call, Flags F) {
+
+  E->set_type(Expression::SEQUENCE);
+  Sequence *Seq = E->mutable_sequence();
+
+  if (Call->getNumArgs() < 3) {
+    ReportError(
+      "repetition should have at least three arguments (min, max, expr)",
+      Call);
+    return false;
+  }
+
+  const Expr* const *Args = Call->getArgs();
+  Seq->set_minreps(ParseIntegerLiteral(Args[0]).getLimitedValue());
+  Seq->set_maxreps(ParseIntegerLiteral(Args[1]).getLimitedValue());
+
+  for (size_t i = 2; i < Call->getNumArgs(); i++)
+    if (!Parse(Seq->add_expression(), Args[i], F))
+      return false;
+
+  return true;
+}
+
+
 bool Parser::ParseSubAutomaton(Expression *E, const CallExpr *Call, Flags F) {
   E->set_type(Expression::SUB_AUTOMATON);
   E->mutable_subautomaton()->set_name(Call->getDirectCallee()->getName());
@@ -499,7 +522,7 @@ bool Parser::ParseSubAutomaton(Expression *E, const CallExpr *Call, Flags F) {
 }
 
 
-bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
+bool Parser::ParseModifier(Expression *E, const CallExpr *Call, Flags F) {
   const FunctionDecl *Fun = Call->getDirectCallee();
   assert(Fun != NULL);
 
@@ -511,11 +534,12 @@ bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
     .Case("__tesla_strict",       &Parser::ParseStrictMode)
     .Case("__tesla_conditional",  &Parser::ParseConditional)
     .Case("__tesla_sequence",     &Parser::ParseSequence)
+    .Case("__tesla_repeat",       &Parser::ParseRepetition)
     .Case("__tesla_optional",     &Parser::ParseOptional)
     .Default(NULL);
 
   if (Parse == NULL) {
-    ReportError("unsupported predicate", Call);
+    ReportError("unsupported modifier", Call);
     return false;
   }
 
@@ -525,11 +549,11 @@ bool Parser::ParsePredicate(Expression *E, const CallExpr *Call, Flags F) {
 
 bool Parser::ParseOptional(Expression *E, const CallExpr *Call, Flags F) {
 
-  // The 'optional' predicate actually takes two arguments ('ignore' and
+  // The 'optional' modifier actually takes two arguments ('ignore' and
   // a programmer-supplied argument); only talk about the user argument in
   // the error message.
   if (Call->getNumArgs() != 2) {
-    ReportError("'optional' predicate takes exactly one user argument", Call);
+    ReportError("'optional' modifier takes exactly one user argument", Call);
     return false;
   }
 
@@ -603,7 +627,7 @@ bool Parser::ParseFunctionCall(Expression *E, const CallExpr *Call, Flags F) {
   FnEvent->set_direction(FunctionEvent::Entry);
   FnEvent->set_strict(F.StrictMode);
 
-  return ParseFunctionPredicate(FnEvent, Call, false, F);
+  return ParseFunctionModifier(FnEvent, Call, false, F);
 }
 
 
@@ -615,7 +639,7 @@ bool Parser::ParseFunctionReturn(Expression *E, const CallExpr *Call, Flags F) {
   FnEvent->set_direction(FunctionEvent::Exit);
   FnEvent->set_strict(F.StrictMode);
 
-  return ParseFunctionPredicate(FnEvent, Call, true, F);
+  return ParseFunctionModifier(FnEvent, Call, true, F);
 }
 
 
@@ -675,7 +699,7 @@ bool Parser::ParseConditional(Expression *E, const clang::CallExpr *Call,
 }
 
 
-bool Parser::ParseFunctionPredicate(FunctionEvent *Event, const CallExpr *Call,
+bool Parser::ParseFunctionModifier(FunctionEvent *Event, const CallExpr *Call,
                                     bool ParseRetVal, Flags F) {
 
   Event->set_context(F.FnInstrContext);
@@ -849,7 +873,7 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
 
 
 bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
-                              Flags F) {
+                              Flags F, bool DoNotRegisterBase) {
   auto *Base =
     dyn_cast<DeclRefExpr>(ME->getBase()->IgnoreImpCasts())->getDecl();
 
@@ -874,11 +898,11 @@ bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
   Field->set_index(Member->getFieldIndex());
   Field->set_name(Member->getName());
 
-  return Parse(Field->mutable_base(), Base, false, F);
+  return Parse(Field->mutable_base(), Base, false, F, DoNotRegisterBase);
 }
 
 
-bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
+bool Parser::Parse(Argument *Arg, const Expr *E, Flags F, bool DoNotRegister) {
   assert(Arg != NULL);
   assert(E != NULL);
 
@@ -895,7 +919,7 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
   if (auto Call = dyn_cast<CallExpr>(P)) {
     auto Fn = Call->getDirectCallee();
     if (!Fn) {
-      ReportError("expected TESLA predicate", P);
+      ReportError("expected TESLA modifier", P);
       return false;
     }
 
@@ -922,14 +946,8 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
 
   }
 
-  if (auto DRE = dyn_cast<DeclRefExpr>(P)) {
-    Arg->set_type(Argument::Variable);
-    const ValueDecl *D = DRE->getDecl();
-
-    *Arg->mutable_name() = DRE->getDecl()->getName();
-    Arg->set_index(ReferenceIndex(D));
-    return true;
-  }
+  if (auto DRE = dyn_cast<DeclRefExpr>(P))
+    return Parse(Arg, DRE->getDecl(), false, F, DoNotRegister);
 
   if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Arg->set_type(Argument::Constant);
@@ -975,14 +993,18 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F) {
   if (auto *UO = dyn_cast<UnaryOperator>(P)) {
     if (UO->getOpcode() == UO_AddrOf) {
       Arg->set_type(Argument::Indirect);
-      return Parse(Arg->mutable_indirection(), UO->getSubExpr(), F);
+      return
+        Parse(Arg->mutable_indirection(), UO->getSubExpr(), F, true)
+        && (DoNotRegister || RegisterArg(Arg));
     }
   }
 
   //  * structure field access: bar(s->x) => called bar() with s->x (TODO)
   if (auto *ME = dyn_cast<MemberExpr>(P)) {
     Arg->set_type(Argument::Field);
-    return ParseStructField(Arg->mutable_field(), ME, F);
+    return
+      ParseStructField(Arg->mutable_field(), ME, F, true)
+      && (DoNotRegister || RegisterArg(Arg));
   }
 
   P->dump();
@@ -1001,20 +1023,20 @@ bool Parser::Parse(FunctionRef *FnRef, const FunctionDecl *Fn, Flags F) {
 }
 
 
-bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F) {
+bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F,
+                   bool DoNotRegister) {
   assert(Arg != NULL);
   assert(D != NULL);
 
   *Arg->mutable_name() = D->getName();
 
-  if (AllowAny)
+  if (AllowAny) {
     Arg->set_type(Argument::Any);
-  else {
-    Arg->set_type(Argument::Variable);
-    Arg->set_index(ReferenceIndex(D));
+    return true;
   }
 
-  return true;
+  Arg->set_type(Argument::Variable);
+  return (DoNotRegister || RegisterArg(Arg));
 }
 
 
@@ -1061,18 +1083,20 @@ bool Parser::CheckAssignmentKind(const ValueDecl *Field, const Expr *E) {
 }
 
 
-size_t Parser::ReferenceIndex(const ValueDecl* D) {
+bool Parser::RegisterArg(Argument* A) {
   size_t Pos = 0;
+  A->set_index(Pos);
 
   for (auto I = References.begin(); I != References.end(); I++)
-    if (*I == D)
-      return Pos;
+    if (**I == *A)
+      break;
     else
-      ++Pos;
+      A->set_index(++Pos);
 
-  References.push_back(D);
+  if (Pos == References.size())
+    References.push_back(A);
 
-  return Pos;
+  return true;
 }
 
 

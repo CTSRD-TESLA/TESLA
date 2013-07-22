@@ -44,6 +44,12 @@ namespace tesla {
 
 int ArgIndex(const Argument&);
 
+/**
+ * The name of the argument, or if it is an indirect argument, the name of
+ * the base variable from which we can look up the argument.
+ */
+std::string BaseName(const Argument&);
+
 template<class T>
 inline bool operator != (const T& x, const T& y) { return !(x == y); }
 
@@ -84,6 +90,21 @@ inline bool operator==(const Argument &A1, const Argument &A2) {
     return false;
 
   if (A1.has_value() && (A1.value() != A2.value()))
+    return false;
+
+  if (A1.has_constantmatch() ^ A2.has_constantmatch())
+    return false;
+
+  if (A1.has_indirection() ^ A2.has_indirection())
+    return false;
+
+  if (A1.has_value() && (A1.indirection() != A2.indirection()))
+    return false;
+
+  if (A1.has_field() ^ A2.has_field())
+    return false;
+
+  if (A1.has_field() && (A1.field() != A2.field()))
     return false;
 
   return true;

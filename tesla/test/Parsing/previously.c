@@ -2,7 +2,7 @@
 /*
  * Commands for llvm-lit:
  * RUN: tesla analyse %s -o %t.tesla -- %cflags -D TESLA
- * RUN: tesla graph -o %t.dot %t.tesla
+ * RUN: tesla graph -d -o %t.dot %t.tesla
  * RUN: FileCheck -input-file %t.dot %s
  */
 
@@ -36,25 +36,28 @@ perform_operation(struct object *o)
 	/*
 	 * CHECK: digraph automaton_0 {
 	 *
-	 * CHECK: 0 [ label = "state 0\n(&#8902;)" ];
-	 * CHECK: 1 [ label = "state 1\n(&#8902;)" ];
-	 * CHECK: 2 [ label = "state 2\n(o)" ];
-	 * CHECK: 3 [ label = "state 3\n(o)" ];
-	 * CHECK: 4 [ label = "state 4\n(o)", shape = doublecircle ];
+	 * TODO: when we switch to LLVM 3.4, use CHECK-DAG here:
+	 *
+	 * CHECK: 0 [ label = "state 0\n{{.*}}(&#8902;)" ];
+	 * CHECK: [[INIT:[0-9]+]] [ label = "state [[INIT]]\n{{.*}}(&#8902;)" ];
+	 * CHECK: [[HOLD:[0-9]+]] [ label = "state [[HOLD]]\n{{.*}}(o)" ];
+	 * CHECK: [[DONE:[0-9]+]] [ label = "state [[DONE]]\n{{.*}}", shape = doublecircle ];
+	 * CHECK: [[ASRT:[0-9]+]] [ label = "state [[ASRT]]\n{{.*}}(o)" ];
 	 *
 	 * CHECK: example_syscall(X): Entry
-	 * CHECK: 0 -> 1;
+	 * CHECK: 0 -> [[INIT]];
 	 *
 	 * CHECK: hold(o): Entry
-	 * CHECK: 1 -> 2;
-	 * CHECK: 1 -> 1;
-	 *
-	 * CHECK: assertion
-	 * CHECK: 2 -> 3;
+	 * CHECK: [[INIT]] -> [[HOLD]];
+	 * CHECK: [[HOLD]] -> [[HOLD]];
 	 *
 	 * CHECK: example_syscall(X) == X
-	 * CHECK: 3 -> 4;
-	 * CHECK: 1 -> 4;
+	 * CHECK: [[INIT]] -> [[DONE]];
+	 * CHECK: [[HOLD]] -> [[DONE]];
+	 * CHECK: [[ASRT]] -> [[DONE]];
+	 *
+	 * CHECK: assertion
+	 * CHECK: [[HOLD]] -> [[ASRT]];
 	 *
 	 * CHECK: }
 	 */

@@ -159,6 +159,9 @@ llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
 llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
                                      const TEquivalenceClass&);
 
+//! Poke through indirection, struct fields, etc.
+llvm::Value* GetArgumentValue(llvm::Value* Param, const Argument& ArgDescrip,
+                              llvm::IRBuilder<>& Builder);
 
 //! Find (or create) one function-event instrumentation function.
 llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,

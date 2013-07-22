@@ -38,11 +38,11 @@ void foo(struct object *op) {
 			 * CHECK:           context: Callee
 			 * CHECK:           argument {
 			 * CHECK-NEXT:        type: Field
+			 * CHECK-NEXT:        index: 0
 			 * CHECK-NEXT:        field {
 			 * CHECK-NEXT:          type: "object"
 			 * CHECK-NEXT:          base {
 			 * CHECK-NEXT:            type: Variable
-			 * CHECK-NEXT:            index: 0
 			 * CHECK-NEXT:            name: "op"
 			 * CHECK-NEXT:          }
 			 * CHECK-NEXT:          name: "field"
@@ -64,11 +64,11 @@ void foo(struct object *op) {
 			 * CHECK:           context: Callee
 			 * CHECK:           argument {
 			 * CHECK-NEXT:        type: Field
+			 * CHECK-NEXT:        index: 1
 			 * CHECK-NEXT:        field {
 			 * CHECK-NEXT:          type: "object"
 			 * CHECK-NEXT:          base {
 			 * CHECK-NEXT:            type: Variable
-			 * CHECK-NEXT:            index: 1
 			 * CHECK-NEXT:            name: "o"
 			 * CHECK-NEXT:          }
 			 * CHECK-NEXT:          name: "field"
@@ -81,4 +81,33 @@ void foo(struct object *op) {
 			do_something(o.field) == 0
 		)
 	);
+	/*
+	 * CHECK:   }
+	 * CHECK: }
+	 * CHECK: argument {
+	 * CHECK-NEXT:   type: Field
+	 * CHECK-NEXT:   index: 0
+	 * CHECK-NEXT:   field {
+	 * CHECK-NEXT:     type: "object"
+	 * CHECK-NEXT:     base {
+	 * CHECK-NEXT:       type: Variable
+	 * CHECK-NEXT:       name: "op"
+	 * CHECK-NEXT:     }
+	 * CHECK-NEXT:     name: "field"
+	 * CHECK-NEXT:     index: 0
+	 * CHECK-NEXT:   }
+	 * CHECK-NEXT: }
+	 * CHECK-NEXT: argument {
+	 * CHECK-NEXT: type: Field
+	 * CHECK-NEXT: index: 1
+	 * CHECK-NEXT: field {
+	 * CHECK-NEXT:   type: "object"
+	 * CHECK-NEXT:   base {
+	 * CHECK-NEXT:     type: Variable
+	 * CHECK-NEXT:     name: "o"
+	 * CHECK-NEXT:   }
+	 * CHECK-NEXT:   name: "field"
+	 * CHECK-NEXT:   index: 0
+	 * CHECK-NEXT: }
+	 */
 }

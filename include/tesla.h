@@ -66,11 +66,14 @@ void
 __tesla_inline_assertion(const char *filename, int line, int count,
 	__tesla_locality *loc, ...);
 
+#define	__TESLA_INFINITE_REPETITIONS	INT_MAX
+
 
 /* Only define the following things if doing TESLA analysis, not compiling. */
 #ifdef	__TESLA_ANALYSER__
 
 #include <sys/types.h>
+#include <limits.h>
 
 /**
  * TESLA events can be serialised either with respect to the current thread
@@ -82,6 +85,8 @@ extern __tesla_locality *__tesla_perthread;
 /** A sequence of TESLA events. Can be combined with && or ||. */
 struct __tesla_event* __tesla_sequence(__tesla_event*, ...);
 
+/** A sequence of events that repeats. */
+struct __tesla_event* __tesla_repeat(int min, int max, ...);
 
 /* TESLA events: */
 /** Entering a function (with optionally-specified arguments). */
@@ -217,6 +222,7 @@ __tesla_struct_uses_automaton(const char *automaton,
 
 #define	__tesla_strict(...)		0
 #define	__tesla_conditional(...)	0
+#define	__tesla_repeat(...)	0
 
 #endif	/* __TESLA_ANALYSER__ */
 

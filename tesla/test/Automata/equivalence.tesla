@@ -18,9 +18,10 @@ automaton {
    *       these state checks to be closer to their relevant transitions:
    *
    * CHECK: 0 [ label = "state 0\n([[ANY:&#[0-9]+;]],[[ANY:&#[0-9]+;]])" ];
-   * CHECK: 1 [ label = "state 1\n([[ANY]],[[ANY]])" ];
-   * CHECK: 2 [ label = "state 2\n(o,[[ANY]])" ];
-   * CHECK: 3 [ label = "state 3\n(o,op)" ];
+   * CHECK: [[INIT:[0-9]+]] [ label = "state [[INIT]]\n([[ANY]],[[ANY]])" ];
+   * CHECK: [[CHECK2:[0-9]+]] [ label = "state [[CHECK2]]\n(o,[[ANY]])" ];
+   * CHECK: [[CHECK23:[0-9]+]] [ label = "state [[CHECK23]]\n(o,op)" ];
+   * CHECK: [[ASSERT:[0-9]+]] [ label = "state [[ASSERT]]\n(o,op)" ];
    */
   identifier {
     location {
@@ -35,7 +36,7 @@ automaton {
     sequence {
       /*
        * CHECK: label = "example_syscall([[ANY]],[[ANY]],[[ANY]])
-       * CHECK: 0 -> 1;
+       * CHECK: 0 -> [[INIT]];
        */
       expression {
         type: FUNCTION
@@ -61,7 +62,7 @@ automaton {
       }
       /*
        * CHECK: label = "security_check([[ANY]],o,[[ANY]])
-       * CHECK: 1 -> 2
+       * CHECK: [[INIT]] -> [[CHECK2]];
        */
       expression {
         type: FUNCTION
@@ -93,7 +94,7 @@ automaton {
        * After that transition, we know about one referenced variable:
        *
        * CHECK: label = "security_check([[ANY]],o,op)
-       * CHECK: 2 -> 3;
+       * CHECK: [[CHECK2]] -> [[CHECK23]];
        */
       expression {
         type: FUNCTION
@@ -125,7 +126,7 @@ automaton {
       }
       /*
        * CHECK: label = "{{.*}}assertion{{.*}}"
-       * CHECK: 3 -> 4;
+       * CHECK: [[CHECK23]] -> [[ASSERT]];
        */
       expression {
         type: ASSERTION_SITE

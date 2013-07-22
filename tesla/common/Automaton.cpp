@@ -37,6 +37,8 @@
 
 #include "tesla.pb.h"
 
+#include <tesla.h>
+
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Twine.h>
 #include <llvm/Support/raw_ostream.h>   // TODO: remove once TODOs below fixed
@@ -231,8 +233,13 @@ string Automaton::Dot() const {
   string Src;
   if (assertion.has_source()) {
     Src = "\n" + assertion.source();
+
     for (size_t i = Src.find("\n"); i != string::npos; i = Src.find("\n", i))
       Src.replace(i, 1, "\\l");
+
+    /* Poor man's quote-escaping (std::string is so under-featured!): */
+    for (size_t i = Src.find('"'); i != string::npos; i = Src.find('"', i + 2))
+      Src.replace(i, 1, "\\");
   }
 
   ss
@@ -291,8 +298,7 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
 
   size_t VariableRefs = 0;
   for (auto A : Automaton.argument())
-    if (A.type() == Argument::Variable)
-      VariableRefs++;
+    VariableRefs++;
 
   Start = State::NewBuilder(States)
     .SetStartState()
@@ -473,10 +479,29 @@ State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
 
 State* NFAParser::Parse(const Sequence& Seq, State& Start) {
   State *Current = &Start;
-  for (const Expression& E : Seq.expression())
-    Current = Parse(E, *Current);
+  State *Final = State::NewBuilder(States).Build();
 
-  return Current;
+  const int Min = Seq.minreps();
+
+  const bool InfiniteLoop = (Seq.maxreps() == __TESLA_INFINITE_REPETITIONS);
+
+  const int Max = InfiniteLoop ? 1 : Seq.maxreps();
+
+  for (int i = 0; i < std::max(Min, Max); i++) {
+    State *RepStart = Current;
+    if (i >= Min)
+      Transition::Create(*Current, *Final, Transitions);
+
+    for (const Expression& E : Seq.expression())
+      Current = Parse(E, *Current);
+
+    if (InfiniteLoop || (i > Max))
+      Transition::Create(*Current, *RepStart, Transitions);
+  }
+
+  Transition::Create(*Current, *Final, Transitions);
+
+  return Final;
 }
 
 State* NFAParser::Parse(const AssertionSite& Site, State& InitialState,

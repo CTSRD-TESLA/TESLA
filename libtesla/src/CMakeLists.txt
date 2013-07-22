@@ -7,7 +7,6 @@ add_library(tesla SHARED
 	tesla_class_perthread.c
 	tesla_debug.c
 	tesla_dtrace.c
-	tesla_key.c
 	tesla_notification.c
 	tesla_store.c
 	tesla_update.c
