@@ -100,13 +100,15 @@ tesla_update_state(enum tesla_context tesla_context, uint32_t class_id,
 
 	// Iterate over existing instances, figure out what to do with each.
 	int err = TESLA_SUCCESS;
-	for (uint32_t i = 0; (i < class->tc_limit); i++) {
+	int expected = class->tc_limit - class->tc_free;
+	for (uint32_t i = 0; expected > 0 && (i < class->tc_limit); i++) {
 		assert(class->tc_instances != NULL);
 		tesla_instance *inst = class->tc_instances + i;
 
 		const tesla_transition *trigger = NULL;
 		enum tesla_action_t action =
 			tesla_action(inst, pattern, trans, &trigger);
+		expected -= action == IGNORE ? 0 : 1;
 
 		switch (action) {
 		case FAIL:
