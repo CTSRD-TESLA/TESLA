@@ -142,8 +142,7 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
 
     std::vector<Value*> Args(ArgCount, NULL);
     for (const Argument& Arg : Descrip.argument()) {
-      Value *V = FnVariables[BaseName(Arg)];
-      if (V == NULL) {
+      if (FnVariables.find(BaseName(Arg)) == FnVariables.end()) {
         string s;
         raw_string_ostream Out(s);
 
@@ -156,6 +155,8 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
         panic("assertion references non-existent variable '" + BaseName(Arg)
            + "'; was it defined under '#ifdef TESLA'?\n\nVariables in scope are:\n" + Out.str());
       }
+
+      Value *V = FnVariables[BaseName(Arg)];
 
       // Find the pointer to the variable we care about, which is either a
       // stack-allocated store target or else, if there is no address-taking,
