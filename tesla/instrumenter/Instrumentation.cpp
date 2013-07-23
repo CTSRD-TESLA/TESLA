@@ -533,13 +533,7 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
 
   switch (ArgDescrip.type()) {
   case Argument::Constant:
-    /* constants are handled by instrumentation pattern matchers */
-    return NULL;
-
   case Argument::Any:
-    /* ignore: we don't care about this parameter */
-    return NULL;
-
   case Argument::Variable:
     return Param;
 
