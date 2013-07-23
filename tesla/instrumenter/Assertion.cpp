@@ -87,19 +87,11 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
 
   // Convert each assertion into appropriate instrumentation.
   for (auto *AssertCall : AssertCalls) {
-    IRBuilder<> Builder(AssertCall);
-    Mod.print(llvm::outs(), NULL);
-
     auto *Automaton(FindAutomaton(AssertCall));
     auto AssertTransitions(this->AssertTrans(Automaton));
 
+    IRBuilder<> Builder(AssertCall);
     auto Args(CollectArgs(AssertCall, *Automaton, Mod, Builder));
-
-    llvm::errs() << "\n\n====\n" << Args.size() << " arg(s):\n";
-    for (auto *A : Args)
-      A->dump();
-    llvm::errs() << "\n====\n\n\n";
-
     Function *InstrFn = CreateInstrumentation(*Automaton, AssertTransitions,
                                               Args, Mod);
 
@@ -111,8 +103,6 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
     // Delete the call to the assertion pseudo-function.
     AssertCall->removeFromParent();
     delete AssertCall;
-
-    Mod.print(llvm::outs(), NULL);
   }
 
   AssertFn->removeFromParent();
