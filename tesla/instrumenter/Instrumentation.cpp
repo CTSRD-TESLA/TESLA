@@ -90,7 +90,8 @@ void FnInstrumentation::AppendInstrumentation(
   bool HasReturnValue =
     (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue());
 
-  vector<Value*> InstrArgs((*Trans.begin())->Arguments().size(), NULL);
+  vector<Value*> KeyArgs(TESLA_KEY_SIZE, NULL);
+
   IRBuilder<> Builder(Instr);
 
   size_t i = 0;
@@ -98,27 +99,31 @@ void FnInstrumentation::AppendInstrumentation(
     for (auto& InstrArg : InstrFn->getArgumentList()) {
       const Argument& Arg = Ev.argument(i);
 
-      // We may need to check constant values (e.g. return values).
+      // We may need to match against constants.
       MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
                    Instr, Exit, &InstrArg, Arg);
 
-      InstrArgs[Arg.index()] = GetArgumentValue(&InstrArg, Arg, Builder);
+      if (Arg.has_index()) {
+        assert(KeyArgs[Arg.index()] == NULL);
+        KeyArgs[Arg.index()] = GetArgumentValue(&InstrArg, Arg, Builder);
+      }
 
       // Ignore the return value, which passed as an argument to InstrFn.
-      if (HasReturnValue && (++i == Ev.argument_size()))
+      i++;
+      if (HasReturnValue && (i == Ev.argument_size()))
         break;
     }
 
   if (HasReturnValue) {
     const Argument &Arg = Ev.expectedreturnvalue();
     Value *ReturnValue = --(InstrFn->arg_end());
+    ReturnValue = GetArgumentValue(ReturnValue, Arg, Builder);
+
     MatchPattern(Ctx, A.Name() + ":match:retval", InstrFn,
                  Instr, Exit, ReturnValue, Arg);
 
-    // The return value *may* be a variable that we need to watch.
-    ReturnValue = GetArgumentValue(ReturnValue, Arg, Builder);
-    if (ReturnValue)
-      InstrArgs[Arg.index()] = ReturnValue;
+    // The return value may be a variable that we need to watch.
+    assert(ReturnValue != NULL);
   }
 
   Type* IntType = Type::getInt32Ty(Ctx);
@@ -126,7 +131,7 @@ void FnInstrumentation::AppendInstrumentation(
   vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
   Args.push_back(ConstantInt::get(IntType, A.ID()));
-  Args.push_back(ConstructKey(Builder, M, InstrArgs));
+  Args.push_back(ConstructKey(Builder, M, KeyArgs));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
   Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
   Args.push_back(ConstructTransitions(Builder, M, Trans));
