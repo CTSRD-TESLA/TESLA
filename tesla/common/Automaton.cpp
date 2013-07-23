@@ -68,6 +68,7 @@ using google::protobuf::TextFormat;
 
 using namespace llvm;
 
+using std::find;
 using std::map;
 using std::string;
 using std::stringstream;
@@ -109,12 +110,13 @@ private:
   State* SubAutomaton(const Identifier&, State& InitialState);
 
   // Inclusive-Or stuff
-  void ConvertIncOrToExcOr(State& InitialState, State& EndState);
+  //void ConvertIncOrToExcOr(State& InitialState, State& EndState);
+  void ConvertIncOrToExcOr2(State& LHSStart, State& RHSStart, State& LHSFinal, State& RHSFinal, State& EndState);
   void CalculateReachableTransitionsBetween(const State& InitialState, State& EndState, SmallVector<Transition*,16>& Ts);
-  TransitionVectors GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts);
-  void CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
-  void CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
-  void CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState);
+  SmallVector<Transition*,16> CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& OldStartState, State& NewStartState);
+  //TransitionVectors GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts);
+  //void CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
+  //void CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
 
   const AutomatonDescription& Automaton;
   const Usage* Use;
@@ -452,8 +454,12 @@ State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
   const Expression& LHS = Expr.expression(0);
   const Expression& RHS = Expr.expression(1);
 
-  State *LHSFinal = Parse(LHS, Branch);
-  State *RHSFinal = Parse(RHS, Branch);
+  State *LHSStart = State::NewBuilder(States).Build();
+  State *RHSStart = State::NewBuilder(States).Build();
+  State *LHSFinal = Parse(LHS, *LHSStart);
+  State *RHSFinal = Parse(RHS, *RHSStart);
+  Transition::Create(Branch, *LHSStart, Transitions);
+  Transition::Create(Branch, *RHSStart, Transitions);
 
   if (!LHSFinal || !RHSFinal)
     return NULL;
@@ -467,7 +473,7 @@ State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
     return Join;
 
   case BooleanExpr::BE_Or:
-    ConvertIncOrToExcOr(Branch, *Join);
+    ConvertIncOrToExcOr2(*LHSStart, *RHSStart, *LHSFinal, *RHSFinal, *Join);
     return Join;
 
   case BooleanExpr::BE_And:
@@ -532,10 +538,16 @@ State* NFAParser::SubAutomaton(const Identifier& ID, State& InitialState) {
   return Final;
 }
 
+string stringifyTransition(Transition* T) {
+  stringstream ss;
+  ss << "(" << T->Source().ID() << ")" << T->String();
+  return ss.str();
+}
+
 string stringifyTransitionVector(SmallVector<Transition*,16>& Ts) {
   stringstream ss;
   for (auto T : Ts) {
-    ss << T->String() << " ";
+    ss << stringifyTransition(T) << " ";
   }
   return ss.str();
 }
@@ -552,27 +564,94 @@ string stringifyTransitionVectors(TransitionVectors& TVs) {
   return ss.str();
 }
 
+void NFAParser::ConvertIncOrToExcOr2(State& LHSStart, State& RHSStart, State& LHSFinal, State& RHSFinal, State& EndState) {
+  
+  debugs("tesla.automata.inclusive_or")
+    << "Lhs start: " << LHSStart.ID() << "\n"
+    << "Rhs start: " << RHSStart.ID() << "\n"
+    ;
+  
+  // Build 2D matrix of states that will be in the inclusive-or result
+  SmallVector<Transition*,16> lhs, rhs;
+  CalculateReachableTransitionsBetween(LHSStart, LHSFinal, lhs);
+  CalculateReachableTransitionsBetween(RHSStart, RHSFinal, rhs);
+
+  debugs("tesla.automata.inclusive_or")
+    << "Lhs reachable: " << stringifyTransitionVector(lhs) << "\n"
+    << "Rhs reachable: " << stringifyTransitionVector(rhs) << "\n"
+    ;
+
+  // Initialise 2D grid of states. Array index represents state position 
+  // in the grid, where (0,0) is top left.
+  State* grid[lhs.size()+1][rhs.size()+1];
+  memset(grid, 0, (lhs.size()+1)*(rhs.size()+1)*sizeof(State*));
+
+  // Initialise first row of grid
+  int j=1;
+  for (Transition* T : rhs) {
+    grid[0][j++] = (State*)&T->Destination();
+  }
+
+  // Populate grid, cloning states and transitions as necessary
+  int i=0;
+  for (Transition* T1 : lhs) {
+    State* T1Dest = (State*)&T1->Destination();
+    // Create copy of rhs starting at T1Dest
+    SmallVector<Transition*,16> rhsCopy = CreateTransitionChainCopy(rhs, RHSStart, *T1Dest);
+    debugs("tesla.automata.inclusive_or") 
+      << "Dumping rhsCopy (size=" << rhsCopy.size() << "): " << stringifyTransitionVector(rhsCopy) << "\n";
+
+    j=1;
+    for (Transition* T2 : rhsCopy) {
+      State* T3Source = grid[i][j];
+      State* T3Dest = (State*)&T2->Destination();
+      Transition::Copy(*T3Source, *T3Dest, T1, Transitions);
+      grid[i+1][j] = T3Dest;
+      debugs("tesla.automata.inclusive_or")
+        << "Setting grid[" << i+1 << "][" << j << "] to " << T3Dest->ID() << "\n";
+      // if this is the last rhsCopy or the last transition in a rhsCopy, then create
+      // epsilon transitions from every state to EndState
+      if (i == lhs.size()-1 || j == rhs.size()) {
+        Transition::Create(*T3Dest, EndState, Transitions);
+      }
+      j++;
+    }
+    i++;
+  }
+
+  debugs("tesla.automata.inclusive_or") << "Dumping grid:\n";
+  for (i=0; i<lhs.size()+1; i++) {
+    for (j=0; j<rhs.size()+1; j++) {
+      if (grid[i][j]) {
+        debugs("tesla.automata.inclusive_or")
+          << "grid[" << i << "][" << j << "] = " << grid[i][j]->ID() << "\n";
+      }
+    }
+  }
+
+}
+
+/*
 void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
   debugs("tesla.automata.inclusive_or")
     << "Converting inclusive-or to exclusive-or\n";
 
-  /*
-   * X `inclusive-or` Y is computed as:
-   * (prefix*(X) || Y) | (X || prefix*(Y)) | (X || Y)
-   * where
-   *   X and Y are sequences of transitions
-   *   prefix*(X) is the set of sets of transition prefixes of X
-   *     (This is equivalent to the powerset of X minus X itself.)
-   *   || is the parallel operator that allow possible interleavings of the
-   *     lhs and rhs
-   *
-   * For example, ab `inclusive-or` cd refers to the following automaton:
-   *   = (prefix*(ab) || cd)           | (ab || prefix*(cd))         | (ab || cd)
-   *   = (ø || cd) | (a || cd)         | (ab || ø) | (ab || c)       | (ab || cd)
-   *   = (cd)      | (a || cd)         | (ab)      | (ab || c)       | (ab || cd)
-   *   = (cd)      | (acd | cad | cda) | (ab)      | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
-   *   = cd        | acd | cad | cda   | ab        | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
-   */
+  //
+  // X `inclusive-or` Y is computed as:
+  // (prefix*(X) || Y) | (X || prefix*(Y)) | (X || Y)
+  // where
+  //   X and Y are sequences of transitions
+  //   prefix*(X) is the set of sets of transition prefixes of X
+  //     (This is equivalent to the powerset of X minus X itself.)
+  //   || is the parallel operator that allow possible interleavings of the
+  //     lhs and rhs
+  //
+  // For example, ab `inclusive-or` cd refers to the following automaton:
+  //   = (prefix*(ab) || cd)           | (ab || prefix*(cd))         | (ab || cd)
+  //   = (ø || cd) | (a || cd)         | (ab || ø) | (ab || c)       | (ab || cd)
+  //   = (cd)      | (a || cd)         | (ab)      | (ab || c)       | (ab || cd)
+  //   = (cd)      | (acd | cad | cda) | (ab)      | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
+  //   = cd        | acd | cad | cda   | ab        | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
   // separate lhs and rhs into different vectors
   SmallVector<Transition*,16> lhs, rhs;
   auto TI = InitialState.begin();
@@ -605,18 +684,22 @@ void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
   CreateParallelAutomata(rhsPrefixes, lhs, InitialState, EndState);
   CreateParallelAutomaton(lhs, rhs, InitialState, EndState);
 }
+*/
 
 void NFAParser::CalculateReachableTransitionsBetween(const State& Start, State& End, SmallVector<Transition*,16>& Ts) {
-  Transition* T = *Start.begin();
   if (Start.ID() == End.ID()) {
     return;
   }
-  if (!isa<NullTransition>(T)) { // skip epsilon edges
-    Ts.push_back(T);
+  for (auto TI=Start.begin(), TE=Start.end() ; TI!=TE ; ++TI) {
+    Transition* T = *TI;
+    if (find(Ts.begin(), Ts.end(), T) == Ts.end()) { // we haven't seen this T before
+      Ts.push_back(T);
+      CalculateReachableTransitionsBetween(T->Destination(), End, Ts);
+    }
   }
-  CalculateReachableTransitionsBetween(T->Destination(), End, Ts);
 }
 
+/*
 TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts) {
 
   debugs("tesla.automata.inclusive_or")
@@ -658,16 +741,16 @@ void NFAParser::CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<
 
 // Compute the automaton for lhs || rhs (where || is the parallel operator)
 void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState) {
-  /*
-   * We build the automaton recursively by repeatedly decomposing lhs || rhs,
-   * until it cannot be decomposed any further.
-   * For example, ab || cd can be decomposed as follows:
-   *   ab || cd = a (b || cd)                    | c (ab || d)
-   *            = a ( b (ø || cd) | c (b || d) ) | c ( a (b || d)  | d ( ab || ø) )
-   *            = a ( bcd | c (bd | db) )        | c ( a (bd | db) | dab )
-   *            = a ( bcd | cbd | cdb )          | c ( abd | adb | dab )
-   *            = abcd | acbd | acdb             | cabd | cadb | cdab
-   */
+  //
+  // We build the automaton recursively by repeatedly decomposing lhs || rhs,
+  // until it cannot be decomposed any further.
+  // For example, ab || cd can be decomposed as follows:
+  //   ab || cd = a (b || cd)                    | c (ab || d)
+  //            = a ( b (ø || cd) | c (b || d) ) | c ( a (b || d)  | d ( ab || ø) )
+  //            = a ( bcd | c (bd | db) )        | c ( a (bd | db) | dab )
+  //            = a ( bcd | cbd | cdb )          | c ( abd | adb | dab )
+  //            = abcd | acbd | acdb             | cabd | cadb | cdab
+  // 
 
   debugs("tesla.automata.inclusive_or")
     << "Entering CreateParallelAutomaton("
@@ -706,26 +789,67 @@ void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallV
     << stringifyTransitionVector(rhs) << ")\n"
     ;
 }
+*/
 
-void NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& InitialState, State& EndState) {
-  State* CurrSource = &InitialState;
+SmallVector<Transition*,16> NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& OldStartState, State& NewStartState) {
+  SmallVector<Transition*,16> clone;
 
   debugs("tesla.automata.inclusive_or")
     << "Creating copy of transition chain: "
     << stringifyTransitionVector(chain) << "\n"
     ;
+  
+  debugs("tesla.automata.inclusive_or")
+    << "Old start state: " << OldStartState.ID() << "\n"
+    << "New start state: " << NewStartState.ID() << "\n"
+    ;
 
-  for (auto TI=chain.begin(), TE=chain.end()-1; TI != TE; TI++) {
+  // mapping from states in chain to clone, to preserve looping
+  map<State*,State*> stateMap;
+  stateMap[&OldStartState] = &NewStartState;
+
+  for (auto TI=chain.begin(), TE=chain.end(); TI != TE; TI++) {
     Transition* T = *TI;
     debugs("tesla.automata.inclusive_or")
-      << "Creating copy of transition: " << T->String() << "\n";
+      << "Creating copy of transition: " << stringifyTransition(T) << "\n";
+    
+    // get the right source and destination states (to preserve looping)
+    State* NewSource = NULL;
+    State* NewDest = NULL;
 
-    State* TDest = State::NewBuilder(States).Build();
-    Transition::Copy(*CurrSource, *TDest, T, Transitions);
-    CurrSource = TDest;
+    State* TSource = (State*)&T->Source();
+    if (stateMap.find(TSource) != stateMap.end()) {
+      NewSource = stateMap[TSource];
+    }
+    else {
+      NewSource = State::NewBuilder(States).Build();
+      stateMap[TSource] = NewSource;
+    }
+
+    State* TDest = (State*)&T->Destination();
+    if (stateMap.find(TDest) != stateMap.end()) {
+      NewDest = stateMap[TDest];
+    }
+    else {
+      NewDest = State::NewBuilder(States).Build();
+      stateMap[TDest] = NewDest;
+    }
+
+    // clone transition
+    if (isa<NullTransition>(T)) { // epsilon edges
+      Transition::Create(*NewSource, *NewDest, Transitions); 
+    }
+    else {
+      Transition::Copy(*NewSource, *NewDest, T, Transitions);
+    }
+    clone.push_back(Transitions.back()); // ASSUME: Transition::Copy(...) adds to the back of Transitions
   }
-  // last transition copy goes from CurrSource -> End
-  Transition::Copy(*CurrSource, EndState, chain.back(), Transitions);
+
+  debugs("tesla.automata.inclusive_or")
+    << "Dumping transition chain copy before returning: "
+    << stringifyTransitionVector(clone) << "\n"
+    ;
+  return clone;
 }
 
 typedef std::set<unsigned> NFAState;

@@ -10,10 +10,6 @@
 
 int	a(int);
 int	b(int);
-int	c(int);
-int	d(int);
-int	e(int);
-int	f(int);
 
 void ab() {
   /*
@@ -37,22 +33,23 @@ void ab() {
    * CHECK: label = "ab(){{.*}}Entry{{.*}}init{{.*}}
    * CHECK: 0 -> [[CALL:[0-9]+]]
    *
-   * a(x): [ 1->2, 1->5, 6->4 ]
+   * a(x): [ 2->4, 5->7 ]
    * CHECK: label = "a(x)
-   * CHECK: [[CALL]] -> [[A1:[0-9]+]]
-   * CHECK: [[CALL]] -> [[A2:[0-9]+]]
-   * CHECK: [[B2:[0-9]+]] -> [[Final:[0-9]+]]
+   * CHECK: [[INIT1:[0-9]+]] -> [[A1:[0-9]+]]
+   * CHECK: [[B1:[0-9]+]] -> [[A2:[0-9]+]]
    *
-   * b(y): [ 1->3, 1->6, 5->4 ]
+   * b(y): [ 3->5, 4->7 ]
    * CHECK: label = "b(y)
-   * CHECK: [[CALL]] -> [[B1:[0-9]+]]
-   * CHECK: [[A2]] -> [[Final]]
-   * CHECK: [[CALL]] -> [[B2]]
+   * CHECK: [[INIT2:[0-9]+]] -> [[B1]]
+   * CHECK: [[A1]] -> [[A2]]
    *
-   * ø: [ 2->4, 3->4 ]
+   * ø: [ 5->6, 4->6, 7->6, 1->2, 1->3 ]
    * CHECK: label = "[[EPSILON:&#[0-9a-f]+;]]"
-   * CHECK: [[A1]] -> [[Final]]
-   * CHECK: [[B1]] -> [[Final]]
+   * CHECK: [[B1]] -> [[FINAL:[0-9]+]]
+   * CHECK: [[A1]] -> [[FINAL]]
+   * CHECK: [[CALL]] -> [[INIT2]]
+   * CHECK: [[A2]] -> [[FINAL]]
+   * CHECK: [[CALL]] -> [[INIT1]]
    */
 
   /*
@@ -61,29 +58,3 @@ void ab() {
    */
 }
 
-// TODO: write this test
-void abcd() {
-  /*
-   * Test ab `inclusive-or` cd:
-   * This should produce the following automaton:
-   *
-   * = (prefix*(ab) || cd)         | (ab || prefix*(cd))          | (ab || cd)
-   * = (Ã || cd) | (a || cd)       | (ab || c)       | (ab || Ã¸) | (ab || cd)
-   * =
-   * = cd        | acd | cad | cda | abc | acb | cab | ab         | a (b || cd)        | c (ab || d)
-   * = cd        | acd | cad | cda | abc | acb | cab | ab         | abcd | acbd | acdb | cabd | cadb | cdab
-   */
-  /*int w, x, y, z;
-  __tesla_inline_assertion("example.c", __LINE__, __COUNTER__,
-                           __tesla_perthread,
-                           __tesla_sequence (
-                             a(w) == 0,
-                             b(x) == 0
-                           )
-                           ||
-                           __tesla_sequence(
-                             c(y) == 0,
-                             d(z) == 0
-                           )
-  );*/
-}
