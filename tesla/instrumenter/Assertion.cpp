@@ -172,11 +172,8 @@ vector<Value*> AssertionSiteInstrumenter::CollectArgs(
            "Variables in scope are:\n" + Out.str());
     }
 
-    Value *V = ValuesInScope[Name];
-    if (Arg.type() != Argument::Indirect)
-      V = GetArgumentValue(V, Arg, Builder);
-
-    Args[Arg.index()] = V;
+    Args[Arg.index()] =
+      GetArgumentValue(ValuesInScope[Name], Arg, Builder, true);
   }
 
   for (auto *Arg : Args)

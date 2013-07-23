@@ -534,7 +534,7 @@ Constant* tesla::TeslaContext(AutomatonDescription::Context Context,
 
 
 Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
-                               IRBuilder<>& Builder) {
+                               IRBuilder<>& Builder, bool AtAssertionSite) {
 
   switch (ArgDescrip.type()) {
   case Argument::Constant:
@@ -543,13 +543,23 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
     return Param;
 
   case Argument::Indirect:
+    // At the assertion site, we don't do the indirection thing: we are
+    // referring to local values.
+    if (AtAssertionSite)
+      return Param;
+
     Param = Builder.CreateLoad(Param);
     return GetArgumentValue(Param, ArgDescrip.indirection(), Builder);
 
   case Argument::Field: {
+    // We only need to do the indirect lookup via struct fields at the
+    // assertion site; otherwise, we just care about local values.
+    if (!AtAssertionSite)
+      return Param;
+
     const StructField& Field = ArgDescrip.field();
     const Argument& BaseArg = Field.base();
-    auto *Base = GetArgumentValue(Param, BaseArg, Builder);
+    auto *Base = GetArgumentValue(Param, BaseArg, Builder, AtAssertionSite);
 
     string Name = (
       (Base->hasName()

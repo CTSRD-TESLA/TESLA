@@ -161,7 +161,8 @@ llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
 
 //! Poke through indirection, struct fields, etc.
 llvm::Value* GetArgumentValue(llvm::Value* Param, const Argument& ArgDescrip,
-                              llvm::IRBuilder<>& Builder);
+                              llvm::IRBuilder<>& Builder,
+                              bool AtAssertionSite = false);
 
 //! Find (or create) one function-event instrumentation function.
 llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,
