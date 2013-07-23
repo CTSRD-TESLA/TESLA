@@ -178,15 +178,8 @@ vector<Value*> AssertionSiteInstrumenter::CollectArgs(
     Args[Arg.index()] = ValuesInScope[Name];
   }
 
-#ifndef NDEBUG
-    llvm::outs() << "\n\nargs:\n";
-    for (auto *Arg : Args) {
-      assert(Arg != NULL);
-
-      Arg->print(llvm::outs());
-      llvm::outs() << "\n";
-    }
-#endif
+  for (auto *Arg : Args)
+    assert(Arg != NULL);
 
   return Args;
 }
