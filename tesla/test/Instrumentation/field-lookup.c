@@ -10,35 +10,59 @@
 
 #include "tesla-macros.h"
 
-struct object { struct object *child; };
+struct obj1;
+struct obj2;
+
+struct obj1 {
+	struct obj2 *child_of_1;
+};
+
+struct obj2 {
+	struct obj1 *child_of_2;
+	int value;
+};
 
 void	context(void);
-int	do_something(struct object*);
+int	do_something(struct obj1*, int);
 
-void foo(struct object *op) {
-	struct object o;
-
+void foo(struct obj1 *op) {
 	/*
 	 */
 	TESLA_WITHIN(context,
-		TSEQUENCE(
-			TESLA_ASSERTION_SITE,
-
-#if NOTYET
-			do_something(o.child->child) == 0,
-#endif
-
-			/*
-			 * CHECK: [[CHILD0:%[a-zA-Z0-9\.]+]] = getelementptr inbounds %struct.object* %0
-			 * CHECK: [[CHILD1:%[a-zA-Z0-9\.]+]] = getelementptr inbounds %struct.object* [[CHILD0]]
-			 * CHECK: [[CHILD2:%[a-zA-Z0-9\.]+]] = getelementptr inbounds %struct.object* [[CHILD1]]
-			 * CHECK: [[VAL:%[0-9]+]] = ptrtoint %struct.object* [[CHILD2]] to i64
-			 * CHECK: [[KEY:%[0-9]+]] = getelementptr inbounds %tesla_key* %key, i32 0, i32 0
-			 * CHECK: store i64 [[VAL]], i64* [[KEY]]
-			 * CHECK: [[MASK:%[0-9]+]] = getelementptr inbounds %tesla_key* %key, i32 0, i32 {{[0-9]+}}
-			 * CHECK: store i32 1, i32* [[MASK]]
-			 */
-			do_something(op->child->child->child) == 0
+		eventually(
+/*
+ * TODO: use CHECK-DAG once we switch to LLVM 3.4:
+ *
+ * First, we need to look up op->child_of_1->child_of_2:
+ * CHECK: [[PTR:%[_a-zA-Z0-9\.]+]] = getelementptr inbounds %struct.obj1* %0
+ * CHECK: [[C:%[_a-zA-Z0-9\.]+]] = load %struct.obj2** [[PTR]]
+ *
+ * CHECK: [[PTR:%[_a-zA-Z0-9\.]+]] = getelementptr inbounds %struct.obj2* [[C]]
+ * CHECK: [[CHILD:%[_a-zA-Z0-9\.]+]] = load %struct.obj1** [[PTR]]
+ *
+ * Next, we look up op->child_of_1->value:
+ * CHECK: [[PTR:%[_a-zA-Z0-9\.]+]] = getelementptr inbounds %struct.obj1* %1
+ * CHECK: [[C:%[_a-zA-Z0-9\.]+]] = load %struct.obj2** [[PTR]]
+ *
+ * CHECK: [[PTR:%[_a-zA-Z0-9\.]+]] = getelementptr inbounds %struct.obj2* [[C]]
+ * CHECK: [[VALUE:%[_a-zA-Z0-9\.]+]] = load i32* [[PTR]]
+ *
+ * Then we use them in a tesla_key:
+ * CHECK: [[KEY:%[_a-zA-Z0-9\.]+]] = alloca %tesla_key
+ *
+ * CHECK: [[CHILD_CAST:%[_a-zA-Z0-9\.]+]] = ptrtoint %struct.obj1* [[CHILD]]
+ * CHECK: [[CHILD_KEY:%[_a-zA-Z0-9\.]+]] = getelementptr {{.*}} [[KEY]]
+ * CHECK: store [[INT:i[3264]+]] [[CHILD_CAST]], [[INT]]* [[CHILD_KEY]]
+ *
+ * CHECK: [[VALUE_CAST:%[_a-zA-Z0-9\.]+]] = zext {{.*}} [[VALUE]]
+ * CHECK: [[VALUE_KEY:%[_a-zA-Z0-9\.]+]] = getelementptr {{.*}} [[KEY]]
+ * CHECK: store [[INT]] [[VALUE_CAST]], [[INT]]* [[VALUE_KEY]]
+ *
+ * CHECK: call void @tesla_update_state({{.*}} [[KEY]]
+ */
+			do_something(
+				op->child_of_1->child_of_2,
+				op->child_of_1->value) == 0
 		)
 	);
 }

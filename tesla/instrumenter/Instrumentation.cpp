@@ -536,11 +536,21 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
 
   case Argument::Field: {
     const StructField& Field = ArgDescrip.field();
-    const Argument& Base = Field.base();
-    string Name = BaseName(Base) + "." + Field.name();
+    const Argument& BaseArg = Field.base();
+    auto *Base = GetArgumentValue(Param, BaseArg, Builder);
 
-    Param = Builder.CreateConstInBoundsGEP1_32(Param, Field.index(), Name);
-    return GetArgumentValue(Param, Base, Builder);
+    string Name = (
+      (Base->hasName()
+        ? Base->getName()
+        : StringRef(BaseName(BaseArg))
+      )
+      + "." + Field.name()
+    ).str();
+
+    Param = Builder.CreateConstInBoundsGEP2_32(Base, 0, Field.index());
+    Param = Builder.CreateLoad(Param, Name);
+
+    return Param;
   }
   }
 }
