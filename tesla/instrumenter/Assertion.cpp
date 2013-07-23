@@ -82,9 +82,6 @@ bool AssertionSiteInstrumenter::runOnModule(Module &M) {
 bool AssertionSiteInstrumenter::ConvertAssertions(
     set<CallInst*>& AssertCalls, Module& Mod) {
 
-  // Things we'll need later, common to all assertions.
-  //Type *IntPtrTy = IntPtrType(Mod);
-
   // Convert each assertion into appropriate instrumentation.
   for (auto *AssertCall : AssertCalls) {
     auto *Automaton(FindAutomaton(AssertCall));
