@@ -20,7 +20,7 @@ void ab() {
    * = (ø || b          | (a || ø          | (a || b)
    * = b                 | a                 | ab | ba
    *
-   * CHECK: digraph automaton_{{[0-9]+}}
+   * CHECKX: digraph automaton_{{[0-9]+}}
    */
   int x, y;
   TESLA_PERTHREAD(strict(called(ab)), strict(returned(ab)),
@@ -30,31 +30,31 @@ void ab() {
    * Transitions, grouped into equivalence classes:
    *
    * ab(): 0->1
-   * CHECK: label = "ab(){{.*}}Entry{{.*}}init{{.*}}
-   * CHECK: 0 -> [[CALL:[0-9]+]]
+   * CHECKX: label = "ab(){{.*}}Entry{{.*}}init{{.*}}
+   * CHECKX: 0 -> [[CALL:[0-9]+]]
    *
    * a(x): [ 2->4, 5->7 ]
-   * CHECK: label = "a(x)
-   * CHECK: [[INIT1:[0-9]+]] -> [[A1:[0-9]+]]
-   * CHECK: [[B1:[0-9]+]] -> [[A2:[0-9]+]]
+   * CHECKX: label = "a(x)
+   * CHECKX: [[INIT1:[0-9]+]] -> [[A1:[0-9]+]]
+   * CHECKX: [[B1:[0-9]+]] -> [[A2:[0-9]+]]
    *
    * b(y): [ 3->5, 4->7 ]
-   * CHECK: label = "b(y)
-   * CHECK: [[INIT2:[0-9]+]] -> [[B1]]
-   * CHECK: [[A1]] -> [[A2]]
+   * CHECKX: label = "b(y)
+   * CHECKX: [[INIT2:[0-9]+]] -> [[B1]]
+   * CHECKX: [[A1]] -> [[A2]]
    *
    * �: [ 5->6, 4->6, 7->6, 1->2, 1->3 ]
-   * CHECK: label = "[[EPSILON:&#[0-9a-f]+;]]"
-   * CHECK: [[B1]] -> [[FINAL:[0-9]+]]
-   * CHECK: [[A1]] -> [[FINAL]]
-   * CHECK: [[CALL]] -> [[INIT2]]
-   * CHECK: [[A2]] -> [[FINAL]]
-   * CHECK: [[CALL]] -> [[INIT1]]
+   * CHECKX: label = "[[EPSILON:&#[0-9a-f]+;]]"
+   * CHECKX: [[B1]] -> [[FINAL:[0-9]+]]
+   * CHECKX: [[A1]] -> [[FINAL]]
+   * CHECKX: [[CALL]] -> [[INIT2]]
+   * CHECKX: [[A2]] -> [[FINAL]]
+   * CHECKX: [[CALL]] -> [[INIT1]]
    */
 
   /*
    * Graph footer:
-   * CHECK: label = "{{.*inclusive-or.c:[0-9]+#[0-9]+}}
+   * CHECKX: label = "{{.*inclusive-or.c:[0-9]+#[0-9]+}}
    */
 }
 

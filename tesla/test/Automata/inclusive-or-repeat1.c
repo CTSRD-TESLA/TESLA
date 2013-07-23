@@ -21,29 +21,29 @@ int foo() {
    * Transitions, grouped into equivalence classes:
    *
    * context(): 0->1
-   * CHECK: label = "context(){{.*}}Entry{{.*}}init{{.*}}
-   * CHECK: 0 -> [[CALL:[0-9]+]]
+   * CHECKX: label = "context(){{.*}}Entry{{.*}}init{{.*}}
+   * CHECKX: 0 -> [[CALL:[0-9]+]]
    *
    * foo(): [ 3->3, 5->3, 1->3, 4->5, 6->5 ]
-   * CHECK: label = "foo()
-   * CHECK: [[F:[0-9]+]] -> [[F]]
-   * CHECK: [[BF:[0-9]+]] -> [[F]]
-   * CHECK: [[CALL]] -> [[F]]
-   * CHECK: [[B:[0-9]+]] -> [[BF]]
-   * CHECK: [[FB:[0-9]+]] -> [[BF]]
+   * CHECKX: label = "foo()
+   * CHECKX: [[F:[0-9]+]] -> [[F]]
+   * CHECKX: [[BF:[0-9]+]] -> [[F]]
+   * CHECKX: [[CALL]] -> [[F]]
+   * CHECKX: [[B:[0-9]+]] -> [[BF]]
+   * CHECKX: [[FB:[0-9]+]] -> [[BF]]
    *
    * bar(): [ 6->6, 1->4, 5->6, 4->4, 3->6 ]
-   * CHECK: label = "bar()
-   * CHECK: [[FB]] -> [[FB]]
-   * CHECK: [[CALL]] -> [[B]]
-   * CHECK: [[BF]] -> [[FB]]
-   * CHECK: [[B]] -> [[B]]
-   * CHECK: [[F]] -> [[FB]]
+   * CHECKX: label = "bar()
+   * CHECKX: [[FB]] -> [[FB]]
+   * CHECKX: [[CALL]] -> [[B]]
+   * CHECKX: [[BF]] -> [[FB]]
+   * CHECKX: [[B]] -> [[B]]
+   * CHECKX: [[F]] -> [[FB]]
    */
 
   /*
    * Graph footer:
-   * CHECK: label = "{{.*inclusive-or-repeat1.c:[0-9]+#[0-9]+}}
+   * CHECKX: label = "{{.*inclusive-or-repeat1.c:[0-9]+#[0-9]+}}
    */
 	return 0;
 }
