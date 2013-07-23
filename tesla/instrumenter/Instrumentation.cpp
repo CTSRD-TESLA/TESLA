@@ -534,10 +534,14 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
     Param = Builder.CreateLoad(Param);
     return GetArgumentValue(Param, ArgDescrip.indirection(), Builder);
 
-  case Argument::Field:
-    /* TODO: finish implementing this */
-    llvm_unreachable("TESLA: field-indirect instrumentation not implemented");
-    return NULL;
+  case Argument::Field: {
+    const StructField& Field = ArgDescrip.field();
+    const Argument& Base = Field.base();
+    string Name = BaseName(Base) + "." + Field.name();
+
+    Param = Builder.CreateConstInBoundsGEP1_32(Param, Field.index(), Name);
+    return GetArgumentValue(Param, Base, Builder);
+  }
   }
 }
 
