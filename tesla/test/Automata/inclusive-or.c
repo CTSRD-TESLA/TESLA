@@ -20,7 +20,7 @@ void ab() {
    * = (ø || b          | (a || ø          | (a || b)
    * = b                 | a                 | ab | ba
    *
-   * CHECKX: digraph automaton_{{[0-9]+}}
+   * CHECK: digraph automaton_{{[0-9]+}}
    */
   int x, y;
   TESLA_PERTHREAD(strict(called(ab)), strict(returned(ab)),

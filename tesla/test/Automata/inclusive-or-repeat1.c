@@ -43,7 +43,7 @@ int foo() {
 
   /*
    * Graph footer:
-   * CHECKX: label = "{{.*inclusive-or-repeat1.c:[0-9]+#[0-9]+}}
+   * CHECK: label = "{{.*inclusive-or-repeat1.c:[0-9]+#[0-9]+}}
    */
 	return 0;
 }
