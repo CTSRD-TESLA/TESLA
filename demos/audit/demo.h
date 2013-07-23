@@ -31,7 +31,10 @@ struct proc;
 #include "mac_framework.h"
 #include "mac_policy.h"
 
+/* We aren't actually in the kernel! */
+#undef _KERNEL
 #include <tesla-macros.h>
+#define _KERNEL
 
 extern struct thread *curthread;
 #define	MAXPATHLEN	1024
