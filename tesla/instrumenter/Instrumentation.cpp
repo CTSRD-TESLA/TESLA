@@ -241,11 +241,9 @@ llvm::Function* tesla::ObjCMethodInstrumentation(llvm::Module& Mod,
                                                  FunctionEvent::CallContext Context,
                                                  bool SuppressDebugInstr) {
 
-  
   return CallableInstrumentation(Mod, (Twine() + ".objc_" + Selector +
         ((Context == FunctionEvent::Caller) ? "_caller" : "_callee")).str(),
         Ty, Dir, Context, SuppressDebugInstr);
- 
 }
 
 
