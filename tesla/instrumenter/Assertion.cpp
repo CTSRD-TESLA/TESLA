@@ -172,7 +172,11 @@ vector<Value*> AssertionSiteInstrumenter::CollectArgs(
            "Variables in scope are:\n" + Out.str());
     }
 
-    Args[Arg.index()] = ValuesInScope[Name];
+    Value *V = ValuesInScope[Name];
+    if (Arg.type() != Argument::Indirect)
+      V = GetArgumentValue(V, Arg, Builder);
+
+    Args[Arg.index()] = V;
   }
 
   for (auto *Arg : Args)
@@ -207,18 +211,11 @@ Function* AssertionSiteInstrumenter::CreateInstrumentation(
 
   IRBuilder<> Builder(Instr);
 
-  std::vector<Value*> InstrArgs;
+  std::vector<Value*> InstrArgs((*TEq.begin())->Arguments().size(), NULL);
   size_t i = 0;
   for (auto& Arg : InstrFn->getArgumentList()) {
-    Value *V = &Arg;
     const Argument& A(Assertion.argument(i++));
-
-    // assertion sites are special: we can ignore indirection because we
-    // have just been passed the value we want.
-    if (A.type() != Argument::Indirect)
-      V = GetArgumentValue(V, A, Builder);
-
-    InstrArgs.push_back(V);
+    InstrArgs[A.index()] = &Arg;
   }
 
   std::vector<Value*> Args;

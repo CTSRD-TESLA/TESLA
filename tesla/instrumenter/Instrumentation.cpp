@@ -87,33 +87,46 @@ void FnInstrumentation::AppendInstrumentation(
   auto *Instr = BasicBlock::Create(Ctx, A.Name() + ":instr", InstrFn, Exit);
   Exit->replaceAllUsesWith(Instr);
 
-  // We may need to check constant values (e.g. return values).
+  bool HasReturnValue =
+    (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue());
+
+  vector<Value*> InstrArgs((*Trans.begin())->Arguments().size(), NULL);
+  IRBuilder<> Builder(Instr);
+
   size_t i = 0;
   if (Ev.argument().size() > 0)
     for (auto& InstrArg : InstrFn->getArgumentList()) {
       const Argument& Arg = Ev.argument(i);
+
+      // We may need to check constant values (e.g. return values).
       MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
                    Instr, Exit, &InstrArg, Arg);
 
+      InstrArgs[Arg.index()] = GetArgumentValue(&InstrArg, Arg, Builder);
+
       // Ignore the return value, which passed as an argument to InstrFn.
-      if (++i == Ev.argument_size())
+      if (HasReturnValue && (++i == Ev.argument_size()))
         break;
     }
 
-  if (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue()) {
+  if (HasReturnValue) {
     const Argument &Arg = Ev.expectedreturnvalue();
     Value *ReturnValue = --(InstrFn->arg_end());
     MatchPattern(Ctx, A.Name() + ":match:retval", InstrFn,
                  Instr, Exit, ReturnValue, Arg);
+
+    // The return value *may* be a variable that we need to watch.
+    ReturnValue = GetArgumentValue(ReturnValue, Arg, Builder);
+    if (ReturnValue)
+      InstrArgs[Arg.index()] = ReturnValue;
   }
 
-  IRBuilder<> Builder(Instr);
   Type* IntType = Type::getInt32Ty(Ctx);
 
   vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
   Args.push_back(ConstantInt::get(IntType, A.ID()));
-  Args.push_back(ConstructKey(Builder, M, InstrFn->getArgumentList(), Ev));
+  Args.push_back(ConstructKey(Builder, M, InstrArgs));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
   Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
   Args.push_back(ConstructTransitions(Builder, M, Trans));
@@ -608,7 +621,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
       continue;
 
     assert(Index < TotalArgs);
-    Args[Index] = GetArgumentValue(&InstrArg, Arg, Builder);
+    Args[Index] = &InstrArg;
   }
 
   return ConstructKey(Builder, M, Args);
