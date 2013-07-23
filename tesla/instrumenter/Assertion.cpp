@@ -53,6 +53,7 @@ using namespace llvm;
 
 using std::set;
 using std::string;
+using std::vector;
 
 
 namespace tesla {
@@ -82,117 +83,36 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
     set<CallInst*>& AssertCalls, Module& Mod) {
 
   // Things we'll need later, common to all assertions.
-  Type *IntPtrTy = IntPtrType(Mod);
+  //Type *IntPtrTy = IntPtrType(Mod);
 
   // Convert each assertion into appropriate instrumentation.
-  for (auto *Assert : AssertCalls) {
-    // Prepare to insert new code in place of the assertion.
-    IRBuilder<> Builder(Assert);
+  for (auto *AssertCall : AssertCalls) {
+    IRBuilder<> Builder(AssertCall);
+    Mod.print(llvm::outs(), NULL);
 
-    Location Loc;
-    ParseAssertionLocation(&Loc, Assert);
+    auto *Automaton(FindAutomaton(AssertCall));
+    auto AssertTransitions(this->AssertTrans(Automaton));
 
-    auto *A = M.FindAutomaton(Loc);
-    assert(A);
+    auto Args(CollectArgs(AssertCall, *Automaton, Mod, Builder));
 
-    // Implement the assertion instrumentation.
-    const AssertTransition *AssertTrans = NULL;
-    Function *InstrFn;
+    llvm::errs() << "\n\n====\n" << Args.size() << " arg(s):\n";
+    for (auto *A : Args)
+      A->dump();
+    llvm::errs() << "\n====\n\n\n";
 
-    for (auto EquivClass : *A) {
-      auto *Head = *EquivClass.begin();
-      AssertTrans = dyn_cast<AssertTransition>(Head);
-      if (!AssertTrans)
-        continue;
+    Function *InstrFn = CreateInstrumentation(*Automaton, AssertTransitions,
+                                              Args, Mod);
 
-      if (AssertTrans->Location() != Loc)
-        panic("automaton '" + ShortName(Loc)
-          + "' contains ASSERT_SITE event with location '"
-          + ShortName(AssertTrans->Location()) + "'");
-
-      if (!(InstrFn = CreateInstrumentation(*A, EquivClass, Mod)))
-        panic("error instrumenting ASSERT_SITE event");
-
-      break;
-    }
-
-    if (!AssertTrans)
-      panic("automaton '" + ShortName(Loc) + "' has no assertion site event");
-
-    // Record named values that might be passed to instrumentation, such as
-    // function parameters and StoreInst results in the current BasicBlock.
-    std::map<string,Value*> FnVariables;
-    BasicBlock *Block = Assert->getParent();
-    Function *Fn = Block->getParent();
-
-    for (llvm::Argument& A : Fn->getArgumentList())
-      FnVariables[A.getName()] = &A;
-
-    for (Instruction& I : *Fn->begin()) {
-      if (auto *Alloc = dyn_cast<AllocaInst>(&I)) {
-	if (!Alloc->hasName()) continue;
-        FnVariables[Alloc->getName()] = Alloc;
-      }
-    }
-
-    // Find the arguments to the relevant 'now' instrumentation function.
-    const AutomatonDescription& Descrip = A->getAssertion();
-    size_t ArgCount = Descrip.argument_size();
-    assert(ArgCount == InstrFn->getArgumentList().size());
-
-    std::vector<Value*> Args(ArgCount, NULL);
-    for (const Argument& Arg : Descrip.argument()) {
-      Value *V;
-      if (FnVariables.find(BaseName(Arg)) != FnVariables.end())
-        V = FnVariables[BaseName(Arg)];
-      else if (!(V = Mod.getGlobalVariable(BaseName(Arg)))) {
-        string s;
-        raw_string_ostream Out(s);
-
-        for (auto Name : FnVariables) {
-          Out << "  '" << Name.first << "': ";
-          Name.second->print(Out);
-          Out << "\n";
-        }
-
-        panic("assertion references non-existent variable '" + BaseName(Arg)
-           + "'; was it defined under '#ifdef TESLA'?\n\nVariables in scope are:\n" + Out.str());
-      }
-
-
-      // Find the pointer to the variable we care about, which is either a
-      // stack-allocated store target or else, if there is no address-taking,
-      // the variable we already have must be the pointer.
-      Value *Ptr = NULL;
-      for (auto i = V->use_begin(); i != V->use_end(); i++) {
-        auto *Store = dyn_cast<StoreInst>(*i);
-        if (!Store)
-          continue;
-
-        Ptr = Store->getPointerOperand();
-
-        if (V == Store->getValueOperand())
-          assert(isa<AllocaInst>(Ptr));
-      }
-
-      // If LLVM hasn't taken the address of our variable, it's because the
-      // variable *is* an address.
-      if (!Ptr)
-        Ptr = V;
-
-      // Handle indirection, struct-field acquisition, etc.
-      V = GetArgumentValue(V, Arg, Builder);
-
-      Value *Val = Builder.CreateLoad(Ptr, "intrumentation_" + Arg.name());
-      Args[Arg.index()] = Cast(Val, Arg.name(), IntPtrTy, Builder);
-    }
+    if (!InstrFn)
+      panic("error instrumenting ASSERT_SITE event");
 
     Builder.CreateCall(InstrFn, Args);
 
     // Delete the call to the assertion pseudo-function.
-    Assert->removeFromParent();
-    delete Assert;
+    AssertCall->removeFromParent();
+    delete AssertCall;
 
+    Mod.print(llvm::outs(), NULL);
   }
 
   AssertFn->removeFromParent();
@@ -202,47 +122,134 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
 }
 
 
+const Automaton* AssertionSiteInstrumenter::FindAutomaton(CallInst *Call) {
+  Location Loc;
+  ParseAssertionLocation(&Loc, Call);
+
+  return M.FindAutomaton(Loc);
+}
+
+
+TEquivalenceClass AssertionSiteInstrumenter::AssertTrans(const Automaton *A) {
+  for (auto EquivClass : *A)
+    if (isa<AssertTransition>(*EquivClass.begin()))
+      return EquivClass;
+
+  panic("automaton '" + A->Name() + "' has no assertion site event");
+}
+
+
+vector<Value*> AssertionSiteInstrumenter::CollectArgs(
+    Instruction *Before, const Automaton& A,
+    Module& Mod, IRBuilder<>& Builder) {
+
+  // Find named values to be passed to instrumentation.
+  std::map<string,Value*> ValuesInScope;
+  for (auto G = Mod.global_begin(); G != Mod.global_end(); G++)
+    ValuesInScope[G->getName()] = G;
+
+  auto *Fn = Before->getParent()->getParent();
+  for (auto& Arg : Fn->getArgumentList())
+    ValuesInScope[Arg.getName()] = &Arg;
+
+  auto& EntryBlock(*Fn->begin());
+  for (auto& I : EntryBlock) {
+    auto *Inst = dyn_cast<AllocaInst>(&I);
+    if (!Inst)
+      continue;
+
+    ValuesInScope[Inst->getName()] = Builder.CreateLoad(Inst);
+  }
+
+  int ArgSize = 0;
+  for (auto& Arg : A.getAssertion().argument())
+    ArgSize = std::max(ArgSize + 1, Arg.index());
+
+  vector<Value*> Args(ArgSize, NULL);
+
+  for (auto& Arg : A.getAssertion().argument()) {
+    string Name(BaseName(Arg));
+
+    if (ValuesInScope.find(Name) == ValuesInScope.end()) {
+      string s;
+      raw_string_ostream Out(s);
+
+      for (auto Name : ValuesInScope) {
+        Out << "  '" << Name.first << "': ";
+        Name.second->print(Out);
+        Out << "\n";
+      }
+
+      panic("assertion references non-existent variable '" + BaseName(Arg)
+         + "'; was it defined under '#ifdef TESLA'?\n\n"
+           "Variables in scope are:\n" + Out.str());
+    }
+
+    Args[Arg.index()] = ValuesInScope[Name];
+  }
+
+#ifndef NDEBUG
+    llvm::outs() << "\n\nargs:\n";
+    for (auto *Arg : Args) {
+      assert(Arg != NULL);
+
+      Arg->print(llvm::outs());
+      llvm::outs() << "\n";
+    }
+#endif
+
+  return Args;
+}
+
+
 Function* AssertionSiteInstrumenter::CreateInstrumentation(
-    const Automaton& A, const TEquivalenceClass& Eq, Module& M) {
+    const Automaton& A, TEquivalenceClass& TEq,
+    ArrayRef<Value*> AssertArgs, Module& M) {
 
-  const AutomatonDescription& Descrip = A.getAssertion();
+  auto& Assertion(A.getAssertion());
   LLVMContext& Ctx = M.getContext();
-
-  const size_t ArgCount = Descrip.argument_size();
-
   Type *Void = Type::getVoidTy(Ctx);
-  Type *IntPtrTy = IntPtrType(M);
+  Type *Int32 = Type::getInt32Ty(Ctx);
 
-  // Assertion site events only take arguments of type intptr_t.
-  std::vector<Type*> ArgTypes(ArgCount, IntPtrTy);
+  vector<Type*> ArgTypes;
+  for (auto *Arg : AssertArgs)
+    ArgTypes.push_back(Arg->getType());
+
   FunctionType *FnType = FunctionType::get(Void, ArgTypes, false);
-  string Name = (ASSERTION_REACHED + "_" + Twine(A.ID())).str();
 
+  string Name = (ASSERTION_REACHED + "_" + Twine(A.ID())).str();
   Function *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, FnType));
   assert(InstrFn != NULL && "instrumentation function not a Function!");
 
   string Message = ("[ASRT] automaton " + Twine(A.ID())).str();
-
   BasicBlock *Instr = CreateInstrPreamble(M, InstrFn, Message,
                                           SuppressDebugInstr);
+
   IRBuilder<> Builder(Instr);
 
-  Type *IntType = Type::getInt32Ty(Ctx);
-
-  // The arguments to the function should be passed straight through to
-  // libtesla via a tesla_key: they are already in the right order.
   std::vector<Value*> InstrArgs;
-  for (Value& Arg : InstrFn->getArgumentList()) InstrArgs.push_back(&Arg);
+  size_t i = 0;
+  for (auto& Arg : InstrFn->getArgumentList()) {
+    Value *V = &Arg;
+    const Argument& A(Assertion.argument(i++));
+
+    // assertion sites are special: we can ignore indirection because we
+    // have just been passed the value we want.
+    if (A.type() != Argument::Indirect)
+      V = GetArgumentValue(V, A, Builder);
+
+    InstrArgs.push_back(V);
+  }
 
   std::vector<Value*> Args;
-  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
-  Args.push_back(ConstantInt::get(IntType, A.ID()));
+  Args.push_back(TeslaContext(Assertion.context(), Ctx));
+  Args.push_back(ConstantInt::get(Int32, A.ID()));
   Args.push_back(ConstructKey(Builder, M, InstrArgs));
   Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
   Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-  Args.push_back(ConstructTransitions(Builder, M, Eq));
+  Args.push_back(ConstructTransitions(Builder, M, TEq));
 
-  Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
+  Function *UpdateStateFn = FindStateUpdateFn(M, Int32);
   assert(Args.size() == UpdateStateFn->arg_size());
   Builder.CreateCall(UpdateStateFn, Args);
 
@@ -296,4 +303,3 @@ void AssertionSiteInstrumenter::ParseAssertionLocation(
 }
 
 }
-

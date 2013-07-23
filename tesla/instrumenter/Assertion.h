@@ -28,6 +28,7 @@
  * SUCH DAMAGE.
  */
 
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/Pass.h"
 
 #include "Instrumenter.h"
@@ -38,6 +39,8 @@
 
 namespace llvm {
   class CallInst;
+  class Instruction;
+  class Value;
 }
 
 namespace tesla {
@@ -65,9 +68,21 @@ private:
   //! Convert assertion declarations into instrumentation calls.
   bool ConvertAssertions(std::set<llvm::CallInst*>&, llvm::Module&);
 
+  //! Find the automaton defined by an assertion site.
+  const Automaton* FindAutomaton(llvm::CallInst *Call);
+
+  //! Find the @ref Automaton that is defined at an assertion site.
+  TEquivalenceClass AssertTrans(const Automaton*);
+
+  //! Gather up the arguments passed to an assertion.
+  std::vector<llvm::Value*> CollectArgs(llvm::Instruction *Before,
+                                        const Automaton&, llvm::Module&,
+                                        llvm::IRBuilder<>&);
+
   //! Add instrumentation for a single @ref AssertTransition.
-  llvm::Function* CreateInstrumentation(const Automaton&,
-                                        const TEquivalenceClass&,
+  llvm::Function* CreateInstrumentation(const Automaton& A,
+                                        TEquivalenceClass&,
+                                        llvm::ArrayRef<llvm::Value*>,
                                         llvm::Module&);
 
   /**
