@@ -143,7 +143,7 @@ vector<Value*> AssertionSiteInstrumenter::CollectArgs(
   for (auto& I : EntryBlock) {
     auto *Inst = dyn_cast<AllocaInst>(&I);
     if (!Inst)
-      continue;
+      break;
 
     ValuesInScope[Inst->getName()] = Builder.CreateLoad(Inst);
   }
