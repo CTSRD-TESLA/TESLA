@@ -208,6 +208,17 @@ void Transition::ReferencesThusFar(OwningArrayPtr<const Argument*>& Args,
 
     MyRefs[Index] = Arg;
   }
+  if (const FnTransition *FT = dyn_cast<FnTransition>(this))
+    if (FT->FnEvent().has_receiver()) {
+      const Argument &Receiver = FT->FnEvent().receiver();
+      int Index = ArgIndex(Receiver);
+      if (Index >= 0) {
+        if (MyRefs.size() <= Index)
+          MyRefs.resize(Index + 1);
+
+        MyRefs[Index] = &Receiver;
+      }
+    }
 
   auto& FromRefs = From.References();
   const size_t Size = FromRefs.size();

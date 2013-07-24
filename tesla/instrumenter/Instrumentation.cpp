@@ -114,6 +114,14 @@ void FnInstrumentation::AppendInstrumentation(
         break;
     }
 
+  if (Ev.kind() != FunctionEvent::CCall) {
+    assert(Ev.has_receiver());
+    int Index = ArgIndex(Ev.receiver());
+    if (Index >= 0)
+      KeyArgs[Index] = GetArgumentValue(InstrFn->getArgumentList().begin(),
+          Ev.receiver(), Builder);
+  }
+
   if (HasReturnValue) {
     const Argument &Arg = Ev.expectedreturnvalue();
     Value *ReturnValue = --(InstrFn->arg_end());
@@ -127,6 +135,18 @@ void FnInstrumentation::AppendInstrumentation(
   }
 
   Type* IntType = Type::getInt32Ty(Ctx);
+
+#ifndef NDEBUG
+  int mask = 0;
+  int bit=1;
+  for (Value *V : KeyArgs) {
+    if (V)
+      mask |= bit;
+    bit<<=1;
+  }
+  int32_t statemask = (*Trans.begin())->Destination().Mask(); 
+  assert((statemask & mask) == statemask);
+#endif
 
   vector<Value*> Args;
   Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
@@ -580,7 +600,6 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
 Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
                            Function::ArgumentListType& InstrArgs,
                            FunctionEvent FnEvent) {
-
   bool HaveRetVal = FnEvent.has_expectedreturnvalue();
   // The number of hidden arguments, i.e. those that are passed to the function
   // but not present explicitly in the source language.
