@@ -41,6 +41,7 @@
 
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Twine.h>
+#include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_ostream.h>   // TODO: remove once TODOs below fixed
 
 #include <google/protobuf/text_format.h>
@@ -77,6 +78,10 @@ using std::vector;
 namespace tesla {
 
 namespace internal {
+
+static const char *XorOnlyName = "tesla-xor-only";
+cl::opt<bool> SuppressInclusiveOr(XorOnlyName, cl::init(false), cl::Hidden,
+                                  cl::desc("Treat inclusive OR as XOR"));
 
 class NFAParser {
 public:
@@ -566,6 +571,15 @@ string stringifyTransitionVectors(TransitionVectors& TVs) {
 
 void NFAParser::ConvertIncOrToExcOr2(State& LHSStart, State& RHSStart, State& LHSFinal, State& RHSFinal, State& EndState) {
   
+  if (SuppressInclusiveOr) {
+    debugs("tesla.automata.inclusive_or")
+      << "Ignoring inclusive-or ('"
+      << XorOnlyName
+      << "' set)\n"
+      ;
+    return;
+  }
+
   debugs("tesla.automata.inclusive_or")
     << "Lhs start: " << LHSStart.ID() << "\n"
     << "Rhs start: " << RHSStart.ID() << "\n"
