@@ -1121,6 +1121,9 @@ bool Parser::CheckAssignmentKind(const ValueDecl *Field, const Expr *E) {
 
 
 bool Parser::RegisterArg(Argument* A) {
+  assert(A->type() != Argument::Any);
+  assert(A->type() != Argument::Constant);
+
   size_t Pos = 0;
   A->set_index(Pos);
 
