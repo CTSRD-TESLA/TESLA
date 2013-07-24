@@ -53,7 +53,7 @@ Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
 
   OwningPtr<Parser> Bootstrap(new Parser(Ctx));
 
-  if (Call->getNumArgs() != 7) {
+  if (Call->getNumArgs() != 8) {
     Bootstrap->ReportError(
       "expected seven arguments: "
       "filename, line, counter, context, start, end, expression",
@@ -61,15 +61,21 @@ Parser* Parser::AssertionParser(CallExpr *Call, ASTContext& Ctx) {
     return NULL;
   }
 
-  Expr *Filename    = Call->getArg(0);
-  Expr *Line        = Call->getArg(1);
-  Expr *Counter     = Call->getArg(2);
-  Expr *Context     = Call->getArg(3);
-  Expr *Beginning   = Call->getArg(4);
-  Expr *End         = Call->getArg(5);
-  Expr *Expression  = Call->getArg(6);
+  size_t i = 0;
+  Expr *Name        = Call->getArg(i++);
+  Expr *Filename    = Call->getArg(i++);
+  Expr *Line        = Call->getArg(i++);
+  Expr *Counter     = Call->getArg(i++);
+  Expr *Context     = Call->getArg(i++);
+  Expr *Beginning   = Call->getArg(i++);
+  Expr *End         = Call->getArg(i++);
+  Expr *Expression  = Call->getArg(i++);
 
   Identifier ID;
+  std::string ProgrammerSpecifiedName(Bootstrap->ParseStringLiteral(Name));
+  if (ProgrammerSpecifiedName.length() > 0)
+    *ID.mutable_name() = ProgrammerSpecifiedName;
+
   if (!Bootstrap->Parse(ID.mutable_location(), Filename, Line, Counter))
     return NULL;
 

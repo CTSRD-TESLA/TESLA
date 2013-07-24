@@ -161,6 +161,7 @@ module asm ".globl __stop_set_sysuninit_set"
 @sysctl___kern_sched_cpusetsize = internal global %struct.sysctl_oid { %struct.sysctl_oid_list* @sysctl__kern_sched_children, %struct.anon zeroinitializer, i32 -1, i32 -2147221502, i8* null, i64 8, i8* getelementptr inbounds ([11 x i8]* @.str24, i32 0, i32 0), i32 (%struct.sysctl_oid*, i8*, i64, %struct.sysctl_req*)* @sysctl_handle_int, i8* getelementptr inbounds ([2 x i8]* @.str25, i32 0, i32 0), i32 0, i32 0, i8* getelementptr inbounds ([17 x i8]* @.str26, i32 0, i32 0) }, align 8
 @__set_sysctl_set_sym_sysctl___kern_sched_cpusetsize = internal constant i8* bitcast (%struct.sysctl_oid* @sysctl___kern_sched_cpusetsize to i8*), section "set_sysctl_set", align 8
 @cpuset_lock = internal global %struct.mtx zeroinitializer, align 8
+@.emptystring = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
 @.str = private unnamed_addr constant [44 x i8] c"/home/jra40/P4/tesla/sys/kern/kern_cpuset.c\00", align 1
 @.str1 = private unnamed_addr constant [34 x i8] c"Bad link elm %p next->prev != elm\00", align 1
 @.str2 = private unnamed_addr constant [34 x i8] c"Bad link elm %p prev->next != elm\00", align 1
@@ -958,7 +959,7 @@ if.then:                                          ; preds = %entry
   br label %out, !dbg !1564
 
 if.end:                                           ; preds = %entry
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([44 x i8]* @.str, i32 0, i32 0), i32 720, i32 0, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #7, !dbg !1565
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([44 x i8]* @.str, i32 0, i32 0), i32 720, i32 0, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #7, !dbg !1565
   store %struct.cpuset* null, %struct.cpuset** %set, align 8, !dbg !1566
   %4 = load %struct.thread** %td, align 8, !dbg !1567
   call void @thread_lock_flags_(%struct.thread* %4, i32 0, i8* getelementptr inbounds ([44 x i8]* @.str, i32 0, i32 0), i32 723) #7, !dbg !1567
@@ -1297,7 +1298,7 @@ return:                                           ; preds = %if.end65, %if.then5
 }
 
 ; Function Attrs: noimplicitfloat noredzone
-declare void @__tesla_inline_assertion(i8*, i32, i32, %struct.__tesla_locality*, ...) #3
+declare void @__tesla_inline_assertion(i8*, i8*, i32, i32, %struct.__tesla_locality*, ...) #3
 
 ; Function Attrs: noimplicitfloat noredzone
 declare void @thread_lock_flags_(%struct.thread*, i32, i8*, i32) #3

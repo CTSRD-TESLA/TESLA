@@ -57,13 +57,15 @@ typedef	int	__tesla_count;
  * Magic "function" representing a TESLA assertion.
  *
  * Its arguments are:
+ *  * an explicit programmer-supplied name (optional: can be set to "")
  *  * name of the file the assertion is located in (__FILE__)
  *  * the line the assertion is defined at (__LINE__)
  *  * a counter to ensure uniqueness (__COUNTER__)
  *  * the TESLA context (per-thread or global)
  */
 void
-__tesla_inline_assertion(const char *filename, int line, int count,
+__tesla_inline_assertion(const char *name,
+	const char *filename, int line, int count,
 	__tesla_locality *loc, ...);
 
 #define	__TESLA_INFINITE_REPETITIONS	INT_MAX

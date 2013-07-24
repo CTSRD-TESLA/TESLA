@@ -245,6 +245,7 @@ module asm ".globl __stop_set_sysctl_set"
 @__set_sysuninit_set_sym_M_CRED_uninit_sys_uninit = internal constant i8* bitcast (%struct.sysinit* @M_CRED_uninit_sys_uninit to i8*), section "set_sysuninit_set", align 8
 @sysctl___security_bsd = internal global %struct.sysctl_oid { %struct.sysctl_oid_list* @sysctl__security_children, %struct.anon zeroinitializer, i32 -1, i32 -1073741823, i8* bitcast (%struct.sysctl_oid_list* @sysctl__security_bsd_children to i8*), i64 0, i8* getelementptr inbounds ([4 x i8]* @.str19, i32 0, i32 0), i32 (%struct.sysctl_oid*, i8*, i64, %struct.sysctl_req*)* null, i8* getelementptr inbounds ([2 x i8]* @.str20, i32 0, i32 0), i32 0, i32 0, i8* getelementptr inbounds ([20 x i8]* @.str21, i32 0, i32 0) }, align 8
 @__set_sysctl_set_sym_sysctl___security_bsd = internal constant i8* bitcast (%struct.sysctl_oid* @sysctl___security_bsd to i8*), section "set_sysctl_set", align 8
+@.emptystring = private unnamed_addr constant [1 x i8] c"\00", align 1
 @.str = private unnamed_addr constant [66 x i8] c"/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c\00", align 1
 @M_TEMP = external global [1 x %struct.malloc_type]
 @M_PGRP = external global [1 x %struct.malloc_type]
@@ -1710,8 +1711,8 @@ entry:
   %ui_uid = getelementptr inbounds %struct.uidinfo* %0, i32 0, i32 6, !dbg !2426
   %1 = load i32* %ui_uid, align 4, !dbg !2426
   store i32 %1, i32* %ruid, align 4, !dbg !2426
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2206, i32 4, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2427
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2208, i32 5, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2428
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2206, i32 4, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2427
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2208, i32 5, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2428
   %2 = load %struct.ucred** %newcred.addr, align 8, !dbg !2429
   %cr_ruidinfo = getelementptr inbounds %struct.ucred* %2, i32 0, i32 8, !dbg !2429
   %3 = load %struct.uidinfo** %cr_ruidinfo, align 8, !dbg !2429
@@ -1779,8 +1780,8 @@ entry:
   call void @llvm.dbg.declare(metadata !{%struct.ucred** %newcred.addr}, metadata !2443), !dbg !2444
   store i32 %svuid, i32* %svuid.addr, align 4
   call void @llvm.dbg.declare(metadata !{i32* %svuid.addr}, metadata !2445), !dbg !2444
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2255, i32 8, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2446
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2257, i32 9, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2447
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2255, i32 8, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2446
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2257, i32 9, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2447
   %0 = load i32* %svuid.addr, align 4, !dbg !2448
   %1 = load %struct.ucred** %newcred.addr, align 8, !dbg !2448
   %cr_svuid = getelementptr inbounds %struct.ucred* %1, i32 0, i32 3, !dbg !2448
@@ -1803,8 +1804,8 @@ entry:
   %ui_uid = getelementptr inbounds %struct.uidinfo* %0, i32 0, i32 6, !dbg !2455
   %1 = load i32* %ui_uid, align 4, !dbg !2455
   store i32 %1, i32* %euid, align 4, !dbg !2455
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2156, i32 0, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2456
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2158, i32 1, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2457
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2156, i32 0, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2456
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2158, i32 1, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2457
   %2 = load i32* %euid, align 4, !dbg !2458
   %3 = load %struct.ucred** %newcred.addr, align 8, !dbg !2458
   %cr_uid = getelementptr inbounds %struct.ucred* %3, i32 0, i32 1, !dbg !2458
@@ -2305,8 +2306,8 @@ entry:
   call void @llvm.dbg.declare(metadata !{%struct.ucred** %newcred.addr}, metadata !2579), !dbg !2580
   store i32 %rgid, i32* %rgid.addr, align 4
   call void @llvm.dbg.declare(metadata !{i32* %rgid.addr}, metadata !2581), !dbg !2580
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2233, i32 6, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2582
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2235, i32 7, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2583
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2233, i32 6, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2582
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2235, i32 7, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2583
   %0 = load i32* %rgid.addr, align 4, !dbg !2584
   %1 = load %struct.ucred** %newcred.addr, align 8, !dbg !2584
   %cr_rgid = getelementptr inbounds %struct.ucred* %1, i32 0, i32 5, !dbg !2584
@@ -2323,8 +2324,8 @@ entry:
   call void @llvm.dbg.declare(metadata !{%struct.ucred** %newcred.addr}, metadata !2586), !dbg !2587
   store i32 %svgid, i32* %svgid.addr, align 4
   call void @llvm.dbg.declare(metadata !{i32* %svgid.addr}, metadata !2588), !dbg !2587
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2277, i32 10, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2589
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2279, i32 11, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2590
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2277, i32 10, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2589
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2279, i32 11, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2590
   %0 = load i32* %svgid.addr, align 4, !dbg !2591
   %1 = load %struct.ucred** %newcred.addr, align 8, !dbg !2591
   %cr_svgid = getelementptr inbounds %struct.ucred* %1, i32 0, i32 6, !dbg !2591
@@ -2341,8 +2342,8 @@ entry:
   call void @llvm.dbg.declare(metadata !{%struct.ucred** %newcred.addr}, metadata !2593), !dbg !2594
   store i32 %egid, i32* %egid.addr, align 4
   call void @llvm.dbg.declare(metadata !{i32* %egid.addr}, metadata !2595), !dbg !2594
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2181, i32 2, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2596
-  call void (i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2183, i32 3, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2597
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2181, i32 2, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2596
+  call void (i8*, i8*, i32, i32, %struct.__tesla_locality*, ...)* @__tesla_inline_assertion(i8* getelementptr inbounds ([1 x i8]* @.emptystring, i32 0, i32 0), i8* getelementptr inbounds ([66 x i8]* @.str, i32 0, i32 0), i32 2183, i32 3, %struct.__tesla_locality* null, i32 0, i32 0, i32 1) #5, !dbg !2597
   %0 = load i32* %egid.addr, align 4, !dbg !2598
   %1 = load %struct.ucred** %newcred.addr, align 8, !dbg !2598
   %cr_groups = getelementptr inbounds %struct.ucred* %1, i32 0, i32 15, !dbg !2598
@@ -6563,7 +6564,7 @@ declare i32 @copyinstr(i8*, i8*, i64, i64*) #2
 declare i8* @memcpy(i8*, i8*, i64) #2
 
 ; Function Attrs: noimplicitfloat noredzone
-declare void @__tesla_inline_assertion(i8*, i32, i32, %struct.__tesla_locality*, ...) #2
+declare void @__tesla_inline_assertion(i8*, i8*, i32, i32, %struct.__tesla_locality*, ...) #2
 
 ; Function Attrs: noimplicitfloat noredzone
 declare i32 @chgproccnt(%struct.uidinfo*, i32, i64) #2
