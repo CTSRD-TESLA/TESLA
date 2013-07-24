@@ -165,8 +165,8 @@ struct __tesla_automaton_usage;
 struct __tesla_automaton_description*	__tesla_automaton_done();
 
 inline struct __tesla_automaton_usage*
-__tesla_struct_uses_automaton(const char *automaton,
-	__tesla_locality *loc, ...)
+__tesla_struct_uses_automaton(__unused const char *automaton,
+	__unused __tesla_locality *loc, ...)
 {
 	return 0;
 }
@@ -183,7 +183,7 @@ __tesla_struct_uses_automaton(const char *automaton,
  */
 #define	__tesla_struct_usage(subject, automaton, loc, start, end) \
 	struct __tesla_automaton_usage*					\
-	__tesla_struct_automaton_usage_##struct_name##_##automaton(subject) { \
+	__tesla_struct_automaton_usage_##struct_name##_##automaton(__unused subject) { \
 		return __tesla_struct_uses_automaton(			\
 			#automaton, loc, start, end);	\
 	}
