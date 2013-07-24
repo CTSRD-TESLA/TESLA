@@ -74,8 +74,13 @@ void State::UpdateReferences(const Transition& T)
   ReferenceVector NewRefs;
   T.ReferencesThusFar(Args, NewRefs);
 
+  int NewRefCount = 0;
+  for (auto *R : NewRefs)
+    if (R != NULL)
+      NewRefCount++;
+
   assert(!VariableReferences
-         || (NewRefs.size() == 0)
+         || (NewRefCount == 0)
          || (Refs.size() == NewRefs.size()));
   const size_t Len = NewRefs.size();
   assert(Len < 8 * sizeof(Mask()));

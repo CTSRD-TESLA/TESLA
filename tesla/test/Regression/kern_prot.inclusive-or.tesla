@@ -1,0 +1,261 @@
+/** vim: set syntax=proto:
+ * @file kern_prot.inclusive-or.tesla
+ * Test an inclusive-or expression that exploded when building the kernel.
+ */
+/**
+ * This turns into a very complex automaton with the inclusive-or stuff,
+ * but it shouldn't throw assertions.
+ *
+ * Commands for llvm-lit (abusing the C preprocessor a bit):
+ * RUN: cpp -P %s %cpp_out %t.tesla
+ * RUN: tesla graph %t.tesla -o %t.dot
+ */
+automaton {
+  identifier {
+    location {
+      filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
+      line: 2158
+      counter: 0
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: BOOLEAN_EXPR
+    booleanExpr {
+      operation: BE_Or
+      expression {
+        type: BOOLEAN_EXPR
+        booleanExpr {
+          operation: BE_Or
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: NULL_EXPR
+              }
+              expression {
+                type: SEQUENCE
+                sequence {
+                  expression {
+                    type: FUNCTION
+                    function {
+                      function {
+                        name: "mac_cred_check_setuid"
+                      }
+                      direction: Exit
+                      context: Callee
+                      argument {
+                        type: Any
+                      }
+                      argument {
+                        type: Variable
+                        index: 0
+                        name: "euid"
+                      }
+                      expectedReturnValue {
+                        type: Constant
+                        value: 0
+                      }
+                      strict: false
+                    }
+                  }
+                  minReps: 1
+                  maxReps: 2147483647
+                }
+              }
+              expression {
+                type: SEQUENCE
+                sequence {
+                  expression {
+                    type: ASSERTION_SITE
+                    assertSite {
+                      location {
+                        filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
+                        line: 2158
+                        counter: 0
+                      }
+                    }
+                  }
+                  minReps: 1
+                  maxReps: 2147483647
+                }
+              }
+            }
+          }
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: NULL_EXPR
+              }
+              expression {
+                type: SEQUENCE
+                sequence {
+                  expression {
+                    type: FUNCTION
+                    function {
+                      function {
+                        name: "mac_cred_check_setreuid"
+                      }
+                      direction: Exit
+                      context: Callee
+                      argument {
+                        type: Any
+                      }
+                      argument {
+                        type: Any
+                      }
+                      argument {
+                        type: Variable
+                        index: 0
+                        name: "euid"
+                      }
+                      expectedReturnValue {
+                        type: Constant
+                        value: 0
+                      }
+                      strict: false
+                    }
+                  }
+                  minReps: 1
+                  maxReps: 2147483647
+                }
+              }
+              expression {
+                type: SEQUENCE
+                sequence {
+                  expression {
+                    type: ASSERTION_SITE
+                    assertSite {
+                      location {
+                        filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
+                        line: 2158
+                        counter: 0
+                      }
+                    }
+                  }
+                  minReps: 1
+                  maxReps: 2147483647
+                }
+              }
+            }
+          }
+        }
+      }
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: FUNCTION
+                function {
+                  function {
+                    name: "mac_cred_check_setresuid"
+                  }
+                  direction: Exit
+                  context: Callee
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Variable
+                    index: 0
+                    name: "euid"
+                  }
+                  argument {
+                    type: Any
+                  }
+                  expectedReturnValue {
+                    type: Constant
+                    value: 0
+                  }
+                  strict: false
+                }
+              }
+              minReps: 1
+              maxReps: 2147483647
+            }
+          }
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: ASSERTION_SITE
+                assertSite {
+                  location {
+                    filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
+                    line: 2158
+                    counter: 0
+                  }
+                }
+              }
+              minReps: 1
+              maxReps: 2147483647
+            }
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "euid"
+  }
+  source: "TESLA_SYSCALL(\n\t    previously(mac_cred_check_setuid(ANY(ptr), euid) == 0) ||\n\t    previously(mac_cred_check_setreuid(ANY(ptr), ANY(int), euid)\n\t    == 0) ||\n\t    previously(mac_cred_check_setresuid(ANY(ptr), ANY(int), euid,\n\t    ANY(int)) == 0));"
+}
+root {
+  identifier {
+    location {
+      filename: "/usr/home/robert/p4/projects/ctsrd/tesla/src/sys/kern/kern_prot.c"
+      line: 2158
+      counter: 0
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
