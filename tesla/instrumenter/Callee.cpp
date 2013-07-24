@@ -243,9 +243,15 @@ class ObjCInstrumentation
     StructType *EnterListTy = StructType::create(Ctx);
     EnterListTy->setBody(PointerType::getUnqual(EnterListTy),
         PointerType::getUnqual(EnterFnTy), NULL);
-    FunctionType *ExitFnTy = isVoidRet
-      ? FunctionType::get(Type::getVoidTy(Ctx), false)
-      : FunctionType::get(Type::getVoidTy(Ctx), MethodType->getReturnType(), false);
+    FunctionType *ExitFnTy;
+    if (isVoidRet)
+      ExitFnTy = EnterFnTy;
+    else {
+      llvm::SmallVector<llvm::Type*,8> Types(MethodType->param_begin(),
+          MethodType->param_end());
+      Types.push_back(MethodType->getReturnType());
+      ExitFnTy = FunctionType::get(Type::getVoidTy(Ctx), Types, false);
+    }
     StructType *ExitListTy = StructType::create(Ctx);
     ExitListTy->setBody(PointerType::getUnqual(ExitListTy),
         PointerType::getUnqual(ExitFnTy), NULL);
@@ -276,19 +282,18 @@ class ObjCInstrumentation
     createCallLoop(Args, Entry, EnterLoop, Call, EnterList);
 
     B.SetInsertPoint(Call);
-    llvm::Value *Ret[] = {
+    llvm::Value *Ret = 
       B.CreateCall(B.CreateBitCast(B.CreateLoad(MethodCache),
-            PointerType::getUnqual(MethodType)), Args)
-    };
-    if (isVoidRet) {
-      createCallLoop(ArrayRef<Value*>(), Call, ExitLoop, Return, ExitList);
-      B.SetInsertPoint(Return);
+            PointerType::getUnqual(MethodType)), Args);
+    if (!isVoidRet) 
+      Args.push_back(Ret);
+
+    createCallLoop(Args, Call, ExitLoop, Return, ExitList);
+    B.SetInsertPoint(Return);
+    if (isVoidRet) 
       B.CreateRetVoid();
-    } else {
-      createCallLoop(Ret, Call, ExitLoop, Return, ExitList);
-      B.SetInsertPoint(Return);
-      B.CreateRet(Ret[0]);
-    }
+    else
+      B.CreateRet(Ret);
   }
 
   CalleeInstr* GetOrCreateInstr(const std::string &SelName, 

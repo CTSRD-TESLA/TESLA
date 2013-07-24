@@ -590,13 +590,45 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
     return false;
   }
 
-  Expr *RetVal = (LHSisICE ? LHS : RHS);
-  Expr *FnCall = (LHSisICE ? RHS : LHS);
+  Expr *RetVal = (LHSisICE ? LHS : RHS)->IgnoreParenCasts();
+  Expr *FnCall = (LHSisICE ? RHS : LHS)->IgnoreParenCasts();
   if (!Parse(FnEvent->mutable_expectedreturnvalue(), RetVal, F))
     return false;
 
+  if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(FnCall)) {
+    const ObjCMethodDecl *Meth = OME->getMethodDecl();
+    if (!Meth) {
+      ReportError("types of Objective-C method to be instrumented must be known", OME);
+      return false;
+    }
+    FunctionEvent::CallKind kind;
+    switch (OME->getReceiverKind()) {
+      default: assert(0); break;
+      case ObjCMessageExpr::Class:
+        FnEvent->mutable_receiver()->set_name(OME->getReceiverInterface()->getName());
+        kind = FunctionEvent::ObjCClassMessage;
+        break;
+      case ObjCMessageExpr::Instance:
+        Parse(FnEvent->mutable_receiver(), OME->getInstanceReceiver(), F);
+        kind = FunctionEvent::ObjCInstanceMessage;
+        break;
+      case ObjCMessageExpr::SuperClass:
+      case ObjCMessageExpr::SuperInstance:
+        kind = FunctionEvent::ObjCSuperMessage;
+        break;
+    }
+    FnEvent->set_kind(kind);
+    FnEvent->mutable_function()->set_name(Meth->getNameAsString());
+    for (auto I = OME->arg_begin(); I != OME->arg_end(); ++I) {
+      if (!Parse(FnEvent->add_argument(), I->IgnoreImplicit(), F))
+        return false;
+    }
+    return true;
+  }
+
   auto FnCallExpr = dyn_cast<CallExpr>(FnCall);
   if (!FnCallExpr) {
+    FnCall->dump();
     ReportError("not a function call", FnCall);
     return false;
   }
