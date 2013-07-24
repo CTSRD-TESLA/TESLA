@@ -1061,6 +1061,12 @@ bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F,
 
   *Arg->mutable_name() = D->getName();
 
+  if (auto *Enum = dyn_cast<EnumConstantDecl>(D)) {
+    Arg->set_type(Argument::Constant);
+    Arg->set_value(Enum->getInitVal().getLimitedValue());
+    return true;
+  }
+
   if (AllowAny) {
     Arg->set_type(Argument::Any);
     return true;
