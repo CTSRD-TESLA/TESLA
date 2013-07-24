@@ -136,7 +136,7 @@ void FnInstrumentation::AppendInstrumentation(
 
   Type* IntType = Type::getInt32Ty(Ctx);
 
-#ifndef NDEBUG
+#ifndef 0 
   int mask = 0;
   int bit=1;
   for (Value *V : KeyArgs) {
