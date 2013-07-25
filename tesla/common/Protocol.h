@@ -54,6 +54,7 @@ std::string BaseName(const Argument&);
 bool operator == (const ::google::protobuf::Message&,
                   const ::google::protobuf::Message&);
 
+//! != is defined as !(==).
 template<class T>
 inline bool operator != (const T& x, const T& y) { return !(x == y); }
 
