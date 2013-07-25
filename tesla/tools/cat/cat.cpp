@@ -30,6 +30,7 @@
  */
 
 #include "Automaton.h"
+#include "Debug.h"
 #include "Manifest.h"
 
 #include "tesla.pb.h"
@@ -63,6 +64,8 @@ main(int argc, char *argv[]) {
   auto& err = llvm::errs();
 
   ManifestFile Result;
+  std::map<Identifier,const AutomatonDescription*> Automata;
+  std::map<Identifier,const Usage*> Usages;
 
   for (auto& Filename : InputFiles) {
     OwningPtr<Manifest> Manifest(Manifest::load(llvm::errs(),
@@ -73,11 +76,29 @@ main(int argc, char *argv[]) {
       return 1;
     }
 
-    for (auto i : Manifest->AllAutomata())
-      *Result.add_automaton() = *i.second;
+    for (auto i : Manifest->AllAutomata()) {
+      auto Existing = Automata.find(i.first);
+      if (Existing == Automata.end())
+        Automata[i.first] = &(*Result.add_automaton() = *i.second);
 
-    for (auto i : Manifest->RootAutomata())
-      *Result.add_root() = *i;
+      // If we already have this automaton, verify that both are
+      // exactly the same.
+      else if (*Existing->second != *i.second)
+        panic("Attempting to cat two files containing automaton '"
+          + ShortName(Existing->first)
+          + "', but these automata are not exactly the same.");
+    }
+
+    for (auto i : Manifest->RootAutomata()) {
+      auto Existing = Usages.find(i->identifier());
+      if (Existing == Usages.end())
+        Usages[i->identifier()] = &(*Result.add_root() = *i);
+
+      else if (*Existing->second != *i)
+        panic("Attempting to cat two files containing root '"
+          + ShortName(i->identifier())
+          + "', but these roots are not exactly the same.");
+    }
   }
 
   string ProtobufText;
