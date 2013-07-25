@@ -5,23 +5,13 @@
  * the C preprocessor a little bit:
  *
  * RUN: cpp -P -DTESLA %s %cpp_out %t.tesla
- * RUN: tesla print -format=dot %t.tesla -o %t.dot
- * RUN: FileCheck -input-file=%t.dot %s
+ * RUN: tesla print -format=text %t.tesla | FileCheck %s
  */
 
 #ifdef TESLA
 automaton {
   /*
-   * CHECK: digraph automaton_{{[0-9]+}}
-   *
-   * TODO: if/when we move to LLVM 3.4, use the CHECK-DAG prefix and distribute
-   *       these state checks to be closer to their relevant transitions:
-   *
-   * CHECK: 0 [ label = "state 0\n([[ANY:&#[0-9]+;]],[[ANY:&#[0-9]+;]])" ];
-   * CHECK: [[INIT:[0-9]+]] [ label = "state [[INIT]]\n([[ANY]],[[ANY]])" ];
-   * CHECK: [[CHECK2:[0-9]+]] [ label = "state [[CHECK2]]\n(o,[[ANY]])" ];
-   * CHECK: [[CHECK23:[0-9]+]] [ label = "state [[CHECK23]]\n(o,op)" ];
-   * CHECK: [[ASSERT:[0-9]+]] [ label = "state [[ASSERT]]\n(o,op)" ];
+   * CHECK: automaton 'example.c:314#42' {
    */
   identifier {
     location {
@@ -35,8 +25,9 @@ automaton {
     type: SEQUENCE
     sequence {
       /*
-       * CHECK: label = "example_syscall([[ANY]],[[ANY]],[[ANY]])
-       * CHECK: 0 -> [[INIT]];
+       * CHECK: state [[START:.*]] (X,X)
+       * CHECK: example_syscall(X,X,X): Entry
+       * CHECK: -->([[INIT:.*]])
        */
       expression {
         type: FUNCTION
@@ -61,8 +52,9 @@ automaton {
         }
       }
       /*
-       * CHECK: label = "security_check([[ANY]],o,[[ANY]])
-       * CHECK: [[INIT]] -> [[CHECK2]];
+       * CHECK: state [[INIT]] (X,X)
+       * CHECK: security_check(X,o,X)
+       * CHECK: -->([[CHECK_O:.*]])
        */
       expression {
         type: FUNCTION
@@ -93,8 +85,9 @@ automaton {
       /*
        * After that transition, we know about one referenced variable:
        *
-       * CHECK: label = "security_check([[ANY]],o,op)
-       * CHECK: [[CHECK2]] -> [[CHECK23]];
+       * CHECK: state [[CHECK_O]] (o,X)
+       * CHECK: security_check(X,o,op)
+       * CHECK: -->([[CHECK_O_OP:.*]])
        */
       expression {
         type: FUNCTION
@@ -125,8 +118,9 @@ automaton {
         }
       }
       /*
-       * CHECK: label = "{{.*}}assertion{{.*}}"
-       * CHECK: [[CHECK23]] -> [[ASSERT]];
+       * CHECK: state [[CHECK_O_OP]] (o,op)
+       * CHECK: <<assertion>>
+       * CHECK: -->([[DONE:.*]])
        */
       expression {
         type: ASSERTION_SITE
@@ -138,6 +132,9 @@ automaton {
           }
         }
       }
+      /*
+       * CHECK: state [[DONE]]
+       */
     }
   }
   argument {
@@ -151,7 +148,7 @@ automaton {
     name: "op"
   }
   /*
-   * CHECK: label = "example.c:314#42"
+   * CHECK: }
    */
 }
 root {
