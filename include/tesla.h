@@ -166,6 +166,10 @@ struct __tesla_automaton_usage;
 /** In an explicit automata description, return this to say "we're done". */
 struct __tesla_automaton_description*	__tesla_automaton_done();
 
+#ifndef __unused
+#define __unused
+#endif
+
 inline struct __tesla_automaton_usage*
 __tesla_struct_uses_automaton(__unused const char *automaton,
 	__unused __tesla_locality *loc, ...)
