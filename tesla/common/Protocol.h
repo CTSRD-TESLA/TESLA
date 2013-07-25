@@ -53,6 +53,28 @@ std::string BaseName(const Argument&);
 template<class T>
 inline bool operator != (const T& x, const T& y) { return !(x == y); }
 
+inline bool operator ==
+    (const AutomatonDescription& x, const AutomatonDescription& y) {
+
+  if ((x.identifier() != y.identifier())
+      || (x.context() != y.context())
+      || (x.expression() != y.expression())
+      || (x.argument_size() != y.argument_size()))
+    return false;
+
+  for (size_t i = 0; i < x.argument_size(); i++)
+    if (x.argument(i) != y.argument(i))
+      return false;
+
+  if (x.has_source() != y.has_source())
+    return false;
+
+  if (x.has_source() && (x.source() != y.source()))
+    return false;
+
+  return true;
+}
+
 inline bool operator == (const Location& x, const Location& y) {
   return (
     // Don't rely on operator==(string&,string&); it might produce unexpected
@@ -188,6 +210,84 @@ inline bool operator < (const Identifier& x, const Identifier& y) {
   }
 
   return (x.location() < y.location());
+}
+
+inline bool operator == (const BooleanExpr& x, const BooleanExpr& y) {
+  if ((x.operation() != y.operation())
+      || (x.expression_size() != y.expression_size()))
+    return false;
+
+  for (size_t i = 0; i < x.expression_size(); i++)
+    if (x.expression(i) != y.expression(i))
+      return false;
+
+  return true;
+}
+
+inline bool operator == (const Sequence& x, const Sequence& y) {
+  if ((x.expression_size() != y.expression_size()))
+    return false;
+
+  for (size_t i = 0; i < x.expression_size(); i++)
+    if (x.expression(i) != y.expression(i))
+      return false;
+
+  if (x.has_minreps() != y.has_minreps())
+    return false;
+
+  if (x.has_minreps() && (x.minreps() != y.minreps()))
+    return false;
+
+  if (x.has_maxreps() != y.has_maxreps())
+    return false;
+
+  if (x.has_maxreps() && (x.maxreps() != y.maxreps()))
+    return false;
+
+  return true;
+}
+
+inline bool operator == (const Expression& x, const Expression& y) {
+  if (x.type() != y.type())
+    return false;
+
+  switch (x.type()) {
+  case Expression::BOOLEAN_EXPR:
+    return (x.booleanexpr() == y.booleanexpr());
+
+  case Expression::SEQUENCE:
+    return (x.sequence() == y.sequence());
+
+  case Expression::NULL_EXPR:
+    return true;
+
+  case Expression::ASSERTION_SITE:
+    return (x.assertsite() == y.assertsite());
+
+  case Expression::FUNCTION:
+    return (x.function() == y.function());
+
+  case Expression::FIELD_ASSIGN:
+    return (x.fieldassign() == y.fieldassign());
+
+  case Expression::SUB_AUTOMATON:
+    return (x.subautomaton() == y.subautomaton());
+  }
+}
+
+inline bool operator == (const Usage& x, const Usage& y) {
+  if ((x.identifier() != y.identifier())
+      || (x.has_beginning() != y.has_beginning())
+      || (x.has_end() != y.has_end()))
+    return false;
+
+  if (x.has_beginning() && (x.beginning() != y.beginning()))
+    return false;
+
+  if (x.has_end() && (x.end() != y.end()))
+    return false;
+
+  return true;
 }
 
 } // namespace tesla
