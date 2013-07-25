@@ -566,7 +566,7 @@ string stringifyTransitionVectors(TransitionVectors& TVs) {
 }
 
 void NFAParser::ConvertIncOrToExcOr(State& LHSStart, State& RHSStart, State& LHSFinal, State& RHSFinal, State& EndState) {
-  
+
   if (SuppressInclusiveOr) {
     debugs("tesla.automata.inclusive_or")
       << "Ignoring inclusive-or ('"
@@ -580,7 +580,7 @@ void NFAParser::ConvertIncOrToExcOr(State& LHSStart, State& RHSStart, State& LHS
     << "Lhs start: " << LHSStart.ID() << "\n"
     << "Rhs start: " << RHSStart.ID() << "\n"
     ;
-  
+
   // Build 2D matrix of states that will be in the inclusive-or result
   SmallVector<Transition*,16> lhs, rhs;
   CalculateReachableTransitionsBetween(LHSStart, LHSFinal, lhs);
@@ -591,7 +591,7 @@ void NFAParser::ConvertIncOrToExcOr(State& LHSStart, State& RHSStart, State& LHS
     << "Rhs reachable: " << stringifyTransitionVector(rhs) << "\n"
     ;
 
-  // Initialise 2D grid of states. Array index represents state position 
+  // Initialise 2D grid of states. Array index represents state position
   // in the grid, where (0,0) is top left.
   State* grid[lhs.size()+1][rhs.size()+1];
   memset(grid, 0, (lhs.size()+1)*(rhs.size()+1)*sizeof(State*));
@@ -608,7 +608,7 @@ void NFAParser::ConvertIncOrToExcOr(State& LHSStart, State& RHSStart, State& LHS
     State* T1Dest = (State*)&T1->Destination();
     // Create copy of rhs starting at T1Dest
     SmallVector<Transition*,16> rhsCopy = CreateTransitionChainCopy(rhs, RHSStart, *T1Dest);
-    debugs("tesla.automata.inclusive_or") 
+    debugs("tesla.automata.inclusive_or")
       << "Dumping rhsCopy (size=" << rhsCopy.size() << "): " << stringifyTransitionVector(rhsCopy) << "\n";
 
     j=1;
@@ -661,7 +661,7 @@ SmallVector<Transition*,16> NFAParser::CreateTransitionChainCopy(SmallVector<Tra
     << "Creating copy of transition chain: "
     << stringifyTransitionVector(chain) << "\n"
     ;
-  
+
   debugs("tesla.automata.inclusive_or")
     << "Old start state: " << OldStartState.ID() << "\n"
     << "New start state: " << NewStartState.ID() << "\n"
@@ -675,7 +675,7 @@ SmallVector<Transition*,16> NFAParser::CreateTransitionChainCopy(SmallVector<Tra
     Transition* T = *TI;
     debugs("tesla.automata.inclusive_or")
       << "Creating copy of transition: " << stringifyTransition(T) << "\n";
-    
+
     // get the right source and destination states (to preserve looping)
     State* NewSource = NULL;
     State* NewDest = NULL;
@@ -700,7 +700,7 @@ SmallVector<Transition*,16> NFAParser::CreateTransitionChainCopy(SmallVector<Tra
 
     // clone transition
     if (isa<NullTransition>(T)) { // epsilon edges
-      Transition::Create(*NewSource, *NewDest, Transitions); 
+      Transition::Create(*NewSource, *NewDest, Transitions);
     }
     else {
       Transition::Copy(*NewSource, *NewDest, T, Transitions);
