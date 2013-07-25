@@ -3,11 +3,7 @@
  * Check automata generated from repeated expressions.
  *
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
- * RUN: tesla print -format=dot -n %t.tesla -o %t.dot
- * RUN: FileCheck -input-file=%t.dot %s
- *
- * TODO: use a more stable output representation than GraphViz dot.
- * XFAIL: *
+ * RUN: tesla print -format=text -d %t.tesla | FileCheck %s
  */
 
 #include "tesla-macros.h"
@@ -19,51 +15,81 @@ int	baz();
 
 int foo() {
 	/*
-	 * CHECK:  digraph automaton{{.*}} {
+	 * CHECK: automaton '[[NAME:.*repeat.c:[0-9]+#[0-9]+]]' {
 	 *
-	 * TODO: when we move to LLVM 3.4, use CHECK-DAG:
-	 *
-	 * CHECK:    edge [ label = "context()
-	 * CHECK:    0 -> [[INIT:[0-9]+]];
+	 * CHECK: state {{.*}} :
+	 * CHECK: context(): Entry <<init>>
+	 * CHECK: -->([[INIT:.*]])
 	 */
 	TESLA_WITHIN(context,
 		TSEQUENCE(
 			/*
-			 * TODO: this is an excellent example of why we need
-			 *       CHECK-DAG: there is nothing wrong with this
-			 *       ordering, but it is a silly ordering to
-			 *       hard-code in a test!
+			 * Since there is a minimum of two foo()
+			 * transitions but no maximum, we create two
+			 * foo()-following states, the last of which can
+			 * loop back.
 			 *
-			 * CHECK:    edge [ label = "foo()
-			 * CHECK:    [[INIT]] -> [[FOO1:[0-9]+]]
-			 * CHECK:    [[FOO1]] -> [[FOO2:[0-9]+]]
-			 * CHECK:    [[INIT]] -> [[INIT]]
+			 * CHECK: state [[INIT]]
+			 * CHECK: foo(): Entry)-->([[FOO1:[':,a-zA-Z0-9]+]])
+			 *
+			 * CHECK: state [[FOO1]]
+			 * CHECK: --(foo(): Entry)-->([[FOO2:[':,a-zA-Z0-9]+]])
+			 *
+			 * CHECK: state [[FOO2]]
+			 * CHECK: --(foo(): Entry)-->([[FOO2]])
 			 */
 			ATLEAST(2, called(foo)),
 
 			/*
-			 * CHECK:    edge [ label = "[[EPISLON:&#949;]]
-			 * CHECK:    [[FOO2]] -> [[BAR0:[0-9]+]]
-			 * CHECK:    [[FOO2]] -> [[IGNORE:[0-9]+]]
-			 */
-
-			/*
-			 * CHECK:    edge [ label = "bar()
-			 * CHECK:    [[BAR1:[0-9]+]] -> [[BAR2:[0-9]+]]
-			 * CHECK:    [[BAR0]] -> [[BAR1]]
-			 * CHECK:    [[BAR2]] -> [[BAR3:[0-9]+]]
-			 * CHECK:    [[INIT]] -> [[INIT]]
+			 * Up to three bar() events are allowed: after each
+			 * one, a baz() event could advance the state to
+			 * the [[BAZ1]] state.
+			 *
+			 * CHECK: --(bar(): Entry)-->([[BAR1:[':,a-zA-Z0-9]+]])
+			 *
+			 * CHECK: state [[BAR1]]
+			 * CHECK: --(bar(): Entry)-->([[BAR2:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(baz(): Entry)-->([[BAZ1:[':,a-zA-Z0-9]+]])
+			 *
+			 * CHECK: state [[BAR2]]
+			 * CHECK: --(bar(): Entry)-->([[BAR3:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(baz(): Entry)-->([[BAZ1]])
 			 */
 			UPTO(3, called(bar)),
 
 			/*
-			 * CHECK:    edge [ label = "baz()
-			 * CHECK:    [[INIT]] -> [[INIT]]
-			 * CHECK:    [[BAZ1:[0-9]+]] -> [[BAZ2:[0-9]+]]
-			 * CHECK:    [[BAZ0:[0-9]+]] -> [[BAZ1]]
-			 * CHECK:    [[BAZ2]] -> [[BAZ3:[0-9]+]]
+			 * Finally, we may have no fewer than two and no more
+			 * than four baz() transitions.
+			 *
+			 * We've already had one from a [[BARx]] state; after
+			 * one more we can take an exit transition:
+			 *
+			 * CHECK: state [[BAZ1]]
+			 * CHECK: --(baz(): Entry)-->([[BAZ2:[':,a-zA-Z0-9]+]])
+			 *
+			 * CHECK: state [[BAZ2]]
+			 * CHECK: --(baz(): Entry)-->([[BAZ3:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(context() == X <<cleanup>>)-->([[DONE:[':,a-zA-Z0-9]+]])
+			 *
+			 * We are allowed one more baz() transition:
+			 *
+			 * CHECK: state [[BAZ3]]
+			 * CHECK: --(baz(): Entry)-->([[BAZ4:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(context() == X <<cleanup>>)-->([[DONE]])
+			 *
+			 * But that was absolutely the last baz() transition:
+			 *
+			 * CHECK: state [[BAZ4]]
+			 * CHECK: --(context() == X <<cleanup>>)-->([[DONE]])
 			 */
-			REPEAT(2, 3, called(baz))
+			REPEAT(2, 4, called(baz))
+
+			/*
+			 * TODO: use CHECK-DAG when we switch to LLVM 3.4:
+			 *
+			 * CHECK: state [[BAR3]]
+			 * CHECK: --(baz(): Entry)-->([[BAZ1]])
+			 */
 		)
 	);
 
