@@ -1,6 +1,6 @@
-/** @file  read.cpp    Tool for reading TESLA manifests. */
+/** @file  print.cpp    Output information about TESLA automata. */
 /*
- * Copyright (c) 2012-2013 Jonathan Anderson
+ * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -29,70 +29,109 @@
  * SUCH DAMAGE.
  */
 
+#include "Automaton.h"
 #include "Manifest.h"
+
 #include "tesla.pb.h"
 
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Pass.h"
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/CommandLine.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Pass.h>
+
 
 using namespace llvm;
 using namespace tesla;
 
 using std::string;
 
-cl::opt<string> ManifestName(cl::desc("[manifest file]"),
-                             cl::Positional, cl::Optional);
+cl::opt<string> ManifestName(cl::desc("<input file>"),
+                             cl::Positional, cl::Required);
 
-enum Command {
-  ListAutomata
-};
+cl::opt<string> OutputFile("o", cl::desc("<output file>"), cl::init("-"));
 
-cl::opt<Command> UserCommand(cl::desc("Command to execute"), cl::Required,
+enum OutputFormat { dot, source, summary, text };
+cl::opt<OutputFormat> Format("format", cl::desc("output format"),
   cl::values(
-    clEnumValN(ListAutomata, "list-automata",
-               "Print short string representation of all automata"),
-    clEnumValEnd)
+    clEnumVal(dot,        "GraphViz dot"),
+    clEnumVal(source,     "automata definition from the original source code"),
+    clEnumVal(summary,    "succinct summaru"),
+    clEnumVal(text,       "textual representation"),
+    NULL
+  ),
+  cl::init(summary)
 );
 
 cl::opt<Automaton::Type> Determinism(cl::desc("automata determinism:"),
       cl::values(
-        clEnumValN(Automaton::Unlinked,      "u", "unlinked NFA"),
-        clEnumValN(Automaton::Linked,        "l", "linked NFA"),
+        clEnumValN(Automaton::Unlinked,      "r", "raw (unlinked) NFA"),
+        clEnumValN(Automaton::Linked,        "n", "NFA"),
         clEnumValN(Automaton::Deterministic, "d", "DFA"),
         clEnumValEnd),
-      cl::init(Automaton::Unlinked));
+      cl::init(Automaton::Deterministic));
 
 int
 main(int argc, char *argv[]) {
   cl::ParseCommandLineOptions(argc, argv);
 
-  auto& out = llvm::outs();
+  bool UseFile = (OutputFile != "-");
+  OwningPtr<raw_fd_ostream> outfile;
+
+  if (UseFile) {
+    string OutErrorInfo;
+    outfile.reset(new raw_fd_ostream(OutputFile.c_str(), OutErrorInfo));
+  }
+
+  raw_ostream& out = UseFile ? *outfile : llvm::outs();
   auto& err = llvm::errs();
 
   OwningPtr<Manifest> Manifest(
-    ManifestName.empty()
-      ? Manifest::load(llvm::errs(), Determinism)
-      : Manifest::load(llvm::errs(), Determinism, ManifestName));
+    Manifest::load(llvm::errs(), Determinism, ManifestName));
 
   if (!Manifest) {
     err << "Unable to read manifest '" << ManifestName << "'\n";
     return false;
   }
 
-  switch (UserCommand) {
-  case ListAutomata:
-    for (auto i : Manifest->AllAutomata()) {
-      auto ID = i.first;
+  for (auto i : Manifest->AllAutomata()) {
+    Identifier ID = i.first;
+    auto *A = Manifest->FindAutomaton(ID);
+    assert(A);
 
-      auto *A = Manifest->FindAutomaton(ID);
-      out << A->String() << "\n\n";
+    switch (Format) {
+    case dot:
+      out << A->Dot();
+      break;
+
+    case source:
+      out << A->Name() << ":\n" << A->SourceCode();
+      break;
+
+    case summary:
+      out
+        << A->Name() << ":\n"
+        << A->StateCount() << " states, "
+        << "responds to " << A->TransitionCount() << " events:\n"
+        ;
+
+      for (auto& TransClass : *A) {
+        auto& Head(**TransClass.begin());
+        out << "  " << Head.ShortLabel() << "\n";
+      }
+
+      break;
+
+    case text:
+      out << A->String();
+      break;
     }
-    break;
+
+    out << "\n\n";
+
+    out.flush();
   }
 
   google::protobuf::ShutdownProtobufLibrary();

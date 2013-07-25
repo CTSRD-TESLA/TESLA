@@ -8,7 +8,7 @@
  *
  * Commands for llvm-lit (abusing the C preprocessor a bit):
  * RUN: cpp -P %s %cpp_out %t.tesla
- * RUN: tesla graph %t.tesla -o %t.dot
+ * RUN: tesla print -format=dot %t.tesla -o %t.dot
  */
 automaton {
   identifier {

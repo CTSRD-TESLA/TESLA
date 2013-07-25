@@ -4,7 +4,7 @@
  *
  * RUN: tesla analyse %s -o %t -- %cflags
  * RUN: FileCheck -input-file=%t %s
- * RUN: tesla graph -d %t -o %t.dot
+ * RUN: tesla print -format=dot -d %t -o %t.dot
  * RUN: FileCheck -check-prefix=DOT -input-file=%t.dot %s
  */
 

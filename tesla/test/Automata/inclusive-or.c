@@ -2,7 +2,7 @@
  * Test that the inclusive OR is correctly implemented.
  *
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
- * RUN: tesla graph -n %t.tesla -o %t.dot
+ * RUN: tesla print -format=dot -n %t.tesla -o %t.dot
  * RUN: FileCheck -input-file=%t.dot %s
  */
 

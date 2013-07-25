@@ -5,7 +5,7 @@
  * the C preprocessor a little bit:
  *
  * RUN: cpp -P -DTESLA %s %cpp_out %t.tesla
- * RUN: tesla graph %t.tesla -o %t.dot
+ * RUN: tesla print -format=dot %t.tesla -o %t.dot
  * RUN: FileCheck -input-file=%t.dot %s
  */
 

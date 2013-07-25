@@ -105,6 +105,9 @@ public:
   std::string String() const;               //!< Human-readable representation.
   std::string Dot() const;                  //!< GraphViz representation.
 
+  //! Automaton specificiation from original source code.
+  std::string SourceCode() const { return assertion.source(); }
+
   //! Iterate over state transitions.
   TransitionSets::const_iterator begin() const { return Transitions.begin(); }
   TransitionSets::const_iterator end() const  { return Transitions.end(); }

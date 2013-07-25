@@ -2,7 +2,7 @@
 /*
  * Commands for llvm-lit:
  * RUN: tesla analyse %s -o %t.tesla -- %cflags -D TESLA
- * RUN: tesla graph -d -o %t.dot %t.tesla
+ * RUN: tesla print -format=dot -d -o %t.dot %t.tesla
  * RUN: FileCheck -input-file %t.dot %s
  */
 

@@ -2,8 +2,8 @@
  * Test that the inclusive OR is correctly implemented.
  *
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
- * RUN: tesla graph -r %t.tesla -o %t.nondeterministic.dot
- * RUN: tesla graph -n %t.tesla -o %t.deterministic.dot
+ * RUN: tesla print -format=dot -r %t.tesla -o %t.nondeterministic.dot
+ * RUN: tesla print -format=dot -n %t.tesla -o %t.deterministic.dot
  * RUN: FileCheck -check-prefix=NFA -input-file=%t.nondeterministic.dot %s
  * RUN: FileCheck -check-prefix=DFA -input-file=%t.deterministic.dot %s
  */

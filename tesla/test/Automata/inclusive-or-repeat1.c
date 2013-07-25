@@ -3,7 +3,7 @@
  * Check automata generated from repeated expressions.
  *
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
- * RUN: tesla graph -d %t.tesla -o %t.dot
+ * RUN: tesla print -format=dot -d %t.tesla -o %t.dot
  * RUN: FileCheck -input-file=%t.dot %s
  */
 

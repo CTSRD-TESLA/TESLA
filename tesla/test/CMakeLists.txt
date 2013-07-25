@@ -11,6 +11,6 @@ add_dependencies(tesla-test
 	tesla-analyse
 	tesla-cat
 	tesla-get-triple
-	tesla-graph
 	tesla-instrument
+	tesla-print
 )

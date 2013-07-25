@@ -6,10 +6,10 @@
  *
  * RUN: cpp %s %cpp_out %t.tesla
  *
- * RUN: tesla graph -n %t.tesla -o %t.nfa.dot
+ * RUN: tesla print -format=dot -n %t.tesla -o %t.nfa.dot
  * RUN: FileCheck %s -check-prefix=NFA -input-file %t.nfa.dot
  *
- * RUN: tesla graph -d %t.tesla -o %t.dfa.dot
+ * RUN: tesla print -format=dot -d %t.tesla -o %t.dfa.dot
  * RUN: FileCheck %s -check-prefix=DFA -input-file %t.dfa.dot
  */
 
