@@ -288,7 +288,7 @@ string Transition::String() const {
     + (NewArgs.empty() ? "" : ":" + NewArgs)
     + (Special.empty() ? "" : " " + Special)
     + ")-->("
-    + Twine(To.ID())
+    + Twine(To.Name())
     + ")"
   ).str();
 }
