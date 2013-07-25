@@ -3,7 +3,7 @@
  * Check automata generated from repeated expressions.
  *
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
- * RUN: tesla graph -u %t.tesla -o %t.dot
+ * RUN: tesla graph -n %t.tesla -o %t.dot
  * RUN: FileCheck -input-file=%t.dot %s
  *
  * TODO: use a more stable output representation than GraphViz dot.

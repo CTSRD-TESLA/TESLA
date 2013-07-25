@@ -55,8 +55,8 @@ cl::opt<string> OutputFile("o", cl::desc("<output file>"), cl::init("-"));
 
 cl::opt<Automaton::Type> Determinism(cl::desc("automata determinism:"),
       cl::values(
-        clEnumValN(Automaton::Unlinked,      "u", "unlinked NFA"),
-        clEnumValN(Automaton::Linked,        "l", "linked NFA"),
+        clEnumValN(Automaton::Unlinked,      "r", "raw (unlinked) NFA"),
+        clEnumValN(Automaton::Linked,        "n", "NFA"),
         clEnumValN(Automaton::Deterministic, "d", "DFA"),
         clEnumValEnd),
       cl::init(Automaton::Unlinked));

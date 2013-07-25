@@ -6,7 +6,7 @@
  *
  * RUN: cpp %s %cpp_out %t.tesla
  *
- * RUN: tesla graph -u %t.tesla -o %t.nfa.dot
+ * RUN: tesla graph -n %t.tesla -o %t.nfa.dot
  * RUN: FileCheck %s -check-prefix=NFA -input-file %t.nfa.dot
  *
  * RUN: tesla graph -d %t.tesla -o %t.dfa.dot
