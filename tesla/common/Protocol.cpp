@@ -34,6 +34,7 @@
 #include "Debug.h"
 #include "Protocol.h"
 
+#include <google/protobuf/descriptor.h>
 #include <llvm/Support/ErrorHandling.h>
 
 using google::protobuf::FieldDescriptor;
