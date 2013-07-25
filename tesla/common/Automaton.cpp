@@ -115,13 +115,9 @@ private:
   State* SubAutomaton(const Identifier&, State& InitialState);
 
   // Inclusive-Or stuff
-  //void ConvertIncOrToExcOr(State& InitialState, State& EndState);
-  void ConvertIncOrToExcOr2(State& LHSStart, State& RHSStart, State& LHSFinal, State& RHSFinal, State& EndState);
+  void ConvertIncOrToExcOr(State& LHSStart, State& RHSStart, State& LHSFinal, State& RHSFinal, State& EndState);
   void CalculateReachableTransitionsBetween(const State& InitialState, State& EndState, SmallVector<Transition*,16>& Ts);
   SmallVector<Transition*,16> CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& OldStartState, State& NewStartState);
-  //TransitionVectors GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts);
-  //void CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
-  //void CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState);
 
   const AutomatonDescription& Automaton;
   const Usage* Use;
@@ -478,7 +474,7 @@ State* NFAParser::Parse(const BooleanExpr& Expr, State& Branch) {
     return Join;
 
   case BooleanExpr::BE_Or:
-    ConvertIncOrToExcOr2(*LHSStart, *RHSStart, *LHSFinal, *RHSFinal, *Join);
+    ConvertIncOrToExcOr(*LHSStart, *RHSStart, *LHSFinal, *RHSFinal, *Join);
     return Join;
 
   case BooleanExpr::BE_And:
@@ -569,7 +565,7 @@ string stringifyTransitionVectors(TransitionVectors& TVs) {
   return ss.str();
 }
 
-void NFAParser::ConvertIncOrToExcOr2(State& LHSStart, State& RHSStart, State& LHSFinal, State& RHSFinal, State& EndState) {
+void NFAParser::ConvertIncOrToExcOr(State& LHSStart, State& RHSStart, State& LHSFinal, State& RHSFinal, State& EndState) {
   
   if (SuppressInclusiveOr) {
     debugs("tesla.automata.inclusive_or")
@@ -645,61 +641,6 @@ void NFAParser::ConvertIncOrToExcOr2(State& LHSStart, State& RHSStart, State& LH
 
 }
 
-/*
-void NFAParser::ConvertIncOrToExcOr(State& InitialState, State& EndState) {
-  debugs("tesla.automata.inclusive_or")
-    << "Converting inclusive-or to exclusive-or\n";
-
-  //
-  // X `inclusive-or` Y is computed as:
-  // (prefix*(X) || Y) | (X || prefix*(Y)) | (X || Y)
-  // where
-  //   X and Y are sequences of transitions
-  //   prefix*(X) is the set of sets of transition prefixes of X
-  //     (This is equivalent to the powerset of X minus X itself.)
-  //   || is the parallel operator that allow possible interleavings of the
-  //     lhs and rhs
-  //
-  // For example, ab `inclusive-or` cd refers to the following automaton:
-  //   = (prefix*(ab) || cd)           | (ab || prefix*(cd))         | (ab || cd)
-  //   = (ø || cd) | (a || cd)         | (ab || ø) | (ab || c)       | (ab || cd)
-  //   = (cd)      | (a || cd)         | (ab)      | (ab || c)       | (ab || cd)
-  //   = (cd)      | (acd | cad | cda) | (ab)      | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
-  //   = cd        | acd | cad | cda   | ab        | abc | acb | cab | abcd | acbd | acdb | cdab | cabd | cadb
-  // separate lhs and rhs into different vectors
-  SmallVector<Transition*,16> lhs, rhs;
-  auto TI = InitialState.begin();
-  Transition *LhsFirstT = *TI;
-  Transition *RhsFirstT = *(TI+1);
-
-  debugs("tesla.automata.inclusive_or")
-    << "Lhs: " << LhsFirstT->String() << "\n"
-    << "Rhs: " << RhsFirstT->String() << "\n"
-    ;
-
-  lhs.push_back(LhsFirstT);
-  rhs.push_back(RhsFirstT);
-  CalculateReachableTransitionsBetween(LhsFirstT->Destination(), EndState, lhs);
-  CalculateReachableTransitionsBetween(RhsFirstT->Destination(), EndState, rhs);
-
-  debugs("tesla.automata.inclusive_or")
-    << "Calculated reachable transitions for lhs: "
-    << stringifyTransitionVector(lhs) << "\n"
-    << "Calculated reachable transitions for rhs: "
-    << stringifyTransitionVector(rhs) << "\n"
-    ;
-
-  // End is already the result of lhs | rhs
-  // We need to add to this:
-  //   (prefix*(lhs) || rhs) | (lhs || prefix*(rhs)) | (lhs || rhs)
-  TransitionVectors lhsPrefixes = GenerateTransitionPrefixesOf(lhs);
-  TransitionVectors rhsPrefixes = GenerateTransitionPrefixesOf(rhs);
-  CreateParallelAutomata(lhsPrefixes, rhs, InitialState, EndState);
-  CreateParallelAutomata(rhsPrefixes, lhs, InitialState, EndState);
-  CreateParallelAutomaton(lhs, rhs, InitialState, EndState);
-}
-*/
-
 void NFAParser::CalculateReachableTransitionsBetween(const State& Start, State& End, SmallVector<Transition*,16>& Ts) {
   if (Start.ID() == End.ID()) {
     return;
@@ -712,98 +653,6 @@ void NFAParser::CalculateReachableTransitionsBetween(const State& Start, State& 
     }
   }
 }
-
-/*
-TransitionVectors NFAParser::GenerateTransitionPrefixesOf(SmallVector<Transition*,16>& Ts) {
-
-  debugs("tesla.automata.inclusive_or")
-    << "Generating transition prefixes of "
-    << stringifyTransitionVector(Ts) << "\n"
-    ;
-
-  TransitionVectors prefixes;
-  SmallVector<Transition*,16> lastPrefix;
-  // add empty prefix
-  prefixes.push_back(lastPrefix);
-  if (Ts.size() > 1) { // catch corner case where length of Ts is 1
-    bool nonEmptyPrefix = false;
-    for (auto T : Ts) {
-      lastPrefix.push_back(T);
-      prefixes.push_back(lastPrefix);
-      nonEmptyPrefix = true;
-    }
-    if (nonEmptyPrefix) {
-      prefixes.pop_back(); // delete the last element as it is not a prefix
-    }
-  }
-
-  debugs("tesla.automata.inclusive_or")
-    << "Computed prefixes: " << stringifyTransitionVectors(prefixes) << "\n";
-
-  return prefixes;
-}
-
-void NFAParser::CreateParallelAutomata(TransitionVectors& prefixes, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState) {
-  for (auto prefix : prefixes) {
-    // Skip the empty prefix because lhs | rhs has already been constructed by
-    // Parse(const BooleanExpr& Expr, State& Branch) above.
-    if (!prefix.empty()) {
-      CreateParallelAutomaton(prefix, rhs, InitialState, EndState);
-    }
-  }
-}
-
-// Compute the automaton for lhs || rhs (where || is the parallel operator)
-void NFAParser::CreateParallelAutomaton(SmallVector<Transition*,16>& lhs, SmallVector<Transition*,16>& rhs, State& InitialState, State& EndState) {
-  //
-  // We build the automaton recursively by repeatedly decomposing lhs || rhs,
-  // until it cannot be decomposed any further.
-  // For example, ab || cd can be decomposed as follows:
-  //   ab || cd = a (b || cd)                    | c (ab || d)
-  //            = a ( b (ø || cd) | c (b || d) ) | c ( a (b || d)  | d ( ab || ø) )
-  //            = a ( bcd | c (bd | db) )        | c ( a (bd | db) | dab )
-  //            = a ( bcd | cbd | cdb )          | c ( abd | adb | dab )
-  //            = abcd | acbd | acdb             | cabd | cadb | cdab
-  // 
-
-  debugs("tesla.automata.inclusive_or")
-    << "Entering CreateParallelAutomaton("
-    << stringifyTransitionVector(lhs) << ","
-    << stringifyTransitionVector(rhs) << ")\n"
-    ;
-
-  if (lhs.empty()) {
-    CreateTransitionChainCopy(rhs, InitialState, EndState);
-  }
-  else if (rhs.empty()) {
-    CreateTransitionChainCopy(lhs, InitialState, EndState);
-  }
-  else {
-    // Decompose as per above comment
-    // a (b ||cd)
-    Transition *LhsFirstT = lhs.front();
-    State *LhsFirstTNewDest = State::NewBuilder(States).Build();
-    Transition::Copy(InitialState, *LhsFirstTNewDest, LhsFirstT, Transitions);
-    SmallVector<Transition*,16> lhsCopy = lhs;
-    lhsCopy.erase(lhsCopy.begin()); // TODO: use a more efficient data structure (deque?)
-    CreateParallelAutomaton(lhsCopy, rhs, *LhsFirstTNewDest, EndState);
-
-    // c (ab || d)
-    Transition *RhsFirstT = rhs.front();
-    State *RhsFirstTNewDest = State::NewBuilder(States).Build();
-    Transition::Copy(InitialState, *RhsFirstTNewDest, RhsFirstT, Transitions);
-    SmallVector<Transition*,16> rhsCopy = rhs;
-    rhsCopy.erase(rhsCopy.begin()); // TODO: use a more efficient data structure (deque?)
-    CreateParallelAutomaton(lhs, rhsCopy, *RhsFirstTNewDest, EndState);
-  }
-
-  debugs("tesla.automata.inclusive_or")
-    << "Exiting CreateParallelAutomaton("
-    << stringifyTransitionVector(lhs) << ","
-    << stringifyTransitionVector(rhs) << ")\n"
-    ;
-}
-*/
 
 SmallVector<Transition*,16> NFAParser::CreateTransitionChainCopy(SmallVector<Transition*,16>& chain, State& OldStartState, State& NewStartState) {
   SmallVector<Transition*,16> clone;
