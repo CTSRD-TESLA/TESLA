@@ -84,4 +84,3 @@ inline bool operator < (const Identifier& x, const Identifier& y) {
 } // namespace tesla
 
 #endif  // TRANSITION_H
-

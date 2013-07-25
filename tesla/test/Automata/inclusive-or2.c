@@ -15,9 +15,9 @@ int	d(int);
 
 void ab() {
   int x, y, z, p;
-  TESLA_WITHIN(ab, 
+  TESLA_WITHIN(ab,
               TSEQUENCE(a(x) == 0, b(y) == 0)
-              || 
+              ||
               TSEQUENCE(c(z) == 0, d(p) == 0));
 
   /*
