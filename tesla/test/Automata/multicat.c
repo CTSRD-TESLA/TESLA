@@ -11,7 +11,6 @@
  * It is an error to 'tesla cat' different definitions with the same name:
  * RUN: tesla cat %t.good1.tesla %t.bad.tesla -o %t.err.tesla 2> %t.err || true
  * RUN: FileCheck %s -check-prefix=ERR -input-file %t.err
- * RUN: test -e %t.err.tesla || false
  *
  * Concatenate files with identical definitions is supported:
  * RUN: tesla cat %t.good1.tesla %t.good2.tesla -o %t.cat.tesla
