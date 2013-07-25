@@ -335,7 +335,6 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
 
   // Handle out-of-scope events: if we observe one, we it should cause us to
   // stay in the post-initialisation state.
-  debugs("tesla.automata.parsing.out-of-scope") << "out-of-scope events:\n";
   vector<const Transition*> OutOfScope;
   for (const Transition *T : Transitions) {
     // Have we already noted an equivalent out-of-scope transition?
@@ -351,11 +350,8 @@ void NFAParser::Parse(OwningPtr<NFA>& Out, unsigned int id) {
         break;
       }
 
-    if (!AlreadyHave && !T->IsStrict() && !T->RequiresInit()) {
+    if (!AlreadyHave && !T->IsStrict() && !T->RequiresInit())
       OutOfScope.push_back(T);
-      debugs("tesla.automata.parsing.out-of-scope")
-        << "  " << T->String() << "\n";
-    }
   }
 
   for (auto *T : OutOfScope) {
@@ -716,12 +712,6 @@ SmallVector<Transition*,16> NFAParser::CreateTransitionChainCopy(SmallVector<Tra
 }
 
 typedef std::set<unsigned> NFAState;
-raw_ostream& operator << (raw_ostream& Out, const NFAState& S) {
-  for (unsigned i : S)
-    Out << i << " ";
-  Out << "\n";
-  return Out;
-}
 struct NFAStateHash
 {
   size_t operator()(const NFAState &S) const {
@@ -729,12 +719,6 @@ struct NFAStateHash
     return *S.begin();
   }
 };
-
-raw_ostream& operator << (
-  raw_ostream& Out, const unordered_map<NFAState, State*, NFAStateHash>& M) {
-  for (auto I : M) Out << (I.second->ID()) << " = " << I.first;
-  return Out;
-}
 
 class DFABuilder {
   /// The NFA state sets that we've seen so far and their corresponding DFA
@@ -863,20 +847,9 @@ class DFABuilder {
     TransitionSets TEquivClasses;
     Transition::GroupClasses(Transitions, TEquivClasses);
 
-    DFA *D = new DFA(N->ID(),
-                     const_cast<AutomatonDescription&>(N->getAssertion()),
-                     N->Use(), N->Name(), States, TEquivClasses);
-
-    debugs("tesla.automata.dfa")
-        << "DFA conversion results:\n"
-        << "> NFA: " << N->String() << "\n"
-        << "> DFA: " << D->String() << "\n"
-        << ">>  DFA state map:\n"
-        << DFAStates
-        << ">>  DFA transition equivalence classes:\n"
-        ;
-
-    return D;
+    return new DFA(N->ID(),
+                   const_cast<AutomatonDescription&>(N->getAssertion()),
+                   N->Use(), N->Name(), States, TEquivClasses);
   }
 
 private:
