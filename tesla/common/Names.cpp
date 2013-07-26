@@ -29,10 +29,10 @@
  * SUCH DAMAGE.
  */
 
-#include "tesla.pb.h"
 #include "Names.h"
+#include "tesla.pb.h"
 
-#include "llvm/ADT/Twine.h"
+#include <llvm/ADT/Twine.h>
 
 #include <string>
 #include <sstream>

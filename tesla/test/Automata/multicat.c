@@ -18,7 +18,7 @@
  * RUN: FileCheck %s -check-prefix=ROOT -input-file %t.cat.tesla
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 int	context();
 int	foo();

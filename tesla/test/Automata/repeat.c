@@ -6,7 +6,7 @@
  * RUN: tesla print -format=text -d %t.tesla | FileCheck %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 int	context();
 int	foo();

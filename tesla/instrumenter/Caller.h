@@ -31,14 +31,14 @@
 #ifndef	TESLA_CALLER_INSTRUMENTATION_H
 #define	TESLA_CALLER_INSTRUMENTATION_H
 
-#include "tesla.pb.h"
-
 #include "Instrumenter.h"
 #include "Instrumentation.h"
 
-#include "llvm/ADT/StringMap.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Pass.h"
+#include "tesla.pb.h"
+
+#include <llvm/ADT/StringMap.h>
+#include <llvm/ADT/StringRef.h>
+#include <llvm/Pass.h>
 
 namespace llvm {
   class Function;

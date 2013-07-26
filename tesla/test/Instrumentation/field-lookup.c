@@ -8,7 +8,7 @@
  * RUN: FileCheck -input-file=%t.instr.ll %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 struct obj1;
 struct obj2;

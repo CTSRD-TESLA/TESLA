@@ -6,7 +6,7 @@
  * RUN: FileCheck -input-file=%t.err %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 int	context();
 int     foo(int);

@@ -28,11 +28,11 @@
  * SUCH DAMAGE.
  */
 
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/Pass.h"
-
 #include "Instrumenter.h"
 #include "Transition.h"
+
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/Pass.h>
 
 #include <set>
 

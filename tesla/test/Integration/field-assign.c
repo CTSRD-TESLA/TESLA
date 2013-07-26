@@ -38,7 +38,7 @@
  */
 
 #include <sys/types.h>
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 #define	DIGITS_OF_PI	31415926
 

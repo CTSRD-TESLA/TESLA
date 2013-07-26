@@ -8,7 +8,7 @@
  * RUN: FileCheck -check-prefix=DOT -input-file=%t.dot %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 struct object;
 

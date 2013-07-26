@@ -8,7 +8,7 @@
  * RUN: FileCheck -input-file=%t.instr.ll %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 /*
  * TODO: use CHECK-DAG when we move to LLVM 3.4

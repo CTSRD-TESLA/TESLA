@@ -6,7 +6,7 @@
  * RUN: FileCheck -input-file=%t %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 struct object { int field; };
 

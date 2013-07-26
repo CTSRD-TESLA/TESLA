@@ -7,7 +7,7 @@
  * RUN: FileCheck -input-file %t.instr.ll %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 void	foo(void);
 

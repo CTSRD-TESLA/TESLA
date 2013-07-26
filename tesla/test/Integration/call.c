@@ -9,7 +9,7 @@
  * RUN: FileCheck -input-file %t.out %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 void	foo(void);
 void	bar(void);

@@ -20,25 +20,25 @@
 #include "FieldReference.h"
 #include "Manifest.h"
 
-#include "llvm/IR/DataLayout.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IRReader/IRReader.h"
-#include "llvm/CodeGen/CommandFlags.h"
-#include "llvm/Bitcode/ReaderWriter.h"
-#include "llvm/Assembly/PrintModulePass.h"
-#include "llvm/Analysis/Verifier.h"
-#include "llvm/Analysis/CallGraph.h"
-#include "llvm/Target/TargetLibraryInfo.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/ADT/Triple.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/ManagedStatic.h"
-#include "llvm/Support/PrettyStackTrace.h"
-#include "llvm/Support/SystemUtils.h"
-#include "llvm/Support/TargetRegistry.h"
-#include "llvm/Support/ToolOutputFile.h"
-#include "llvm/PassManager.h"
+#include <llvm/ADT/Triple.h>
+#include <llvm/Analysis/Verifier.h>
+#include <llvm/Analysis/CallGraph.h>
+#include <llvm/Assembly/PrintModulePass.h>
+#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/CodeGen/CommandFlags.h>
+#include <llvm/IR/DataLayout.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Target/TargetLibraryInfo.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/ManagedStatic.h>
+#include <llvm/Support/PrettyStackTrace.h>
+#include <llvm/Support/SystemUtils.h>
+#include <llvm/Support/TargetRegistry.h>
+#include <llvm/Support/ToolOutputFile.h>
+#include <llvm/PassManager.h>
 
 using namespace llvm;
 

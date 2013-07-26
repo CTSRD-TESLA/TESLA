@@ -29,8 +29,6 @@
  * SUCH DAMAGE.
  */
 
-#include <libtesla.h>
-
 #include "Automaton.h"
 #include "Debug.h"
 #include "Instrumentation.h"
@@ -38,10 +36,12 @@
 #include "State.h"
 #include "Transition.h"
 
-#include "llvm/IR/DataLayout.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Module.h"
-#include "llvm/Support/raw_ostream.h"
+#include <libtesla.h>
+
+#include <llvm/IR/DataLayout.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 
 using namespace llvm;
 

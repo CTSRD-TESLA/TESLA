@@ -15,7 +15,7 @@
  * RUN: FileCheck -check-prefix=TESLA -input-file %t/out.txt %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 /*
  * Check that the instrumented IR contains a static struct tesla_transitions

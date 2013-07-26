@@ -32,10 +32,10 @@
 #ifndef AUTOMATON_H
 #define AUTOMATON_H
 
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/StringRef.h"
-
 #include "Transition.h"
+
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/StringRef.h>
 
 #include <map>
 

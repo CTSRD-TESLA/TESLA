@@ -8,7 +8,7 @@
  * RUN: FileCheck -check-prefix=DFA -input-file=%t.deterministic.dot %s
  */
 
-#include "tesla-macros.h"
+#include <tesla-macros.h>
 
 int foo(int x) {
 	/*

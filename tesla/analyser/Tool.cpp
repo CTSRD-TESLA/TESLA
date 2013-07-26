@@ -31,14 +31,13 @@
 #include "AST.h"
 #include "Debug.h"
 
-#include "llvm/Support/CommandLine.h"
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/FrontendActions.h>
+#include <clang/Tooling/CompilationDatabase.h>
+#include <clang/Tooling/Tooling.h>
 
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/FrontendActions.h"
-#include "clang/Tooling/CompilationDatabase.h"
-#include "clang/Tooling/Tooling.h"
-
-#include "llvm/Support/PrettyStackTrace.h"
+#include <llvm/Support/CommandLine.h>
+#include <llvm/Support/PrettyStackTrace.h>
 
 #include <google/protobuf/text_format.h>
 

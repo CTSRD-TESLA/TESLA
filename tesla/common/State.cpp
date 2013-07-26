@@ -31,9 +31,11 @@
 
 #include "State.h"
 #include "Transition.h"
+
 #include "tesla.pb.h"
 
 #include <llvm/ADT/Twine.h>
+
 #include <sstream>
 
 using namespace llvm;

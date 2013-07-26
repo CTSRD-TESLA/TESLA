@@ -36,9 +36,9 @@
 
 #include "tesla.pb.h"
 
-#include "llvm/ADT/StringMap.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Pass.h"
+#include <llvm/ADT/StringMap.h>
+#include <llvm/ADT/StringRef.h>
+#include <llvm/Pass.h>
 
 namespace llvm {
   class Function;

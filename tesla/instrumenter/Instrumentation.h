@@ -32,15 +32,16 @@
 #ifndef	TESLA_INSTRUMENTATION_H
 #define	TESLA_INSTRUMENTATION_H
 
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/IRBuilder.h"
-
 #include "Transition.h"
 
 #include "tesla.pb.h"
+
 #include <libtesla.h>
+
+#include <llvm/ADT/SmallVector.h>
+#include <llvm/ADT/StringRef.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/IRBuilder.h>
 
 namespace llvm {
   class BasicBlock;
