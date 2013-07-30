@@ -50,6 +50,7 @@ namespace clang {
   class Expr;
   class FunctionDecl;
   class MemberExpr;
+  class ObjCMessageExpr;
   class SourceLocation;
   class SourceRange;
   class Stmt;
@@ -140,6 +141,9 @@ private:
                                      Flags);
 
   bool ParseFunctionCall(Expression*, const clang::CallExpr*, Flags);
+  bool ParseObjCMessageSend(FunctionEvent*, const clang::ObjCMessageExpr*,
+                            Flags);
+
   bool ParseFunctionReturn(Expression*, const clang::CallExpr*, Flags);
   bool ParseCallee(Expression*, const clang::CallExpr*, Flags);
   bool ParseCaller(Expression*, const clang::CallExpr*, Flags);

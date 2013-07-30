@@ -228,6 +228,11 @@ bool Parser::Parse(Expression *E, const CompoundStmt *C, Flags F) {
         return false;
       }
 
+    } else if (isa<DeclStmt>(S)) {
+      // Ignore decls within sequences: this is TESLA's way of expressing
+      // intermediate variables.
+      return true;
+
     } else if (auto *E = dyn_cast<Expr>(S)) {
       // Otherwise, it's just a regular TESLA expression.
       if (!Parse(Seq->add_expression(), E, F))
@@ -604,36 +609,8 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
   if (!Parse(FnEvent->mutable_expectedreturnvalue(), RetVal, F))
     return false;
 
-  if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(FnCall)) {
-    const ObjCMethodDecl *Meth = OME->getMethodDecl();
-    if (!Meth) {
-      ReportError("types of Objective-C method to be instrumented must be known", OME);
-      return false;
-    }
-    FunctionEvent::CallKind kind;
-    switch (OME->getReceiverKind()) {
-      default: assert(0); break;
-      case ObjCMessageExpr::Class:
-        FnEvent->mutable_receiver()->set_name(OME->getReceiverInterface()->getName());
-        kind = FunctionEvent::ObjCClassMessage;
-        break;
-      case ObjCMessageExpr::Instance:
-        Parse(FnEvent->mutable_receiver(), OME->getInstanceReceiver(), F);
-        kind = FunctionEvent::ObjCInstanceMessage;
-        break;
-      case ObjCMessageExpr::SuperClass:
-      case ObjCMessageExpr::SuperInstance:
-        kind = FunctionEvent::ObjCSuperMessage;
-        break;
-    }
-    FnEvent->set_kind(kind);
-    FnEvent->mutable_function()->set_name(Meth->getNameAsString());
-    for (auto I = OME->arg_begin(); I != OME->arg_end(); ++I) {
-      if (!Parse(FnEvent->add_argument(), I->IgnoreImplicit(), F))
-        return false;
-    }
-    return true;
-  }
+  if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(FnCall))
+    return ParseObjCMessageSend(FnEvent, OME, F);
 
   auto FnCallExpr = dyn_cast<CallExpr>(FnCall);
   if (!FnCallExpr) {
@@ -657,6 +634,43 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
   }
 
   return true;
+}
+
+
+bool Parser::ParseObjCMessageSend(FunctionEvent *FnEvent,
+                                  const ObjCMessageExpr *OME, Flags F) {
+
+  const ObjCMethodDecl *Meth = OME->getMethodDecl();
+  if (!Meth) {
+    ReportError("Objective-C method has unknown type", OME);
+    return false;
+  }
+
+  FnEvent->mutable_function()->set_name(Meth->getNameAsString());
+
+  for (auto I = OME->arg_begin(); I != OME->arg_end(); ++I) {
+    if (!Parse(FnEvent->add_argument(), I->IgnoreImplicit(), F))
+      return false;
+  }
+
+  switch (OME->getReceiverKind()) {
+    case ObjCMessageExpr::Class:
+      FnEvent->set_kind(FunctionEvent::ObjCClassMessage);
+      FnEvent->mutable_receiver()->set_name(
+        OME->getReceiverInterface()->getName());
+      return true;
+
+    case ObjCMessageExpr::Instance:
+      FnEvent->set_kind(FunctionEvent::ObjCInstanceMessage);
+      return Parse(FnEvent->mutable_receiver(), OME->getInstanceReceiver(), F);
+
+    case ObjCMessageExpr::SuperClass:
+    case ObjCMessageExpr::SuperInstance:
+      FnEvent->set_kind(FunctionEvent::ObjCSuperMessage);
+      return true;
+  }
+
+  llvm_unreachable("unhandled ObjC message receiver kind");
 }
 
 
@@ -792,28 +806,9 @@ bool Parser::ParseFunctionModifier(FunctionEvent *Event, const CallExpr *Call,
             ArgCount = CE->getNumArgs();
           } else if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(Arg)) {
             Meth = OME->getMethodDecl();
-            if (!Meth) {
-              ReportError("types of Objective-C method to be instrumented must be known", OME);
+            if (!ParseObjCMessageSend(Event, OME, F))
               return false;
-            }
-            FunctionEvent::CallKind kind;
-            switch (OME->getReceiverKind()) {
-              default: assert(0); break;
-              case ObjCMessageExpr::Class:
-                Event->mutable_receiver()->set_name(OME->getReceiverInterface()->getName());
-                kind = FunctionEvent::ObjCClassMessage;
-                break;
-              case ObjCMessageExpr::Instance:
-                Parse(Event->mutable_receiver(), OME->getInstanceReceiver(), F);
-                kind = FunctionEvent::ObjCInstanceMessage;
-                break;
-              case ObjCMessageExpr::SuperClass:
-              case ObjCMessageExpr::SuperInstance:
-                kind = FunctionEvent::ObjCSuperMessage;
-                break;
-            }
-            Event->set_kind(kind);
-            Event->mutable_function()->set_name(Meth->getNameAsString());
+
             Args = OME->getArgs();
             ArgCount = OME->getNumArgs();
           } else {
