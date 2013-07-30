@@ -339,6 +339,9 @@ bool Parser::Parse(Expression *Ex, const Expr *E, Flags F) {
 
   E = E->IgnoreImplicit();
 
+  if (auto Seq = dyn_cast<StmtExpr>(E))
+    return Parse(Ex, Seq->getSubStmt(), F);
+
   if (auto Assign = dyn_cast<CompoundAssignOperator>(E))
     return ParseFieldAssign(Ex, Assign, F);
 

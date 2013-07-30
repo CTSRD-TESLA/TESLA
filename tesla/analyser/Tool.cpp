@@ -66,6 +66,8 @@ int main(int argc, const char **argv) {
   std::vector<const char*> args(argv, argv + argc);
   args.push_back("-D");
   args.push_back("__TESLA_ANALYSER__");
+  args.push_back("-Wno-unused-comparison");
+  args.push_back("-Wno-unused-value");
 
   // Change argc and argv to refer to the vector's memory.
   // The CompilationDatabase will modify these, so we shouldn't pass in
