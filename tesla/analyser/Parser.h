@@ -154,8 +154,8 @@ private:
   bool ParseRepetition(Expression*, const clang::CallExpr*, Flags);
 
   //! Helper for @ref ParseFunctionCall and @ref ParseFunctionReturn.
-  bool ParseFunctionModifier(FunctionEvent*, const clang::CallExpr*,
-                              bool ParseRetVal, Flags);
+  bool ParseFunctionDetails(FunctionEvent*, const clang::CallExpr*,
+                            bool ParseRetVal, Flags);
 
   //! Parse 'foo(x) == y'.
   bool ParseFunctionCall(Expression*, const clang::BinaryOperator*, Flags);

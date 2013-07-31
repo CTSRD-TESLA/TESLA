@@ -682,7 +682,7 @@ bool Parser::ParseFunctionCall(Expression *E, const CallExpr *Call, Flags F) {
   FnEvent->set_direction(FunctionEvent::Entry);
   FnEvent->set_strict(F.StrictMode);
 
-  return ParseFunctionModifier(FnEvent, Call, false, F);
+  return ParseFunctionDetails(FnEvent, Call, false, F);
 }
 
 
@@ -694,7 +694,7 @@ bool Parser::ParseFunctionReturn(Expression *E, const CallExpr *Call, Flags F) {
   FnEvent->set_direction(FunctionEvent::Exit);
   FnEvent->set_strict(F.StrictMode);
 
-  return ParseFunctionModifier(FnEvent, Call, true, F);
+  return ParseFunctionDetails(FnEvent, Call, true, F);
 }
 
 
@@ -754,8 +754,8 @@ bool Parser::ParseConditional(Expression *E, const clang::CallExpr *Call,
 }
 
 
-bool Parser::ParseFunctionModifier(FunctionEvent *Event, const CallExpr *Call,
-                                    bool ParseRetVal, Flags F) {
+bool Parser::ParseFunctionDetails(FunctionEvent *Event, const CallExpr *Call,
+                                   bool ParseRetVal, Flags F) {
 
   Event->set_context(F.FnInstrContext);
 
@@ -768,10 +768,9 @@ bool Parser::ParseFunctionModifier(FunctionEvent *Event, const CallExpr *Call,
 
   auto Arg = Call->getArg(0)->IgnoreParenCasts();
   auto FnRef = dyn_cast<DeclRefExpr>(Arg);
-  // For C function calls
-  const FunctionDecl *Fn = 0;
-  // For Objective-C message sends
-  const ObjCMethodDecl *Meth = 0;
+
+  const FunctionDecl *CFn = 0;
+  const ObjCMethodDecl *ObjCMeth = 0;
 
   const Expr *const*Args;
   SmallVector<const Expr*, 8> ArgsVector;
@@ -780,62 +779,75 @@ bool Parser::ParseFunctionModifier(FunctionEvent *Event, const CallExpr *Call,
   if (FnRef) {
     Args = Call->getArgs() + 1;
     ArgCount = Call->getNumArgs() - 1;
-  } else
-      if (const BinaryOperator *BinOp = dyn_cast<BinaryOperator>(Arg))
-        if (BinOp->getOpcode() == BO_Comma) {
-          Arg = BinOp->getLHS()->IgnoreParenCasts();
-          // IF this is just a function name (undecorated) then use it),
-          // otherwise get the call expression and look at it.
-          if (isa<BinaryOperator>(Arg))
-            while (const BinaryOperator *BO = dyn_cast<BinaryOperator>(Arg)) {
-              ArgsVector.push_back(BO->getRHS()->IgnoreParenCasts());
-              Arg = BO->getLHS()->IgnoreParenCasts();
-            }
-          if ((FnRef = dyn_cast<DeclRefExpr>(Arg))) {
-            std::reverse(ArgsVector.begin(), ArgsVector.end());
-            ArgCount = ArgsVector.size();
-            Args = ArgsVector.data();
-          } else if (const CallExpr *CE = dyn_cast<CallExpr>(Arg)) {
-            // If there isn't a direct callee, then we'll fall through to the
-            // error block.  We probably should have a better error report
-            // here.
-            Fn = CE->getDirectCallee();
-            // Use this call as the call expression so that we can look at
-            // its arguments, and don't skip the first argument.
-            Args = CE->getArgs();
-            ArgCount = CE->getNumArgs();
-          } else if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(Arg)) {
-            Meth = OME->getMethodDecl();
-            if (!ParseObjCMessageSend(Event, OME, F))
-              return false;
 
-            Args = OME->getArgs();
-            ArgCount = OME->getNumArgs();
-          } else {
-            Call->dump();
-            assert(0);
-          }
-          // TODO: This is where ObjC / C++ method call expressions would be
-          // inspected.
+  } else if (const BinaryOperator *BinOp = dyn_cast<BinaryOperator>(Arg)) {
+    // Handle the new called() syntax.
+    //
+    // called(foo(x)) macro now expands to ((void) foo(x), __tesla_ignore).
+    //
+    BinOp->dump();
+    BinOp->dumpPretty(Ctx);
+    if (BinOp->getOpcode() == BO_Comma) {
+      Arg = BinOp->getLHS()->IgnoreParenCasts();
+      Arg->dump();
+
+      // If this is just a function name (undecorated) then use it,
+      // otherwise get the call expression and look at it.
+      if (isa<BinaryOperator>(Arg)) {
+        while (const BinaryOperator *BO = dyn_cast<BinaryOperator>(Arg)) {
+          ArgsVector.push_back(BO->getRHS()->IgnoreParenCasts());
+          Arg = BO->getLHS()->IgnoreParenCasts();
         }
+      }
+
+      if ((FnRef = dyn_cast<DeclRefExpr>(Arg))) {
+        std::reverse(ArgsVector.begin(), ArgsVector.end());
+        ArgCount = ArgsVector.size();
+        Args = ArgsVector.data();
+
+      } else if (const CallExpr *CE = dyn_cast<CallExpr>(Arg)) {
+        // If there isn't a direct callee, then we'll fall through to the
+        // error block.  We probably should have a better error report
+        // here.
+        CFn = CE->getDirectCallee();
+        // Use this call as the call expression so that we can look at
+        // its arguments, and don't skip the first argument.
+        Args = CE->getArgs();
+        ArgCount = CE->getNumArgs();
+      } else if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(Arg)) {
+        if (!ParseObjCMessageSend(Event, OME, F))
+          return false;
+
+        ObjCMeth = OME->getMethodDecl();
+        Args = OME->getArgs();
+        ArgCount = OME->getNumArgs();
+      } else {
+        Call->dump();
+        assert(0);
+      }
+      // TODO: This is where ObjC / C++ method call expressions would be
+      // inspected.
+    }
+  }
 
   if (FnRef)
-    Fn = dyn_cast<FunctionDecl>(FnRef->getDecl());
+    CFn = dyn_cast<FunctionDecl>(FnRef->getDecl());
 
-  if (!(Fn || Meth)) {
+  if (!(CFn || ObjCMeth)) {
     ReportError("called() must refer to a function or method call", Call);
     return false;
   }
 
-  bool HaveRetVal = ParseRetVal && 
-    (Fn ? !Fn->getResultType()->isVoidType()
-        : Meth->getResultType()->isVoidType()) ;
+  bool HaveRetVal = ParseRetVal &&
+    (CFn ? !CFn->getResultType()->isVoidType()
+        : ObjCMeth->getResultType()->isVoidType()) ;
 
   // Parse the arguments to the event: either specified by the programmer in
   // the assertion or else the definition of the function.
 
   if (ArgCount > 0) {
-    const size_t ExpectedSize = (Fn ? Fn->param_size() : Meth->param_size())
+    const size_t ExpectedSize =
+      (CFn ? CFn->param_size() : ObjCMeth->param_size())
       + (HaveRetVal ? 1 : 0);
 
     // If an assertion specifies any arguments, it must specify all of them.
@@ -859,23 +871,18 @@ bool Parser::ParseFunctionModifier(FunctionEvent *Event, const CallExpr *Call,
   } else {
     // The assertion doesn't specify any arguments; include information about
     // arguments from the function definition, just for information.
-    if (Fn)
-      for (auto I = Fn->param_begin(); I != Fn->param_end(); ++I) {
-        if (!Parse(Event->add_argument(), *I, true, F))
-          return false;
-      }
-    else
-      for (auto I = Meth->param_begin(); I != Meth->param_end(); ++I) {
-        if (!Parse(Event->add_argument(), *I, true, F))
-          return false;
-      }
+    auto Start = CFn ? CFn->param_begin() : ObjCMeth->param_begin();
+    auto End = CFn ? CFn->param_end() : ObjCMeth->param_end();
 
+    for (auto i = Start; i != End; i++)
+      if (!Parse(Event->add_argument(), *i, true, F))
+        return false;
 
     if (HaveRetVal)
       Event->mutable_expectedreturnvalue()->set_type(Argument::Any);
   }
 
-  return Fn ? Parse(Event->mutable_function(), Fn, F) : true;
+  return CFn ? Parse(Event->mutable_function(), CFn, F) : true;
 }
 
 
