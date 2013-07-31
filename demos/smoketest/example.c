@@ -45,12 +45,12 @@ perform_operation(int op, struct object *o)
 		previously(security_check(ANY(ptr), o, op) == 0));
 
 	/* An even simpler assertion! */
-	TESLA_WITHIN(example_syscall, previously(called(security_check)));
+	TESLA_WITHIN(example_syscall, previously(call(security_check)));
 
 	/* More simple assertions. */
-	TESLA_WITHIN(example_syscall, previously(called(hold(o))));
-	TESLA_WITHIN(example_syscall, previously(returned(hold(o))));
-	TESLA_WITHIN(example_syscall, eventually(called(release(o))));
+	TESLA_WITHIN(example_syscall, previously(call(hold(o))));
+	TESLA_WITHIN(example_syscall, previously(returnfrom(hold(o))));
+	TESLA_WITHIN(example_syscall, eventually(call(release(o))));
 
 	/* A simple assertion about struct manipulation. */
 	TESLA_WITHIN(example_syscall, previously(o->refcount += 1));
@@ -63,14 +63,14 @@ perform_operation(int op, struct object *o)
 	);
 
 	/* An example of using the lower-level TESLA interface. */
-	TESLA_GLOBAL(called(example_syscall), returned(example_syscall),
+	TESLA_GLOBAL(call(example_syscall), returnfrom(example_syscall),
 		TSEQUENCE(
 			get_object(ANY(int), ANY(ptr)) == 0,
 			security_check(ANY(ptr), o, op) == 0,
-			some_helper(op) == 0 || called(never_actually_called),
-			optional(called(void_helper(o))),
+			some_helper(op) == 0 || call(never_actually_called),
+			optional(call(void_helper(o))),
 			TESLA_ASSERTION_SITE,
-			returned(release(o))
+			returnfrom(release(o))
 		)
 	);
 #endif

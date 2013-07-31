@@ -56,8 +56,8 @@ worker(int index)
 	struct object *obj = objects + index;
 	hold(obj);
 
-	TESLA_WITHIN(worker, previously(called(hold(obj))));
-	TESLA_WITHIN(worker, eventually(called(release(obj))));
+	TESLA_WITHIN(worker, previously(call(hold(obj))));
+	TESLA_WITHIN(worker, eventually(call(release(obj))));
 
 	release(obj);
 }

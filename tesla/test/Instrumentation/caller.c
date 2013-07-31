@@ -19,10 +19,10 @@ main(int argc, char *argv[])
 	// CHECK: call void @__tesla_instrumentation_callee_enter_main([[INT]] %argc, i8** %argv)
 
 	// Make an assertion about calling foo() and returning from bar():
-	TESLA_PERTHREAD(called(main), returned(main),
+	TESLA_PERTHREAD(call(main), returnfrom(main),
 		TSEQUENCE(
-			caller(called(foo)),
-			caller(returned(bar)),
+			caller(call(foo)),
+			caller(returnfrom(bar)),
 			TESLA_ASSERTION_SITE
 		)
 	);

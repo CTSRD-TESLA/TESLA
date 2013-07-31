@@ -61,7 +61,7 @@ perform_operation(struct object *o)
 	 *
 	 * CHECK: }
 	 */
-	TESLA_WITHIN(example_syscall, previously(called(hold(o))));
+	TESLA_WITHIN(example_syscall, previously(call(hold(o))));
 
 	return 0;
 }

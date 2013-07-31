@@ -23,7 +23,7 @@ void ab() {
    * CHECK: digraph automaton_{{[0-9]+}}
    */
   int x, y;
-  TESLA_PERTHREAD(strict(called(ab)), strict(returned(ab)),
+  TESLA_PERTHREAD(strict(call(ab)), strict(returnfrom(ab)),
                   strict(a(x) == 0 || b(y) == 0));
 
   /*

@@ -23,7 +23,7 @@ foo()
 int
 main(int argc, char *argv[])
 {
-	TESLA_WITHIN(main, eventually(called(foo)));
+	TESLA_WITHIN(main, eventually(call(foo)));
 
 	foo();
 

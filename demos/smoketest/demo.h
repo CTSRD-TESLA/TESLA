@@ -60,7 +60,7 @@ int crypto_encrypt(const_DES_cblock *key, DES_key_schedule *schedule);
 
 /**
  * Assists in testing '||':
- * previously(foo) -> previously(foo || called(never_actually_called)).
+ * previously(foo) -> previously(foo || call(never_actually_called)).
  */
 void never_actually_called(void);
 

@@ -41,7 +41,7 @@ int foo() {
 			 * CHECK:       minReps: 2
 			 * CHECK:     }
 			 */
-			ATLEAST(2, called(foo)),
+			ATLEAST(2, call(foo)),
 
 			/*
 			 * CHECK:     sequence {
@@ -56,7 +56,7 @@ int foo() {
 			 * CHECK:         maxReps: 10
 			 * CHECK:     }
 			 */
-			UPTO(10, called(bar)),
+			UPTO(10, call(bar)),
 
 			/*
 			 * CHECK:     sequence {
@@ -72,7 +72,7 @@ int foo() {
 			 * CHECK:       }
 			 * CHECK:     }
 			 */
-			REPEAT(42, 314, called(baz))
+			REPEAT(42, 314, call(baz))
 		)
 	);
 	/*

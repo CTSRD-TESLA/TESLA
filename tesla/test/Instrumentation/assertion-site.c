@@ -20,9 +20,9 @@ main(int argc, char *argv[])
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
 	TESLA_WITHIN(main,
 		TSEQUENCE(
-			callee(called(foo)),
+			callee(call(foo)),
 			TESLA_ASSERTION_SITE,
-			callee(returned(bar))
+			callee(returnfrom(bar))
 		)
 	);
 
@@ -31,8 +31,8 @@ main(int argc, char *argv[])
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
 	TESLA_WITHIN(main,
 		TSEQUENCE(
-			caller(called(foo)),
-			caller(returned(bar)),
+			caller(call(foo)),
+			caller(returnfrom(bar)),
 			TESLA_ASSERTION_SITE
 		)
 	);

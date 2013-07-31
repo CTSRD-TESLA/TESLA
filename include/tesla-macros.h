@@ -46,8 +46,8 @@
 /** An assertion made within the execution of a particular function. */
 #define	TESLA_WITHIN(function, expression)				\
 	TESLA_PERTHREAD(						\
-		callee(called(function)),				\
-		callee(returned(function)),				\
+		callee(call(function)),					\
+		callee(returnfrom(function)),				\
 		expression						\
 	)
 
@@ -70,8 +70,8 @@
 /** A strictly-ordered sequence of events. */
 #define	TSEQUENCE(...)		__tesla_sequence(TIGNORE, __VA_ARGS__)
 
-#define	called(...)		__tesla_call(((void) __VA_ARGS__, TIGNORE))
-#define	returned(...)		__tesla_return(((void) __VA_ARGS__, TIGNORE))
+#define	call(...)		__tesla_call(((void) __VA_ARGS__, TIGNORE))
+#define	returnfrom(...)		__tesla_return(((void) __VA_ARGS__, TIGNORE))
 
 #define	callee(...)		__tesla_callee(TIGNORE, __VA_ARGS__)
 #define	caller(...)		__tesla_caller(TIGNORE, __VA_ARGS__)

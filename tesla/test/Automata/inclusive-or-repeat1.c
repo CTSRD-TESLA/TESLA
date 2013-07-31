@@ -15,7 +15,7 @@ int	bar();
 
 int foo() {
 	TESLA_WITHIN(context,
-	  strict(ATLEAST(0, called(foo)) || ATLEAST (0, called(bar)))
+	  strict(ATLEAST(0, call(foo)) || ATLEAST (0, call(bar)))
 	);
   /*
    * Transitions, grouped into equivalence classes:

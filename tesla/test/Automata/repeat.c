@@ -38,7 +38,7 @@ int foo() {
 			 * CHECK: state [[FOO2]]
 			 * CHECK: --(foo(): Entry)-->([[FOO2]])
 			 */
-			ATLEAST(2, called(foo)),
+			ATLEAST(2, call(foo)),
 
 			/*
 			 * Up to three bar() events are allowed: after each
@@ -55,7 +55,7 @@ int foo() {
 			 * CHECK: --(bar(): Entry)-->([[BAR3:[':,a-zA-Z0-9]+]])
 			 * CHECK: --(baz(): Entry)-->([[BAZ1]])
 			 */
-			UPTO(3, called(bar)),
+			UPTO(3, call(bar)),
 
 			/*
 			 * Finally, we may have no fewer than two and no more
@@ -82,7 +82,7 @@ int foo() {
 			 * CHECK: state [[BAZ4]]
 			 * CHECK: --(context() == X <<cleanup>>)-->([[DONE]])
 			 */
-			REPEAT(2, 4, called(baz))
+			REPEAT(2, 4, call(baz))
 
 			/*
 			 * TODO: use CHECK-DAG when we switch to LLVM 3.4:

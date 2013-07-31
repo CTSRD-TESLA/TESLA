@@ -33,7 +33,7 @@ int	baz();
  * ERR: not exactly the same
  */
 #ifdef	BAD_ROBOT
-#define	EXPR()	returned(foo)
+#define	EXPR()	returnfrom(foo)
 #else
 #define	EXPR()	foo() == 0
 #endif

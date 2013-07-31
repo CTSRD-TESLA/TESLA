@@ -63,11 +63,11 @@ main(int argc, char *argv[])
 
 
 	// And finally, on the NOW event:
-	TESLA_PERTHREAD(called(main), returned(main),
+	TESLA_PERTHREAD(call(main), returnfrom(main),
 		previously(
 			TSEQUENCE(
-				caller(called(foo)),
-				callee(called(bar))
+				caller(call(foo)),
+				callee(call(bar))
 			)
 		)
 	);

@@ -18,9 +18,9 @@ void bar(void)
 
 	TESLA_WITHIN(bar,
 		TSEQUENCE(
-			called(foo),
+			call(foo),
 			TESLA_ASSERTION_SITE,
-			called(foo)
+			call(foo)
 		)
 	);
 

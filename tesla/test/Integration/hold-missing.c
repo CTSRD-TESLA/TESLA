@@ -38,8 +38,8 @@ static void	hold(struct object *o) { o->refcount += 1; }
 int
 perform_operation(int op, struct object *o)
 {
-	TESLA_WITHIN(example_syscall, previously(called(hold(o))));
-	TESLA_WITHIN(example_syscall, previously(returned(hold(o))));
+	TESLA_WITHIN(example_syscall, previously(call(hold(o))));
+	TESLA_WITHIN(example_syscall, previously(returnfrom(hold(o))));
 
 	return 0;
 }

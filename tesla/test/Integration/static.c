@@ -56,8 +56,8 @@ main(int argc, char *argv[])
 	// And finally, on the NOW event:
 	TESLA_WITHIN(main,
 		TSEQUENCE(
-			caller(called(foo)),
-			callee(called(bar)),
+			caller(call(foo)),
+			callee(call(bar)),
 			TESLA_ASSERTION_SITE
 		)
 	);

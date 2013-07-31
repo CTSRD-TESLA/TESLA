@@ -63,7 +63,7 @@ int foo(int x) {
 			 * CHECK:         }
 			 * CHECK:       }
 			 */
-			called(foo(x)),
+			call(foo(x)),
 
 			/*
 			 * CHECK:       expression {
