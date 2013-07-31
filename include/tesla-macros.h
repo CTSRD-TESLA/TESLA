@@ -71,7 +71,7 @@
 #define	TSEQUENCE(...)		__tesla_sequence(TIGNORE, __VA_ARGS__)
 
 #define	call(...)		__tesla_call(((void) __VA_ARGS__, TIGNORE))
-#define	returnfrom(...)		__tesla_return(((void) __VA_ARGS__, TIGNORE))
+#define	returnfrom(...)		__tesla_return(((void) (__VA_ARGS__), TIGNORE))
 
 #define	callee(...)		__tesla_callee(TIGNORE, __VA_ARGS__)
 #define	caller(...)		__tesla_caller(TIGNORE, __VA_ARGS__)

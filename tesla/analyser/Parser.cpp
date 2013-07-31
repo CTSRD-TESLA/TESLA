@@ -755,135 +755,164 @@ bool Parser::ParseConditional(Expression *E, const clang::CallExpr *Call,
 }
 
 
-bool Parser::ParseFunctionDetails(FunctionEvent *Event, const CallExpr *Call,
-                                   bool ParseRetVal, Flags F) {
+bool Parser::ParseFunctionDetails(FunctionEvent *Event, const CallExpr *CE,
+                                  bool ParseRetVal, Flags F) {
 
   Event->set_context(F.FnInstrContext);
 
-  // The arguments to __tesla_call/return are the function itself and then,
-  // optionally, the arguments (any of which may be __tesla_any()).
-  if (Call->getNumArgs() < 1) {
-    ReportError("missing function argument", Call);
+  //
+  // The actual function call/return/reference is the LHS of the
+  // magic (call, __tesla_ignore) expression.
+  //
+  auto *PseudoFn = CE->getDirectCallee();
+  if ((PseudoFn->getName() != "__tesla_call")
+      && (PseudoFn->getName() != "__tesla_return")) {
+    ReportError("expected __tesla_call or __tesla_return", CE);
     return false;
   }
 
-  auto Arg = Call->getArg(0)->IgnoreParenCasts();
-  auto FnRef = dyn_cast<DeclRefExpr>(Arg);
+  if (CE->getNumArgs() != 1) {
+    ReportError("expected one argument: ((void) call, __tesla_ignore)", CE);
+    return false;
+  }
 
-  const FunctionDecl *CFn = 0;
-  const ObjCMethodDecl *ObjCMeth = 0;
+  auto BinOp = dyn_cast<BinaryOperator>(CE->getArg(0)->IgnoreParenCasts());
+  if (!BinOp || BinOp->getOpcode() != BO_Comma) {
+    ReportError("expected ((void) call, __tesla_ignore)", CE);
+    return false;
+  }
 
-  const Expr *const*Args;
-  SmallVector<const Expr*, 8> ArgsVector;
-  int ArgCount = 0;
+  Expr *Call = BinOp->getLHS()->IgnoreParenCasts();
 
-  if (FnRef) {
-    Args = Call->getArgs() + 1;
-    ArgCount = Call->getNumArgs() - 1;
 
-  } else if (const BinaryOperator *BinOp = dyn_cast<BinaryOperator>(Arg)) {
-    // Handle the new called() syntax.
+  //
+  // Find the parameters of the function (or Objective-C message send)
+  // and the arguments passed to it in the TESLA event pattern (if any).
+  //
+  const Expr* RetVal;
+
+  if (auto *BinOp = dyn_cast<BinaryOperator>(Call)) {
     //
-    // called(foo(x)) macro now expands to ((void) foo(x), __tesla_ignore).
+    // The foo(x) == ret syntax is only allowed within __tesla_return.
     //
-    BinOp->dump();
-    BinOp->dumpPretty(Ctx);
-    if (BinOp->getOpcode() == BO_Comma) {
-      Arg = BinOp->getLHS()->IgnoreParenCasts();
-      Arg->dump();
-
-      // If this is just a function name (undecorated) then use it,
-      // otherwise get the call expression and look at it.
-      if (isa<BinaryOperator>(Arg)) {
-        while (const BinaryOperator *BO = dyn_cast<BinaryOperator>(Arg)) {
-          ArgsVector.push_back(BO->getRHS()->IgnoreParenCasts());
-          Arg = BO->getLHS()->IgnoreParenCasts();
-        }
-      }
-
-      if ((FnRef = dyn_cast<DeclRefExpr>(Arg))) {
-        std::reverse(ArgsVector.begin(), ArgsVector.end());
-        ArgCount = ArgsVector.size();
-        Args = ArgsVector.data();
-
-      } else if (const CallExpr *CE = dyn_cast<CallExpr>(Arg)) {
-        // If there isn't a direct callee, then we'll fall through to the
-        // error block.  We probably should have a better error report
-        // here.
-        CFn = CE->getDirectCallee();
-        // Use this call as the call expression so that we can look at
-        // its arguments, and don't skip the first argument.
-        Args = CE->getArgs();
-        ArgCount = CE->getNumArgs();
-      } else if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(Arg)) {
-        if (!ParseObjCMessageSend(Event, OME, F))
-          return false;
-
-        ObjCMeth = OME->getMethodDecl();
-        Args = OME->getArgs();
-        ArgCount = OME->getNumArgs();
-      } else {
-        Call->dump();
-        assert(0);
-      }
-      // TODO: This is where ObjC / C++ method call expressions would be
-      // inspected.
+    if (PseudoFn->getName() != "__tesla_return") {
+      ReportError("'fn(args) == ret' syntax only permitted in return", BinOp);
+      return false;
     }
+
+    Call = BinOp->getLHS()->IgnoreParenCasts();
+    RetVal = BinOp->getRHS()->IgnoreParenCasts();
+
+  } else {
+    RetVal = NULL;
   }
 
-  if (FnRef)
-    CFn = dyn_cast<FunctionDecl>(FnRef->getDecl());
 
-  if (!(CFn || ObjCMeth)) {
-    ReportError("called() must refer to a function or method call", Call);
+  //
+  // Find the function / message we're referencing.
+  //
+  const FunctionDecl *CFn;
+  QualType ResultType;
+  ObjCMethodDecl::param_const_iterator ParamBegin, ParamEnd;
+  typedef llvm::ArrayRef<const Expr*> ArgVec;
+  ArgVec Args;
+
+  if (auto *OME = dyn_cast<ObjCMessageExpr>(Call)) {
+    //
+    // An Objective-C message send should have both parameters and arguments.
+    //
+    if (!ParseObjCMessageSend(Event, OME, F))
+      return false;
+
+    auto *Method = OME->getMethodDecl();
+    ResultType = Method->getResultType();
+    ParamBegin = Method->param_begin();
+    ParamEnd = Method->param_end();
+
+    CFn = NULL;
+    Args = ArgVec(OME->getArgs(), OME->getNumArgs());
+
+  } else if (auto FnDeclRef = dyn_cast<DeclRefExpr>(Call)) {
+    //
+    // A bare function reference (e.g. called(foo)) doesn't tell us anything
+    // about its arguments.
+    //
+    CFn = dyn_cast<FunctionDecl>(FnDeclRef->getDecl());
+    if (!CFn) {
+      ReportError("not a function", FnDeclRef->getDecl());
+      return false;
+    }
+
+    Args = ArgVec(NULL, (size_t) 0);
+
+  } else if (auto *CE = dyn_cast<CallExpr>(Call)) {
+    //
+    // An actual call to a C function implies parameters (from the function)
+    // and arguments (from the assertion).
+    //
+    CFn = CE->getDirectCallee();
+    Args = ArgVec(CE->getArgs(), CE->getNumArgs());
+
+  } else {
+    Call->dump();
+    ReportError("expected C function or Objective-C message send", Call);
     return false;
   }
 
-  bool HaveRetVal = ParseRetVal &&
-    (CFn ? !CFn->getResultType()->isVoidType()
-        : ObjCMeth->getResultType()->isVoidType()) ;
 
-  // Parse the arguments to the event: either specified by the programmer in
-  // the assertion or else the definition of the function.
+  //
+  // Defer C parameter handling to here (rather than duplicating code above).
+  //
+  if (CFn) {
+    if (!Parse(Event->mutable_function(), CFn, F))
+      return false;
 
-  if (ArgCount > 0) {
-    const size_t ExpectedSize =
-      (CFn ? CFn->param_size() : ObjCMeth->param_size())
-      + (HaveRetVal ? 1 : 0);
+    ResultType = CFn->getResultType();
+    ParamBegin = CFn->param_begin();
+    ParamEnd = CFn->param_end();
+  }
 
+  assert(!ResultType.isNull());
+  bool HaveRetVal = ParseRetVal && !ResultType->isVoidType();
+
+
+  //
+  // Parse the arguments to the event: either patterns of expected values
+  // specified by the programmer in the assertion or else
+  // debug information about them, implied by the definition of the function.
+  //
+  if (Args.empty()) {
+    //
+    // The assertion doesn't specify any arguments; include information about
+    // arguments from the function definition for debugging purposes.
+    //
+    for (auto i = ParamBegin; i != ParamEnd; i++)
+      if (!Parse(Event->add_argument(), *i, true, F))
+        return false;
+
+  } else {
     // If an assertion specifies any arguments, it must specify all of them.
-    if (ArgCount != ExpectedSize) {
+    const size_t ExpectedSize = (ParamEnd - ParamBegin) + (HaveRetVal ? 1 : 0);
+    if (Args.size() != ExpectedSize) {
       ReportError("specify all args (possibly __tesla_any()) or none", Call);
       return false;
     }
 
-    for (size_t i = 0; i < ArgCount; i++) {
-      if (!Parse(Event->add_argument(), Args[i], F))
+    for (auto Arg : Args)
+      if (!Parse(Event->add_argument(), Arg, F))
         return false;
-    }
-
-    if (HaveRetVal)
-    { assert(0);
-      if (!Parse(Event->mutable_expectedreturnvalue(),
-                 Args[ArgCount-1], F))
-        return false;
-    }
-
-  } else {
-    // The assertion doesn't specify any arguments; include information about
-    // arguments from the function definition, just for information.
-    auto Start = CFn ? CFn->param_begin() : ObjCMeth->param_begin();
-    auto End = CFn ? CFn->param_end() : ObjCMeth->param_end();
-
-    for (auto i = Start; i != End; i++)
-      if (!Parse(Event->add_argument(), *i, true, F))
-        return false;
-
-    if (HaveRetVal)
-      Event->mutable_expectedreturnvalue()->set_type(Argument::Any);
   }
 
-  return CFn ? Parse(Event->mutable_function(), CFn, F) : true;
+  if (HaveRetVal) {
+    if (RetVal) {
+      if (!Parse(Event->mutable_expectedreturnvalue(), RetVal, F))
+        return false;
+    } else {
+      Event->mutable_expectedreturnvalue()->set_type(Argument::Any);
+    }
+  }
+
+  return true;
 }
 
 
