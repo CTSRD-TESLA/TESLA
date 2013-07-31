@@ -49,7 +49,7 @@ perform_operation(int op, struct object *o)
 
 	/* More simple assertions. */
 	TESLA_WITHIN(example_syscall, previously(called(hold(o))));
-	TESLA_WITHIN(example_syscall, previously(returned(hold, o)));
+	TESLA_WITHIN(example_syscall, previously(returned(hold(o))));
 	TESLA_WITHIN(example_syscall, eventually(called(release(o))));
 
 	/* A simple assertion about struct manipulation. */
@@ -70,7 +70,7 @@ perform_operation(int op, struct object *o)
 			some_helper(op) == 0 || called(never_actually_called),
 			optional(called(void_helper(o))),
 			TESLA_ASSERTION_SITE,
-			returned(release, o)
+			returned(release(o))
 		)
 	);
 #endif

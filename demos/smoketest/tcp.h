@@ -187,11 +187,11 @@ void	tcp_free(struct tcpcb*);
  * and its events will trigger synchronisation.
  *
  * The automaton starts with the event 'called(tcp_init(tp))' and ends with
- * the event 'returned(tcp_free, tp)'.
+ * the event 'returned(tcp_free(tp))'.
  */
 TESLA_STRUCT_AUTOMATON(struct tcpcb *tp, my_tcpcb_assertion, __tesla_global,
                        called(tcp_init(tp)),
-                       returned(tcp_free, tp));
+                       returned(tcp_free(tp)));
 
 automaton(my_tcpcb_assertion, struct tcpcb *tp)
 {
