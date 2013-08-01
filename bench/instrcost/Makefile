@@ -1,4 +1,5 @@
 .PHONY: all clean
+.SILENT:
 
 # The location of TESLA outputs (binaries, libraries, etc.).
 # Only needed when we don't install TESLA to /usr/local.

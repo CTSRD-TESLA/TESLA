@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Invoke this script with a maximum number of assertions:
 #   ./run-to 3
@@ -12,17 +12,17 @@
 
 cd `dirname $0`
 
-declare -i MAX=$1
+MAX=$1
 if [ "$MAX" == "" ]; then
 	echo "Usage: run-to <runs> [CFLAGS]"
 	exit 1
 fi
 
 if [ "$TRIALS" == "" ]; then
-	 declare -i TRIALS=3
+	 TRIALS=3
 fi
 
-declare -i TRIALS=${TRIALS}
+TRIALS=${TRIALS}
 
 export LD_LIBRARY_PATH=$TESLA_BUILD_DIR/libtesla/src
 
@@ -37,19 +37,19 @@ function run {
 	FLAGS="${CFLAGS} $2 -D RUNS=${RUNS}"
 
 	echo "# CFLAGS = '${FLAGS}'"
-	echo "# asserts\truns\c"
+	echo -en "# asserts\truns"
 
-	for t in `seq ${TRIALS}`; do echo "\ttrial$t\c"; done
+	for t in `seq ${TRIALS}`; do echo -en "\ttrial$t"; done
 	echo
 
-	declare -i i=0
-	while [ ${MAX} -gt $i ]; do
-		CFLAGS="${FLAGS} -D TESLA=$i" make --quiet clean all || exit 1
+	i=0
+	for i in `seq ${MAX}`; do
+		CFLAGS="${FLAGS} -D TESLA=$i" make clean all || exit 1
 
-		echo "  $i\t\t${RUNS}\c"
+		echo -en "  $i\t\t${RUNS}"
 
 		for t in `seq ${TRIALS}`; do
-			echo "\t\c"
+			echo -en "\t"
 			./instrcost
 		done
 		echo
