@@ -15,19 +15,22 @@ averages = []
 for line in open(args.filename, 'r'):
 	if line.startswith('#'):
 		if 'CFLAGS' in line:
+			label = line.strip()[:-1].replace("# CFLAGS = '", "")
+			print(label)
+
 			if len(all_data) > 0:
-				pylab.plot(
-					range(1, len(averages) + 1),
-					averages,
-					'-.'
-				)
-				pylab.boxplot(all_data)
+				pylab.plot(averages, 'g-.')
+				pylab.boxplot(all_data,
+					positions = range(len(all_data)))
 				all_data = []
 				averages = []
 
 			pylab.figure()
-			pylab.suptitle(line)
-			print(line.strip())
+			pylab.suptitle(label)
+			pylab.xlabel('Assertions')
+			pylab.ylabel('Overhead [%]')
+
+			baseline = None
 		continue
 
 	cols = line.split()
@@ -42,16 +45,27 @@ for line in open(args.filename, 'r'):
 	trials = [ float(t) / runs for t in trials ]
 	avg = numpy.average(trials)
 
-	all_data.append(trials)
-	averages.append(avg)
+	if baseline is None:
+		baseline = avg
+
+	overhead = [ 100 * (t - baseline) / t for t in trials ]
+	overhead_avg = numpy.average(overhead)
+
+	all_data.append(overhead)
+	averages.append(overhead_avg)
 
 	summary = (
-		assertions, avg, numpy.std(trials), min(trials), max(trials)
+		assertions,
+		avg,
+		numpy.std(trials),
+		min(trials),
+		max(trials),
+		overhead_avg,
 	)
 
-	print('%d assertions: %12.4g ± %10.4g    [%.4g-%.4g]' % summary)
+	print('%d assertions: %12.4g ± %10.4g    [%.4g-%.4g] (%d%%)' % summary)
 
-pylab.plot(range(1, len(averages)+1), averages, '-.')
-pylab.boxplot(all_data)
+pylab.plot(averages, 'g-.')
+pylab.boxplot(all_data, positions = range(len(all_data)))
 
 pylab.show()
