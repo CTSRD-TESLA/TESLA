@@ -7,9 +7,9 @@ usage() {
 	echo "    - analyse       (analyse C assertions, produce TESLA IR)"
 	echo "    - cat           (combine several TESLA IR files)"
 	echo "    - get-triple    (get the host's LLVM triple)"
-	echo "    - info          (show information about TESLA automata)"
 	echo "    - highlight     (show transitions taken in a .dot graph)"
 	echo "    - instrument    (add TESLA instrumention to LLVM IR)"
+	echo "    - print         (print information about TESLA automata)"
 	echo
 }
 
