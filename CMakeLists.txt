@@ -86,6 +86,10 @@ if (USE_LIBCXX)
   set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
+  if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
+    set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -l cxxrt")
+  endif ()
+
   include_directories(${LIBCXX_INCLUDE_DIRS})
 endif ()
 
@@ -132,7 +136,7 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 
 	set(LIT_EXTRA ${LIT_EXTRA}
 		--param=extra_include_dirs=${EXECINFO_INCLUDE_DIRS}
-		--param=extra_libs=${EXECINFO_LIBRARY})
+		--param=extra_libs="-lthr:${EXECINFO_LIBRARY}")
 
 else ( ${CMAKE_SYSTEM_NAME} MATCHES Linux )
 	# On some Linux installations, we need to explicitly pass the
