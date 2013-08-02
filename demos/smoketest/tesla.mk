@@ -3,7 +3,7 @@
 ANALYSE=	tesla analyse
 CAT=		tesla cat
 INSTRUMENT=	tesla instrument -S -verify-each
-GRAPH=		tesla graph
+GRAPH=		tesla print
 
 #CFLAGS+=	-D TESLA
 LIBS+=		-l tesla
