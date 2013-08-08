@@ -24,22 +24,6 @@ index 9471e3a..45a6d58 100644
 +        return xml
 +
 +
-diff --git a/utils/lit/lit/TestRunner.py b/utils/lit/lit/TestRunner.py
-index 8417699..07fb43f 100644
---- a/utils/lit/lit/TestRunner.py
-+++ b/utils/lit/lit/TestRunner.py
-@@ -277,10 +277,7 @@ def executeScript(test, litConfig, tmpBase, commands, cwd):
-         script += '.bat'
- 
-     # Write script file
--    mode = 'w'
--    if litConfig.isWindows and not isWin32CMDEXE:
--      mode += 'b'  # Avoid CRLFs when writing bash scripts.
--    f = open(script, mode)
-+    f = open(script,'w')
-     if isWin32CMDEXE:
-         f.write('\nif %ERRORLEVEL% NEQ 0 EXIT\n'.join(commands))
-     else:
 diff --git a/utils/lit/lit/main.py b/utils/lit/lit/main.py
 index da961ee..6cd025f 100755
 --- a/utils/lit/lit/main.py
