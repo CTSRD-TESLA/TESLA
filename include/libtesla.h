@@ -31,8 +31,8 @@
  * $Id$
  */
 
-#ifndef _TESLA_STATE
-#define	_TESLA_STATE
+#ifndef	_LIBTESLA_H
+#define	_LIBTESLA_H
 
 #include <sys/cdefs.h>
 
