@@ -65,7 +65,7 @@ check_store(struct tesla_store *store)
 		tesla_class_put(classes[i]);
 	}
 
-	void *JUNK = (void*) 0xF00BA5;
+	struct tesla_class *JUNK = (struct tesla_class*) 0xF00BA5;
 	struct tesla_class *junk = JUNK;
 	int err = tesla_class_get(store, CLASSES, &junk, "foo", "bar");
 	if (err != TESLA_ERROR_EINVAL)

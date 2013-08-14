@@ -19,7 +19,7 @@ set(TESTS
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
 
 foreach(test ${TESTS})
-	add_executable(${test} ${test}.c)
+	add_executable(${test} ${test}.cpp)
 	target_link_libraries(${test} tesla)
 
 	if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )

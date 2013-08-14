@@ -2,13 +2,6 @@ cmake_minimum_required(VERSION 2.6)
 project(TESLA)
 
 #
-# TESLA uses some C++11 extensions like 'auto', but doesn't require a
-# C++11-compliant standard library.
-#
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-extensions")
-
-
-#
 # Protocol buffers:
 #
 find_package(Protobuf REQUIRED)

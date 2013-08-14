@@ -6,7 +6,7 @@
  * situation described by a @ref tesla_key and a @ref tesla_transition.
  *
  * Commands for llvm-lit:
- * RUN: clang %cflags %ldflags %s -o %t
+ * RUN: clang++ %cxxflags %ldflags %s -o %t
  * RUN: %t | tee %t.out
  * RUN: FileCheck -input-file %t.out %s
  */
@@ -35,7 +35,7 @@ main(int argc, char **argv)
 
 	uint32_t x = 42;
 	uint32_t y = 86;
-	uint32_t z = 99;
+	//uint32_t z = 99;
 
 	bzero(&t_storage, sizeof(t_storage));
 

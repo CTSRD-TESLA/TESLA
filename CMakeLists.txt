@@ -52,6 +52,11 @@ link_directories(${LLVM_LIBDIR})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+#
+# TESLA uses some C++11 extensions like 'auto', but doesn't require a
+# C++11-compliant standard library.
+#
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-extensions")
 
 #
 # Global include directories for all of TESLA:
@@ -97,6 +102,8 @@ endif ()
 #
 # Set up some variables to control the testing framework:
 #
+set(LIT_EXTRA "--param=extra_cxxflags=${CMAKE_CXX_FLAGS}")
+
 set(SHOW_TEST_STATS false CACHE BOOL "Show statistics after running tests")
 if (SHOW_TEST_STATS)
   message(STATUS "Will show statistics after each test run")
