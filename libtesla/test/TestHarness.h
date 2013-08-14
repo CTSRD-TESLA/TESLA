@@ -160,7 +160,6 @@ LibTeslaTest::LibTeslaTest()
 	assert(tesla_set_event_handler(&Event::handlers) == TESLA_SUCCESS);
 }
 
-#include <iostream>
 void LibTeslaTest::Ev(Event *e)
 {
 	assert(!expectedEvents.empty());
@@ -169,79 +168,5 @@ void LibTeslaTest::Ev(Event *e)
 
 	lastEvent.reset(e);
 }
-
-
-#if 0
-#include <execinfo.h>
-#include <signal.h>
-#include <stdlib.h>
-
-#ifdef NDEBUG
-#error NDEBUG set but tests only work properly in debug mode
-#endif
-
-#define check(op) do { \
-	int tesla_error = op; \
-	if (tesla_error != TESLA_SUCCESS) { \
-		print_backtrace(); \
-		errx(1, "error at %s:%i in " #op ": %s", \
-		     __FILE__, __LINE__, tesla_strerror(tesla_error)); \
-	} \
-} while(0)
-
-
-void	print_backtrace(void);
-void	install_default_signal_handler(void);
-
-static void
-signal_handler(int sig)
-{
-	fprintf(stderr, "Signal %d:\n", sig);
-	print_backtrace();
-	exit(1);
-}
-
-void
-print_backtrace()
-{
-	void *array[10];
-	size_t size = backtrace(array, 10);
-
-	backtrace_symbols_fd(array, size, 2);
-}
-
-void
-install_default_signal_handler()
-{
-	signal(11, signal_handler);
-}
-
-struct {
-	int	new_instances;
-	int	transitions;
-} counts;
-
-
-#if 0
-
-/** A vector of event handlers. */
-struct tesla_event_handlers {
-	tesla_ev_new_instance	teh_init;
-	tesla_ev_transition	teh_transition;
-	tesla_ev_clone		teh_clone;
-	tesla_ev_no_instance	teh_fail_no_instance;
-	tesla_ev_bad_transition	teh_bad_transition;
-	tesla_ev_error		teh_err;
-	tesla_ev_accept		teh_accept;
-	tesla_ev_ignored	teh_ignored;
-};
-#endif
-
-void
-install_tesla_event_handlers()
-{
-}
-
-#endif
 
 #endif
