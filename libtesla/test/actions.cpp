@@ -1,5 +1,5 @@
 /**
- * @file actions.c
+ * @file actions.cpp
  * Tests @ref tesla_action.
  *
  * @ref tesla_action decides what we should do to a @ref tesla_instance in a

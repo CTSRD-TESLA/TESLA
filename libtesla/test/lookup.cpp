@@ -1,5 +1,5 @@
 /**
- * @file lookup.c
+ * @file lookup.cpp
  * Tests automata lookup.
  *
  * We should be able to look up automata by exact name or by using ANY.

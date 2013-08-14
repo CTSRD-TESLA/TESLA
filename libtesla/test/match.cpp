@@ -1,4 +1,4 @@
-/** @file match.c  Tests automata key matching. */
+/** @file match.cpp  Tests automata key matching. */
 /*
  * Commands for llvm-lit:
  * RUN: clang %cflags %ldflags %s -o %t

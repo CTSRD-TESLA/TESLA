@@ -1,5 +1,5 @@
 /**
- * @file update.c
+ * @file update.cpp
  * Tests automata-updating behaviour.
  *
  * When an event is fired, it must be delivered to all automata instances that

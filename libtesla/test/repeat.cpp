@@ -1,5 +1,5 @@
 /**
- * @file repeat.c
+ * @file repeat.cpp
  * Stress test: runs automata through their paces many times.
  *
  * Commands for llvm-lit:

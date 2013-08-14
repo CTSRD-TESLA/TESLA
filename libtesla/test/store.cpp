@@ -1,5 +1,5 @@
 /**
- * @file store.c
+ * @file store.cpp
  * Tests automata class storage.
  *
  * Commands for llvm-lit:
