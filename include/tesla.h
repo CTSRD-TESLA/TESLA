@@ -39,6 +39,10 @@
 #ifndef	TESLA_H
 #define	TESLA_H
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 /**
  * API for programmers who want to use TESLA in their code.
  *
@@ -237,5 +241,7 @@ __tesla_struct_uses_automaton(__unused const char *automaton,
 #endif	/* __TESLA_ANALYSER__ */
 
 /** @} */
+
+__END_DECLS
 
 #endif	/* TESLA_H */

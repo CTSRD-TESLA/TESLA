@@ -33,6 +33,10 @@
 #ifndef TESLA_INTERNAL_H
 #define	TESLA_INTERNAL_H
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 /**
  * @addtogroup libtesla
  * @{
@@ -414,5 +418,6 @@ extern int have_transitions;
 
 /** @} */
 
+__END_DECLS
 
 #endif /* TESLA_INTERNAL_H */

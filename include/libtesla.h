@@ -34,6 +34,10 @@
 #ifndef _TESLA_STATE
 #define	_TESLA_STATE
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 /**
  * Support library for TESLA instrumentation.
  * @addtogroup libtesla
@@ -287,5 +291,7 @@ int	tesla_set_event_handlers(struct tesla_event_metahandler *);
 #endif
 
 /** @} */
+
+__END_DECLS
 
 #endif /* _TESLA_STATE */

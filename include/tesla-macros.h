@@ -32,6 +32,10 @@
 #ifndef	TESLA_MACROS_H
 #define	TESLA_MACROS_H
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 /**
  * @addtogroup ConsumerAPI
  * @{
@@ -103,5 +107,7 @@
 #define eventually(...)		TSEQUENCE(TESLA_ASSERTION_SITE, __VA_ARGS__)
 
 /** @} */
+
+__END_DECLS
 
 #endif	/* !TESLA_MACROS_H */
