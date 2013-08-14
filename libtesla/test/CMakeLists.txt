@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE Debug)
 include_directories(../src)
 
 set(TESTS
+	actions
 	match
 	lookup
 	store
