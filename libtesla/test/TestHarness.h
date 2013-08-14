@@ -37,6 +37,10 @@
 #include <libtesla.h>
 #include <assert.h>
 
+#ifndef NULL
+#define NULL 0
+#endif
+
 typedef struct tesla_class Class;
 typedef struct tesla_instance Instance;
 typedef struct tesla_key Key;
