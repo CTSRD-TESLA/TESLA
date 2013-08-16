@@ -11,6 +11,7 @@ set(TESTS
 	actions
 	match
 	lookup
+	repeat
 	store
 	update
 )
