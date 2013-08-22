@@ -35,7 +35,7 @@ main(int argc, char *argv[])
 	 * CHECK: ====
 	 * CHECK: tesla_update_state()
 	 * CHECK: context:      per-thread
-	 * CHECK: class:        0 ('[[NAME:.*]]')
+	 * CHECK: class:        '[[NAME:.*]]'
 	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]]:0x0 <init>) ]
 	 * CHECK: key:          0x0 [ X X X X ]
 	 * CHECK: ----

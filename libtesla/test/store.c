@@ -1,5 +1,5 @@
 /**
- * @file store.cpp
+ * @file store.c
  * Tests automata class storage.
  *
  * Commands for llvm-lit:
@@ -44,9 +44,14 @@ check_store(struct tesla_store *store)
 {
 	assert(store != NULL);
 
+	struct tesla_automaton descriptions[CLASSES];
 	struct tesla_class *classes[CLASSES];
+
 	for (unsigned int i = 0; i < CLASSES; i++) {
-		check(tesla_class_get(store, i, classes + i, name(i), desc(i)));
+		struct tesla_automaton *descrip = descriptions + i;
+		descrip->ta_name = name(i);
+
+		check(tesla_class_get(store, descrip, classes + i));
 
 		struct tesla_instance *instance;
 		struct tesla_key key;
@@ -67,13 +72,19 @@ check_store(struct tesla_store *store)
 
 	struct tesla_class *JUNK = (struct tesla_class*) 0xF00BA5;
 	struct tesla_class *junk = JUNK;
-	int err = tesla_class_get(store, CLASSES, &junk, "foo", "bar");
-	if (err != TESLA_ERROR_EINVAL)
-		errx(1, "tesla_class_get() did not report EINVAL: %s",
+
+	struct tesla_automaton descrip = {
+		.ta_name = "store.cpp:i+1",
+		.ta_description = "valid automaton, invalid tesla_class*",
+		.ta_alphabet_size = 42,
+	};
+
+	int err = tesla_class_get(store, &descrip, &junk);
+	if (err != TESLA_ERROR_ENOENT)
+		errx(1, "tesla_class_get() did not report ENOENT: %s",
 		     tesla_strerror(err));
 
 	if (junk != JUNK)
 		errx(1, "tesla_class_get() clobbered output variable when"
 		        " returning an error");
 }
-

@@ -62,6 +62,15 @@ BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
                          BasicBlock *MatchTarget, BasicBlock *NonMatchTarget,
                          Value *Val, const tesla::Argument& Pattern);
 
+/// Find or create the @ref tesla_automaton type.
+llvm::StructType* StructAutomatonType(llvm::Module&);
+
+/// Find a constnat pointer to a constant value.
+Constant* PointerTo(Constant *C, Type *T, Module& M, StringRef Name = "");
+
+/// Get a constant string pointer.
+Constant* StrPtr(StringRef S, Module& M, StringRef Name = "");
+
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
     if (B.getName() == Name)
@@ -134,32 +143,8 @@ void FnInstrumentation::AppendInstrumentation(
     assert(ReturnValue != NULL);
   }
 
-  Type* IntType = Type::getInt32Ty(Ctx);
-
-#if 0 
-  int mask = 0;
-  int bit=1;
-  for (Value *V : KeyArgs) {
-    if (V)
-      mask |= bit;
-    bit<<=1;
-  }
-  int32_t statemask = (*Trans.begin())->Destination().Mask(); 
-  assert((statemask & mask) == statemask);
-#endif
-
-  vector<Value*> Args;
-  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
-  Args.push_back(ConstantInt::get(IntType, A.ID()));
-  Args.push_back(ConstructKey(Builder, M, KeyArgs));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-  Args.push_back(ConstructTransitions(Builder, M, Trans));
-
-  Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
-  assert(Args.size() == UpdateStateFn->arg_size());
-  Builder.CreateCall(UpdateStateFn, Args);
-  Builder.CreateBr(Exit);
+  UpdateState(A, Trans.Symbol, ConstructKey(Builder, M, KeyArgs),
+              M, Exit, Builder);
 }
 
 
@@ -357,6 +342,39 @@ Function* tesla::StructInstrumentation(Module& Mod, StructType *Type,
 }
 
 
+void tesla::UpdateState(const Automaton& A, uint32_t Symbol, Value *Key,
+                        Module& M, BasicBlock *Next, IRBuilder<>& Builder) {
+
+  auto& Ctx(M.getContext());
+
+  Type *Automaton = StructAutomatonType(M);
+  Type *AutoStar = PointerType::getUnqual(Automaton);
+  Type* Int32 = Type::getInt32Ty(Ctx);
+  Type *KeyStar = PointerType::getUnqual(KeyType(M));
+  Type *Void = Type::getVoidTy(Ctx);
+
+  auto *Fn = dyn_cast<Function>(M.getOrInsertFunction(
+      "tesla_update_state",
+      Void,       // return type
+      Int32,      // context (global vs per-thread)
+      AutoStar,   // automaton description
+      Int32,      // symbol/event ID
+      KeyStar,    // pattern
+      NULL
+  ));
+
+  std::vector<Value*> Args;
+  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
+  Args.push_back(ExternAutomatonDescrip(&A, M));
+  Args.push_back(ConstantInt::get(Int32, Symbol));
+  Args.push_back(Key);
+
+  assert(Args.size() == Fn->arg_size());
+  Builder.CreateCall(Fn, Args);
+  Builder.CreateBr(Next);
+}
+
+
 Type* tesla::IntPtrType(Module& M) {
     return DataLayout(&M).getIntPtrType(M.getContext());
 }
@@ -391,14 +409,40 @@ StructType* tesla::TransitionSetType(Module& M) {
 
   Type *IntTy = IntegerType::get(Ctx, 32);
   Type *TransStar = PointerType::getUnqual(TransitionType(M));
-  Type *CharStar = PointerType::getUnqual(IntegerType::get(Ctx, 8));
+  //Type *CharStar = PointerType::getUnqual(IntegerType::get(Ctx, 8));
 
   return StructType::create(Name,
                             IntTy,      // number of possible transitions
                             TransStar,  // transition array
-                            CharStar,   // description
+  //                          CharStar,   // description
                             NULL);
 }
+
+StructType* tesla::StructAutomatonType(Module& M) {
+  const char StructTypeName[] = "tesla_automaton";
+  StructType *T = M.getTypeByName(StructTypeName);
+  if (T)
+    return T;
+
+  // We don't already have it.
+  auto& Ctx = M.getContext();
+
+  Type *CharPtr = PointerType::getUnqual(IntegerType::get(Ctx, 8));
+  Type *CharPtrPtr = PointerType::getUnqual(CharPtr);
+
+  Type *Int = IntegerType::get(Ctx, 32);
+
+  Type *TransPtr = PointerType::getUnqual(TransitionSetType(M));
+
+  return StructType::create(StructTypeName,
+                            CharPtr,    // name
+                            Int,        // alphabet_size
+                            TransPtr,   // transitions
+                            CharPtr,    // description
+                            CharPtrPtr, // symbol_names
+                            NULL);
+}
+
 
 BasicBlock* tesla::CreateInstrPreamble(Module& Mod, Function *F,
                                        const Twine& Prefix, bool SuppressDI) {
@@ -510,32 +554,6 @@ BasicBlock* tesla::MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
   M.CreateCondBr(Cmp, MatchTarget, NonMatchTarget);
 
   return MatchBlock;
-}
-
-
-Function* tesla::FindStateUpdateFn(Module& M, Type *IntType) {
-
-  LLVMContext& Ctx = M.getContext();
-
-  Type *Char = IntegerType::get(Ctx, 8);
-  Type *CharStar = PointerType::getUnqual(Char);
-  Type *TransStar = PointerType::getUnqual(TransitionSetType(M));
-  Type *KeyStar = PointerType::getUnqual(KeyType(M));
-  Type *Void = Type::getVoidTy(Ctx);
-
-  Constant *Fn = M.getOrInsertFunction("tesla_update_state",
-      Void,       // return type
-      IntType,    // context
-      IntType,    // class_id
-      KeyStar,    // key
-      CharStar,   // name
-      CharStar,   // description
-      TransStar,  // transitions data
-      NULL
-    );
-
-  assert(isa<Function>(Fn));
-  return cast<Function>(Fn);
 }
 
 
@@ -709,7 +727,13 @@ Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,
 }
 
 Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
-                                      const TEquivalenceClass& Tr) {
+                                      const TEquivalenceClass& Tr,
+                                      StructType *T) {
+
+  assert(!Tr.empty());
+
+  string Name(("sym" + Twine(Tr.Symbol)).str());
+  string Desc((*Tr.begin())->String());
 
   // First convert each individual transition into an llvm::Constant*.
   vector<Constant*> Transitions;
@@ -717,34 +741,113 @@ Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
     Transitions.push_back(ConstructTransition(Builder, M, *T));
 
   // Put them all into a global struct tesla_transitions.
-  static StructType *T = TransitionSetType(M);
-
   Type *IntType = Type::getInt32Ty(M.getContext());
-  Constant *Zero = ConstantInt::get(IntType, 0);
-  Constant *Zeroes[] = { Zero, Zero };
-
   Constant *Count = ConstantInt::get(IntType, Transitions.size());
-
-  assert(Tr.size() > 0);
-  string Name = "transition_array_" + (*Tr.begin())->String();
 
   ArrayType *ArrayT = ArrayType::get(TransitionType(M), Transitions.size());
   auto *Array = new GlobalVariable(M, ArrayT, true, GlobalValue::PrivateLinkage,
                                    ConstantArray::get(ArrayT, Transitions),
-                                   Name);
+                                   "transition_array_" + Name);
 
-  // Create a global variable that points to this structure.
-  Constant *ArrayPtr = ConstantExpr::getInBoundsGetElementPtr(Array, Zeroes);
+  Constant *Zero = ConstantInt::get(IntType, 0);
+  Constant *Zeroes[] = { Zero, Zero };
+  auto *ArrayPtr = ConstantExpr::getInBoundsGetElementPtr(Array, Zeroes);
 
-  string Description;
-  raw_string_ostream D(Description);
-  D << Tr;
-  auto *Desc = Builder.CreateGlobalStringPtr(D.str(), Name + "_description");
-
-  Constant *TransitionsInit =
-    ConstantStruct::get(T, Count, ArrayPtr, Desc, NULL);
-
-  return new GlobalVariable(M, T, true, GlobalValue::PrivateLinkage,
-                            TransitionsInit, "transitions");
+  return ConstantStruct::get(T, Count, ArrayPtr, NULL);
 }
 
+
+Constant* tesla::ExternAutomatonDescrip(const Automaton *A, Module& M) {
+  auto *Existing = M.getGlobalVariable(A->Name());
+  if (Existing)
+    return Existing;
+
+  StructType *T = StructAutomatonType(M);
+  string DescripName(A->Name());
+
+  return new GlobalVariable(M, T, true, GlobalValue::ExternalLinkage, NULL,
+                            DescripName);
+}
+
+Constant* tesla::ConstructAutomatonDescription(const Automaton *A, Module& M) {
+  auto *Existing = M.getGlobalVariable(A->Name());
+  if (Existing)
+    assert(!Existing->hasInitializer());
+
+  auto& Ctx(M.getContext());
+  string Name(A->Name());
+
+  IntegerType *Int32 = IntegerType::get(Ctx, 32);
+  Type *CharPtr = PointerType::getUnqual(IntegerType::get(Ctx, 8));
+  Type *CharPtrPtr = PointerType::getUnqual(CharPtr);
+  StructType *TransSetTy = TransitionSetType(M);
+  StructType *T = StructAutomatonType(M);
+
+  vector<Constant*> Trans;
+  vector<Constant*> Events;
+
+  auto *Zero = ConstantInt::get(Int32, 0);
+  Constant* Zeros[] = { Zero, Zero };
+  ArrayRef<Constant*> GEPZeros(Zeros, 2);
+
+  IRBuilder<> Builder(Ctx);
+  for (const TEquivalenceClass& Tr : *A) {
+    string Descrip((*Tr.begin())->String());
+
+    Trans.push_back(ConstructTransitions(Builder, M, Tr, TransSetTy));
+    Events.push_back(StrPtr(Descrip, M));
+  }
+
+  ArrayType *TransArrayT = ArrayType::get(TransSetTy, Trans.size());
+  ArrayType *SymbolArrayT = ArrayType::get(CharPtr, Events.size());
+
+
+  // Construct the tesla_automaton struct (starting with its members).
+  auto *AlphabetSize = ConstantInt::get(Int32, Trans.size());
+  auto *Description = StrPtr(A->SourceCode(), M, Name + "_description");
+  auto *SymbolNames = PointerTo(ConstantArray::get(SymbolArrayT, Events),
+                                CharPtrPtr, M, Name + "_symbol_names");
+
+  auto *TransArray = ConstantArray::get(TransArrayT, Trans);
+  auto *TransArrayPtr = PointerTo(TransArray,
+                                  PointerType::getUnqual(TransArrayT),
+                                  M,
+                                  Name + "_transitions");
+  auto *Transitions =
+    ConstantExpr::getInBoundsGetElementPtr(TransArrayPtr, GEPZeros);
+
+  auto *Init = ConstantStruct::get(T, StrPtr(Name, M, Name + "_name"),
+                                   AlphabetSize, Transitions, Description,
+                                   SymbolNames, NULL);
+
+  auto *Var = new GlobalVariable(M, T, true, GlobalValue::ExternalLinkage,
+                                 Init, Name);
+
+
+  // If there is already a variable with the same name, it is an extern
+  // declaration; replace it with this definition.
+  if (Existing) {
+    Existing->replaceAllUsesWith(Var);
+    Existing->removeFromParent();
+    delete Existing;
+
+    Var->setName(A->Name());
+  }
+
+  return Var;
+}
+
+
+Constant* tesla::PointerTo(Constant *C, Type *T, Module& M, StringRef Name) {
+  return ConstantExpr::getPointerCast(
+      new GlobalVariable(M, C->getType(), true,
+                         GlobalVariable::InternalLinkage, C, Name),
+      T
+  );
+}
+
+Constant* tesla::StrPtr(StringRef S, Module& M, StringRef Name) {
+  LLVMContext& Ctx = M.getContext();
+  Type *CharPtr = PointerType::getUnqual(IntegerType::get(Ctx, 8));
+  return PointerTo(ConstantDataArray::getString(Ctx, S), CharPtr, M);
+}

@@ -45,7 +45,7 @@ get_object(struct object* *obj_out)
 	 * CHECK:     %tesla_key* [[KEY]], i32 0, i32 4
 	 * CHECK:   store i32 1, i32* [[MASK]]
 	 *
-	 * CHECK:   call void @tesla_update_state({{.*}}, %tesla_key* %key,
+	 * CHECK:   call void @tesla_update_state({{.*}}, %tesla_key* %key
 	 */
 	return 0;
 }

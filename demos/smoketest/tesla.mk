@@ -7,7 +7,7 @@ GRAPH=		tesla print
 
 #CFLAGS+=	-D TESLA
 LIBS+=		-l tesla
-GRAPH_FLAGS?=	-d
+GRAPH_FLAGS?=	-d -format=dot
 
 TESLA_ALLFILES=	.tesla ${TESLA_FILES} ${TESLA_IR} ${TESLA_OBJS}
 TESLA_FILES=	${SRCS:.c=.tesla}

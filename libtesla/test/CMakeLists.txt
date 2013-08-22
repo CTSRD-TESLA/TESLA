@@ -8,23 +8,23 @@ set(CMAKE_BUILD_TYPE Debug)
 include_directories(../src)
 
 set(TESTS
-	actions
-	match
-	lookup
-	repeat
-	store
-	update
+	actions.cpp
+	match.cpp
+	lookup.cpp
+	repeat.cpp
+	store.c
+	update.cpp
 )
 
 # Ignore "unused parameter 'int argc'" warnings in test programs.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
 
 foreach(test ${TESTS})
-	add_executable(${test} ${test}.cpp)
-	target_link_libraries(${test} tesla)
+	add_executable(${test}.test ${test})
+	target_link_libraries(${test}.test tesla)
 
 	if( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
-		target_link_libraries(${test} ${EXECINFO_LIBRARY})
+		target_link_libraries(${test}.test ${EXECINFO_LIBRARY})
 	endif( ${CMAKE_SYSTEM_NAME} MATCHES FreeBSD )
 endforeach(test)
 

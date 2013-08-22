@@ -167,7 +167,7 @@ void Transition::GroupClasses(const TransitionVector& Ungrouped,
     }
 
     if (!FoundEquivalent) {
-      TEquivalenceClass New;
+      TEquivalenceClass New(EquivalenceClasses.size());
       New.insert(T);
       EquivalenceClasses.push_back(New);
     }

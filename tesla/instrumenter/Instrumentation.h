@@ -106,6 +106,10 @@ typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
 /// A container for a few types (e.g., of function arguments).
 typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 
+/// Call @ref tesla_update_state().
+void UpdateState(const Automaton&, uint32_t Symbol, llvm::Value *Key,
+                 llvm::Module&, llvm::BasicBlock *Next, llvm::IRBuilder<>&);
+
 /// Extract the @a register_t type from an @a llvm::Module.
 llvm::Type* IntPtrType(llvm::Module&);
 
@@ -114,6 +118,7 @@ llvm::StructType* TransitionType(llvm::Module&);
 
 /// Extract the @ref tesla_transitions type from an @a llvm::Module.
 llvm::StructType* TransitionSetType(llvm::Module&);
+
 
 /**
  * Find the constant for a libtesla context (either @ref TESLA_CONTEXT_THREAD
@@ -124,10 +129,6 @@ llvm::Constant* TeslaContext(AutomatonDescription::Context Context,
 
 /*! Find a @a BasicBlock within a @a Function. */
 llvm::BasicBlock* FindBlock(llvm::StringRef Name, llvm::Function&);
-
-/*! Find the libtesla function @ref tesla_update_state. */
-llvm::Function* FindStateUpdateFn(llvm::Module&,
-                                  llvm::Type *IntType);
 
 /**
  * Cast an integer-ish @a Value to another type.
@@ -158,7 +159,14 @@ llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
 
 //! Construct a @ref tesla_transitions for a @ref TEquivalenceClass.
 llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
-                                     const TEquivalenceClass&);
+                                     const TEquivalenceClass&,
+                                     llvm::StructType*);
+
+//! Declare a reference to an external @ref tesla_automaton.
+llvm::Constant* ExternAutomatonDescrip(const Automaton*, llvm::Module&);
+
+//! Construct a @ref tesla_automaton for a @ref tesla::Automaton.
+llvm::Constant* ConstructAutomatonDescription(const Automaton*, llvm::Module&);
 
 //! Poke through indirection, struct fields, etc.
 llvm::Value* GetArgumentValue(llvm::Value* Param, const Argument& ArgDescrip,
@@ -171,8 +179,8 @@ llvm::Function* FunctionInstrumentation(llvm::Module&, const llvm::Function&,
                                         FunctionEvent::CallContext,
                                         bool SuppressDebugInstr);
 
-//! Find (or create) one function-event instrumentation function given a 
-llvm::Function* ObjCMethodInstrumentation(llvm::Module&, 
+//! Find (or create) one function-event instrumentation function given a
+llvm::Function* ObjCMethodInstrumentation(llvm::Module&,
                                           llvm::StringRef Selector,
                                           llvm::FunctionType*,
                                           FunctionEvent::Direction,

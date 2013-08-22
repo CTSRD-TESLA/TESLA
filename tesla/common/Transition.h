@@ -62,7 +62,21 @@ typedef llvm::MutableArrayRef<const Argument*> MutableReferenceVector;
 typedef llvm::SmallVector<Transition*,10> TransitionVector;
 
 //! A set of TESLA transitions that are considered equivalent.
-typedef llvm::SmallPtrSet<const Transition*,4> TEquivalenceClass;
+class TEquivalenceClass
+{
+public:
+  TEquivalenceClass(uint32_t Symbol) : Symbol(Symbol) {}
+
+  bool empty() const { return Transitions.empty(); }
+  void insert(const Transition *t) { Transitions.insert(t); }
+
+  typedef llvm::SmallPtrSet<const Transition*,4>::iterator iterator;
+  iterator begin() const { return Transitions.begin(); }
+  iterator end() const { return Transitions.end(); }
+
+  uint32_t Symbol;
+  llvm::SmallPtrSet<const Transition*,4> Transitions;
+};
 
 //! Get a string representation of a @ref TEquivalenceClass.
 llvm::raw_ostream& operator << (llvm::raw_ostream&, const TEquivalenceClass&);

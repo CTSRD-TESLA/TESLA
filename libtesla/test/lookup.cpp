@@ -31,6 +31,16 @@ void	create_instance(struct tesla_class*, struct tesla_instance**,
  */
 int	search_for_pattern(struct tesla_class*, struct tesla_key *pattern);
 
+struct tesla_automaton glob = {
+	.ta_name = "glob_automaton",
+	.ta_description = "a class of TESLA automata",
+};
+
+struct tesla_automaton thr = {
+	.ta_name = "thr_automaton",
+	.ta_description = "a class of TESLA automata",
+};
+
 int
 main(int argc, char **argv)
 {
@@ -39,14 +49,12 @@ main(int argc, char **argv)
 	struct tesla_store *global_store;
 	struct tesla_class *glob_automaton;
 	check(tesla_store_get(TESLA_CONTEXT_GLOBAL, 1, 3, &global_store));
-	check(tesla_class_get(global_store, 0, &glob_automaton,
-		"glob_automaton", "a class of TESLA automata"));
+	check(tesla_class_get(global_store, &glob, &glob_automaton));
 
 	struct tesla_store *perthread_store;
 	struct tesla_class *thr_automaton;
 	check(tesla_store_get(TESLA_CONTEXT_THREAD, 1, 3, &perthread_store));
-	check(tesla_class_get(perthread_store, 0, &thr_automaton,
-		"thr_automaton", "a class of TESLA automata"));
+	check(tesla_class_get(perthread_store, &thr, &thr_automaton));
 
 	/* Create some automata instances. */
 	create_instance(glob_automaton, &instances[0], 42, 0, 1000);

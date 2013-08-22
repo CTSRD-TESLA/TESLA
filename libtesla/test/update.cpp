@@ -35,10 +35,29 @@ const char descrip[] = "a demonstration class of automata";
 
 #define PRINT(...) DEBUG(libtesla.test.update, __VA_ARGS__)
 
+const char *event_descriptions[] = { "foo" };
+
 class UpdateTest : public LibTeslaTest
 {
 public:
 	void run();
+
+private:
+	int count(struct tesla_store *store, const struct tesla_key *key);
+
+	struct tesla_transition t[3];
+	struct tesla_transitions trans = {
+		.length = 1,
+		.transitions = t
+	};
+
+	struct tesla_automaton automaton = {
+		.ta_name = "unique_name",
+		.ta_description = "update.cpp: generate(automaton)",
+		.ta_alphabet_size = 1,
+		.ta_symbol_names = event_descriptions,
+		.ta_transitions = &trans,
+	};
 };
 
 
@@ -56,11 +75,11 @@ main(int argc, char **argv)
 
 void UpdateTest::run()
 {
-	const enum tesla_context scope = TESLA_CONTEXT_GLOBAL;
+	const enum tesla_context context = TESLA_CONTEXT_GLOBAL;
 	const int32_t instances_in_class = 10;
 
 	struct tesla_store *store;
-	check(tesla_store_get(scope, 1, instances_in_class, &store));
+	check(tesla_store_get(context, 1, instances_in_class, &store));
 
 	// Test the following sequence of automata update events:
 	//
@@ -74,11 +93,6 @@ void UpdateTest::run()
 
 	struct tesla_key key;
 
-	struct tesla_transition t[3];
-	struct tesla_transitions trans = {
-		.length = 1,
-		.transitions = t
-	};
 
 	const struct tesla_key
 		any = { .tk_mask = 0 },
@@ -96,7 +110,7 @@ void UpdateTest::run()
 	t[0].flags = TESLA_TRANS_INIT;
 
 	expectedEvents.push(NewInstance);
-	tesla_update_state(scope, id, &key, name, descrip, &trans);
+	tesla_update_state(context, &automaton, 0, &key);
 	// TODO: pass transition through event handler
 	//assert(lastEvent->transition == t);
 	assert(lastEvent.get());
@@ -118,7 +132,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(scope, id, &key, name, descrip, &trans);
+	tesla_update_state(context, &automaton, 0, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 1);
 	assert(lastEvent->inst->ti_key.tk_mask == 0);
@@ -141,7 +155,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(scope, id, &key, name, descrip, &trans);
+	tesla_update_state(context, &automaton, 0, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 2);
 	assert(lastEvent->inst->ti_key.tk_mask == 0x1);
@@ -164,7 +178,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Transition);
-	tesla_update_state(scope, id, &key, name, descrip, &trans);
+	tesla_update_state(context, &automaton, 0, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 4);
 	assert(lastEvent->inst->ti_key.tk_mask == 0x3);
@@ -184,7 +198,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(scope, id, &key, name, descrip, &trans);
+	tesla_update_state(context, &automaton, 0, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 1);
 	assert(lastEvent->inst->ti_key.tk_mask == 0);
@@ -207,7 +221,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(scope, id, &key, name, descrip, &trans);
+	tesla_update_state(context, &automaton, 0, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 5);
 	assert(lastEvent->inst->ti_key.tk_mask == 0x1);
@@ -230,7 +244,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(scope, id, &key, name, descrip, &trans);
+	tesla_update_state(context, &automaton, 0, &key);
 	assert(lastEvent->inst->ti_state == 1);
 	assert(lastEvent->inst->ti_key.tk_mask == 0);
 	assert(lastEvent->copy->ti_state == 7);
@@ -243,13 +257,13 @@ void UpdateTest::run()
 
 
 int
-count(struct tesla_store *store, const struct tesla_key *key)
+UpdateTest::count(struct tesla_store *store, const struct tesla_key *key)
 {
 	uint32_t len = 20;
 	struct tesla_instance* matches[len];
 	struct tesla_class *cls;
 
-	check(tesla_class_get(store, id, &cls, name, descrip));
+	check(tesla_class_get(store, &automaton, &cls));
 
 	check(tesla_match(cls, key, matches, &len));
 

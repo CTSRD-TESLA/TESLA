@@ -3,7 +3,7 @@
  * Stress test: runs automata through their paces many times.
  *
  * Commands for llvm-lit:
- * RUN: clang %cflags %ldflags %s -o %t
+ * RUN: clang %cxxflags %ldflags %s -o %t
  * RUN: %t
  */
 
@@ -99,6 +99,17 @@ const struct tesla_transitions D = {
 	.length = sizeof(d) / sizeof(d[0]), .transitions = d
 };
 
+const struct tesla_transitions all_transitions[] = { A, B, C, D };
+const char *event_names[] = { "A", "B(x)", "C", "D" };
+
+
+const struct tesla_automaton automaton = {
+	.ta_name = (__FILE__ ":test_automaton"),
+	.ta_description = "this is where the original source should go",
+	.ta_transitions = all_transitions,
+	.ta_symbol_names = event_names,
+};
+
 
 int
 do_test_run(enum tesla_context context)
@@ -112,39 +123,34 @@ do_test_run(enum tesla_context context)
 
 	/* event A: */
 	const struct tesla_key *k = &nothing;
-	tesla_update_state(context, 0, k, name, descrip, &A);
-	tesla_update_state(context, 1, k, name, descrip, &A);
+	tesla_update_state(context, &automaton, 0, k);
 
 
 	/* event B (but only on some instances): */
 	for (size_t i = 0; i < INSTANCES / 2; i += 2) {
 		const struct tesla_key *k = others + i;
-		tesla_update_state(context, 0, k, name, descrip, &B);
-		tesla_update_state(context, 1, k, name, descrip, &B);
+		tesla_update_state(context, &automaton, 1, k);
 	}
 
 
 	/* event B again: */
 	for (size_t i = 0; i < INSTANCES / 2; i += 2) {
 		const struct tesla_key *k = others + i;
-		tesla_update_state(context, 0, k, name, descrip, &B);
-		tesla_update_state(context, 1, k, name, descrip, &B);
+		tesla_update_state(context, &automaton, 1, k);
 	}
 
 
 	/* event D: */
 	for (size_t i = 0; i < INSTANCES / 2; i += 2) {
 		const struct tesla_key *k = others + i;
-		tesla_update_state(context, 0, k, name, descrip, &D);
-		tesla_update_state(context, 1, k, name, descrip, &D);
+		tesla_update_state(context, &automaton, 3, k);
 	}
 
 
 	/* event C: */
 	for (size_t i = 0; i < INSTANCES / 2; i++) {
 		const struct tesla_key *k = others + i;
-		tesla_update_state(context, 0, k, name, descrip, &C);
-		tesla_update_state(context, 1, k, name, descrip, &C);
+		tesla_update_state(context, &automaton, 2, k);
 	}
 
 	return 0;

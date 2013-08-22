@@ -82,11 +82,14 @@ bool AssertionSiteInstrumenter::runOnModule(Module &M) {
 bool AssertionSiteInstrumenter::ConvertAssertions(
     set<CallInst*>& AssertCalls, Module& Mod) {
 
-  // Convert each assertion into appropriate instrumentation.
   for (auto *AssertCall : AssertCalls) {
     auto *Automaton(FindAutomaton(AssertCall));
     auto AssertTransitions(this->AssertTrans(Automaton));
 
+    // Generate the static automaton description.
+    ConstructAutomatonDescription(Automaton, Mod);
+
+    // Convert the assertion into appropriate instrumentation.
     IRBuilder<> Builder(AssertCall);
     auto Args(CollectArgs(AssertCall, *Automaton, Mod, Builder));
     Function *InstrFn = CreateInstrumentation(*Automaton, AssertTransitions,
@@ -188,9 +191,8 @@ Function* AssertionSiteInstrumenter::CreateInstrumentation(
     ArrayRef<Value*> AssertArgs, Module& M) {
 
   auto& Assertion(A.getAssertion());
-  LLVMContext& Ctx = M.getContext();
-  Type *Void = Type::getVoidTy(Ctx);
-  Type *Int32 = Type::getInt32Ty(Ctx);
+  auto& Ctx(M.getContext());
+  auto *Void(Type::getVoidTy(Ctx));
 
   vector<Type*> ArgTypes;
   for (auto *Arg : AssertArgs)
@@ -215,22 +217,11 @@ Function* AssertionSiteInstrumenter::CreateInstrumentation(
     InstrArgs[A.index()] = &Arg;
   }
 
-  std::vector<Value*> Args;
-  Args.push_back(TeslaContext(Assertion.context(), Ctx));
-  Args.push_back(ConstantInt::get(Int32, A.ID()));
-  Args.push_back(ConstructKey(Builder, M, InstrArgs));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-  Args.push_back(ConstructTransitions(Builder, M, TEq));
-
-  Function *UpdateStateFn = FindStateUpdateFn(M, Int32);
-  assert(Args.size() == UpdateStateFn->arg_size());
-  Builder.CreateCall(UpdateStateFn, Args);
-
   auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
   IRBuilder<>(Exit).CreateRetVoid();
 
-  Builder.CreateBr(Exit);
+  UpdateState(A, TEq.Symbol, ConstructKey(Builder, M, InstrArgs),
+              M, Exit, Builder);
 
   return InstrFn;
 }

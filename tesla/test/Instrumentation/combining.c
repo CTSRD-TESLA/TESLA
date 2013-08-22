@@ -21,7 +21,8 @@
  * Check that the instrumented IR contains a static struct tesla_transitions
  * with at least two transitions in it:
  *
- * INSTR: [[TSET:@transitions[0-9]*]] = {{.*}} %tesla_transitions { i32 {{[2-9]}}
+ * INSTR: @"[[AUTO:.*]]_transitions" = internal constant [{{[2-9]}} x %tesla_transitions]
+ * INSTR: @"[[AUTO]]" = {{.*}}"[[AUTO]]_transitions"
  */
 
 static void
@@ -48,7 +49,7 @@ main(int argc, char *argv[])
 	 */
 
 	/*
-	 * INSTR: call void @tesla_update_state({{.*}}[[TSET]]
+	 * INSTR: call void @tesla_update_state({{.*}}[[AUTO]]
 	 *
 	 * TESLA: ====
 	 * TESLA: ([[INIT]]:0x0 -> [[FOO:[0-9]+]]:0x0) ({{[0-9]+}}:0x0 ->

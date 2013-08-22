@@ -9,7 +9,7 @@
 
 cd `dirname $0`
 
-CFLAGS="$*" make clean all
+CFLAGS="$*" make clean all || exit 1
 TESLA_DEBUG=tesla.events LD_LIBRARY_PATH=$TESLA_BUILD_DIR/libtesla/src ./smoketest
 
 #

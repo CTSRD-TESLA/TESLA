@@ -40,7 +40,6 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Module.h>
-#include <llvm/Support/raw_ostream.h>  // TODO: tmp
 
 #include <map>
 #include <set>
@@ -372,20 +371,8 @@ void FieldInstrumentation::AppendInstrumentation(
     panic("struct field instrumentation should not be passed struct field");
   }
 
-  Type* IntType = Type::getInt32Ty(Ctx);
-
-  std::vector<Value*> Args;
-  Args.push_back(TeslaContext(A.getAssertion().context(), Ctx));
-  Args.push_back(ConstantInt::get(IntType, A.ID()));
-  Args.push_back(ConstructKey(Builder, M, KeyValues));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.Name()));
-  Args.push_back(Builder.CreateGlobalStringPtr(A.String()));
-  Args.push_back(ConstructTransitions(Builder, M, Trans));
-
-  Function *UpdateStateFn = FindStateUpdateFn(M, IntType);
-  assert(Args.size() == UpdateStateFn->arg_size());
-  Builder.CreateCall(UpdateStateFn, Args);
-  Builder.CreateBr(Exit);
+  UpdateState(A, Trans.Symbol, ConstructKey(Builder, M, KeyValues),
+              M, Exit, Builder);
 }
 
 BasicBlock* FieldInstrumentation::NextInstrBlock(const Automaton *A) {

@@ -35,11 +35,11 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: class: 0 ('[[NAME:/.*ignored.c:[0-9]+#[0-9]+]]')
+	 * CHECK: class: '[[NAME:/.*ignored.c:[0-9]+#[0-9]+]]'
 	 * CHECK: ----
 	 * CHECK: ----
 	 * CHECK-NOT: update
-	 * CHECK: ignore '[[NAME]]':0x0 [ X
+	 * CHECK: ignore '[[NAME]]'
 	 * CHECK-NOT: update
 	 * CHECK: ----
 	 * CHECK: ====

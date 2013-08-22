@@ -29,7 +29,7 @@ main(int argc, char *argv[])
 	 *
 	 * CHECK: ====
 	 * CHECK: tesla_update_state
-	 * CHECK: class: 0 ('[[NAME:.*]]')
+	 * CHECK: class: '[[NAME:.*]]'
 	 * CHECK: transitions:  [ (0:0x0 -> 1:0x0 <init>) ]
 	 * CHECK: ----
 	 * CHECK: ----
