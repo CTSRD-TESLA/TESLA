@@ -17,4 +17,3 @@ target_link_libraries(tesla ${CMAKE_THREAD_LIBS_INIT})
 
 
 install(TARGETS tesla DESTINATION lib)
-
