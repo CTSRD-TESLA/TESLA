@@ -45,6 +45,7 @@
 using namespace llvm;
 
 
+#ifndef NDEBUG
 static bool debugging(StringRef Name) {
 #ifdef HAVE_ISSETUGID
   /*
@@ -74,6 +75,8 @@ static bool debugging(StringRef Name) {
   // Use fnmatch()'s normal wildcard expansion.
   return (fnmatch(env.c_str(), Name.str().c_str(), 0) == 0);
 }
+#endif
+
 
 void tesla::panic(Twine Message, bool PrintStackTrace) {
   report_fatal_error("TESLA: " + Message, PrintStackTrace);

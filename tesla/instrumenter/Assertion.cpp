@@ -179,9 +179,6 @@ vector<Value*> AssertionSiteInstrumenter::CollectArgs(
       GetArgumentValue(ValuesInScope[Name], Arg, Builder, true);
   }
 
-  for (auto *Arg : Args)
-    assert(Arg != NULL);
-
   return Args;
 }
 
