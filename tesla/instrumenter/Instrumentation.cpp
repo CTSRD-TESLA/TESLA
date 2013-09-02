@@ -64,13 +64,6 @@ static Constant* TeslaContext(AutomatonDescription::Context, LLVMContext&);
  */
 static Value* Cast(Value *From, StringRef Name, Type *NewType, IRBuilder<>&);
 
-/**
- * Map instrumentation arguments into a @ref tesla_key that can be used to
- * look up automata.
- */
-llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
-                          llvm::Function::ArgumentListType& InstrumentationArgs,
-                          FunctionEvent FnEventDescription);
 
 //! Construct a single @ref tesla_transition.
 static Constant* ConstructTransition(IRBuilder<>&, Module&, const Transition&);
@@ -646,63 +639,6 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
   }
 }
 
-Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
-                           Function::ArgumentListType& InstrArgs,
-                           FunctionEvent FnEvent) {
-  bool HaveRetVal = FnEvent.has_expectedreturnvalue();
-  // The number of hidden arguments, i.e. those that are passed to the function
-  // but not present explicitly in the source language.
-  const size_t HiddenArgs = ((FnEvent.kind() == FunctionEvent::CCall) ? 0 : 2);
-  const size_t TotalArgs = FnEvent.argument_size() + (HaveRetVal ? 1 : 0)
-    + HiddenArgs;
-
-  if (InstrArgs.size() != TotalArgs)
-    panic(
-      "instrumentation for '" + FnEvent.function().name() + "' takes "
-      + Twine(InstrArgs.size())
-      + " arguments but description in manifest provides "
-      + Twine(FnEvent.argument_size())
-      + (HaveRetVal ? " and a return value" : "")
-    );
-
-  vector<Value*> Args(TotalArgs, NULL);
-
-  // If this is an Objective-C event, then we need to construct the `self` and
-  // `_cmd` hidden arguments.  We never care about `_cmd` (it is only relevant
-  // for forwarding), but we may care about the receiver.
-  // TODO: If we ever care about C++, we should handle `this` here as well.
-  if (FnEvent.kind() != FunctionEvent::CCall) {
-    int Index = ArgIndex(FnEvent.receiver());
-    if (Index >= 0)
-      Args[Index] = GetArgumentValue(InstrArgs.begin(), FnEvent.receiver(),
-              Builder);
-  }
-
-  size_t i = 0;
-
-  for (auto& InstrArg : InstrArgs) {
-    // Skip the LLVM arguments that refer to hidden source-language arguments
-    // here, as they've already been processed.
-    if (i < HiddenArgs) {
-      i++;
-      continue;
-    }
-
-    auto& Arg = (HaveRetVal && (i == (TotalArgs - 1)))
-      ? FnEvent.expectedreturnvalue()
-      : FnEvent.argument(i - HiddenArgs);
-    ++i;
-
-    int Index = ArgIndex(Arg);
-    if (Index < 0)
-      continue;
-
-    assert(Index < TotalArgs);
-    Args[Index] = &InstrArg;
-  }
-
-  return ConstructKey(Builder, M, Args);
-}
 
 Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
                            ArrayRef<Value*> Args) {
