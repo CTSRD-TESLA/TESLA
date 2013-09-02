@@ -17,6 +17,25 @@ mv unsafe/*intrin*.h unsafe/mm3dnow.h unsafe/mm_malloc.h .
 </div>
 
 <p>
+You then need to set some environment variables.
+With sh/bash/zsh, set:
+</p>
+
+<div class="console">export TESLA_SOURCE_DIR=/path/to/tesla
+export TESLA_BUILD_DIR=<span class="green">$TESLA_SOURCE_DIR</span>/build     <span class="blue"># or wherever you ran cmake</span>
+export PATH=<span class="green">$LLVM_BUILD_DIR</span>/bin:<span class="green">$PATH</span>:<span class="green">$TESLA_SOURCE_DIR</span>/scripts
+</div>
+
+<p>
+Or in csh/tcsh:
+</p>
+
+<div class="console">setenv TESLA_SOURCE_DIR /path/to/tesla
+setenv TESLA_BUILD_DIR <span class="green">$TESLA_SOURCE_DIR</span>/build     <span class="blue"># or wherever you ran cmake</span>
+setenv PATH <span class="green">$LLVM_BUILD_DIR</span>/bin:<span class="green">$PATH</span>:<span class="green">$TESLA_SOURCE_DIR</span>/scripts
+</div>
+
+<p>
 You then need to build the FreeBSD kernel toolchain, either by itself:
 </p>
 
