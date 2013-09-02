@@ -110,9 +110,6 @@ typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 void UpdateState(const Automaton&, uint32_t Symbol, llvm::Value *Key,
                  llvm::Module&, llvm::BasicBlock *Next, llvm::IRBuilder<>&);
 
-/// Extract the @a register_t type from an @a llvm::Module.
-llvm::Type* IntPtrType(llvm::Module&);
-
 
 /**
  * Find the constant for a libtesla context (either @ref TESLA_CONTEXT_THREAD

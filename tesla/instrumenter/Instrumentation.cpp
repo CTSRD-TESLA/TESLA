@@ -66,6 +66,12 @@ static Constant* ConstructTransitions(IRBuilder<>&, Module&,
                                       const TEquivalenceClass&, StructType*);
 
 
+/// Extract the @a register_t type from an @a llvm::Module.
+static Type* IntPtrType(Module& M)
+{
+    return DataLayout(&M).getIntPtrType(M.getContext());
+}
+
 /// Extract the @ref tesla_transition type from an LLVM @a Module.
 static StructType* TransitionType(Module&);
 
@@ -389,10 +395,6 @@ void tesla::UpdateState(const Automaton& A, uint32_t Symbol, Value *Key,
   Builder.CreateBr(Next);
 }
 
-
-Type* tesla::IntPtrType(Module& M) {
-    return DataLayout(&M).getIntPtrType(M.getContext());
-}
 
 StructType* tesla::TransitionType(Module& M) {
   const char Name[] = "tesla_transition";
