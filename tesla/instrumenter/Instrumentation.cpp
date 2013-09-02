@@ -849,5 +849,5 @@ Constant* tesla::PointerTo(Constant *C, Type *T, Module& M, StringRef Name) {
 Constant* tesla::StrPtr(StringRef S, Module& M, StringRef Name) {
   LLVMContext& Ctx = M.getContext();
   Type *CharPtr = PointerType::getUnqual(IntegerType::get(Ctx, 8));
-  return PointerTo(ConstantDataArray::getString(Ctx, S), CharPtr, M);
+  return PointerTo(ConstantDataArray::getString(Ctx, S), CharPtr, M, Name);
 }
