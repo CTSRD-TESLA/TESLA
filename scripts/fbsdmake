@@ -19,7 +19,7 @@
 # Find the various tools we need.
 XCC=`which clang`
 XCXX=`which clang++`
-XCPP=clang-cpp
+XCPP=`which clang-cpp`
 XLLC=`which llc`
 BINUTILS=$(dirname `which ar`)
 
@@ -37,8 +37,6 @@ fi
 
 # Run make, setting some variable and passing command-line arguments through.
 make \
+	KERNCONF=TESLA -DWITH_TESLA -DWITHOUT_FORMAT_EXTENSIONS \
 	XCC=$XCC XCXX=$XCXX XCPP=$XCPP XLLC=$XLLC TESLA=$TESLA \
-	CROSS_BINUTILS_PREFIX=$BINUTILS/ \
-	CONFIGARGS=-t -DWITHOUT_FORMAT_EXTENSIONS \
 	$*
-

@@ -17,20 +17,34 @@ mv unsafe/*intrin*.h unsafe/mm3dnow.h unsafe/mm_malloc.h .
 </div>
 
 <p>
-Then run make in the FreeBSD source tree with the following variables:
+You then need to build the FreeBSD kernel toolchain, either by itself:
 </p>
 
-<div class="console">-D WITH_TESLA -D WITHOUT_FORMAT_EXTENSIONS \
-    XCC=<span class="green">$LLVM_BIN</span>/clang \
-    XCXX=<span class="green">$LLVM_BIN</span>/clang++ \
-    XCPP=/usr/bin/clang-cpp \
-    XLLC=<span class="green">$LLVM_BIN</span>/llc \
-    TESLA=<span class="green">$TESLA_SOURCE_DIR</span>/scripts/tesla \
-    KERNCONF=TESLA \
-    buildworld buildkernel
-</div>
+<div class="console"><span class="blue">$</span> make -jXX kernel-toolchain</div>
 
 <p>
-This will build a instrumented kernel in
+or as part of the <a href="http://www.freebsd.org/handbook/makeworld.html#canonical-build" target="_blank">normal buildworld process</a>:
+</p>
+
+<div class="console"><span class="blue">$</span> make -jXX buildworld</div>
+
+<p>(where XX is the number of parallel jobs you'd like 'make' to run)</p>
+
+<p>
+Then run make in the FreeBSD source tree with the
+<code>fbsdmake</code> wrapper script from the
+<code><span class="keyword">$TESLA_SOURCE_DIR</span>/scripts</code>
+directory:
+</p>
+
+<div class="console"><span class="blue">$</span> fbsdmake -jXX buildkernel</div>
+
+<p>
+This script works by setting environment variables
+(<a href="https://wiki.freebsd.org/ExternalToolchain" target="_blank">XCC, XCXX, etc.</a>)
+that describe the TESLA toolchain and calling <code>make</code>,
+passing through command-line arguments like <code>-jXX</code>
+and <code>buildkernel</code> above.
+The result is an instrumented kernel in
 <code><span class="keyword">$OBJDIR</span>/sys/TESLA</code>.
 </p>
