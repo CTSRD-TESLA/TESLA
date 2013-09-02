@@ -34,6 +34,7 @@
 #include "Instrumentation.h"
 #include "Names.h"
 #include "State.h"
+#include "SuperFastHash.h"
 #include "Transition.h"
 
 #include <libtesla.h>
@@ -440,6 +441,12 @@ StructType* tesla::StructAutomatonType(Module& M) {
                             TransPtr,   // transitions
                             CharPtr,    // description
                             CharPtrPtr, // symbol_names
+                            CharPtr,    // init
+                            Int,        // init len
+                            Int,        // init hash
+                            CharPtr,    // cleanup
+                            Int,        // cleanup len
+                            Int,        // cleanup hash
                             NULL);
 }
 
@@ -816,12 +823,32 @@ Constant* tesla::ConstructAutomatonDescription(const Automaton *A, Module& M) {
   auto *Transitions =
     ConstantExpr::getInBoundsGetElementPtr(TransArrayPtr, GEPZeros);
 
-  auto *Init = ConstantStruct::get(T, StrPtr(Name, M, Name + "_name"),
+  string Protobuf;
+  __debugonly bool Success;
+
+  Success = A->Init().Protobuf()->SerializeToString(&Protobuf);
+  assert(Success);
+
+  auto *Init = StrPtr(Protobuf, M, A->Init().ShortLabel() + ":protobuf");
+  auto *InitLen = ConstantInt::get(Int32, Protobuf.length());
+  auto *InitHash =
+    ConstantInt::get(Int32, SuperFastHash(Protobuf.c_str(), Protobuf.length()));
+
+  Success = A->Cleanup().Protobuf()->SerializeToString(&Protobuf);
+  assert(Success);
+
+  auto *Cleanup = StrPtr(Protobuf, M, A->Cleanup().ShortLabel() + ":protobuf");
+  auto *CleanupLen = ConstantInt::get(Int32, Protobuf.length());
+  auto *CleanupHash =
+    ConstantInt::get(Int32, SuperFastHash(Protobuf.c_str(), Protobuf.length()));
+
+  auto *GVInit = ConstantStruct::get(T, StrPtr(Name, M, Name + "_name"),
                                    AlphabetSize, Transitions, Description,
-                                   SymbolNames, NULL);
+                                   SymbolNames, Init, InitLen, InitHash,
+                                   Cleanup, CleanupLen, CleanupHash, NULL);
 
   auto *Var = new GlobalVariable(M, T, true, GlobalValue::ExternalLinkage,
-                                 Init, Name);
+                                 GVInit, Name);
 
 
   // If there is already a variable with the same name, it is an extern

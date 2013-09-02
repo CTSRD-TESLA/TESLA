@@ -107,6 +107,25 @@ struct tesla_automaton {
 
 	/** Human-readable descriptions of input symbols (for debugging). */
 	const char*			*ta_symbol_names;
+
+	/**
+	 * An opaque description of the automaton's initialisation event.
+	 *
+	 * This description should be short and deterministic,
+	 * i.e., multiple automata that share the same init event should
+	 * have exactly the same ta_init description string.
+	 *
+	 * This can be written by hand if needed (e.g. for testing),
+	 * but in practice we generate it from protocol buffers.
+	 */
+	const char			*ta_init;
+	const int32_t			 ta_initlen;
+	const int32_t			 ta_inithash;
+
+	/** An opaque description of the cleanup event (see @ref #ta_init). */
+	const char			*ta_cleanup;
+	const int32_t			 ta_cleanuplen;
+	const int32_t			 ta_cleanuphash;
 };
 
 
