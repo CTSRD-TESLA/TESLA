@@ -181,6 +181,9 @@ public:
   //! A bitmask representing the arguments newly referenced by this transition.
   int NewArgMask() const;
 
+  //! Get the underlying protocol buffer (which can serialise itself, etc.).
+  const google::protobuf::Message* Protobuf() const { return Raw; }
+
   /**
    * The references known at the point this transition occurs.
    *
@@ -213,14 +216,17 @@ protected:
 
   static void Append(const llvm::OwningPtr<Transition>&, TransitionSets&);
 
-  Transition(const State& From, const State& To, bool Init, bool Cleanup,
+  Transition(const google::protobuf::Message *Protobuf,
+             const State& From, const State& To, bool Init, bool Cleanup,
              bool OutOfScope)
-    : From(From), To(To), Init(Init), Cleanup(Cleanup),
+    : Raw(Protobuf), From(From), To(To), Init(Init), Cleanup(Cleanup),
       OutOfScope(OutOfScope)
   {
     // An out-of-scope event cannot cause initialisation.
     assert(!Init || !OutOfScope);
   }
+
+  const google::protobuf::Message *Raw;
 
   const State& From;
   const State& To;
@@ -260,7 +266,7 @@ protected:
 
 private:
   NullTransition(const State& From, const State& To, bool Init, bool Cleanup)
-    : Transition(From, To, Init, Cleanup, false) {}
+    : Transition(NULL, From, To, Init, Cleanup, false) {}
 
   friend class Transition;
 };
@@ -296,7 +302,7 @@ protected:
 private:
   AssertTransition(const State& From, const State& To, const AssertionSite& A,
                    const ReferenceVector& Refs, bool Init, bool Cleanup)
-    : Transition(From, To, Init, Cleanup, false), A(A), Refs(Refs)
+    : Transition(NULL, From, To, Init, Cleanup, false), A(A), Refs(Refs)
   {
   }
 
@@ -340,7 +346,7 @@ protected:
 private:
   FnTransition(const State& From, const State& To, const FunctionEvent& Ev,
                bool Init, bool Cleanup, bool OutOfScope)
-    : Transition(From, To, Init, Cleanup, OutOfScope), Ev(Ev) {}
+    : Transition(&Ev, From, To, Init, Cleanup, OutOfScope), Ev(Ev) {}
 
   const FunctionEvent& Ev;
 
@@ -426,7 +432,7 @@ protected:
 private:
   SubAutomatonTransition(const State& From, const State& To,
                          const Identifier& ID)
-    : Transition(From, To, false, false, false), ID(ID) {}
+    : Transition(NULL, From, To, false, false, false), ID(ID) {}
 
   const Identifier& ID;
 

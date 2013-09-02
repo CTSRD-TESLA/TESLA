@@ -364,7 +364,7 @@ FieldAssignTransition::FieldAssignTransition(const State& From, const State& To,
                                              const FieldAssignment& A,
                                              bool Init, bool Cleanup,
                                              bool OutOfScope)
-  : Transition(From, To, Init, Cleanup, OutOfScope), Assign(A),
+  : Transition(&A, From, To, Init, Cleanup, OutOfScope), Assign(A),
     ReferencedVariables(new const Argument*[2]),
     Refs(ReferencedVariables.get(), 2)
 {
