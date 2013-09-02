@@ -91,7 +91,7 @@ BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
                          Value *Val, const tesla::Argument& Pattern);
 
 /// Find or create the @ref tesla_automaton type.
-llvm::StructType* StructAutomatonType(llvm::Module&);
+StructType* StructAutomatonType(Module&);
 
 /// Find a constnat pointer to a constant value.
 Constant* PointerTo(Constant *C, Type *T, Module& M, StringRef Name = "");
@@ -229,7 +229,7 @@ const char* Format(Type *T) {
 
 } /* namespace tesla */
 
-Function* tesla::CallableInstrumentation(Module& Mod, llvm::StringRef CalledName,
+Function* tesla::CallableInstrumentation(Module& Mod, StringRef CalledName,
                                          FunctionType *SubType,
                                          FunctionEvent::Direction Dir,
                                          FunctionEvent::CallContext Context,
@@ -285,12 +285,11 @@ Function* tesla::CallableInstrumentation(Module& Mod, llvm::StringRef CalledName
   return InstrFn;
 }
 
-llvm::Function* tesla::ObjCMethodInstrumentation(llvm::Module& Mod,
-                                                 llvm::StringRef Selector,
-                                                 llvm::FunctionType* Ty,
-                                                 FunctionEvent::Direction Dir,
-                                                 FunctionEvent::CallContext Context,
-                                                 bool SuppressDebugInstr) {
+Function* tesla::ObjCMethodInstrumentation(Module& Mod, StringRef Selector,
+                                           FunctionType* Ty,
+                                           FunctionEvent::Direction Dir,
+                                           FunctionEvent::CallContext Context,
+                                           bool SuppressDebugInstr) {
 
   return CallableInstrumentation(Mod, (Twine() + ".objc_" + Selector +
         ((Context == FunctionEvent::Caller) ? "_caller" : "_callee")).str(),
@@ -669,7 +668,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   return Key;
 }
 
-Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,
+Constant* tesla::ConstructTransition(IRBuilder<>& Builder, Module& M,
                                      const Transition& T) {
 
   uint32_t Flags =
