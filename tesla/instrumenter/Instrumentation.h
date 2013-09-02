@@ -111,13 +111,6 @@ void UpdateState(const Automaton&, uint32_t Symbol, llvm::Value *Key,
                  llvm::Module&, llvm::BasicBlock *Next, llvm::IRBuilder<>&);
 
 
-/**
- * Find the constant for a libtesla context (either @ref TESLA_CONTEXT_THREAD
- * or @ref TESLA_CONTEXT_GLOBAL).
- */
-llvm::Constant* TeslaContext(AutomatonDescription::Context Context,
-                             llvm::LLVMContext& Ctx);
-
 /*! Find a @a BasicBlock within a @a Function. */
 llvm::BasicBlock* FindBlock(llvm::StringRef Name, llvm::Function&);
 

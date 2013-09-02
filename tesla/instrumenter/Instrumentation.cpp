@@ -51,6 +51,12 @@ using std::vector;
 namespace tesla {
 
 /**
+ * Find the constant for a libtesla context (@ref TESLA_CONTEXT_THREAD,
+ * @ref TESLA_CONTEXT_GLOBAL, maybe other things in the future).
+ */
+static Constant* TeslaContext(AutomatonDescription::Context, LLVMContext&);
+
+/**
  * Map instrumentation arguments into a @ref tesla_key that can be used to
  * look up automata.
  */
