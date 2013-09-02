@@ -46,6 +46,12 @@ llvm::raw_ostream& debugs(llvm::StringRef DebugModuleName = "tesla");
 LLVM_ATTRIBUTE_NORETURN
 void panic(llvm::Twine Message, bool PrintStackTrace = true);
 
+#ifdef NDEBUG
+#define __debugonly __unused
+#else
+#define __debugonly
+#endif
+
 } // namespace tesla
 
 
