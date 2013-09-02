@@ -113,12 +113,6 @@ void UpdateState(const Automaton&, uint32_t Symbol, llvm::Value *Key,
 /// Extract the @a register_t type from an @a llvm::Module.
 llvm::Type* IntPtrType(llvm::Module&);
 
-/// Extract the @ref tesla_transition type from an @a llvm::Module.
-llvm::StructType* TransitionType(llvm::Module&);
-
-/// Extract the @ref tesla_transitions type from an @a llvm::Module.
-llvm::StructType* TransitionSetType(llvm::Module&);
-
 
 /**
  * Find the constant for a libtesla context (either @ref TESLA_CONTEXT_THREAD
@@ -152,15 +146,6 @@ llvm::BasicBlock* CreateInstrPreamble(llvm::Module& Mod, llvm::Function *F,
 //! Map a set of values into a @ref tesla_key.
 llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
                           llvm::ArrayRef<llvm::Value*> Args);
-
-//! Construct a single @ref tesla_transition.
-llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
-                                    const Transition&);
-
-//! Construct a @ref tesla_transitions for a @ref TEquivalenceClass.
-llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
-                                     const TEquivalenceClass&,
-                                     llvm::StructType*);
 
 //! Declare a reference to an external @ref tesla_automaton.
 llvm::Constant* ExternAutomatonDescrip(const Automaton*, llvm::Module&);

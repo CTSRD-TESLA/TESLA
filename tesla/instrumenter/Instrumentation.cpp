@@ -58,6 +58,21 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
                           llvm::Function::ArgumentListType& InstrumentationArgs,
                           FunctionEvent FnEventDescription);
 
+//! Construct a single @ref tesla_transition.
+static Constant* ConstructTransition(IRBuilder<>&, Module&, const Transition&);
+
+//! Construct a @ref tesla_transitions for a @ref TEquivalenceClass.
+static Constant* ConstructTransitions(IRBuilder<>&, Module&,
+                                      const TEquivalenceClass&, StructType*);
+
+
+/// Extract the @ref tesla_transition type from an LLVM @a Module.
+static StructType* TransitionType(Module&);
+
+/// Extract the @ref tesla_transitions type from an LLVM @a Module.
+static StructType* TransitionSetType(Module&);
+
+
 BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
                          BasicBlock *MatchTarget, BasicBlock *NonMatchTarget,
                          Value *Val, const tesla::Argument& Pattern);
