@@ -114,15 +114,6 @@ void UpdateState(const Automaton&, uint32_t Symbol, llvm::Value *Key,
 /*! Find a @a BasicBlock within a @a Function. */
 llvm::BasicBlock* FindBlock(llvm::StringRef Name, llvm::Function&);
 
-/**
- * Cast an integer-ish @a Value to another type.
- *
- * We use this for casting to register_t, but it's possible that other integer
- * types might work too. Maybe.
- */
-llvm::Value* Cast(llvm::Value *From, llvm::StringRef Name,
-                  llvm::Type *NewType, llvm::IRBuilder<>&);
-
 /*!
  * Initialise the instrumentation function's preamble.
  *

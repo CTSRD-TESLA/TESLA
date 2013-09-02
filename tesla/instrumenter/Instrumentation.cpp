@@ -57,6 +57,14 @@ namespace tesla {
 static Constant* TeslaContext(AutomatonDescription::Context, LLVMContext&);
 
 /**
+ * Cast an integer-ish @a Value to another type.
+ *
+ * We use this for casting to register_t, but it's possible that other integer
+ * types might work too. Maybe.
+ */
+static Value* Cast(Value *From, StringRef Name, Type *NewType, IRBuilder<>&);
+
+/**
  * Map instrumentation arguments into a @ref tesla_key that can be used to
  * look up automata.
  */
