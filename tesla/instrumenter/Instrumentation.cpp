@@ -85,19 +85,22 @@ static StructType* TransitionType(Module&);
 /// Extract the @ref tesla_transitions type from an LLVM @a Module.
 static StructType* TransitionSetType(Module&);
 
-
-BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
-                         BasicBlock *MatchTarget, BasicBlock *NonMatchTarget,
-                         Value *Val, const tesla::Argument& Pattern);
-
 /// Find or create the @ref tesla_automaton type.
-StructType* StructAutomatonType(Module&);
+static StructType* StructAutomatonType(Module&);
+
 
 /// Find a constnat pointer to a constant value.
-Constant* PointerTo(Constant *C, Type *T, Module& M, StringRef Name = "");
+static Constant* PointerTo(Constant *C, Type *T, Module& M, StringRef Name);
 
 /// Get a constant string pointer.
-Constant* StrPtr(StringRef S, Module& M, StringRef Name = "");
+static Constant* StrPtr(StringRef S, Module& M, StringRef Name = "");
+
+
+/// Create a BasicBlock that matches a value against an @ref Argument pattern.
+static BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
+                                BasicBlock *MatchTarget, BasicBlock *NoMatch,
+                                Value *Val, const tesla::Argument& Pattern);
+
 
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
