@@ -15,4 +15,3 @@ add_library(TeslaCommon
 
 target_link_libraries(TeslaCommon TeslaProto)
 target_link_libraries(TeslaCommon ${LLVM_LIBS})
-
