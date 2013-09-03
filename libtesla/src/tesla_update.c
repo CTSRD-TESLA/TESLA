@@ -86,6 +86,34 @@ tesla_update_state(enum tesla_context tesla_context,
 
 	print_class(class);
 
+
+	// Has this class been initialised?
+	const tesla_lifetime *lifetime = autom->ta_lifetime;
+	int32_t inithash = lifetime->tl_inithash;
+	tesla_initstate *initstate = NULL;
+
+	for (uint32_t i = 0, len = store->ts_length; i < len; i++) {
+		tesla_initstate *s = store->ts_init[(i + inithash) % len];
+
+		// The hash bucket is empty => inconsistent hash table state.
+		assert(s->tis_lifetime.tl_init != NULL);
+
+		if (same_lifetime(&s->tis_lifetime, lifetime)) {
+			initstate = s;
+			break;
+		}
+	}
+
+	assert(initstate != NULL);
+
+	if (!initstate->tis_alive) {
+		/*
+		 * TODO(JA): once we register init events properly, call:
+		 * ev_ignored(class, symbol, pattern);
+		 */
+	}
+
+
 	// Did we match any instances?
 	bool matched_something = false;
 
@@ -118,6 +146,7 @@ tesla_update_state(enum tesla_context tesla_context,
 			break;
 
 		case IGNORE:
+			// TODO(JA): this should become unreachable
 			break;
 
 		case UPDATE:
