@@ -128,14 +128,14 @@ struct tesla_lifetime {
 	 * This can be written by hand if needed (e.g. for testing),
 	 * but in practice we generate it from protocol buffers.
 	 */
-	const char			*ta_init;
-	const int32_t			 ta_initlen;
-	const int32_t			 ta_inithash;
+	const char			*tl_init;
+	const int32_t			 tl_initlen;
+	const int32_t			 tl_inithash;
 
-	/** An opaque description of the cleanup event (see @ref #ta_init). */
-	const char			*ta_cleanup;
-	const int32_t			 ta_cleanuplen;
-	const int32_t			 ta_cleanuphash;
+	/** An opaque description of the cleanup event (see @ref #tl_init). */
+	const char			*tl_cleanup;
+	const int32_t			 tl_cleanuplen;
+	const int32_t			 tl_cleanuphash;
 };
 
 

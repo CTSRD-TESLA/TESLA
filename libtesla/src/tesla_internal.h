@@ -265,6 +265,7 @@ struct tesla_class {
 typedef struct tesla_class		tesla_class;
 typedef struct tesla_instance		tesla_instance;
 typedef struct tesla_key		tesla_key;
+typedef struct tesla_lifetime		tesla_lifetime;
 typedef struct tesla_store		tesla_store;
 typedef struct tesla_transition		tesla_transition;
 typedef struct tesla_transitions	tesla_transitions;
