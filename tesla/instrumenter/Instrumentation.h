@@ -110,34 +110,9 @@ typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
 void UpdateState(const Automaton&, uint32_t Symbol, llvm::Value *Key,
                  llvm::Module&, llvm::BasicBlock *Next, llvm::IRBuilder<>&);
 
-/// Extract the @a register_t type from an @a llvm::Module.
-llvm::Type* IntPtrType(llvm::Module&);
-
-/// Extract the @ref tesla_transition type from an @a llvm::Module.
-llvm::StructType* TransitionType(llvm::Module&);
-
-/// Extract the @ref tesla_transitions type from an @a llvm::Module.
-llvm::StructType* TransitionSetType(llvm::Module&);
-
-
-/**
- * Find the constant for a libtesla context (either @ref TESLA_CONTEXT_THREAD
- * or @ref TESLA_CONTEXT_GLOBAL).
- */
-llvm::Constant* TeslaContext(AutomatonDescription::Context Context,
-                             llvm::LLVMContext& Ctx);
 
 /*! Find a @a BasicBlock within a @a Function. */
 llvm::BasicBlock* FindBlock(llvm::StringRef Name, llvm::Function&);
-
-/**
- * Cast an integer-ish @a Value to another type.
- *
- * We use this for casting to register_t, but it's possible that other integer
- * types might work too. Maybe.
- */
-llvm::Value* Cast(llvm::Value *From, llvm::StringRef Name,
-                  llvm::Type *NewType, llvm::IRBuilder<>&);
 
 /*!
  * Initialise the instrumentation function's preamble.
@@ -152,15 +127,6 @@ llvm::BasicBlock* CreateInstrPreamble(llvm::Module& Mod, llvm::Function *F,
 //! Map a set of values into a @ref tesla_key.
 llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
                           llvm::ArrayRef<llvm::Value*> Args);
-
-//! Construct a single @ref tesla_transition.
-llvm::Constant* ConstructTransition(llvm::IRBuilder<>&, llvm::Module&,
-                                    const Transition&);
-
-//! Construct a @ref tesla_transitions for a @ref TEquivalenceClass.
-llvm::Constant* ConstructTransitions(llvm::IRBuilder<>&, llvm::Module&,
-                                     const TEquivalenceClass&,
-                                     llvm::StructType*);
 
 //! Declare a reference to an external @ref tesla_automaton.
 llvm::Constant* ExternAutomatonDescrip(const Automaton*, llvm::Module&);

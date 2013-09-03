@@ -52,25 +52,56 @@ using std::vector;
 namespace tesla {
 
 /**
- * Map instrumentation arguments into a @ref tesla_key that can be used to
- * look up automata.
+ * Find the constant for a libtesla context (@ref TESLA_CONTEXT_THREAD,
+ * @ref TESLA_CONTEXT_GLOBAL, maybe other things in the future).
  */
-llvm::Value* ConstructKey(llvm::IRBuilder<>& Builder, llvm::Module& M,
-                          llvm::Function::ArgumentListType& InstrumentationArgs,
-                          FunctionEvent FnEventDescription);
+static Constant* TeslaContext(AutomatonDescription::Context, LLVMContext&);
 
-BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
-                         BasicBlock *MatchTarget, BasicBlock *NonMatchTarget,
-                         Value *Val, const tesla::Argument& Pattern);
+/**
+ * Cast an integer-ish @a Value to another type.
+ *
+ * We use this for casting to register_t, but it's possible that other integer
+ * types might work too. Maybe.
+ */
+static Value* Cast(Value *From, StringRef Name, Type *NewType, IRBuilder<>&);
+
+
+//! Construct a single @ref tesla_transition.
+static Constant* ConstructTransition(IRBuilder<>&, Module&, const Transition&);
+
+//! Construct a @ref tesla_transitions for a @ref TEquivalenceClass.
+static Constant* ConstructTransitions(IRBuilder<>&, Module&,
+                                      const TEquivalenceClass&, StructType*);
+
+
+/// Extract the @a register_t type from an @a llvm::Module.
+static Type* IntPtrType(Module& M)
+{
+    return DataLayout(&M).getIntPtrType(M.getContext());
+}
+
+/// Extract the @ref tesla_transition type from an LLVM @a Module.
+static StructType* TransitionType(Module&);
+
+/// Extract the @ref tesla_transitions type from an LLVM @a Module.
+static StructType* TransitionSetType(Module&);
 
 /// Find or create the @ref tesla_automaton type.
-llvm::StructType* StructAutomatonType(llvm::Module&);
+static StructType* StructAutomatonType(Module&);
+
 
 /// Find a constnat pointer to a constant value.
-Constant* PointerTo(Constant *C, Type *T, Module& M, StringRef Name = "");
+static Constant* PointerTo(Constant *C, Type *T, Module& M, StringRef Name);
 
 /// Get a constant string pointer.
-Constant* StrPtr(StringRef S, Module& M, StringRef Name = "");
+static Constant* StrPtr(StringRef S, Module& M, StringRef Name = "");
+
+
+/// Create a BasicBlock that matches a value against an @ref Argument pattern.
+static BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
+                                BasicBlock *MatchTarget, BasicBlock *NoMatch,
+                                Value *Val, const tesla::Argument& Pattern);
+
 
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
@@ -202,7 +233,7 @@ const char* Format(Type *T) {
 
 } /* namespace tesla */
 
-Function* tesla::CallableInstrumentation(Module& Mod, llvm::StringRef CalledName,
+Function* tesla::CallableInstrumentation(Module& Mod, StringRef CalledName,
                                          FunctionType *SubType,
                                          FunctionEvent::Direction Dir,
                                          FunctionEvent::CallContext Context,
@@ -258,12 +289,11 @@ Function* tesla::CallableInstrumentation(Module& Mod, llvm::StringRef CalledName
   return InstrFn;
 }
 
-llvm::Function* tesla::ObjCMethodInstrumentation(llvm::Module& Mod,
-                                                 llvm::StringRef Selector,
-                                                 llvm::FunctionType* Ty,
-                                                 FunctionEvent::Direction Dir,
-                                                 FunctionEvent::CallContext Context,
-                                                 bool SuppressDebugInstr) {
+Function* tesla::ObjCMethodInstrumentation(Module& Mod, StringRef Selector,
+                                           FunctionType* Ty,
+                                           FunctionEvent::Direction Dir,
+                                           FunctionEvent::CallContext Context,
+                                           bool SuppressDebugInstr) {
 
   return CallableInstrumentation(Mod, (Twine() + ".objc_" + Selector +
         ((Context == FunctionEvent::Caller) ? "_caller" : "_callee")).str(),
@@ -375,10 +405,6 @@ void tesla::UpdateState(const Automaton& A, uint32_t Symbol, Value *Key,
   Builder.CreateBr(Next);
 }
 
-
-Type* tesla::IntPtrType(Module& M) {
-    return DataLayout(&M).getIntPtrType(M.getContext());
-}
 
 StructType* tesla::TransitionType(Module& M) {
   const char Name[] = "tesla_transition";
@@ -622,63 +648,6 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
   }
 }
 
-Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
-                           Function::ArgumentListType& InstrArgs,
-                           FunctionEvent FnEvent) {
-  bool HaveRetVal = FnEvent.has_expectedreturnvalue();
-  // The number of hidden arguments, i.e. those that are passed to the function
-  // but not present explicitly in the source language.
-  const size_t HiddenArgs = ((FnEvent.kind() == FunctionEvent::CCall) ? 0 : 2);
-  const size_t TotalArgs = FnEvent.argument_size() + (HaveRetVal ? 1 : 0)
-    + HiddenArgs;
-
-  if (InstrArgs.size() != TotalArgs)
-    panic(
-      "instrumentation for '" + FnEvent.function().name() + "' takes "
-      + Twine(InstrArgs.size())
-      + " arguments but description in manifest provides "
-      + Twine(FnEvent.argument_size())
-      + (HaveRetVal ? " and a return value" : "")
-    );
-
-  vector<Value*> Args(TotalArgs, NULL);
-
-  // If this is an Objective-C event, then we need to construct the `self` and
-  // `_cmd` hidden arguments.  We never care about `_cmd` (it is only relevant
-  // for forwarding), but we may care about the receiver.
-  // TODO: If we ever care about C++, we should handle `this` here as well.
-  if (FnEvent.kind() != FunctionEvent::CCall) {
-    int Index = ArgIndex(FnEvent.receiver());
-    if (Index >= 0)
-      Args[Index] = GetArgumentValue(InstrArgs.begin(), FnEvent.receiver(),
-              Builder);
-  }
-
-  size_t i = 0;
-
-  for (auto& InstrArg : InstrArgs) {
-    // Skip the LLVM arguments that refer to hidden source-language arguments
-    // here, as they've already been processed.
-    if (i < HiddenArgs) {
-      i++;
-      continue;
-    }
-
-    auto& Arg = (HaveRetVal && (i == (TotalArgs - 1)))
-      ? FnEvent.expectedreturnvalue()
-      : FnEvent.argument(i - HiddenArgs);
-    ++i;
-
-    int Index = ArgIndex(Arg);
-    if (Index < 0)
-      continue;
-
-    assert(Index < TotalArgs);
-    Args[Index] = &InstrArg;
-  }
-
-  return ConstructKey(Builder, M, Args);
-}
 
 Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
                            ArrayRef<Value*> Args) {
@@ -709,7 +678,7 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   return Key;
 }
 
-Constant* tesla::ConstructTransition(IRBuilder<>& Builder, llvm::Module& M,
+Constant* tesla::ConstructTransition(IRBuilder<>& Builder, Module& M,
                                      const Transition& T) {
 
   uint32_t Flags =
@@ -876,5 +845,5 @@ Constant* tesla::PointerTo(Constant *C, Type *T, Module& M, StringRef Name) {
 Constant* tesla::StrPtr(StringRef S, Module& M, StringRef Name) {
   LLVMContext& Ctx = M.getContext();
   Type *CharPtr = PointerType::getUnqual(IntegerType::get(Ctx, 8));
-  return PointerTo(ConstantDataArray::getString(Ctx, S), CharPtr, M);
+  return PointerTo(ConstantDataArray::getString(Ctx, S), CharPtr, M, Name);
 }
