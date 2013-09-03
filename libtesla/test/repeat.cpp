@@ -103,11 +103,22 @@ const struct tesla_transitions all_transitions[] = { A, B, C, D };
 const char *event_names[] = { "A", "B(x)", "C", "D" };
 
 
+const struct tesla_lifetime shared_lifetime = {
+	.tl_init = "init",
+	.tl_initlen = sizeof("init"),
+	.tl_inithash = 0,
+
+	.tl_cleanup = "cleanup",
+	.tl_cleanuplen = sizeof("cleanup"),
+	.tl_cleanuphash = 1,
+};
+
 const struct tesla_automaton automaton = {
 	.ta_name = (__FILE__ ":test_automaton"),
 	.ta_description = "this is where the original source should go",
 	.ta_transitions = all_transitions,
 	.ta_symbol_names = event_names,
+	.ta_lifetime = &shared_lifetime,
 };
 
 

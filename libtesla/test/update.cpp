@@ -51,12 +51,23 @@ private:
 		.transitions = t
 	};
 
+	const struct tesla_lifetime shared_lifetime = {
+		.tl_init = "init",
+		.tl_initlen = sizeof("init"),
+		.tl_inithash = 0,
+
+		.tl_cleanup = "cleanup",
+		.tl_cleanuplen = sizeof("cleanup"),
+		.tl_cleanuphash = 1,
+	};
+
 	struct tesla_automaton automaton = {
 		.ta_name = "unique_name",
 		.ta_description = "update.cpp: generate(automaton)",
 		.ta_alphabet_size = 1,
 		.ta_symbol_names = event_descriptions,
 		.ta_transitions = &trans,
+		.ta_lifetime = &shared_lifetime,
 	};
 };
 

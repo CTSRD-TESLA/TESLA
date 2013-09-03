@@ -65,6 +65,7 @@ __BEGIN_DECLS
 #include <assert.h>
 #include <err.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #endif
@@ -130,6 +131,19 @@ tesla_instance_active(const struct tesla_instance *i)
 	return ((i->ti_state != 0) || (i->ti_key.tk_mask != 0));
 }
 
+static inline bool
+same_lifetime(const struct tesla_lifetime *x, const struct tesla_lifetime *y)
+{
+	assert(x != NULL);
+	assert(y != NULL);
+
+	return (x->tl_initlen == y->tl_initlen)
+		&& (x->tl_cleanuplen == y->tl_cleanuplen)
+		&& (strncmp(x->tl_init, y->tl_init, y->tl_initlen) == 0)
+		&& (strncmp(y->tl_cleanup, y->tl_cleanup, y->tl_cleanuplen)
+		     == 0)
+		;
+}
 
 
 /** Clone an existing instance into a new instance. */
@@ -262,8 +276,17 @@ struct tesla_class {
 #endif
 };
 
+
+/** A lifetime and whether or not we are in it. */
+struct tesla_initstate {
+	struct tesla_lifetime	tis_lifetime;
+	bool			tis_alive;
+};
+
+
 typedef struct tesla_class		tesla_class;
 typedef struct tesla_instance		tesla_instance;
+typedef struct tesla_initstate		tesla_initstate;
 typedef struct tesla_key		tesla_key;
 typedef struct tesla_lifetime		tesla_lifetime;
 typedef struct tesla_store		tesla_store;
@@ -283,6 +306,25 @@ struct tesla_store {
 
 	/** Actual slots that classes might be stored in. */
 	struct tesla_class	*ts_classes;
+
+	/**
+	 * Information about live/dead automata classes; may be shared among
+	 * automata.
+	 *
+	 * For instance, the lifetime [enter syscall, exit syscall] is shared
+	 * by many automata we've written for the FreeBSD kernel. Each
+	 * @ref tesla_store should only record these events once.
+	 */
+	struct tesla_initstate	*ts_lifetimes;
+
+	/** The number of lifetimes that we currently know about. */
+	uint32_t		ts_lifetime_count;
+
+	/** A mapping from init events to lifetimes. */
+	struct tesla_initstate*	*ts_init;
+
+	/** A mapping from cleanup events to lifetimes. */
+	struct tesla_initstate*	*ts_cleanup;
 };
 
 /**

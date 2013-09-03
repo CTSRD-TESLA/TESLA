@@ -145,6 +145,25 @@ tesla_store_init(tesla_store *store, enum tesla_context context,
 		assert(store->ts_classes[i].tc_context >= 0);
 	}
 
+	/*
+	 * For now, allocate as many lifetime storage slots as there are
+	 * classes. In practice, many automata will share lifetime information.
+	 *
+	 * TODO(JA): perhaps allocate fewer of these?
+	 */
+	const size_t lifetime_size = classes * sizeof(store->ts_lifetimes[0]);
+	store->ts_lifetimes = tesla_malloc(lifetime_size);
+	bzero(store->ts_lifetimes, lifetime_size);
+
+	store->ts_lifetime_count = 0;
+
+	const size_t mapping_size = classes * sizeof(store->ts_init[0]);
+	store->ts_init = tesla_malloc(mapping_size);
+	bzero(store->ts_init, mapping_size);
+
+	store->ts_cleanup = tesla_malloc(mapping_size);
+	bzero(store->ts_cleanup, mapping_size);
+
 	return (error);
 }
 
@@ -156,6 +175,10 @@ tesla_store_free(tesla_store *store)
 
 	for (uint32_t i = 0; i < store->ts_length; i++)
 		tesla_class_destroy(store->ts_classes + i);
+
+	tesla_free(store->ts_lifetimes);
+	tesla_free(store->ts_init);
+	tesla_free(store->ts_cleanup);
 
 	tesla_free(store);
 }
@@ -215,6 +238,64 @@ tesla_class_get(struct tesla_store *store,
 	assert(tclass->tc_context >= 0);
 
 	tesla_class_acquire(tclass);
+
+	// Store the automaton's lifetime (unless we already have it).
+	assert(description->ta_lifetime != NULL);
+	const tesla_lifetime *life = description->ta_lifetime;
+
+	assert(life->tl_init != NULL);
+	assert(life->tl_initlen > 0);
+	assert(life->tl_cleanup != NULL);
+	assert(life->tl_cleanuplen > 0);
+
+	tesla_initstate *initstate = NULL;
+
+	for (uint32_t i = 0; i < store->ts_lifetime_count; i++) {
+		tesla_initstate *existing = store->ts_lifetimes + i;
+		if (same_lifetime(&existing->tis_lifetime, life)) {
+			// We already have this lifetime.
+			initstate = existing;
+			break;
+
+		}
+	}
+
+	if (initstate == NULL) {
+		assert(store->ts_lifetime_count < store->ts_length);
+		initstate = store->ts_lifetimes + store->ts_lifetime_count++;
+
+		initstate->tis_lifetime = *life;
+		initstate->tis_alive = false;
+	}
+
+
+	/*
+	 * For now, assume that each init and cleanup event will map to
+	 * only one lifetime; i.e. you cannot have both [foo,bar] and [foo,baz].
+	 *
+	 * TODO(JA): relax this limitation using a multimap
+	 */
+	for (uint32_t i = 0; i < len; i++) {
+		tesla_initstate* *bucket =
+			store->ts_init + ((life->tl_inithash + i) % len);
+
+		// If the bucket is empty, take ownership of it.
+		if (*bucket == NULL) {
+			*bucket = initstate;
+			break;
+		}
+	}
+
+	for (uint32_t i = 0; i < len; i++) {
+		tesla_initstate* *bucket =
+			store->ts_cleanup + ((life->tl_cleanuphash + i) % len);
+
+		// If the bucket is empty, take ownership of it.
+		if (*bucket == NULL) {
+			*bucket = initstate;
+			break;
+		}
+	}
 
 	*tclassp = tclass;
 	return (TESLA_SUCCESS);

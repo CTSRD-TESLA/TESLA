@@ -31,14 +31,27 @@ void	create_instance(struct tesla_class*, struct tesla_instance**,
  */
 int	search_for_pattern(struct tesla_class*, struct tesla_key *pattern);
 
+
+struct tesla_lifetime shared_lifetime = {
+	.tl_init = "init",
+	.tl_initlen = sizeof("init"),
+	.tl_inithash = 0,
+
+	.tl_cleanup = "cleanup",
+	.tl_cleanuplen = sizeof("cleanup"),
+	.tl_cleanuphash = 1,
+};
+
 struct tesla_automaton glob = {
 	.ta_name = "glob_automaton",
 	.ta_description = "a class of TESLA automata",
+	.ta_lifetime = &shared_lifetime,
 };
 
 struct tesla_automaton thr = {
 	.ta_name = "thr_automaton",
 	.ta_description = "a class of TESLA automata",
+	.ta_lifetime = &shared_lifetime,
 };
 
 int
