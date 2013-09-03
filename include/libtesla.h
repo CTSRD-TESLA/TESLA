@@ -111,8 +111,11 @@ struct tesla_automaton {
 
 
 /**
- * Register a @ref tesla_automaton (which must survive for the lifetime of
- * libtesla), receiving a registered @ref tesla_class back.
+ * Register a @ref tesla_automaton, receiving a @ref tesla_class back.
+ *
+ * The @ref tesla_automaton must exist for the lifetime of the TESLA context
+ * (until thread destruction in the per-thread case, indefinitely in the
+ * global case).
  */
 int	tesla_register(const struct tesla_automaton*, struct tesla_class**);
 
