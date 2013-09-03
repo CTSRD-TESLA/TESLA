@@ -270,7 +270,7 @@ struct tesla_class {
 	struct tesla_instance	*tc_instances;	/* Instances of this class. */
 
 #ifdef _KERNEL
-	struct mtx		tc_lock;	/* Synchronise tc_table. */
+	struct mtx		 tc_lock;	/* Synchronise tc_table. */
 #else
 	pthread_mutex_t		 tc_lock;	/* Synchronise tc_table. */
 #endif

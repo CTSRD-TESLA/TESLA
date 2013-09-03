@@ -448,7 +448,6 @@ StructType* tesla::TransitionSetType(Module& M) {
   return StructType::create(Name,
                             IntTy,      // number of possible transitions
                             TransStar,  // transition array
-  //                          CharStar,   // description
                             NULL);
 }
 
