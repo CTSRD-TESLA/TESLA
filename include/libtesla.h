@@ -76,7 +76,7 @@ const char	*tesla_strerror(int32_t error);
  * a number of times with different names and current states.
  */
 struct tesla_class;
-
+struct tesla_lifetime;
 struct tesla_transitions;
 
 /**
@@ -108,6 +108,16 @@ struct tesla_automaton {
 	/** Human-readable descriptions of input symbols (for debugging). */
 	const char*			*ta_symbol_names;
 
+	/** How the automaton is initialised and cleaned up. */
+	const struct tesla_lifetime	*ta_lifetime;
+};
+
+
+/**
+ * The lifetime of a @ref tesla_class is defined as the time between
+ * observing an initialisation event and its corresponding cleanup event.
+ */
+struct tesla_lifetime {
 	/**
 	 * An opaque description of the automaton's initialisation event.
 	 *

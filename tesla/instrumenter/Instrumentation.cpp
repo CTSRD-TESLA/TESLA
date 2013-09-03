@@ -73,6 +73,10 @@ static Constant* ConstructTransition(IRBuilder<>&, Module&, const Transition&);
 static Constant* ConstructTransitions(IRBuilder<>&, Module&,
                                       const TEquivalenceClass&, StructType*);
 
+//! Construct a @ref tesla_lifetime.
+static Constant* ConstructLifetime(const Automaton*, Module&,
+                                   Type *Int32, Type *CharPtr);
+
 
 /// Extract the @a register_t type from an @a llvm::Module.
 static Type* IntPtrType(Module& M)
@@ -88,6 +92,9 @@ static StructType* TransitionSetType(Module&);
 
 /// Find or create the @ref tesla_automaton type.
 static StructType* StructAutomatonType(Module&);
+
+/// Find or create the @ref tesla_lifetype type.
+static StructType* LifetimeType(llvm::Module&, llvm::Type*, llvm::Type*);
 
 
 /// Find a constnat pointer to a constant value.
@@ -461,12 +468,26 @@ StructType* tesla::StructAutomatonType(Module& M) {
 
   Type *TransPtr = PointerType::getUnqual(TransitionSetType(M));
 
+  Type *LifetimePtr = PointerType::getUnqual(LifetimeType(M, Int, CharPtr));
+
   return StructType::create(StructTypeName,
                             CharPtr,    // name
                             Int,        // alphabet_size
                             TransPtr,   // transitions
                             CharPtr,    // description
                             CharPtrPtr, // symbol_names
+                            LifetimePtr,// lifetime
+                            NULL);
+}
+
+StructType* tesla::LifetimeType(Module& M, Type *Int, Type *CharPtr)
+{
+  static const char Name[] = "tesla_lifetime";
+  StructType *T = M.getTypeByName(Name);
+  if (T)
+    return T;
+
+  return StructType::create(Name,
                             CharPtr,    // init
                             Int,        // init len
                             Int,        // init hash
@@ -792,6 +813,33 @@ Constant* tesla::ConstructAutomatonDescription(const Automaton *A, Module& M) {
   auto *Transitions =
     ConstantExpr::getInBoundsGetElementPtr(TransArrayPtr, GEPZeros);
 
+  auto *Lifetime = ConstructLifetime(A, M, Int32, CharPtr);
+
+  auto *Init = ConstantStruct::get(T, StrPtr(Name, M, Name + "_name"),
+                                   AlphabetSize, Transitions, Description,
+                                   SymbolNames, Lifetime, NULL);
+
+  auto *Var = new GlobalVariable(M, T, true, GlobalValue::ExternalLinkage,
+                                 Init, Name);
+
+
+  // If there is already a variable with the same name, it is an extern
+  // declaration; replace it with this definition.
+  if (Existing) {
+    Existing->replaceAllUsesWith(Var);
+    Existing->removeFromParent();
+    delete Existing;
+
+    Var->setName(A->Name());
+  }
+
+  return Var;
+}
+
+
+Constant* tesla::ConstructLifetime(const Automaton *A, Module& M,
+                                   Type *Int32, Type *CharPtr) {
+
   string Protobuf;
   __debugonly bool Success;
 
@@ -811,26 +859,15 @@ Constant* tesla::ConstructAutomatonDescription(const Automaton *A, Module& M) {
   auto *CleanupHash =
     ConstantInt::get(Int32, SuperFastHash(Protobuf.c_str(), Protobuf.length()));
 
-  auto *GVInit = ConstantStruct::get(T, StrPtr(Name, M, Name + "_name"),
-                                   AlphabetSize, Transitions, Description,
-                                   SymbolNames, Init, InitLen, InitHash,
-                                   Cleanup, CleanupLen, CleanupHash, NULL);
 
-  auto *Var = new GlobalVariable(M, T, true, GlobalValue::ExternalLinkage,
-                                 GVInit, Name);
+  StructType *T = LifetimeType(M, Int32, CharPtr);
 
+  auto *Lifetime = ConstantStruct::get(T, Init, InitLen, InitHash,
+                                       Cleanup, CleanupLen, CleanupHash,
+                                       NULL);
 
-  // If there is already a variable with the same name, it is an extern
-  // declaration; replace it with this definition.
-  if (Existing) {
-    Existing->replaceAllUsesWith(Var);
-    Existing->removeFromParent();
-    delete Existing;
-
-    Var->setName(A->Name());
-  }
-
-  return Var;
+  return new GlobalVariable(M, T, true, GlobalVariable::InternalLinkage,
+                            Lifetime, A->Name() + ":lifetime");
 }
 
 
