@@ -39,7 +39,6 @@
 #endif
 
 #define	DEBUG_NAME	"libtesla.state.update"
-#define PRINT(...) DEBUG(libtesla.state.update, __VA_ARGS__)
 
 void
 tesla_update_state(enum tesla_context tesla_context,
@@ -59,32 +58,14 @@ tesla_update_state(enum tesla_context tesla_context,
 		assert(init_count < 2);
 	}
 
-	PRINT("\n====\n%s()\n", __func__);
-	PRINT("  context:      %s\n",
-	            (tesla_context == TESLA_CONTEXT_GLOBAL
-		     ? "global"
-		     : "per-thread"));
-	PRINT("  class:        '%s'\n", autom->ta_name);
-
-	PRINT("  transitions:  ");
-	print_transitions(DEBUG_NAME, trans);
-	PRINT("\n");
-	PRINT("  key:          ");
-	print_key(DEBUG_NAME, pattern);
-	PRINT("\n----\n");
-
 	struct tesla_store *store;
 	int ret = tesla_store_get(tesla_context, TESLA_MAX_CLASSES,
 			TESLA_MAX_INSTANCES, &store);
 	assert(ret == TESLA_SUCCESS);
 
-	PRINT("store: 0x%tx\n", (intptr_t) store);
-
 	struct tesla_class *class;
 	ret = tesla_class_get(store, autom, &class);
 	assert(ret == TESLA_SUCCESS);
-
-	print_class(class);
 
 	// Did we match any instances?
 	bool matched_something = false;
@@ -226,9 +207,6 @@ tesla_update_state(enum tesla_context tesla_context,
 	// Does it cause class cleanup?
 	if (cleanup_required)
 		tesla_class_reset(class);
-
-	print_class(class);
-	PRINT("\n====\n\n");
 
 cleanup:
 	tesla_class_put(class);
