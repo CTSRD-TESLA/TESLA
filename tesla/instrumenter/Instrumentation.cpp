@@ -108,20 +108,32 @@ static BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
                                 BasicBlock *MatchTarget, BasicBlock *NoMatch,
                                 Value *Val, const tesla::Argument& Pattern);
 
+/// Call @ref tesla_enter_context().
+static BasicBlock* EnterContext(AutomatonDescription::Context,
+                                const Transition&, ArrayRef<Value*> Key,
+                                Module&, Function*, BasicBlock *Next);
+
+/// Call @ref tesla_exit_context().
+static BasicBlock* ExitContext(AutomatonDescription::Context,
+                                const Transition&, ArrayRef<Value*> Key,
+                                Module&, Function*, BasicBlock *Next);
+
 
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
     if (B.getName() == Name)
       return &B;
 
-  panic("instrumentation function '" + Fn.getName()
-         + "' has no '" + Name + "' block");
+  return NULL;
 }
 
 void FnInstrumentation::AppendInstrumentation(
     const Automaton& A, const FunctionEvent& Ev, TEquivalenceClass& Trans) {
 
   LLVMContext& Ctx = M.getContext();
+
+  const Transition *Head = *Trans.begin();
+  assert(!(Head->RequiresInit() and Head->RequiresCleanup()));
 
   auto Fn = Ev.function();
   assert((Ev.kind() != FunctionEvent::CCall) || (Fn.name() == TargetFn->getName()));
@@ -131,15 +143,31 @@ void FnInstrumentation::AppendInstrumentation(
   // matchers and instrumentation blocks. Find the current end of this chain
   // and insert the new instrumentation before it.
   auto *Exit = FindBlock("exit", *InstrFn);
-  auto *Instr = BasicBlock::Create(Ctx, A.Name() + ":instr", InstrFn, Exit);
-  Exit->replaceAllUsesWith(Instr);
 
   bool HasReturnValue =
     (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue());
 
   vector<Value*> KeyArgs(TESLA_KEY_SIZE, NULL);
 
-  IRBuilder<> Builder(Instr);
+  BasicBlock *BB;
+  if (Head->RequiresInit()) {
+    if (FindBlock("tesla_context_entry", *InstrFn))
+      return;
+
+    BB = FindBlock("entry", *InstrFn);
+
+  } else if (Head->RequiresCleanup()) {
+    if (FindBlock("tesla_context_exit", *InstrFn))
+      return;
+
+    BB = FindBlock("entry", *InstrFn);
+
+  } else {
+    BB = BasicBlock::Create(Ctx, A.Name() + ":instr", InstrFn, Exit);
+    Exit->replaceAllUsesWith(BB);
+  }
+
+  IRBuilder<> Builder(BB);
 
   size_t i = 0;
   if (Ev.argument().size() > 0)
@@ -148,7 +176,7 @@ void FnInstrumentation::AppendInstrumentation(
 
       // We may need to match against constants.
       MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
-                   Instr, Exit, &InstrArg, Arg);
+                   BB, Exit, &InstrArg, Arg);
 
       if (Arg.has_index()) {
         assert(KeyArgs[Arg.index()] == NULL);
@@ -175,14 +203,21 @@ void FnInstrumentation::AppendInstrumentation(
     ReturnValue = GetArgumentValue(ReturnValue, Arg, Builder);
 
     MatchPattern(Ctx, A.Name() + ":match:retval", InstrFn,
-                 Instr, Exit, ReturnValue, Arg);
+                 BB, Exit, ReturnValue, Arg);
 
     // The return value may be a variable that we need to watch.
     assert(ReturnValue != NULL);
   }
 
-  UpdateState(A, Trans.Symbol, ConstructKey(Builder, M, KeyArgs),
-              M, Exit, Builder);
+  if (Head->RequiresInit())
+    EnterContext(A.getAssertion().context(), *Head, KeyArgs, M, InstrFn, Exit);
+
+  else if (Head->RequiresCleanup())
+    ExitContext(A.getAssertion().context(), *Head, KeyArgs, M, InstrFn, Exit);
+
+  else
+    UpdateState(A, Trans.Symbol, ConstructKey(Builder, M, KeyArgs),
+                M, Exit, Builder);
 }
 
 
@@ -409,6 +444,101 @@ void tesla::UpdateState(const Automaton& A, uint32_t Symbol, Value *Key,
   assert(Args.size() == Fn->arg_size());
   Builder.CreateCall(Fn, Args);
   Builder.CreateBr(Next);
+}
+
+
+BasicBlock* tesla::EnterContext(AutomatonDescription::Context Context,
+                                const Transition& T, ArrayRef<Value*> KeyArgs,
+                                Module& M, Function *Fn, BasicBlock *Next) {
+
+  static const string BlockName = "tesla_context_entry";
+  BasicBlock *BB = FindBlock(BlockName, *Fn);
+  if (BB)
+    return BB;
+
+  auto& Ctx(M.getContext());
+
+  BB = BasicBlock::Create(Ctx, BlockName, Fn, Next);
+  auto *Entry = FindBlock("entry", *Fn);
+  BB->moveAfter(Entry);
+
+  Next->replaceAllUsesWith(BB);
+
+  IRBuilder<> Builder(BB);
+
+  Type *Void = Type::getVoidTy(Ctx);
+  Type *Int32 = Type::getInt32Ty(Ctx);
+  Type *Event = PointerType::getUnqual(LifetimeEventType(M));
+  Type *KeyStar = PointerType::getUnqual(KeyType(M));
+
+  auto *Target = dyn_cast<Function>(M.getOrInsertFunction(
+      "tesla_enter_context",
+      Void,       // return type
+      Int32,      // context (global vs per-thread)
+      Event,      // static event description
+      KeyStar,    // dynamic event information
+      NULL
+  ));
+
+  auto *Key = ConstructKey(Builder, M, KeyArgs);
+
+  std::vector<Value*> Args;
+  Args.push_back(TeslaContext(Context, Ctx));
+  Args.push_back(ConstructLifetimeEvent(T, M));
+  Args.push_back(Key);
+  Key->dump();
+
+  assert(Args.size() == Target->arg_size());
+  Builder.CreateCall(Target, Args);
+  Builder.CreateBr(Next);
+
+  BB->dump();
+
+  return BB;
+}
+
+
+BasicBlock* tesla::ExitContext(AutomatonDescription::Context Context,
+                                const Transition& T, ArrayRef<Value*> KeyArgs,
+                                Module& M, Function *Fn, BasicBlock *Next) {
+
+  static const string BlockName = "tesla_context_exit";
+  BasicBlock *BB = FindBlock(BlockName, *Fn);
+  if (BB)
+    return BB;
+
+  auto& Ctx(M.getContext());
+
+  BB = BasicBlock::Create(Ctx, BlockName, Fn, Next);
+  IRBuilder<> Builder(BB);
+
+  Type *Void = Type::getVoidTy(Ctx);
+  Type *Int32 = Type::getInt32Ty(Ctx);
+  Type *Event = PointerType::getUnqual(LifetimeEventType(M));
+  Type *KeyStar = PointerType::getUnqual(KeyType(M));
+
+  auto *Target = dyn_cast<Function>(M.getOrInsertFunction(
+      "tesla_exit_context",
+      Void,       // return type
+      Int32,      // context (global vs per-thread)
+      Event,      // static event description
+      KeyStar,    // dynamic event information
+      NULL
+  ));
+
+  auto *Key = ConstructKey(Builder, M, KeyArgs);
+
+  std::vector<Value*> Args;
+  Args.push_back(TeslaContext(Context, Ctx));
+  Args.push_back(ConstructLifetimeEvent(T, M));
+  Args.push_back(Key);
+  Key->dump();
+
+  assert(Args.size() == Target->arg_size());
+  Builder.CreateCall(Target, Args);
+  Builder.CreateBr(Next);
+
+  return BB;
 }
 
 
