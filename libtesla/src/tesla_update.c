@@ -42,6 +42,26 @@
 #define PRINT(...) DEBUG(libtesla.state.update, __VA_ARGS__)
 
 void
+tesla_enter_context(enum tesla_context context,
+	const struct tesla_lifetime_event *e,
+	const struct tesla_key *k)
+{
+	assert(e != NULL);
+	assert(k != NULL);
+}
+
+
+void
+tesla_exit_context(enum tesla_context context,
+	const struct tesla_lifetime_event *e,
+	const struct tesla_key *k)
+{
+	assert(e != NULL);
+	assert(k != NULL);
+}
+
+
+void
 tesla_update_state(enum tesla_context tesla_context,
 	const struct tesla_automaton *autom, uint32_t symbol,
 	const struct tesla_key *pattern)
