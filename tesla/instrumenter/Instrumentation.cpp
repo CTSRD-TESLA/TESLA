@@ -478,7 +478,7 @@ BasicBlock* tesla::CreateInstrPreamble(Module& Mod, Function *F,
     return Entry;
 
   auto *Preamble = BasicBlock::Create(Ctx, "preamble", F, Entry);
-  auto *PrintBB = BasicBlock::Create(Ctx, "printf", F);
+  auto *PrintBB = BasicBlock::Create(Ctx, "printf", F, Entry);
   IRBuilder<> Builder(Preamble);
 
   // Only print if TESLA_DEBUG indicates that we want output.
