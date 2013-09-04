@@ -89,7 +89,6 @@ main(int argc, char *argv[]) {
 
 
 
-
 int
 get_object(int index, struct object **o)
 {
@@ -110,4 +109,3 @@ get_object(int index, struct object **o)
 
 	return (0);
 }
-
