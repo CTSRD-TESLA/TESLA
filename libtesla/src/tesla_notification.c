@@ -313,7 +313,7 @@ print_ignored(const struct tesla_class *tcp, int32_t symbol,
 {
 	const struct tesla_automaton *a = tcp->tc_automaton;
 
-	DEBUG(libtesla.event, "ignore '%s': %s", a->ta_name,
+	DEBUG(libtesla.event, "ignore '%s': %s\n", a->ta_name,
 		a->ta_symbol_names[symbol]);
 }
 
