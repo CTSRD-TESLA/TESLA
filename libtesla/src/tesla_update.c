@@ -38,7 +38,6 @@
 #include <inttypes.h>
 #endif
 
-#define	DEBUG_NAME	"libtesla.state.update"
 
 void
 tesla_update_state(enum tesla_context tesla_context,
@@ -48,15 +47,15 @@ tesla_update_state(enum tesla_context tesla_context,
 	const struct tesla_transitions *trans =
 		autom->ta_transitions + symbol;
 
-	if (tesla_debugging(DEBUG_NAME)) {
-		/* We should never see with multiple <<init>> transitions. */
-		int init_count = 0;
-		for (uint32_t i = 0; i < trans->length; i++)
-			if (trans->transitions[i].flags & TESLA_TRANS_INIT)
-				init_count++;
+#ifndef NDEBUG
+	/* We should never see with multiple <<init>> transitions. */
+	int init_count = 0;
+	for (uint32_t i = 0; i < trans->length; i++)
+		if (trans->transitions[i].flags & TESLA_TRANS_INIT)
+			init_count++;
 
-		assert(init_count < 2);
-	}
+	assert(init_count < 2);
+#endif
 
 	struct tesla_store *store;
 	int ret = tesla_store_get(tesla_context, TESLA_MAX_CLASSES,
