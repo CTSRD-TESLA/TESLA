@@ -76,7 +76,7 @@ const char	*tesla_strerror(int32_t error);
  * a number of times with different names and current states.
  */
 struct tesla_class;
-struct tesla_lifetime;
+struct tesla_lifetime_event;
 struct tesla_transitions;
 
 /**
@@ -108,18 +108,21 @@ struct tesla_automaton {
 	/** Human-readable descriptions of input symbols (for debugging). */
 	const char*			*ta_symbol_names;
 
-	/** How the automaton is initialised and cleaned up. */
-	const struct tesla_lifetime	*ta_lifetime;
+	/** The event that activates the automaton. */
+	const struct tesla_lifetime_event	*ta_init;
+
+	/** The event that deactivates the automaton. */
+	const struct tesla_lifetime_event	*ta_cleanup;
 };
 
 
 /**
- * The lifetime of a @ref tesla_class is defined as the time between
- * observing an initialisation event and its corresponding cleanup event.
+ * A short, unique, deterministic representation of a context entry/exit event,
+ * a pair of which defines an automaton's lifetime.
  */
-struct tesla_lifetime {
+struct tesla_lifetime_event {
 	/**
-	 * An opaque description of the automaton's initialisation event.
+	 * An opaque representation of the automaton's initialisation event.
 	 *
 	 * This description should be short and deterministic,
 	 * i.e., multiple automata that share the same init event should
@@ -128,14 +131,21 @@ struct tesla_lifetime {
 	 * This can be written by hand if needed (e.g. for testing),
 	 * but in practice we generate it from protocol buffers.
 	 */
-	const char			*tl_init;
-	const int32_t			 tl_initlen;
-	const int32_t			 tl_inithash;
+	const char			*tle_repr;
 
-	/** An opaque description of the cleanup event (see @ref #tl_init). */
-	const char			*tl_cleanup;
-	const int32_t			 tl_cleanuplen;
-	const int32_t			 tl_cleanuphash;
+	/** The length of @ref #tle_repr. */
+	const int32_t			 tle_length;
+
+	/**
+	 * A precomputed hash of @ref #tle_repr.
+	 *
+	 * libtesla doesn't care what hash algorithm is used; in test code or
+	 * statically-compiled clients, incrementing integers works well.
+	 *
+	 * All clients should be consistent, however; the TESLA instrumenter
+	 * uses SuperFastHash.
+	 */
+	const int32_t			 tle_hash;
 };
 
 

@@ -44,14 +44,16 @@ check_store(struct tesla_store *store)
 {
 	assert(store != NULL);
 
-	struct tesla_lifetime shared_lifetime = {
-		.tl_init = "init",
-		.tl_initlen = sizeof("init"),
-		.tl_inithash = 0,
+	struct tesla_lifetime_event shared_init = {
+		.tle_repr = "init",
+		.tle_length = sizeof("init"),
+		.tle_hash = 0,
+	};
 
-		.tl_cleanup = "cleanup",
-		.tl_cleanuplen = sizeof("cleanup"),
-		.tl_cleanuphash = 1,
+	struct tesla_lifetime_event shared_cleanup = {
+		.tle_repr = "cleanup",
+		.tle_length = sizeof("cleanup"),
+		.tle_hash = 1,
 	};
 
 	struct tesla_automaton descriptions[CLASSES];
@@ -60,7 +62,8 @@ check_store(struct tesla_store *store)
 	for (unsigned int i = 0; i < CLASSES; i++) {
 		struct tesla_automaton *descrip = descriptions + i;
 		descrip->ta_name = name(i);
-                descrip->ta_lifetime = &shared_lifetime;
+                descrip->ta_init = &shared_init;
+                descrip->ta_cleanup = &shared_cleanup;
 
 		check(tesla_class_get(store, descrip, classes + i));
 

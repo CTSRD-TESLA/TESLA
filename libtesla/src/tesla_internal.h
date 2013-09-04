@@ -132,16 +132,15 @@ tesla_instance_active(const struct tesla_instance *i)
 }
 
 static inline bool
-same_lifetime(const struct tesla_lifetime *x, const struct tesla_lifetime *y)
+same_lifetime(const struct tesla_lifetime_event *x,
+              const struct tesla_lifetime_event *y)
 {
 	assert(x != NULL);
 	assert(y != NULL);
 
-	return (x->tl_initlen == y->tl_initlen)
-		&& (x->tl_cleanuplen == y->tl_cleanuplen)
-		&& (strncmp(x->tl_init, y->tl_init, y->tl_initlen) == 0)
-		&& (strncmp(y->tl_cleanup, y->tl_cleanup, y->tl_cleanuplen)
-		     == 0)
+	return (x->tle_length == y->tle_length)
+		&& (x->tle_hash == y->tle_hash)
+		&& (strncmp(x->tle_repr, y->tle_repr, x->tle_length) == 0)
 		;
 }
 
@@ -279,8 +278,9 @@ struct tesla_class {
 
 /** A lifetime and whether or not we are in it. */
 struct tesla_initstate {
-	struct tesla_lifetime	tis_lifetime;
-	bool			tis_alive;
+	struct tesla_lifetime_event	tis_init;
+	struct tesla_lifetime_event	tis_cleanup;
+	bool				tis_alive;
 };
 
 
@@ -288,7 +288,7 @@ typedef struct tesla_class		tesla_class;
 typedef struct tesla_instance		tesla_instance;
 typedef struct tesla_initstate		tesla_initstate;
 typedef struct tesla_key		tesla_key;
-typedef struct tesla_lifetime		tesla_lifetime;
+typedef struct tesla_lifetime_event	tesla_lifetime_event;
 typedef struct tesla_store		tesla_store;
 typedef struct tesla_transition		tesla_transition;
 typedef struct tesla_transitions	tesla_transitions;

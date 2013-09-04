@@ -88,17 +88,17 @@ tesla_update_state(enum tesla_context tesla_context,
 
 
 	// Has this class been initialised?
-	const tesla_lifetime *lifetime = autom->ta_lifetime;
-	int32_t inithash = lifetime->tl_inithash;
+	const tesla_lifetime_event *init = autom->ta_init;
+	int32_t inithash = init->tle_hash;
 	tesla_initstate *initstate = NULL;
 
 	for (uint32_t i = 0, len = store->ts_length; i < len; i++) {
 		tesla_initstate *s = store->ts_init[(i + inithash) % len];
 
 		// The hash bucket is empty => inconsistent hash table state.
-		assert(s->tis_lifetime.tl_init != NULL);
+		assert(s->tis_init.tle_repr != NULL);
 
-		if (same_lifetime(&s->tis_lifetime, lifetime)) {
+		if (same_lifetime(&s->tis_init, init)) {
 			initstate = s;
 			break;
 		}

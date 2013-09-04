@@ -240,20 +240,24 @@ tesla_class_get(struct tesla_store *store,
 	tesla_class_acquire(tclass);
 
 	// Store the automaton's lifetime (unless we already have it).
-	assert(description->ta_lifetime != NULL);
-	const tesla_lifetime *life = description->ta_lifetime;
+	assert(description->ta_init != NULL);
+	assert(description->ta_cleanup != NULL);
 
-	assert(life->tl_init != NULL);
-	assert(life->tl_initlen > 0);
-	assert(life->tl_cleanup != NULL);
-	assert(life->tl_cleanuplen > 0);
+	const tesla_lifetime_event *init = description->ta_init;
+	const tesla_lifetime_event *cleanup = description->ta_cleanup;
+
+	assert(init->tle_repr != NULL);
+	assert(init->tle_length > 0);
+	assert(cleanup->tle_repr != NULL);
+	assert(cleanup->tle_length > 0);
 
 	tesla_initstate *initstate = NULL;
 
 	for (uint32_t i = 0; i < store->ts_lifetime_count; i++) {
 		tesla_initstate *existing = store->ts_lifetimes + i;
-		if (same_lifetime(&existing->tis_lifetime, life)) {
+		if (same_lifetime(&existing->tis_init, init)) {
 			// We already have this lifetime.
+			assert(same_lifetime(&existing->tis_cleanup, cleanup));
 			initstate = existing;
 			break;
 
@@ -264,7 +268,8 @@ tesla_class_get(struct tesla_store *store,
 		assert(store->ts_lifetime_count < store->ts_length);
 		initstate = store->ts_lifetimes + store->ts_lifetime_count++;
 
-		initstate->tis_lifetime = *life;
+		initstate->tis_init = *init;
+		initstate->tis_cleanup = *cleanup;
 		initstate->tis_alive = false;
 	}
 
@@ -277,7 +282,7 @@ tesla_class_get(struct tesla_store *store,
 	 */
 	for (uint32_t i = 0; i < len; i++) {
 		tesla_initstate* *bucket =
-			store->ts_init + ((life->tl_inithash + i) % len);
+			store->ts_init + ((init->tle_hash + i) % len);
 
 		// If the bucket is empty, take ownership of it.
 		if (*bucket == NULL) {
@@ -288,7 +293,7 @@ tesla_class_get(struct tesla_store *store,
 
 	for (uint32_t i = 0; i < len; i++) {
 		tesla_initstate* *bucket =
-			store->ts_cleanup + ((life->tl_cleanuphash + i) % len);
+			store->ts_cleanup + ((cleanup->tle_hash + i) % len);
 
 		// If the bucket is empty, take ownership of it.
 		if (*bucket == NULL) {

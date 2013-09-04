@@ -73,9 +73,8 @@ static Constant* ConstructTransition(IRBuilder<>&, Module&, const Transition&);
 static Constant* ConstructTransitions(IRBuilder<>&, Module&,
                                       const TEquivalenceClass&, StructType*);
 
-//! Construct a @ref tesla_lifetime.
-static Constant* ConstructLifetime(const Automaton*, Module&,
-                                   Type *Int32, Type *CharPtr);
+//! Construct a @ref tesla_lifetime_event.
+static Constant* ConstructLifetimeEvent(const Transition&, Module&);
 
 
 /// Extract the @a register_t type from an @a llvm::Module.
@@ -94,7 +93,7 @@ static StructType* TransitionSetType(Module&);
 static StructType* StructAutomatonType(Module&);
 
 /// Find or create the @ref tesla_lifetype type.
-static StructType* LifetimeType(llvm::Module&, llvm::Type*, llvm::Type*);
+static StructType* LifetimeEventType(llvm::Module&);
 
 
 /// Find a constnat pointer to a constant value.
@@ -467,7 +466,8 @@ StructType* tesla::StructAutomatonType(Module& M) {
 
   Type *TransPtr = PointerType::getUnqual(TransitionSetType(M));
 
-  Type *LifetimePtr = PointerType::getUnqual(LifetimeType(M, Int, CharPtr));
+  Type *LifetimeEventPtr =
+    PointerType::getUnqual(LifetimeEventType(M));
 
   return StructType::create(StructTypeName,
                             CharPtr,    // name
@@ -475,24 +475,29 @@ StructType* tesla::StructAutomatonType(Module& M) {
                             TransPtr,   // transitions
                             CharPtr,    // description
                             CharPtrPtr, // symbol_names
-                            LifetimePtr,// lifetime
+                            LifetimeEventPtr,   // entry
+                            LifetimeEventPtr,   // exit
                             NULL);
 }
 
-StructType* tesla::LifetimeType(Module& M, Type *Int, Type *CharPtr)
+StructType* tesla::LifetimeEventType(Module& M)
 {
   static const char Name[] = "tesla_lifetime";
   StructType *T = M.getTypeByName(Name);
   if (T)
     return T;
 
+  // TODO(JA): stop looking up the same types over and over
+
+  LLVMContext& Ctx = M.getContext();
+
+  Type *CharPtr = PointerType::getUnqual(IntegerType::get(Ctx, 8));
+  Type *Int32 = IntegerType::get(Ctx, 32);
+
   return StructType::create(Name,
-                            CharPtr,    // init
-                            Int,        // init len
-                            Int,        // init hash
-                            CharPtr,    // cleanup
-                            Int,        // cleanup len
-                            Int,        // cleanup hash
+                            CharPtr,    // opaque representation
+                            Int32,      // representation length
+                            Int32,      // pre-computed hash
                             NULL);
 }
 
@@ -812,11 +817,12 @@ Constant* tesla::ConstructAutomatonDescription(const Automaton *A, Module& M) {
   auto *Transitions =
     ConstantExpr::getInBoundsGetElementPtr(TransArrayPtr, GEPZeros);
 
-  auto *Lifetime = ConstructLifetime(A, M, Int32, CharPtr);
+  auto *Enter = ConstructLifetimeEvent(A->Init(), M);
+  auto *Exit = ConstructLifetimeEvent(A->Cleanup(), M);
 
   auto *Init = ConstantStruct::get(T, StrPtr(Name, M, Name + "_name"),
                                    AlphabetSize, Transitions, Description,
-                                   SymbolNames, Lifetime, NULL);
+                                   SymbolNames, Enter, Exit, NULL);
 
   auto *Var = new GlobalVariable(M, T, true, GlobalValue::ExternalLinkage,
                                  Init, Name);
@@ -836,37 +842,27 @@ Constant* tesla::ConstructAutomatonDescription(const Automaton *A, Module& M) {
 }
 
 
-Constant* tesla::ConstructLifetime(const Automaton *A, Module& M,
-                                   Type *Int32, Type *CharPtr) {
+Constant* tesla::ConstructLifetimeEvent(const Transition& T, Module& M) {
+
+  LLVMContext& Ctx = M.getContext();
+  Type *Int32 = IntegerType::get(Ctx, 32);
 
   string Protobuf;
-  __debugonly bool Success;
 
-  Success = A->Init().Protobuf()->SerializeToString(&Protobuf);
+  __debugonly bool Success = T.Protobuf()->SerializeToString(&Protobuf);
   assert(Success);
 
-  auto *Init = StrPtr(Protobuf, M, A->Init().ShortLabel() + ":protobuf");
-  auto *InitLen = ConstantInt::get(Int32, Protobuf.length());
-  auto *InitHash =
+  auto *Repr = StrPtr(Protobuf, M, T.ShortLabel() + ":protobuf");
+  auto *Length = ConstantInt::get(Int32, Protobuf.length());
+  auto *Hash =
     ConstantInt::get(Int32, SuperFastHash(Protobuf.c_str(), Protobuf.length()));
 
-  Success = A->Cleanup().Protobuf()->SerializeToString(&Protobuf);
-  assert(Success);
+  StructType *Ty = LifetimeEventType(M);
 
-  auto *Cleanup = StrPtr(Protobuf, M, A->Cleanup().ShortLabel() + ":protobuf");
-  auto *CleanupLen = ConstantInt::get(Int32, Protobuf.length());
-  auto *CleanupHash =
-    ConstantInt::get(Int32, SuperFastHash(Protobuf.c_str(), Protobuf.length()));
+  auto *Lifetime = ConstantStruct::get(Ty, Repr, Length, Hash, NULL);
 
-
-  StructType *T = LifetimeType(M, Int32, CharPtr);
-
-  auto *Lifetime = ConstantStruct::get(T, Init, InitLen, InitHash,
-                                       Cleanup, CleanupLen, CleanupHash,
-                                       NULL);
-
-  return new GlobalVariable(M, T, true, GlobalVariable::InternalLinkage,
-                            Lifetime, A->Name() + ":lifetime");
+  return new GlobalVariable(M, Ty, true, GlobalVariable::InternalLinkage,
+                            Lifetime, T.ShortLabel());
 }
 
 

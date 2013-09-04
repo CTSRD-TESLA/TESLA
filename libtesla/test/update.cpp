@@ -51,14 +51,16 @@ private:
 		.transitions = t
 	};
 
-	const struct tesla_lifetime shared_lifetime = {
-		.tl_init = "init",
-		.tl_initlen = sizeof("init"),
-		.tl_inithash = 0,
+	struct tesla_lifetime_event shared_init = {
+		.tle_repr = "init",
+		.tle_length = sizeof("init"),
+		.tle_hash = 0,
+	};
 
-		.tl_cleanup = "cleanup",
-		.tl_cleanuplen = sizeof("cleanup"),
-		.tl_cleanuphash = 1,
+	struct tesla_lifetime_event shared_cleanup = {
+		.tle_repr = "cleanup",
+		.tle_length = sizeof("cleanup"),
+		.tle_hash = 1,
 	};
 
 	struct tesla_automaton automaton = {
@@ -67,7 +69,8 @@ private:
 		.ta_alphabet_size = 1,
 		.ta_symbol_names = event_descriptions,
 		.ta_transitions = &trans,
-		.ta_lifetime = &shared_lifetime,
+		.ta_init = &shared_init,
+		.ta_cleanup = &shared_cleanup,
 	};
 };
 
