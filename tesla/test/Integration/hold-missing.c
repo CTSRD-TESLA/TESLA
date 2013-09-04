@@ -51,15 +51,9 @@ example_syscall(struct credential *cred, int index, int op)
 	/*
 	 * Entering the system call should update all automata:
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1:0x0 <init>) ]
-	 * CHECK: ====
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> 1:0x0 <init>) ]
-	 * CHECK: ====
+	 * CHECK: [CALE] example_syscall
+	 * CHECK: new    0: 1:0x0 ('{{.*}}')
+	 * CHECK: new    0: 1:0x0 ('{{.*}}')
 	 */
 
 	struct object *o;

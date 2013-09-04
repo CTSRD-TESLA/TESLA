@@ -8,6 +8,7 @@ add_custom_target(tesla-test
 	COMMENT "Testing TESLA")
 
 add_dependencies(tesla-test
+	tesla			# oddly-named libtesla target
 	tesla-analyse
 	tesla-cat
 	tesla-get-triple

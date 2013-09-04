@@ -50,11 +50,7 @@ example_syscall(struct credential *cred, int index, int op)
 {
 	/*
 	 * System call entry is the inital bound of the automaton:
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]]:0x0 <init>) ]
-	 * CHECK: ====
+	 * CHECK: new    [[INST0:[0-9]+]]: [[INIT:[0-9]+:0x0]]
 	 */
 
 	struct object *o;
@@ -64,32 +60,22 @@ example_syscall(struct credential *cred, int index, int op)
 
 	/*
 	 * perform_operation() contains the NOW event:
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: transitions: {{.*}} ([[INIT]]:0x0 -> [[OP:[0-9]+]]:0x1)
-	 * CHECK: ====
+	 * CHECK: clone  [[INST0]]:[[INIT]] -> [[INST1:[0-9]+]]:[[NOW:[0-9]+:0x1]]
 	 */
 	perform_operation(op, o);
 
 	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: transitions: {{.*}} ([[OP]]:0x1 -> [[REL:[0-9]+]]:0x1)
-	 * CHECK: ====
+	 * CHECK: update [[INST1]]: [[NOW]]->[[REL:[0-9]+:0x1]]
 	 */
 	release(o);
 
 	/*
 	 * Finally, leaving example_syscall() finalises the automaton:
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: transitions:
-	 * CHECK:     ([[REL]]:0x1 -> [[FINAL:[0-9]+]]:0x{{[01]}} <clean>)
-	 * CHECK: update {{[0-9]}}: [[REL]]->[[FINAL]]
-	 * CHECK: pass '{{.*}}': {{[0-9]+}}
-	 * CHECK: tesla_class_reset
-	 * CHECK: ====
+	 * CHECK: update [[INST0]]: [[INIT]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[NAME:.*]]': [[INST0]]
+	 * CHECK: update [[INST1]]: [[REL]]->[[DONE]]
+	 * CHECK: pass '[[NAME:.*]]': [[INST1]]
+	 * CHECK: tesla_class_reset [[NAME]]
 	 */
 	return 0;
 }
@@ -100,7 +86,6 @@ main(int argc, char *argv[]) {
 	struct credential cred;
 	return example_syscall(&cred, 0, 0);
 }
-
 
 
 
@@ -124,4 +109,3 @@ get_object(int index, struct object **o)
 
 	return (0);
 }
-

@@ -572,7 +572,6 @@ StructType* tesla::TransitionSetType(Module& M) {
 
   Type *IntTy = IntegerType::get(Ctx, 32);
   Type *TransStar = PointerType::getUnqual(TransitionType(M));
-  //Type *CharStar = PointerType::getUnqual(IntegerType::get(Ctx, 8));
 
   return StructType::create(Name,
                             IntTy,      // number of possible transitions
@@ -642,7 +641,7 @@ BasicBlock* tesla::CreateInstrPreamble(Module& Mod, Function *F,
     return Entry;
 
   auto *Preamble = BasicBlock::Create(Ctx, "preamble", F, Entry);
-  auto *PrintBB = BasicBlock::Create(Ctx, "printf", F);
+  auto *PrintBB = BasicBlock::Create(Ctx, "printf", F, Entry);
   IRBuilder<> Builder(Preamble);
 
   // Only print if TESLA_DEBUG indicates that we want output.

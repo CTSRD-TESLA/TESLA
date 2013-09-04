@@ -32,15 +32,9 @@ main(int argc, char *argv[])
 	/*
 	 * First we enter main():
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state()
-	 * CHECK: context:      per-thread
-	 * CHECK: class:        '[[NAME:.*]]'
-	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]]:0x0 <init>) ]
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ----
-	 * CHECK: new [[AUTOMATON_ID:[0-9]]]: [[INIT]]
-	 * CHECK: ====
+	 * CHECK: [CALE] main
+	 * CHECK: new    [[INST0:[0-9]+]]: [[INIT:1:0x0]]
+	 * CHECK:   ('[[NAME:.*]]')
 	 */
 
 	int i = 4;
@@ -55,13 +49,8 @@ main(int argc, char *argv[])
 	/*
 	 * Then we call foo():
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state()
-	 * CHECK: ([[INIT]]:0x0 -> [[FOO:[0-9]+]]:0x7)
-	 * CHECK: key:          0x7 [ 4 [[IP:[0-9a-f]+]] [[SP:[0-9a-f]+]] X ]
-	 * CHECK: ----
-	 * CHECK: clone [[AUTOMATON_ID]]:[[INIT]] -> [[CLONE:[0-9]+]]:[[FOO]]
-	 * CHECK: ====
+	 * CHECK: [RETE] foo
+	 * CHECK: clone  [[INST0]]:[[INIT]] -> [[INST1:[0-9]+]]:[[FOO:[0-9]+:0x7]]
 	 */
 
 	assert(foo(i, ip, sp) == 0);
@@ -69,29 +58,23 @@ main(int argc, char *argv[])
 	/*
 	 * Then we hit the NOW event:
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state()
-	 * CHECK: ([[FOO]]:0x7 -> [[NOW:[0-9]+]]:0x7)
-	 * CHECK: key:          0x7 [ 4 [[IP]] [[SP]] X ]
-	 * CHECK: ----
-	 * CHECK: update {{[0-9]+}}: [[FOO]]->[[NOW]]
-	 * CHECK: ====
+	 * CHECK: [ASRT]
+	 * CHECK: update [[INST1]]: [[FOO]]->[[NOW:[0-9]+:0x7]]
 	 */
 	TESLA_WITHIN(main, previously(foo(i, ip, sp) == 0));
 
 	/*
 	 * And finally we leave main():
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state()
-	 * CHECK: transitions:
-         * CHECK:   ([[NOW]]:0x7 -> [[FINAL:[0-9]+]]:0x{{[07]}} <clean>)
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ----
-	 * CHECK: update [[CLONE]]: [[NOW]]->[[FINAL]]
-	 * CHECK: pass '[[NAME]]': [[CLONE]]
-	 * CHECK: tesla_class_reset
-	 * CHECK: ====
+	 * CHECK: [RETE] main
+	 *
+	 * CHECK: update [[INST0]]: [[INIT]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[NAME]]': [[INST0]]
+	 *
+	 * CHECK: update [[INST1]]: [[NOW]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[NAME]]': [[INST1]]
+	 *
+	 * CHECK: tesla_class_reset [[NAME]]
 	 */
 
 	return 0;

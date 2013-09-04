@@ -26,65 +26,29 @@ main(int argc, char *argv[])
 {
 	/*
 	 * CHECK: [CALE] main
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class: '[[NAME:.*]]'
-	 * CHECK: transitions:  [ (0:0x0 -> 1:0x0 <init>) ]
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: new    0: 1
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: new    [[INST0:[0-9]+]]: [[INIT:1:0x0]]
 	 */
 	struct object *o;
 
 	/*
 	 * CHECK: [RETE] get_object 0 [[OBJ_PTR:0x[0-9a-f]+]] 0
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: transitions: [ (1:0x0 -> 2:0x1)
-	 * CHECK: key: 0x1 [ [[OBJ:[0-9a-f]+]] X
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: clone 0:1 -> 1:2
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: clone  [[INST0]]:[[INIT]] -> [[INST1:[0-9]+]]:[[OBJ:[0-9]+:0x1]]
 	 */
 	get_object(0, &o);
 
 	/*
 	 * CHECK: [ASRT] automaton 0
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: key: 0x1 [ [[OBJ:[0-9a-f]+]] X
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: update 1: 2->[[FOO:[0-9]+]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: update [[INST1]]: [[OBJ]]->[[NOW:[0-9]+:0x1]]
 	 */
 	foo(o);
 
 	/*
 	 * CHECK: [RETE] main
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: <clean>
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: pass '[[NAME]]'
-	 * CHECK: tesla_class_reset
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: [[INST0]]: [[INIT]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[NAME:.*]]': [[INST0]]
+	 * CHECK: [[INST1]]: [[NOW]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[NAME:.*]]': [[INST1]]
+	 * CHECK: tesla_class_reset [[NAME]]
 	 */
 	return 0;
 }
