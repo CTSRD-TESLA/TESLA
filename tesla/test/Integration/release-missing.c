@@ -49,6 +49,10 @@ perform_operation(int op, struct object *o)
 int
 example_syscall(struct credential *cred, int index, int op)
 {
+	/*
+	 * CHECK: new    [[INST0:[0-9]+]]: [[INIT:1:0x0]]
+	 */
+
 	struct object *o;
 	int error = get_object(index, &o);
 	if (error != 0)
@@ -56,15 +60,7 @@ example_syscall(struct credential *cred, int index, int op)
 
 	/*
 	 * perform_operation() contains the NOW event:
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]]:0x0 <init>) ]
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: new [[ID:[0-9]+]]: [[INIT]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: clone  [[INST0]]:[[INIT]] -> [[INST1:[0-9]+]]:[[NOW:[0-9]+:0x1]]
 	 */
 	perform_operation(op, o);
 

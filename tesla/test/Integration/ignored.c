@@ -33,16 +33,8 @@ main(int argc, char *argv[])
 	/*
 	 * This call to foo(), which is out of bar()'s scope, should be ignored:
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class: '[[NAME:/.*ignored.c:[0-9]+#[0-9]+]]'
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK-NOT: update
-	 * CHECK: ignore '[[NAME]]'
-	 * CHECK-NOT: update
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: ignore '[[NAME:/.*ignored.c:[0-9]+#[0-9]+]]':
+	 * CHECK: foo(): Entry
 	 */
 	foo();
 

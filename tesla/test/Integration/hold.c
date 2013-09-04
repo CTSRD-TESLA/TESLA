@@ -48,72 +48,33 @@ int
 example_syscall(struct credential *cred, int index, int op)
 {
 	/*
-	 * Entering the system call should update all automata:
+	 * Entering the system call should instantiate automata:
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS0:.*]]'
-	 * CHECK: transitions:  [ (0:0x0 -> [[INIT0:[0-9]+]]:0x0 <init>) ]
-	 * CHECK: ----
-	 * CHECK: new [[ID0:[0-9]+]]
-	 * CHECK: ----
-	 * CHECK: ====
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS1:.*]]'
-	 * CHECK: transitions:  [ (0:0x0 -> [[INIT1:[0-9]+]]:0x0 <init>) ]
-	 * CHECK: ----
-	 * CHECK: new [[ID1:[0-9]+]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: [CALE] example_syscall
+	 * CHECK: new  [[A0I0:[0-9]+]]: [[INIT:[0-9]+:0x0]] ('[[A0:.*]]')
+	 * CHECK: new  [[A1I0:[0-9]+]]: [[INIT:[0-9]+:0x0]] ('[[A1:.*]]')
 	 */
 
 	struct object *o;
 
 	/*
-	 * get_object() calls hold(), which should be reflected in two automata:
+	 * get_object() calls hold(), which should be reflected in two automata
+	 * (one which cares about entry and the other, exit):
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS0]]'
-	 * CHECK: transitions:  {{.*}} ([[INIT0]]:0x0 -> [[OBJ0:[0-9]+]]:0x1)
-	 * CHECK: ----
-	 * CHECK: clone [[ID0]]:[[INIT0]] -> [[ID00:[0-9]+]]:[[OBJ0]]
-	 * CHECK: ----
-	 * CHECK: ====
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS1]]'
-	 * CHECK: transitions:  {{.*}} ([[INIT1]]:0x0 -> [[OBJ1:[0-9]+]]:0x1)
-	 * CHECK: ----
-	 * CHECK: clone [[ID1]]:[[INIT1]] -> [[ID10:[0-9]+]]:[[OBJ1]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: [CALE] hold
+	 * CHECK: clone [[A0I0]]:[[INIT]] -> [[A0I1:[0-9]+]]:[[HOLD:[0-9]+:0x1]]
+	 * CHECK: [RETE] hold
+	 * CHECK: clone [[A1I0]]:[[INIT]] -> [[A1I1:[0-9]+]]:[[HOLD:[0-9]+:0x1]]
 	 */
 	int error = get_object(index, &o);
 	if (error != 0)
 		return (error);
 
 	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS0]]'
-	 * CHECK: transitions:  {{.*}} ([[INIT0]]:0x0 -> [[OBJ0]]:0x1)
-	 * CHECK: ----
-	 * CHECK: clone [[ID0]]:[[INIT0]] -> [[ID01:[0-9]+]]:[[OBJ0]]
-	 * CHECK: ----
-	 * CHECK: ====
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS1]]'
-	 * CHECK: transitions:  {{.*}} ([[INIT1]]:0x0 -> [[OBJ1]]:0x1)
-	 * CHECK: ----
-	 * CHECK: clone [[ID1]]:[[INIT1]] -> [[ID11:[0-9]+]]:[[OBJ1]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: [CALE] hold
+	 * CHECK: clone [[A0I0]]:[[INIT]] -> [[A0I2:[0-9]+]]:[[HOLD:[0-9]+:0x1]]
+	 * CHECK: [RETE] hold
+	 * CHECK: clone [[A1I0]]:[[INIT]] -> [[A1I2:[0-9]+]]:[[HOLD:[0-9]+:0x1]]
 	 */
 	error = get_object(index + 1, &o);
 	if (error != 0)
@@ -122,62 +83,33 @@ example_syscall(struct credential *cred, int index, int op)
 	/*
 	 * perform_operation() contains all NOW events:
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS0]]'
-	 * CHECK: transitions:  {{.*}} ([[OBJ0]]:0x1 -> [[OP0:[0-9]+]]:0x1) ]
-	 * CHECK: ----
-	 * CHECK-NOT: update [[ID00]]: [[OBJ0]]->[[OP0]]
-	 * CHECK:     update [[ID01]]: [[OBJ0]]->[[OP0]]
-	 * CHECK: ----
-	 * CHECK: ====
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS1]]'
-	 * CHECK: transitions:  {{.*}} ([[OBJ1]]:0x1 -> [[OP1:[0-9]+]]:0x1) ]
-	 * CHECK: ----
-	 * CHECK-NOT: update [[ID10]]: [[OBJ1]]->[[OP1]]
-	 * CHECK:     update [[ID11]]: [[OBJ1]]->[[OP1]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: [ASRT] automaton 0
+	 * CHECK: update [[A0I2]]: [[HOLD]]->[[NOW:[0-9]+:0x1]]
+	 * CHECK: [ASRT] automaton 1
+	 * CHECK: update [[A1I2]]: [[HOLD]]->[[NOW:[0-9]+:0x1]]
 	 */
 	return perform_operation(op, o);
 
 	/*
 	 * On leaving the assertion scope, we should be cleaning up:
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS0]]'
-	 * CHECK: transitions:
-	 * CHECK:     ([[OP0]]:0x1 -> [[FIN0:[0-9]+]]:0x{{[01]}} <clean>)
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK-NOT: fail
-	 * CHECK: pass '[[CLASS0]]': [[ID01]]
-	 * CHECK-NOT: fail
-	 * CHECK: tesla_class_reset
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: [RETE] example_syscall
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: class:        '[[CLASS1]]'
-	 * CHECK: transitions:
-	 * CHECK:     ([[OP1]]:0x1 -> [[FIN1:[0-9]+]]:0x{{[01]}} <clean>)
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK-NOT: fail
-	 * CHECK: pass '[[CLASS1]]': [[ID11]]
-	 * CHECK-NOT: fail
-	 * CHECK: tesla_class_reset
-	 * CHECK: ----
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: update [[A0I0]]: [[INIT]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[A0]]': [[A0I0]]
+	 * CHECK: update [[A0I1]]: [[HOLD]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[A0]]': [[A0I1]]
+	 * CHECK: update [[A0I2]]: [[NOW]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[A0]]': [[A0I2]]
+	 * CHECK: tesla_class_reset [[A0]]
+	 *
+	 * CHECK: update [[A1I0]]: [[INIT]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[A1]]': [[A1I0]]
+	 * CHECK: update [[A1I1]]: [[HOLD]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[A1]]': [[A1I1]]
+	 * CHECK: update [[A1I2]]: [[NOW]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[A1]]': [[A1I2]]
+	 * CHECK: tesla_class_reset [[A1]]
 	 */
 }
 

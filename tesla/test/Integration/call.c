@@ -20,49 +20,35 @@ main(int argc, char *argv[])
 	/*
 	 * We should update state on entering main():
 	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]]:0x0 <init>) ]
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ----
-	 * CHECK: new [[ID:[0-9]+]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * CHECK: [CALE] main
+	 * CHECK: new    0: [[INIT:[0-9]+:0x0]] ('[[NAME:.*]]')
 	 */
 
 
-	// Update state again on calling foo():
+	/*
+	 * Update state again on calling foo():
+	 *
+	 * CHECK: [CALR] foo
+	 * CHECK: update 0: [[INIT]]->[[FOO:[0-9]+:0x0]]
+	 */
 	foo();
+
+
 	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:  {{.*}} ([[INIT]]:0x0 -> [[FOO:[0-9]+]]:0x0)
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ----
-	 * CHECK: update [[ID]]: [[INIT]]->[[FOO]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * Again on calling bar():
+	 *
+	 * CHECK: [CALE] bar
+	 * CHECK: update 0: [[FOO]]->[[BAR:[0-9]+:0x0]]
 	 */
-
-
-	// Again on calling bar():
 	bar();
+
+
 	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:  {{.*}} ([[FOO]]:0x0 -> [[BAR:[0-9]+]]:0x0)
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ----
-	 * CHECK: update [[ID]]: [[FOO]]->[[BAR]]
-	 * CHECK: ----
-	 * CHECK: ====
+	 * Next we reach the assertion:
+	 *
+	 * CHECK: [ASRT]
+	 * CHECK: update 0: [[BAR]]->[[NOW:[0-9]+:0x0]]
 	 */
-
-
-	// And finally, on the NOW event:
 	TESLA_PERTHREAD(call(main), returnfrom(main),
 		previously(
 			TSEQUENCE(
@@ -71,31 +57,15 @@ main(int argc, char *argv[])
 			)
 		)
 	);
-	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:
-	 * CHECK:    ([[BAR]]:0x0 -> [[NOW:[0-9]+]]:0x0)
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ----
-	 * CHECK: update [[ID]]: [[BAR]]->[[NOW]]
-	 * CHECK: ----
-	 * CHECK: ====
-	 */
+
 
 	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:
-	 * CHECK:    ([[NOW]]:0x0 -> [[FINAL:[0-9]+]]:0x0 <clean>)
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ----
-	 * CHECK: update [[ID]]: [[NOW]]->[[FINAL]]
-	 * CHECK: pass '{{.*}}': {{[0-9]+}}
-	 * CHECK: ----
-	 * CHECK: ====
+	 * Finally, we leave the context:
+	 *
+	 * CHECK: [RETE] main
+	 * CHECK: update 0: [[NOW]]->[[DONE:[0-9]+:0x0]]
+	 * CHECK: pass '[[NAME]]': 0
+	 * CHECK: tesla_class_reset [[NAME]]
 	 */
 
 	return 0;

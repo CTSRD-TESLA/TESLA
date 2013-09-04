@@ -19,41 +19,28 @@ main(int argc, char *argv[])
 {
 	/*
 	 * We should update state on entering main():
-	 *
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:  [ (0:0x0 -> [[INIT:[0-9]+]]:0x0 <init>) ]
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ====
+	 * CHECK: new    [[ID:[0-9]+]]: [[INIT:[0-9]+:0x0]]
 	 */
 
 
-	// Update state again on calling foo():
+	/*
+	 * Update state again on calling foo():
+	 * CHECK: update [[ID]]: [[INIT]]->[[FOO:[0-9]+:0x0]]
+	 */
 	foo();
+
+
 	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:  {{.*}} ([[INIT]]:0x0 -> [[FOO:[0-9]+]]:0x0)
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ====
+	 * Again on calling bar():
+	 * CHECK: update [[ID]]: [[FOO]]->[[BAR:[0-9]+:0x0]]
 	 */
-
-
-	// Again on calling bar():
 	bar();
+
+
 	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:  {{.*}} ([[FOO]]:0x0 -> [[NOW:[0-9]+]]:0x0)
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: ====
+	 * The NOW event:
+	 * CHECK: update [[ID]]: [[BAR]]->[[NOW:[0-9]+:0x0]]
 	 */
-
-
-	// And finally, on the NOW event:
 	TESLA_WITHIN(main,
 		TSEQUENCE(
 			caller(call(foo)),
@@ -61,14 +48,12 @@ main(int argc, char *argv[])
 			TESLA_ASSERTION_SITE
 		)
 	);
+
 	/*
-	 * CHECK: ====
-	 * CHECK: tesla_update_state
-	 * CHECK: per-thread
-	 * CHECK: transitions:  {{.*}} ([[NOW]]:0x0 -> [[FINAL:[0-9]+]]:0x0)
-	 * CHECK: key:          0x0 [ X X X X ]
-	 * CHECK: pass '{{.*}}': {{[0-9]+}}
-	 * CHECK: ====
+	 * And finally, on exit:
+	 * CHECK: update [[ID]]: [[NOW]]->[[DONE:[0-9]+]]
+	 * CHECK: pass '[[NAME:.*]]': [[ID]]
+	 * CHECK: tesla_class_reset [[NAME]]
 	 */
 
 	return 0;
