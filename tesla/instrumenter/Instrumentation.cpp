@@ -486,13 +486,10 @@ BasicBlock* tesla::EnterContext(AutomatonDescription::Context Context,
   Args.push_back(TeslaContext(Context, Ctx));
   Args.push_back(ConstructLifetimeEvent(T, M));
   Args.push_back(Key);
-  Key->dump();
 
   assert(Args.size() == Target->arg_size());
   Builder.CreateCall(Target, Args);
   Builder.CreateBr(Next);
-
-  BB->dump();
 
   return BB;
 }
@@ -532,7 +529,6 @@ BasicBlock* tesla::ExitContext(AutomatonDescription::Context Context,
   Args.push_back(TeslaContext(Context, Ctx));
   Args.push_back(ConstructLifetimeEvent(T, M));
   Args.push_back(Key);
-  Key->dump();
 
   assert(Args.size() == Target->arg_size());
   Builder.CreateCall(Target, Args);
