@@ -31,8 +31,10 @@
 #ifndef TEST_HARNESS_H
 #define TEST_HARNESS_H
 
+#include <iostream>
 #include <memory>
 #include <queue>
+#include <sstream>
 
 #include <libtesla.h>
 #include <assert.h>
@@ -146,6 +148,52 @@ public:
 		  err(err), errMessage(errMessage)
 	{
 	}
+
+	static const char* TypeStr(enum EventType e) {
+		switch (e) {
+			case NewInstance:	return "NewInstance";
+			case Transition:	return "Transition";
+			case Clone:		return "Clone";
+			case NoInstance:	return "NoInstance";
+			case BadTransition:	return "BadTransition";
+			case Err:		return "Err";
+			case Accept:		return "Accept";
+			case Ignored:		return "Ignored";
+			case Invalid:		return "Invalid";
+		}
+	}
+
+	std::string str() const
+	{
+		std::ostringstream oss;
+
+		oss
+			<< "Event {\n"
+			<< "  event:        " << TypeStr(type) << "\n"
+			;
+
+		if (err >= 0)
+			oss
+				<< "  error:        "
+				<< err
+				<< " (" << tesla_strerror(err) << ")\n"
+			;
+
+		if (errMessage)
+			oss << "  error message:'" << errMessage << "'\n";
+
+		if (cls)        oss << "  class:        " << cls << "\n";
+		if (inst)       oss << "  instance:     " << inst << "\n";
+		if (copy)       oss << "  clone:        " << copy << "\n";
+		if (key)        oss << "  key:          " << key << "\n";
+		if (transition) oss << "  transition:   " << transition << "\n";
+		if (symbol >= 0)
+			oss << "  symbol:       " << symbol << "\n";
+
+		oss << "}";
+
+		return oss.str();
+	}
 };
 
 
@@ -170,7 +218,20 @@ LibTeslaTest::LibTeslaTest()
 void LibTeslaTest::Ev(Event *e)
 {
 	assert(!expectedEvents.empty());
-	assert(e->type == expectedEvents.front());
+
+	if (e->type != expectedEvents.front()) {
+		std::cerr
+			<< "expected event of type '"
+			<< Event::TypeStr(expectedEvents.front())
+			<< "' but received '"
+			<< Event::TypeStr(e->type)
+			<< "':\n"
+			<< e->str()
+			<< std::endl
+			;
+
+		assert(false);
+	}
 	expectedEvents.pop();
 
 	lastEvent.reset(e);
