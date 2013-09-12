@@ -132,15 +132,19 @@ tesla_instance_active(const struct tesla_instance *i)
 }
 
 static inline bool
-same_lifetime(const struct tesla_lifetime_event *x,
-              const struct tesla_lifetime_event *y)
+same_lifetime(const struct tesla_lifetime *x, const struct tesla_lifetime *y)
 {
 	assert(x != NULL);
 	assert(y != NULL);
 
-	return (x->tle_length == y->tle_length)
-		&& (x->tle_hash == y->tle_hash)
-		&& (strncmp(x->tle_repr, y->tle_repr, x->tle_length) == 0)
+	return (x->tl_begin.tle_length == y->tl_begin.tle_length)
+		&& (x->tl_end.tle_length == y->tl_end.tle_length)
+		&& (x->tl_begin.tle_hash == y->tl_begin.tle_hash)
+		&& (x->tl_end.tle_hash == y->tl_end.tle_hash)
+		&& (strncmp(x->tl_begin.tle_repr, y->tl_begin.tle_repr,
+		            x->tl_begin.tle_length) == 0)
+		&& (strncmp(x->tl_end.tle_repr, y->tl_end.tle_repr,
+		            x->tl_end.tle_length) == 0)
 		;
 }
 
@@ -276,17 +280,8 @@ struct tesla_class {
 };
 
 
-/** A lifetime and whether or not we are in it. */
-struct tesla_initstate {
-	struct tesla_lifetime_event	tis_init;
-	struct tesla_lifetime_event	tis_cleanup;
-	bool				tis_alive;
-};
-
-
 typedef struct tesla_class		tesla_class;
 typedef struct tesla_instance		tesla_instance;
-typedef struct tesla_initstate		tesla_initstate;
 typedef struct tesla_key		tesla_key;
 typedef struct tesla_lifetime_event	tesla_lifetime_event;
 typedef struct tesla_store		tesla_store;
@@ -315,16 +310,10 @@ struct tesla_store {
 	 * by many automata we've written for the FreeBSD kernel. Each
 	 * @ref tesla_store should only record these events once.
 	 */
-	struct tesla_initstate	*ts_lifetimes;
+	struct tesla_lifetime	*ts_lifetimes;
 
 	/** The number of lifetimes that we currently know about. */
 	uint32_t		ts_lifetime_count;
-
-	/** A mapping from init events to lifetimes. */
-	struct tesla_initstate*	*ts_init;
-
-	/** A mapping from cleanup events to lifetimes. */
-	struct tesla_initstate*	*ts_cleanup;
 };
 
 /**

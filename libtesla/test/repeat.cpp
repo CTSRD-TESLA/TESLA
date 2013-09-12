@@ -103,16 +103,17 @@ const struct tesla_transitions all_transitions[] = { A, B, C, D };
 const char *event_names[] = { "A", "B(x)", "C", "D" };
 
 
-const struct tesla_lifetime_event shared_init = {
-	.tle_repr = "init",
-	.tle_length = sizeof("init"),
-	.tle_hash = 0,
-};
-
-const struct tesla_lifetime_event shared_cleanup = {
-	.tle_repr = "cleanup",
-	.tle_length = sizeof("cleanup"),
-	.tle_hash = 1,
+const struct tesla_lifetime lifetime = {
+	.tl_begin = {
+		.tle_repr = "init",
+		.tle_length = sizeof("init"),
+		.tle_hash = 0,
+	},
+	.tl_end = {
+		.tle_repr = "cleanup",
+		.tle_length = sizeof("cleanup"),
+		.tle_hash = 1,
+	},
 };
 
 const struct tesla_automaton automaton = {
@@ -120,8 +121,7 @@ const struct tesla_automaton automaton = {
 	.ta_description = "this is where the original source should go",
 	.ta_transitions = all_transitions,
 	.ta_symbol_names = event_names,
-	.ta_init = &shared_init,
-	.ta_cleanup = &shared_cleanup,
+	.ta_lifetime = &lifetime,
 };
 
 

@@ -108,11 +108,8 @@ struct tesla_automaton {
 	/** Human-readable descriptions of input symbols (for debugging). */
 	const char*			*ta_symbol_names;
 
-	/** The event that activates the automaton. */
-	const struct tesla_lifetime_event	*ta_init;
-
-	/** The event that deactivates the automaton. */
-	const struct tesla_lifetime_event	*ta_cleanup;
+	/** The lifetime of the automaton's context. */
+	const struct tesla_lifetime	*ta_lifetime;
 };
 
 
@@ -146,6 +143,15 @@ struct tesla_lifetime_event {
 	 * uses SuperFastHash.
 	 */
 	const int32_t			 tle_hash;
+};
+
+
+/**
+ * The description of a TESLA lifetime.
+ */
+struct tesla_lifetime {
+	struct tesla_lifetime_event	tl_begin;
+	struct tesla_lifetime_event	tl_end;
 };
 
 
@@ -289,17 +295,17 @@ void	tesla_update_state(enum tesla_context context,
  * We have encountered an entry bound for some automata.
  *
  * @param  context      Where the automaton is stored.
- * @param  e            Static description of the event.
+ * @param  l            Static description of the lifetime (begin, end events).
  * @param  k            Dynamic event information. Usually empty, since we
  *                      often use purely static bounds like
  *                      call(syscallenter), but doesn't have to be.
  */
 void	tesla_enter_context(enum tesla_context context,
-	const struct tesla_lifetime_event *e, const struct tesla_key *k);
+	const struct tesla_lifetime *l, const struct tesla_key *k);
 
 /** We have encountered an exit bound for some automata. */
 void	tesla_exit_context(enum tesla_context context,
-	const struct tesla_lifetime_event*, const struct tesla_key*);
+	const struct tesla_lifetime*, const struct tesla_key*);
 
 
 /** A single instance of an automaton: a name (@ref ti_key) and a state. */

@@ -157,13 +157,6 @@ tesla_store_init(tesla_store *store, enum tesla_context context,
 
 	store->ts_lifetime_count = 0;
 
-	const size_t mapping_size = classes * sizeof(store->ts_init[0]);
-	store->ts_init = tesla_malloc(mapping_size);
-	bzero(store->ts_init, mapping_size);
-
-	store->ts_cleanup = tesla_malloc(mapping_size);
-	bzero(store->ts_cleanup, mapping_size);
-
 	return (error);
 }
 
@@ -177,9 +170,6 @@ tesla_store_free(tesla_store *store)
 		tesla_class_destroy(store->ts_classes + i);
 
 	tesla_free(store->ts_lifetimes);
-	tesla_free(store->ts_init);
-	tesla_free(store->ts_cleanup);
-
 	tesla_free(store);
 }
 
@@ -238,69 +228,6 @@ tesla_class_get(struct tesla_store *store,
 	assert(tclass->tc_context >= 0);
 
 	tesla_class_acquire(tclass);
-
-	// Store the automaton's lifetime (unless we already have it).
-	assert(description->ta_init != NULL);
-	assert(description->ta_cleanup != NULL);
-
-	const tesla_lifetime_event *init = description->ta_init;
-	const tesla_lifetime_event *cleanup = description->ta_cleanup;
-
-	assert(init->tle_repr != NULL);
-	assert(init->tle_length > 0);
-	assert(cleanup->tle_repr != NULL);
-	assert(cleanup->tle_length > 0);
-
-	tesla_initstate *initstate = NULL;
-
-	for (uint32_t i = 0; i < store->ts_lifetime_count; i++) {
-		tesla_initstate *existing = store->ts_lifetimes + i;
-		if (same_lifetime(&existing->tis_init, init)) {
-			// We already have this lifetime.
-			assert(same_lifetime(&existing->tis_cleanup, cleanup));
-			initstate = existing;
-			break;
-
-		}
-	}
-
-	if (initstate == NULL) {
-		assert(store->ts_lifetime_count < store->ts_length);
-		initstate = store->ts_lifetimes + store->ts_lifetime_count++;
-
-		initstate->tis_init = *init;
-		initstate->tis_cleanup = *cleanup;
-		initstate->tis_alive = false;
-	}
-
-
-	/*
-	 * For now, assume that each init and cleanup event will map to
-	 * only one lifetime; i.e. you cannot have both [foo,bar] and [foo,baz].
-	 *
-	 * TODO(JA): relax this limitation using a multimap
-	 */
-	for (uint32_t i = 0; i < len; i++) {
-		tesla_initstate* *bucket =
-			store->ts_init + ((init->tle_hash + i) % len);
-
-		// If the bucket is empty, take ownership of it.
-		if (*bucket == NULL) {
-			*bucket = initstate;
-			break;
-		}
-	}
-
-	for (uint32_t i = 0; i < len; i++) {
-		tesla_initstate* *bucket =
-			store->ts_cleanup + ((cleanup->tle_hash + i) % len);
-
-		// If the bucket is empty, take ownership of it.
-		if (*bucket == NULL) {
-			*bucket = initstate;
-			break;
-		}
-	}
 
 	*tclassp = tclass;
 	return (TESLA_SUCCESS);
