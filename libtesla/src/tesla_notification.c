@@ -267,8 +267,8 @@ print_bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 	assert(tcp != NULL);
 	assert(tip != NULL);
 
-	const tesla_transitions *transp
-		= tcp->tc_automaton->ta_transitions + symbol;
+	const tesla_automaton *autom = tcp->tc_automaton;
+	const tesla_transitions *transp = autom->ta_transitions + symbol;
 
 	print_failure_header(tcp);
 
@@ -278,11 +278,16 @@ print_bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 
 	SAFE_SPRINTF(next, end,
 		"Instance %td is in state %d\n"
-		"but required to take a transition in ",
-		(tip - tcp->tc_instances), tip->ti_state);
+		"but received event '%s'\n"
+		"(causes transition in: ",
+		(tip - tcp->tc_instances), tip->ti_state,
+		autom->ta_symbol_names[symbol]);
 	assert(next > buffer);
 
 	next = sprint_transitions(next, end, transp);
+	assert(next > buffer);
+
+	SAFE_SPRINTF(next, end, ")\n");
 	assert(next > buffer);
 
 	error("%s", buffer);

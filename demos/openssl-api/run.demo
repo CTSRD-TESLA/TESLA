@@ -57,5 +57,6 @@ echo $LINE
 # DTESLA: TESLA failure:
 # DTESLA: In automaton 'openssl-api.c
 # DTESLA: Instance {{[0-9]+}} is in state {{[0-9]+}}
-# DTESLA: but required to take a transition in [
+# DTESLA: but received event '{{.*}}assertion
+# DTESLA: causes transition in: [
 #

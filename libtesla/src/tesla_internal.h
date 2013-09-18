@@ -262,6 +262,7 @@ struct tesla_class {
 #endif
 };
 
+typedef struct tesla_automaton		tesla_automaton;
 typedef struct tesla_class		tesla_class;
 typedef struct tesla_instance		tesla_instance;
 typedef struct tesla_key		tesla_key;

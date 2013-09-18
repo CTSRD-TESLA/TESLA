@@ -69,7 +69,8 @@ example_syscall(struct credential *cred, int index, int op)
 
 	/*
 	 * ERR: Instance {{[0-9]+}} is in state {{[0-9]+}}
-	 * ERR: but required to take a transition in [
+	 * ERR: but received event '{{.*}}example_syscall{{.*}}cleanup
+	 * ERR: causes transition in: [
 	 * ERR:     ({{[0-9]+}}:0x0 -> {{[0-9]+}}:0x0 <clean>)
 	 * ERR:     ({{[0-9]+}}:0x1 -> {{[0-9]+}}:0x{{[01]}} <clean>)
 	 * ERR: ]
