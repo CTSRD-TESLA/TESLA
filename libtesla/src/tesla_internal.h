@@ -82,7 +82,7 @@ __BEGIN_DECLS
 /**
  * Call this if things go catastrophically, unrecoverably wrong.
  */
-void	tesla_die(int32_t errno, const char *event) __attribute__((noreturn));
+void	tesla_die(int32_t errnum, const char *event) __attribute__((noreturn));
 
 /**
  * Reset all automata in a store to the inactive state.
@@ -342,7 +342,7 @@ void	ev_no_instance(struct tesla_class *, int32_t symbol,
 	    const struct tesla_key *);
 void	ev_bad_transition(struct tesla_class *, struct tesla_instance *,
 	    int32_t symbol);
-void	ev_err(const struct tesla_automaton *, int symbol, int errno,
+void	ev_err(const struct tesla_automaton *, int symbol, int errnum,
 	    const char *);
 void	ev_accept(struct tesla_class *, struct tesla_instance *);
 void	ev_ignored(const struct tesla_class *, int32_t symbol,

@@ -120,10 +120,10 @@ bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 }
 
 static void
-err(struct tesla_class *tcp, int errno, const char *message)
+err(struct tesla_class *tcp, int errnum, const char *message)
 {
 
-	SDT_PROBE(tesla, automata, fail, other_err, tcp, errno, message, 0, 0);
+	SDT_PROBE(tesla, automata, fail, other_err, tcp, errnum, message, 0, 0);
 }
 
 static void

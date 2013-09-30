@@ -159,11 +159,11 @@ ev_bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 }
 
 void
-ev_err(const struct tesla_automaton *a, int symbol, int errno,
+ev_err(const struct tesla_automaton *a, int symbol, int errnum,
 	const char *message)
 {
 
-	FOREACH_ERROR_HANDLER(teh_err, a, symbol, errno, message);
+	FOREACH_ERROR_HANDLER(teh_err, a, symbol, errnum, message);
 }
 
 void
@@ -294,13 +294,13 @@ print_bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 }
 
 static void
-print_error(const struct tesla_automaton *a, int symbol, int errno,
+print_error(const struct tesla_automaton *a, int symbol, int errnum,
 	const char *message)
 {
 
 	DEBUG(libtesla.event, "%s in '%s' %s: %s\n",
 		message, a->ta_name, a->ta_symbol_names[symbol],
-		tesla_strerror(errno));
+		tesla_strerror(errnum));
 }
 
 static void
@@ -369,13 +369,13 @@ panic_bad_transition(struct tesla_class *tcp,
 }
 
 static void
-panic_error(const struct tesla_automaton *a, int symbol, int errno,
+panic_error(const struct tesla_automaton *a, int symbol, int errnum,
 	const char *message)
 {
 
 	tesla_panic("TESLA: %s in '%s' %s: %s", message,
 		a->ta_name, a->ta_symbol_names[symbol],
-		tesla_strerror(errno));
+		tesla_strerror(errnum));
 }
 
 static const struct tesla_event_handlers failstop_handlers = {
