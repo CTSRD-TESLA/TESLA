@@ -280,7 +280,7 @@ typedef void	(*tesla_ev_bad_transition)(struct tesla_class *,
 
 /** Generic error handler. */
 typedef void	(*tesla_ev_error)(const struct tesla_automaton *,
-	    int32_t symbol, int32_t errno, const char *message);
+	    int32_t symbol, int32_t errnum, const char *message);
 
 /** A @ref tesla_instance has accepted a sequence of events. */
 typedef void	(*tesla_ev_accept)(struct tesla_class *,
