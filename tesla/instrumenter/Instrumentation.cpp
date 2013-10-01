@@ -111,6 +111,20 @@ BasicBlock *FindBlock(StringRef Name, Function& Fn) {
          + "' has no '" + Name + "' block");
 }
 
+static const Argument& getArgAtIndex(const FunctionEvent& Ev, int i) {
+  // If this is an Objective-C message send, then the first parameter is
+  // the receiver, the second is the selector.  Neither is an explicit
+  // argument.
+  if (Ev.kind() == FunctionEvent::CCall)
+    return Ev.argument(i);
+  else {
+    if (i == 0)
+      return Ev.receiver();
+    }
+    assert(i != 1 && "Matching on selector not allowed");
+    return Ev.argument(i - 2);
+}
+
 void FnInstrumentation::AppendInstrumentation(
     const Automaton& A, const FunctionEvent& Ev, TEquivalenceClass& Trans) {
 
@@ -137,7 +151,11 @@ void FnInstrumentation::AppendInstrumentation(
   size_t i = 0;
   if (Ev.argument().size() > 0)
     for (auto& InstrArg : InstrFn->getArgumentList()) {
-      const Argument& Arg = Ev.argument(i);
+      if (Ev.kind() != FunctionEvent::CCall && i == 1) {
+        i++;
+        continue;
+      }
+      const Argument& Arg = getArgAtIndex(Ev, i);
 
       // We may need to match against constants.
       MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
