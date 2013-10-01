@@ -174,7 +174,7 @@ class ObjCInstrumentation
     IRBuilder<> B(BasicBlock::Create(Ctx, "entry", RegisterFn));
     // Create a global for the selector name
     Constant *C =
-        ConstantDataArray::getString(Ctx, SelName, false);
+        ConstantDataArray::getString(Ctx, SelName, true);
     GlobalVariable *GV =
       new GlobalVariable(Mod, C->getType(), true,
                                GlobalValue::PrivateLinkage,
