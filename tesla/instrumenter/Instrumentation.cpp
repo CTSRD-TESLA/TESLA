@@ -213,7 +213,7 @@ StructType* KeyType(Module& M) {
 
 
 /// Find (or create) printf() declaration.
-Function* Printf(Module& Mod) {
+Value* Printf(Module& Mod, IRBuilder<> &B) {
   auto& Ctx = Mod.getContext();
 
   FunctionType *PrintfType = FunctionType::get(
@@ -221,10 +221,11 @@ Function* Printf(Module& Mod) {
     PointerType::getUnqual(IntegerType::get(Ctx, 8)),  // format string: char*
     true);                                             // use varargs
 
-  Function* Printf = cast<Function>(
-    Mod.getOrInsertFunction("printf", PrintfType));
+  Value *Printf =
+    Mod.getOrInsertGlobal("__tesla_printf", PointerType::getUnqual(PrintfType));
 
-  return Printf;
+
+  return B.CreateLoad(Printf);
 }
 
 /// Find (or create) tesla_debugging() declaration.
@@ -239,7 +240,7 @@ Function* TeslaDebugging(Module& Mod) {
 }
 
 const char* Format(Type *T) {
-    if (T->isPointerTy()) return " 0x%llx";
+    if (T->isPointerTy()) return " %p";
     if (T->isIntegerTy()) return " %d";
     if (T->isFloatTy()) return " %f";
     if (T->isDoubleTy()) return " %f";
@@ -519,7 +520,7 @@ BasicBlock* tesla::CreateInstrPreamble(Module& Mod, Function *F,
   for (auto& Arg : F->getArgumentList()) PrintfArgs.push_back(&Arg);
 
   IRBuilder<> PrintBuilder(PrintBB);
-  PrintBuilder.CreateCall(Printf(Mod), PrintfArgs);
+  PrintBuilder.CreateCall(Printf(Mod, PrintBuilder), PrintfArgs);
   PrintBuilder.CreateBr(Entry);
 
   return Entry;

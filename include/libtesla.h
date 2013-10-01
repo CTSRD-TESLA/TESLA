@@ -325,6 +325,12 @@ int	tesla_set_event_handler(struct tesla_event_handlers *);
 /** Register a set of event handling vectors. */
 int	tesla_set_event_handlers(struct tesla_event_metahandler *);
 
+/** The type for printf handler functions */
+typedef uint32_t(*printf_type)(const char *, ...);
+
+/** The function that will be called to log messages. */
+extern printf_type __tesla_printf;
+
 #ifdef _KERNEL
 #define	TESLA_KERN_PRINTF_EV	0x1
 #define	TESLA_KERN_PRINTERR_EV	0x2
