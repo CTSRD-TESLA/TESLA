@@ -61,6 +61,7 @@ namespace {
   class SelectorTypesFinder : public InstVisitor<SelectorTypesFinder> {
     Module *Mod;
     FunctionType *FTy;
+    AttributeSet AS;
     unsigned MDKind;
     const std::string &SelName;
     public:
@@ -86,12 +87,14 @@ namespace {
       if (Sel->getString() != SelName) return;
       FTy = cast<FunctionType>(
         cast<PointerType>(CS.getCalledValue()->getType())->getElementType());
+      AS = CS.getAttributes();
     }
     void visitModule(Module &M) { Mod = &M; }
-    FunctionType *getFunctionType(Module &M) {
+    FunctionType *getFunctionType(Module &M, AttributeSet &Attrs) {
       if (!FTy) {
         visit(M);
       }
+      Attrs = AS;
       return FTy;
     }
   };
@@ -118,12 +121,12 @@ class ObjCInstrumentation
   bool SuppressDebugInstr;
 
 
-  FunctionType *typesForSelector(const std::string &Sel) {
+  FunctionType *typesForSelector(const std::string &Sel, AttributeSet &AS) {
     auto &Type = SelTypes[Sel];
     if (Type)
       return Type;
     SelectorTypesFinder Finder(Ctx, Sel);
-    Type = Finder.getFunctionType(Mod);
+    Type = Finder.getFunctionType(Mod, AS);
     return Type;
   }
 
@@ -137,8 +140,8 @@ class ObjCInstrumentation
     return ".tesla_objc_hook_" + ClassName + '_' + SelName + '_' + AutomatonName;
   }
 
-  void createCallLoop(ArrayRef<Value*> Args, BasicBlock *Entry, BasicBlock
-      *Loop, BasicBlock *Exit, Value *List) {
+  void createCallLoop(ArrayRef<Value*> Args, AttributeSet &AS,
+      BasicBlock *Entry, BasicBlock *Loop, BasicBlock *Exit, Value *List) {
 
     IRBuilder<> B(Entry);
     Value *Head = B.CreateLoad(List);
@@ -147,7 +150,8 @@ class ObjCInstrumentation
     B.SetInsertPoint(Loop);
     PHINode *PHI = B.CreatePHI(Head->getType(), 2);
     PHI->addIncoming(Head, Entry);
-    B.CreateCall(B.CreateLoad(B.CreateStructGEP(PHI, 1)), Args);
+    CallInst *CI = B.CreateCall(B.CreateLoad(B.CreateStructGEP(PHI, 1)), Args);
+    CI->setAttributes(AS);
     Head = B.CreateLoad(B.CreateStructGEP(Head, 0));
     B.CreateCondBr(B.CreateIsNull(Head), Exit, Loop);
     PHI->addIncoming(Head, Loop);
@@ -156,7 +160,7 @@ class ObjCInstrumentation
   /// Creates the instrumentation function, which will be invoked by the
   /// runtime whenever the selector is matched.
   void createIntrumentationFunction(const std::string &SelName,
-      FunctionType *MethodType) {
+      FunctionType *MethodType, AttributeSet &AS) {
     std::string HookName = interpositionName(SelName);
     Function *Fn = Mod.getFunction(HookName);
     if (Fn) return;
@@ -216,6 +220,7 @@ class ObjCInstrumentation
     Function *Interpose = cast<Function>(Mod.getOrInsertFunction(
           interpositionName(SelName, "_interposed"), MethodType));
     Interpose->setLinkage(GlobalValue::LinkOnceODRLinkage);
+    Interpose->setAttributes(AS);
 
 
     // Make the hook return the interposition function, after caching the method in TLS.
@@ -278,17 +283,21 @@ class ObjCInstrumentation
     for (auto I=Interpose->arg_begin(), E=Interpose->arg_end() ; I!=E ; ++I) {
       Args.push_back(I);
     }
+    AttributeSet RetAttrs = AS.getRetAttributes();
+    AS = AS.removeAttributes(Ctx, AttributeSet::ReturnIndex, RetAttrs);
 
-    createCallLoop(Args, Entry, EnterLoop, Call, EnterList);
+    createCallLoop(Args, AS, Entry, EnterLoop, Call, EnterList);
 
     B.SetInsertPoint(Call);
-    llvm::Value *Ret = 
+
+    llvm::CallInst *Ret = 
       B.CreateCall(B.CreateBitCast(B.CreateLoad(MethodCache),
             PointerType::getUnqual(MethodType)), Args);
+    Ret->setAttributes(AS);
     if (!isVoidRet) 
       Args.push_back(Ret);
 
-    createCallLoop(Args, Call, ExitLoop, Return, ExitList);
+    createCallLoop(Args, AS, Call, ExitLoop, Return, ExitList);
     B.SetInsertPoint(Return);
     if (isVoidRet) 
       B.CreateRetVoid();
@@ -343,10 +352,11 @@ public:
       case FunctionEvent::ObjCInstanceMessage:
         SelName = FnEvent.function().name();
     }
-    FunctionType *FTy = typesForSelector(SelName);
+    AttributeSet AS;
+    FunctionType *FTy = typesForSelector(SelName, AS);
     if (!FTy) return false;
 
-    createIntrumentationFunction(SelName, FTy);
+    createIntrumentationFunction(SelName, FTy, AS);
 
     bool didCreate;
     auto Instr = GetOrCreateInstr(SelName, FTy, FnEvent.direction(), didCreate);
@@ -354,6 +364,7 @@ public:
 
     if (didCreate) {
       Function *Fn = Instr->getInstrumentationFunction();
+      Fn->setAttributes(AS);
 
       // We must make this link-once ODR, because we'll potentially also be
       // emitting copies of it in other compilation units and we only want one
