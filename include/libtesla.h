@@ -108,13 +108,13 @@ struct tesla_automaton {
 	/** Human-readable descriptions of input symbols (for debugging). */
 	const char*			*ta_symbol_names;
 
-	/** The lifetime of the automaton's context. */
+	/** The automaton's lifetime. */
 	const struct tesla_lifetime	*ta_lifetime;
 };
 
 
 /**
- * A short, unique, deterministic representation of a context entry/exit event,
+ * A short, unique, deterministic representation of a lifetime entry/exit event,
  * a pair of which defines an automaton's lifetime.
  */
 struct tesla_lifetime_event {
@@ -318,6 +318,12 @@ struct tesla_instance {
 /*
  * Event notification:
  */
+/** An initialisation event has occurred; entering an automaton lifetime. */
+typedef void	(*tesla_ev_sunrise)(const struct tesla_lifetime *);
+
+/** A cleanup event has occurred; exiting an automaton lifetime. */
+typedef void	(*tesla_ev_sunset)(const struct tesla_lifetime *);
+
 /** A new @ref tesla_instance has been created. */
 typedef void	(*tesla_ev_new_instance)(struct tesla_class *,
 	    struct tesla_instance *);
@@ -353,6 +359,8 @@ typedef void	(*tesla_ev_ignored)(const struct tesla_class *,
 
 /** A vector of event handlers. */
 struct tesla_event_handlers {
+	tesla_ev_sunrise	teh_sunrise;
+	tesla_ev_sunset		teh_sunset;
 	tesla_ev_new_instance	teh_init;
 	tesla_ev_transition	teh_transition;
 	tesla_ev_clone		teh_clone;

@@ -51,7 +51,8 @@ static int
 check_event_handler(const struct tesla_event_handlers *tehp)
 {
 
-	if (!tehp || !tehp->teh_init || !tehp->teh_transition
+	if (!tehp || !tehp->teh_sunrise || !tehp->teh_sunset
+	    || !tehp->teh_init || !tehp->teh_transition
 	    || !tehp->teh_clone || !tehp->teh_fail_no_instance
 	    || !tehp->teh_bad_transition || !tehp->teh_err
 	    || !tehp->teh_accept || !tehp->teh_ignored)
@@ -117,6 +118,21 @@ tesla_set_event_handlers(struct tesla_event_metahandler *temp)
 		if (event_handlers->tem_mask & (1 << i)) \
 			if (event_handlers->tem_handlers[i]->x) \
 				event_handlers->tem_handlers[i]->x(__VA_ARGS__)
+
+void
+ev_sunrise(const struct tesla_lifetime *tl)
+{
+
+	FOREACH_ERROR_HANDLER(teh_sunrise, tl);
+}
+
+
+void
+ev_sunset(const struct tesla_lifetime *tl)
+{
+
+	FOREACH_ERROR_HANDLER(teh_sunset, tl);
+}
 
 
 void
@@ -198,6 +214,16 @@ print_failure_header(const struct tesla_class *tcp)
 	error("In automaton '%s':\n%s\n",
 	      tcp->tc_automaton->ta_name,
 	      tcp->tc_automaton->ta_description);
+}
+
+static void
+print_sunrise(const struct tesla_lifetime *tl)
+{
+}
+
+static void
+print_sunset(const struct tesla_lifetime *tl)
+{
 }
 
 static void
@@ -318,6 +344,8 @@ print_ignored(const struct tesla_class *tcp, int32_t symbol,
 }
 
 static const struct tesla_event_handlers printf_handlers = {
+	.teh_sunrise		= print_sunrise,
+	.teh_sunset		= print_sunset,
 	.teh_init		= print_new_instance,
 	.teh_transition		= print_transition_taken,
 	.teh_clone		= print_clone,
@@ -329,6 +357,8 @@ static const struct tesla_event_handlers printf_handlers = {
 };
 
 static const struct tesla_event_handlers printf_on_failure = {
+	.teh_sunrise		= 0,
+	.teh_sunset		= 0,
 	.teh_init		= 0,
 	.teh_transition		= 0,
 	.teh_clone		= 0,

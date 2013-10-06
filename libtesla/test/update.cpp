@@ -136,17 +136,10 @@ void UpdateTest::run()
 	t[0].to_mask = 0x0;
 	t[0].flags = TESLA_TRANS_INIT;
 
-	expectedEvents.push(NewInstance);
+	expectedEvents.push(Sunrise);
 	tesla_enter_context(context, automaton.ta_lifetime, &key);
 
-	//tesla_update_state(context, &automaton, 0, &key);
-	// TODO: pass transition through event handler
-	//assert(lastEvent->transition == t);
-	//assert(lastEvent.get());
-	//assert(lastEvent->inst->ti_state == 1);
-	//assert(lastEvent->inst->ti_key.tk_mask == 0);
-
-	//assert(count(store, &any) == 1);
+	assert(count(store, &any) == 0);
 	assert(count(store, &one) == 0);
 	assert(count(store, &two) == 0);
 
@@ -160,6 +153,7 @@ void UpdateTest::run()
 	t[0].to_mask = 0x1;
 	t[0].flags = 0;
 
+	expectedEvents.push(NewInstance);
 	expectedEvents.push(Clone);
 	tesla_update_state(context, &automaton, 1, &key);
 	assert(lastEvent->transition == t);

@@ -38,6 +38,10 @@
 
 SDT_PROVIDER_DEFINE(tesla);
 
+SDT_PROBE_DEFINE1(tesla, automata, lifetime, sunrise, sunrise,
+    "struct tesla_lifetime *");
+SDT_PROBE_DEFINE1(tesla, automata, lifetime, sunset, sunset,
+    "struct tesla_lifetime *");
 SDT_PROBE_DEFINE2(tesla, automata, instance, create, create,
     "struct tesla_class *", "struct tesla_instance *");
 SDT_PROBE_DEFINE3(tesla, automata, event, transition, state-transition,
@@ -59,6 +63,20 @@ SDT_PROBE_DEFINE2(tesla, automata, success, accept, accept,
 SDT_PROBE_DEFINE3(tesla, automata, event, ignored, ignored-event,
     "struct tesla_class *", "struct tesla_key *",
     "struct tesla_transitions *");
+
+static void
+sunrise(struct tesla_lifetime *tl)
+{
+
+	SDT_PROBE(tesla, automata, lifetime, sunrise, tl, 0, 0, 0, 0);
+}
+
+static void
+sunset(struct tesla_lifetime *tl)
+{
+
+	SDT_PROBE(tesla, automata, lifetime, sunset, tl, 0, 0, 0, 0);
+}
 
 static void
 new_instance(struct tesla_class *tcp, struct tesla_instance *tip)
@@ -142,6 +160,8 @@ ignored(const struct tesla_class *tcp, const struct tesla_key *tkp,
 }
 
 const struct tesla_event_handlers dtrace_handlers = {
+	.teh_sunrise			= sunrise,
+	.teh_sunset			= sunset,
 	.teh_init			= new_instance,
 	.teh_transition			= transition,
 	.teh_clone			= clone,
