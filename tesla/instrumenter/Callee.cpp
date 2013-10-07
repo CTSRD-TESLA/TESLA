@@ -31,11 +31,13 @@
 
 #include "Automaton.h"
 #include "Callee.h"
+#include "InstrContext.h"
 #include "Instrumentation.h"
 #include "Manifest.h"
 #include "Names.h"
 #include "State.h"
 #include "Transition.h"
+#include "TranslationFn.h"
 
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/Bitcode/ReaderWriter.h>
@@ -431,6 +433,8 @@ FnCalleeInstrumenter::~FnCalleeInstrumenter() {
 }
 
 bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
+  InstrCtx.reset(InstrContext::Create(Mod));
+
   bool ModifiedIR = false;
 
   for (auto i : M.RootAutomata()) {

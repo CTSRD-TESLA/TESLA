@@ -31,6 +31,7 @@
 #ifndef	TESLA_CALLEE_INSTRUMENTATION_H
 #define	TESLA_CALLEE_INSTRUMENTATION_H
 
+#include "InstrContext.h"
 #include "Instrumenter.h"
 #include "Instrumentation.h"
 
@@ -75,6 +76,7 @@ private:
 
   llvm::StringMap<CalleeInstr*> Entry;
   llvm::StringMap<CalleeInstr*> Exit;
+  llvm::OwningPtr<InstrContext> InstrCtx;
 };
 
 
