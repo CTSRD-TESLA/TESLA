@@ -31,10 +31,12 @@
 
 #include "Automaton.h"
 #include "InstrContext.h"
+#include "State.h"
 #include "TranslationFn.h"
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 
 using namespace llvm;
 using namespace tesla;
@@ -80,10 +82,11 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   // length, array of transitions
   Type *TransSetF[] = { Int32Ty, TransPtrTy };
   StructType *TransitionSetTy = StructTy("tesla_transitions", TransSetF, M);
+  PointerType *TransitionSetPtrTy = PointerType::getUnqual(TransitionSetTy);
 
   // name, alphabet size, transitions, description, symbol names
   Type *AutomFields[] = {
-    CharPtrTy, Int32Ty, TransPtrTy, CharPtrTy, CharPtrPtrTy
+    CharPtrTy, Int32Ty, TransitionSetPtrTy, CharPtrTy, CharPtrPtrTy
   };
   StructType *AutomatonTy = StructTy("tesla_automaton", AutomFields, M);
   PointerType *AutomatonPtrTy = PointerType::getUnqual(AutomatonTy);
@@ -105,7 +108,8 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   return new InstrContext(M, Ctx, VoidTy, CharTy, CharPtrTy, CharPtrPtrTy,
                           Int32Ty, IntPtrTy, AutomatonTy, AutomatonPtrTy,
                           KeyTy, KeyPtrTy,
-                          TransitionTy, TransPtrTy, TransitionSetTy,
+                          TransitionTy, TransPtrTy,
+                          TransitionSetTy, TransitionSetPtrTy,
                           Debugging, Printf, SuppressDebugPrintf);
 }
 
@@ -117,6 +121,7 @@ InstrContext::InstrContext(Module& M, LLVMContext& Ctx, Type* VoidTy,
                            StructType* KeyTy, PointerType* KeyPtrTy,
                            StructType* TransitionTy, PointerType* TransPtrTy,
                            StructType* TransitionSetTy,
+                           PointerType* TransitionSetPtrTy,
                            Constant* Debugging, Constant* Printf,
                            bool SuppressDebugPrintf)
   : M(M), Ctx(Ctx),
@@ -126,12 +131,154 @@ InstrContext::InstrContext(Module& M, LLVMContext& Ctx, Type* VoidTy,
     AutomatonTy(AutomatonTy), AutomatonPtrTy(AutomatonPtrTy),
     KeyTy(KeyTy), KeyPtrTy(KeyPtrTy),
     TransitionTy(TransitionTy), TransPtrTy(TransPtrTy),
-    TransitionSetTy(TransitionSetTy),
+    TransitionSetTy(TransitionSetTy), TransitionSetPtrTy(TransitionSetPtrTy),
     SuppressDebugPrintf(SuppressDebugPrintf),
     Debugging(Debugging), Printf(Printf)
 {
   assert((Debugging != NULL and Printf != NULL)
          or SuppressDebugPrintf);
+}
+
+
+Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
+  const string Name(A->Name());
+
+  //
+  // If there is already a global variable with this automaton's name, it
+  // had better be an extern reference: only the assertion instrumenter
+  // should call this method and it should only do so once per automaton.
+  //
+  auto *Existing = M.getGlobalVariable(Name);
+  if (Existing)
+    assert(!Existing->hasInitializer());
+
+  vector<Constant*> Transitions;
+  vector<Constant*> EventDescriptions;
+
+  for (const TEquivalenceClass& Tr : *A) {
+    string Descrip((*Tr.begin())->String());
+
+    Transitions.push_back(BuildTransitions(Tr));
+    EventDescriptions.push_back(ConstStr(Descrip));
+  }
+
+  // Construct the tesla_automaton struct (starting with its members).
+  Constant *AlphabetSize = ConstantInt::get(Int32Ty, Transitions.size());
+  Constant *Description = ConstStr(A->SourceCode(), Name + "_description");
+
+  ArrayType *SymbolArrayT = ArrayType::get(CharPtrTy, EventDescriptions.size());
+  Constant *SymbolNames =
+    ConstPointer(ConstantArray::get(SymbolArrayT, EventDescriptions),
+                 CharPtrPtrTy, Name + "_symbol_names");
+
+  ArrayType *TransArrayT = ArrayType::get(TransitionSetTy, Transitions.size());
+  Constant *TransArray = ConstantArray::get(TransArrayT, Transitions);
+  Constant *TransArrayPtr = ConstPointer(TransArray,
+                                         PointerType::getUnqual(TransArrayT),
+                                         Name + "_transitions");
+
+  Constant *TransitionsArray = ConstArrayPointer(TransArrayPtr);
+
+  llvm::errs() << "\n\n";
+  AutomatonTy->dump();
+  ConstStr(Name, Name + "_name")->dump();
+  AlphabetSize->dump();
+  TransitionsArray->dump();
+  Description->dump();
+  SymbolNames->dump();
+  llvm::errs() << "\n\n";
+
+  Constant *Init = ConstantStruct::get(AutomatonTy,
+                                       ConstStr(Name, Name + "_name"),
+                                       AlphabetSize, TransitionsArray,
+                                       Description, SymbolNames,
+                                       NULL);
+
+  GlobalVariable *Automaton
+    = new GlobalVariable(M, AutomatonTy, true,
+                         GlobalValue::ExternalLinkage,
+                         Init, Name);
+
+
+  // If there is already a variable with the same name, it is an extern
+  // declaration; replace it with this definition.
+  if (Existing) {
+    Existing->replaceAllUsesWith(Automaton);
+    Existing->removeFromParent();
+    delete Existing;
+
+    Automaton->setName(A->Name());
+  }
+
+  return Automaton;
+}
+
+
+Constant* InstrContext::BuildTransition(const Transition& T) {
+  uint32_t Flags =
+      (T.RequiresInit()           ? TESLA_TRANS_INIT      : 0)
+    | (T.RequiresCleanup()        ? TESLA_TRANS_CLEANUP   : 0);
+
+  uint32_t Values[] = {
+    (uint32_t) T.Source().ID(),
+    T.Source().Mask(),
+    (uint32_t) T.Destination().ID(),
+    T.Destination().Mask(),
+    Flags
+  };
+
+  vector<Constant*> Elements;
+  for (auto Val : Values)
+    Elements.push_back(ConstantInt::get(Int32Ty, Val));
+
+  return ConstantStruct::get(TransitionTy, Elements);
+}
+
+
+Constant* InstrContext::BuildTransitions(const TEquivalenceClass& Tr) {
+  assert(!Tr.empty());
+
+  string Name(("sym" + Twine(Tr.Symbol)).str());
+  string Description((*Tr.begin())->String());
+
+  // First convert each individual transition into an llvm::Constant*.
+  vector<Constant*> Transitions;
+  for (auto T : Tr)
+    Transitions.push_back(BuildTransition(*T));
+
+  // Put them all into a global struct tesla_transitions.
+  Constant *Count = ConstantInt::get(Int32Ty, Transitions.size());
+
+  ArrayType *ArrayT = ArrayType::get(TransitionTy, Transitions.size());
+  GlobalVariable *Array =
+    new GlobalVariable(M, ArrayT, true, GlobalValue::PrivateLinkage,
+                       ConstantArray::get(ArrayT, Transitions),
+                       "transition_array_" + Name);
+
+  Constant *ArrayPtr = ConstArrayPointer(Array);
+
+  return ConstantStruct::get(TransitionSetTy, Count, ArrayPtr, NULL);
+}
+
+
+Constant* InstrContext::ConstArrayPointer(Constant *Array) {
+  static Constant *Zero = ConstantInt::get(Int32Ty, 0);
+  static Constant *Zeroes[] = { Zero, Zero };
+  return ConstantExpr::getInBoundsGetElementPtr(Array, Zeroes);
+}
+
+
+Constant* InstrContext::ConstPointer(Constant *C, Type *T, StringRef Name) {
+  return ConstantExpr::getPointerCast(
+      new GlobalVariable(M, C->getType(), true,
+                         GlobalVariable::InternalLinkage, C, Name),
+      T
+  );
+}
+
+
+Constant* InstrContext::ConstStr(StringRef S, StringRef Name) {
+  return ConstPointer(ConstantDataArray::getString(Ctx, S), CharPtrTy, Name);
 }
 
 

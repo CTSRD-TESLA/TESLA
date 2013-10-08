@@ -32,6 +32,8 @@
 #ifndef	TESLA_INSTR_CONTEXT_H
 #define	TESLA_INSTR_CONTEXT_H
 
+#include "Transition.h"
+
 #include "tesla.pb.h"
 
 #include <llvm/ADT/StringRef.h>
@@ -40,6 +42,7 @@ namespace llvm {
   class Constant;
   class Function;
   class FunctionType;
+  class GlobalVariable;
   class IntegerType;
   class LLVMContext;
   class Module;
@@ -62,6 +65,15 @@ class InstrContext {
 public:
   static InstrContext* Create(llvm::Module&, bool SuppressDebugPrintf = false);
 
+  llvm::Constant* BuildAutomatonDescription(const Automaton*);
+  llvm::Constant* BuildTransition(const Transition&);
+  llvm::Constant* BuildTransitions(const TEquivalenceClass&);
+
+  llvm::Constant* ConstArrayPointer(llvm::Constant*);
+  llvm::Constant* ConstPointer(llvm::Constant*, llvm::Type*,
+                               llvm::StringRef Name = "");
+  llvm::Constant* ConstStr(llvm::StringRef, llvm::StringRef Name = "");
+
   TranslationFn* CreateInstrFn(const FunctionEvent&, llvm::Function *Target);
 
   llvm::Constant* TeslaContext(AutomatonDescription::Context);
@@ -83,6 +95,7 @@ private:
                llvm::StructType* KeyTy, llvm::PointerType* KeyPtrTy,
                llvm::StructType* TransitionTy, llvm::PointerType* TransPtrTy,
                llvm::StructType* TransitionSetTy,
+               llvm::PointerType* TransitionSetPtrTy,
                llvm::Constant* Debugging, llvm::Constant* Printf,
                bool SuppressDebugPrintf);
 
@@ -108,6 +121,7 @@ private:
   llvm::PointerType* TransPtrTy;
 
   llvm::StructType* TransitionSetTy;
+  llvm::PointerType* TransitionSetPtrTy;
 
   const bool SuppressDebugPrintf;
   llvm::Constant* Debugging;
