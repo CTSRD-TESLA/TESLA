@@ -285,6 +285,23 @@ Constant* InstrContext::ConstStr(StringRef S, StringRef Name) {
 }
 
 
+TranslationFn* InstrContext::CreateInstrFn(const Automaton& A,
+                                           ArrayRef<Value*> AssertArgs)
+{
+  const string Name = "assertion_" + A.Name();
+  const string PrintfPrefix = ("[ASRT] automaton " + Twine(A.ID())).str();
+
+  vector<Type*> ArgTypes;
+  for (auto *Arg : AssertArgs)
+    ArgTypes.push_back(Arg->getType());
+
+  FunctionType *InstrType = FunctionType::get(VoidTy, ArgTypes, false);
+
+  return TranslationFn::Create(*this, Name, InstrType, PrintfPrefix,
+                               GlobalValue::InternalLinkage);
+}
+
+
 TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
                                            Function *Target) {
 

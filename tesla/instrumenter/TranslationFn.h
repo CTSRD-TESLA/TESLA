@@ -77,6 +77,11 @@ public:
                   llvm::Instruction* Before);
 
   /**
+   * Add instrumentation for an assertion.
+   */
+  EventTranslator AddInstrumentation(const Automaton&);
+
+  /**
    * Add instrumentation for a function-esque event.
    *
    * This currents includes C function calls and Objective-C messages,

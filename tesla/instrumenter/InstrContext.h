@@ -49,6 +49,7 @@ namespace llvm {
   class PointerType;
   class StructType;
   class Type;
+  class Value;
 }
 
 namespace tesla {
@@ -74,6 +75,7 @@ public:
                                llvm::StringRef Name = "");
   llvm::Constant* ConstStr(llvm::StringRef, llvm::StringRef Name = "");
 
+  TranslationFn* CreateInstrFn(const Automaton&, llvm::ArrayRef<llvm::Value*>);
   TranslationFn* CreateInstrFn(const FunctionEvent&, llvm::Function *Target);
 
   llvm::Constant* TeslaContext(AutomatonDescription::Context);

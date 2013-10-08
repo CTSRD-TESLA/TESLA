@@ -95,6 +95,13 @@ TranslationFn* TranslationFn::Create(InstrContext& InstrCtx,
 void TranslationFn::InsertCall(ArrayRef<Value*> Args, Instruction *Before) {
   CallInst::Create(InstrFn, Args)->insertBefore(Before);
 }
+
+
+EventTranslator TranslationFn::AddInstrumentation(const Automaton& A) {
+  auto& Args = A.getAssertion().argument();
+  vector<Argument> Patterns(Args.begin(), Args.end());
+
+  return AddInstrumentation("assertion_reached", Patterns, false);
 }
 
 

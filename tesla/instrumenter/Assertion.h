@@ -80,12 +80,6 @@ private:
                                         const Automaton&, llvm::Module&,
                                         llvm::IRBuilder<>&);
 
-  //! Add instrumentation for a single @ref AssertTransition.
-  llvm::Function* CreateInstrumentation(const Automaton& A,
-                                        TEquivalenceClass&,
-                                        llvm::ArrayRef<llvm::Value*>,
-                                        llvm::Module&);
-
   /**
    * Parse a @ref Location out of a @ref CallInst to the TESLA assertion
    * pseudo-call.
