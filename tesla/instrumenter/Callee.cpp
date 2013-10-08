@@ -102,7 +102,7 @@ namespace {
   };
 }
 
-class ObjCInstrumentation 
+class ObjCInstrumentation
 {
   Module &Mod;
   LLVMContext &Ctx;
@@ -188,7 +188,7 @@ class ObjCInstrumentation
     BasicBlock *End = BasicBlock::Create(Ctx, "ret", RegisterFn);
     BasicBlock *Fail = BasicBlock::Create(Ctx, "error", RegisterFn);
     // Get the selector
-    Value *Sel = B.CreateCall(SelRegisterName, 
+    Value *Sel = B.CreateCall(SelRegisterName,
         B.CreateBitCast(GV, PtrTy));
     // Register it
     B.CreateCondBr(B.CreateIsNull(B.CreateCall2(ObjCRegisterHook, Sel, Fn)), End, Fail);
@@ -273,7 +273,7 @@ class ObjCInstrumentation
                                GlobalValue::LinkOnceODRLinkage,
                                Constant::getNullValue(PointerType::getUnqual(ExitListTy)),
                                interpositionName(SelName, "_exit_list"));
-    
+
     // In the interposition function, call the entry functions, call the real
     // function, then call the exit functions
     BasicBlock *Entry = BasicBlock::Create(Ctx, "entry", Interpose);
@@ -292,22 +292,22 @@ class ObjCInstrumentation
 
     B.SetInsertPoint(Call);
 
-    llvm::CallInst *Ret = 
+    llvm::CallInst *Ret =
       B.CreateCall(B.CreateBitCast(B.CreateLoad(MethodCache),
             PointerType::getUnqual(MethodType)), Args);
     Ret->setAttributes(AS);
-    if (!isVoidRet) 
+    if (!isVoidRet)
       Args.push_back(Ret);
 
     createCallLoop(Args, AS, Call, ExitLoop, Return, ExitList);
     B.SetInsertPoint(Return);
-    if (isVoidRet) 
+    if (isVoidRet)
       B.CreateRetVoid();
     else
       B.CreateRet(Ret);
   }
 
-  CalleeInstr* GetOrCreateInstr(const std::string &SelName, 
+  CalleeInstr* GetOrCreateInstr(const std::string &SelName,
                                 llvm::FunctionType *FTy,
                                 FunctionEvent::Direction Dir,
                                 bool &didCreate) {
@@ -433,7 +433,7 @@ FnCalleeInstrumenter::~FnCalleeInstrumenter() {
 }
 
 bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
-  InstrCtx.reset(InstrContext::Create(Mod));
+  InstrCtx.reset(InstrContext::Create(Mod, SuppressDebugInstr));
 
   bool ModifiedIR = false;
 
@@ -450,7 +450,7 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 
       // For now, skip Objective-C message sends.
       if (FnEvent.kind() != FunctionEvent::CCall) {
-        if (!ObjC) 
+        if (!ObjC)
           ObjC = new ObjCInstrumentation(Mod, SuppressDebugInstr);
         ModifiedIR |= ObjC->instrument(A, FnEvent, EquivClass);
         continue;
@@ -493,7 +493,7 @@ CalleeInstr* FnCalleeInstrumenter::GetOrCreateInstr(
 
 // ==== FnCalleeInstr implementation ===========================================
 CalleeInstr* CalleeInstr::Build(Module& M,
-                                const std::string &SelName, 
+                                const std::string &SelName,
                                 llvm::FunctionType *FTy,
                                 FunctionEvent::Direction Dir,
                                 bool SuppressDebugInstr) {

@@ -43,10 +43,7 @@ namespace llvm {
 
 namespace tesla {
 
-class FieldAssignTransition;
-class FnTransition;
 class InstrContext;
-class Transition;
 
 
 /**
