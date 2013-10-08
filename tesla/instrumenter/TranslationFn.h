@@ -73,7 +73,8 @@ class TranslationFn;
  */
 class TranslationFn {
 public:
-  llvm::CallInst* Call(llvm::ArrayRef<llvm::Value*> Args);
+  void InsertCall(llvm::ArrayRef<llvm::Value*> Args,
+                  llvm::Instruction* Before);
 
   /**
    * Add instrumentation for a function-esque event.

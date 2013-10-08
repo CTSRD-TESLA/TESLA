@@ -92,8 +92,9 @@ TranslationFn* TranslationFn::Create(InstrContext& InstrCtx,
 }
 
 
-CallInst* TranslationFn::Call(ArrayRef<Value*> Args) {
-  return CallInst::Create(InstrFn, Args);
+void TranslationFn::InsertCall(ArrayRef<Value*> Args, Instruction *Before) {
+  CallInst::Create(InstrFn, Args)->insertBefore(Before);
+}
 }
 
 
