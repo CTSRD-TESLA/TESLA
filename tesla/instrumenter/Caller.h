@@ -33,6 +33,7 @@
 
 #include "Instrumenter.h"
 #include "Instrumentation.h"
+#include "TranslationFn.h"
 
 #include "tesla.pb.h"
 
