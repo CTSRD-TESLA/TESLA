@@ -42,6 +42,16 @@ using std::string;
 using std::vector;
 
 
+static StructType* StructTy(StringRef Name, ArrayRef<Type*> Fields, Module& M) {
+  StructType *Ty = M.getTypeByName(Name);
+
+  if (Ty == NULL)
+    Ty = StructType::create(Fields, Name);
+
+  assert(Ty->getName() == Name);
+  return Ty;
+}
+
 InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
 {
   LLVMContext& Ctx = M.getContext();
@@ -55,29 +65,22 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   IntegerType *Int32Ty = IntegerType::getInt32Ty(Ctx);
   IntegerType *IntPtrTy = DataLayout(&M).getIntPtrType(Ctx);
 
-  StructType *TransitionTy = StructType::create(
-      "tesla_transition",
-      Int32Ty, Int32Ty,   // "from" state, mask
-      Int32Ty, Int32Ty,   // "to" state, mask
-      Int32Ty,            // flags
-      NULL);
 
+  // "from" state and mask, "to" state and mask, flags
+  Type *TransFields[] = { Int32Ty, Int32Ty, Int32Ty, Int32Ty, Int32Ty };
+  StructType *TransitionTy = StructTy("tesla_transition", TransFields, M);
   PointerType *TransPtrTy = PointerType::getUnqual(TransitionTy);
 
-  StructType *TransitionSetTy = StructType::create(
-      "tesla_transitions",
-      Int32Ty,         // length
-      TransPtrTy,      // transitions array
-      NULL);
+  // length, array of transitions
+  Type *TransSetF[] = { Int32Ty, TransPtrTy };
+  StructType *TransitionSetTy = StructTy("tesla_transitions", TransSetF, M);
 
-  StructType *AutomatonTy = StructType::create(
-      "tesla_automaton",
-      CharPtrTy,           // name
-      Int32Ty,             // alphabet size
-      TransPtrTy,          // transitions
-      CharPtrTy,           // description
-      CharPtrPtrTy,        // symbol names
-      NULL);
+  // name, alphabet size, transitions, description, symbol names
+  Type *AutomFields[] = {
+    CharPtrTy, Int32Ty, TransPtrTy, CharPtrTy, CharPtrPtrTy
+  };
+  StructType *AutomatonTy = StructTy("tesla_automaton", AutomFields, M);
+  PointerType *AutomatonPtrTy = PointerType::getUnqual(AutomatonTy);
 
   Constant *Debugging, *Printf;
   if (SuppressDebugPrintf)
