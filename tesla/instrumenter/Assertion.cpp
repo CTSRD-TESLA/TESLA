@@ -32,6 +32,7 @@
 #include "Assertion.h"
 #include "Automaton.h"
 #include "Debug.h"
+#include "InstrContext.h"
 #include "Instrumentation.h"
 #include "Manifest.h"
 #include "Names.h"
@@ -65,6 +66,8 @@ AssertionSiteInstrumenter::~AssertionSiteInstrumenter() {
 }
 
 bool AssertionSiteInstrumenter::runOnModule(Module &M) {
+  InstrCtx.reset(InstrContext::Create(M, SuppressDebugInstr));
+
   // If this module doesn't declare any assertions, just carry on.
   AssertFn = M.getFunction(INLINE_ASSERTION);
   if (!AssertFn)
@@ -87,7 +90,7 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
     auto AssertTransitions(this->AssertTrans(Automaton));
 
     // Generate the static automaton description.
-    ConstructAutomatonDescription(Automaton, Mod);
+    InstrCtx->BuildAutomatonDescription(Automaton);
 
     // Convert the assertion into appropriate instrumentation.
     IRBuilder<> Builder(AssertCall);

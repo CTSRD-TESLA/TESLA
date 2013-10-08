@@ -47,6 +47,7 @@ namespace tesla {
 
 class AssertTransition;
 class Automaton;
+class InstrContext;
 class Manifest;
 class Location;
 
@@ -90,6 +91,8 @@ private:
    * pseudo-call.
    */
   static void ParseAssertionLocation(Location *Loc, llvm::CallInst*);
+
+  llvm::OwningPtr<InstrContext> InstrCtx;
 
   //! The TESLA pseudo-function used to declare assertions.
   llvm::Function *AssertFn = NULL;

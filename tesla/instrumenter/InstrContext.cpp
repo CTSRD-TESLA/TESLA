@@ -162,7 +162,15 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
     EventDescriptions.push_back(ConstStr(Descrip));
   }
 
-  // Construct the tesla_automaton struct (starting with its members).
+  //
+  // The members of a struct tesla_automaton are:
+  //
+  // name: char*
+  // alphabet size: int32_t
+  // transitions: struct tesla_transitions*
+  // description: char*
+  // symbol names: char**
+  //
   Constant *AlphabetSize = ConstantInt::get(Int32Ty, Transitions.size());
   Constant *Description = ConstStr(A->SourceCode(), Name + "_description");
 
@@ -179,15 +187,9 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
 
   Constant *TransitionsArray = ConstArrayPointer(TransArrayPtr);
 
-  llvm::errs() << "\n\n";
-  AutomatonTy->dump();
-  ConstStr(Name, Name + "_name")->dump();
-  AlphabetSize->dump();
-  TransitionsArray->dump();
-  Description->dump();
-  SymbolNames->dump();
-  llvm::errs() << "\n\n";
-
+  //
+  // Create the global variable and its (constant) initialiser.
+  //
   Constant *Init = ConstantStruct::get(AutomatonTy,
                                        ConstStr(Name, Name + "_name"),
                                        AlphabetSize, TransitionsArray,
@@ -200,8 +202,10 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
                          Init, Name);
 
 
+  //
   // If there is already a variable with the same name, it is an extern
   // declaration; replace it with this definition.
+  //
   if (Existing) {
     Existing->replaceAllUsesWith(Automaton);
     Existing->removeFromParent();

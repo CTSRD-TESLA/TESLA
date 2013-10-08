@@ -131,8 +131,6 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
 //! Declare a reference to an external @ref tesla_automaton.
 llvm::Constant* ExternAutomatonDescrip(const Automaton*, llvm::Module&);
 
-//! Construct a @ref tesla_automaton for a @ref tesla::Automaton.
-llvm::Constant* ConstructAutomatonDescription(const Automaton*, llvm::Module&);
 
 //! Poke through indirection, struct fields, etc.
 llvm::Value* GetArgumentValue(llvm::Value* Param, const Argument& ArgDescrip,
