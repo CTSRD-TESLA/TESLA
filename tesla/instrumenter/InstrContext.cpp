@@ -130,6 +130,8 @@ InstrContext::InstrContext(Module& M, LLVMContext& Ctx, Type* VoidTy,
     SuppressDebugPrintf(SuppressDebugPrintf),
     Debugging(Debugging), Printf(Printf)
 {
+  assert((Debugging != NULL and Printf != NULL)
+         or SuppressDebugPrintf);
 }
 
 
