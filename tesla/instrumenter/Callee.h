@@ -70,7 +70,7 @@ public:
   virtual bool runOnModule(llvm::Module &M);
 
 private:
-  llvm::OwningPtr<ObjCInstrumentation> ObjC;
+  ObjCInstrumentation* ObjC;
   TranslationFn* GetOrCreateInstr(llvm::Function*, const FunctionEvent&);
 
   llvm::OwningPtr<InstrContext> InstrCtx;
