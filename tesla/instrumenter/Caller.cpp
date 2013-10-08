@@ -259,6 +259,4 @@ bool CallerInstrumentation::Instrument(Instruction &Inst) {
   return true;
 }
 
-
 }
-
