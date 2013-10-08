@@ -29,6 +29,9 @@
  * SUCH DAMAGE.
  */
 
+#ifndef TESLA_MANIFEST_H
+#define TESLA_MANIFEST_H
+
 #include "Automaton.h"
 #include "Names.h"
 
@@ -110,3 +113,4 @@ private:
 
 }
 
+#endif  /* !TESLA_MANIFEST_H */
