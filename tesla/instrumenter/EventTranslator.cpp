@@ -29,10 +29,23 @@
  * SUCH DAMAGE.
  */
 
+#include "Automaton.h"
 #include "EventTranslator.h"
+#include "InstrContext.h"
 
 using namespace llvm;
 using namespace tesla;
 
 using std::string;
 using std::vector;
+
+
+void EventTranslator::CallUpdateState(const Automaton& A, uint32_t Symbol) {
+  std::vector<Value*> Args;
+  Args.push_back(InstrCtx.TeslaContext(A.getAssertion().context()));
+  Args.push_back(InstrCtx.ExternalDescription(A));
+  Args.push_back(ConstantInt::get(InstrCtx.Int32Ty, Symbol));
+  Args.push_back(Key);
+
+  Builder.CreateCall(InstrCtx.UpdateStateFn(), Args);
+}

@@ -43,6 +43,7 @@ namespace llvm {
 
 namespace tesla {
 
+class Automaton;
 class InstrContext;
 
 
@@ -60,10 +61,7 @@ public:
   {
   }
 
-#if 0
-void UpdateState(const Automaton&, uint32_t Symbol, llvm::Value *Key,
-                 llvm::Module&, llvm::BasicBlock *Next, llvm::IRBuilder<>&);
-#endif
+  void CallUpdateState(const Automaton&, uint32_t Symbol);
 
 private:
   InstrContext& InstrCtx;

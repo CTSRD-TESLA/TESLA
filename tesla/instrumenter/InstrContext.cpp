@@ -29,6 +29,7 @@
  * SUCH DAMAGE.
  */
 
+#include "Automaton.h"
 #include "InstrContext.h"
 #include "TranslationFn.h"
 
@@ -65,6 +66,11 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   IntegerType *Int32Ty = IntegerType::getInt32Ty(Ctx);
   IntegerType *IntPtrTy = DataLayout(&M).getIntPtrType(Ctx);
 
+  // A struct tesla_key is a mask and a set of keys.
+  vector<Type*> KeyElements(TESLA_KEY_SIZE, IntPtrTy);
+  KeyElements.push_back(Int32Ty);
+  StructType *KeyTy = StructTy("tesla_key", KeyElements, M);
+  PointerType *KeyPtrTy = PointerType::getUnqual(KeyTy);
 
   // "from" state and mask, "to" state and mask, flags
   Type *TransFields[] = { Int32Ty, Int32Ty, Int32Ty, Int32Ty, Int32Ty };
@@ -97,7 +103,8 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   }
 
   return new InstrContext(M, Ctx, VoidTy, CharTy, CharPtrTy, CharPtrPtrTy,
-                          Int32Ty, IntPtrTy, AutomatonTy,
+                          Int32Ty, IntPtrTy, AutomatonTy, AutomatonPtrTy,
+                          KeyTy, KeyPtrTy,
                           TransitionTy, TransPtrTy, TransitionSetTy,
                           Debugging, Printf, SuppressDebugPrintf);
 }
@@ -106,7 +113,8 @@ InstrContext::InstrContext(Module& M, LLVMContext& Ctx, Type* VoidTy,
                            IntegerType* CharTy, PointerType* CharPtrTy,
                            PointerType* CharPtrPtrTy,
                            IntegerType* Int32Ty, IntegerType* IntPtrTy,
-                           StructType* AutomatonTy,
+                           StructType* AutomatonTy, PointerType* AutomatonPtrTy,
+                           StructType* KeyTy, PointerType* KeyPtrTy,
                            StructType* TransitionTy, PointerType* TransPtrTy,
                            StructType* TransitionSetTy,
                            Constant* Debugging, Constant* Printf,
@@ -115,7 +123,8 @@ InstrContext::InstrContext(Module& M, LLVMContext& Ctx, Type* VoidTy,
     VoidTy(VoidTy),
     CharTy(CharTy), CharPtrTy(CharPtrTy), CharPtrPtrTy(CharPtrPtrTy),
     Int32Ty(Int32Ty), IntPtrTy(IntPtrTy),
-    AutomatonTy(AutomatonTy),
+    AutomatonTy(AutomatonTy), AutomatonPtrTy(AutomatonPtrTy),
+    KeyTy(KeyTy), KeyPtrTy(KeyPtrTy),
     TransitionTy(TransitionTy), TransPtrTy(TransPtrTy),
     TransitionSetTy(TransitionSetTy),
     SuppressDebugPrintf(SuppressDebugPrintf),
@@ -180,4 +189,38 @@ TranslationFn* InstrContext::CreateInstrFn(StringRef TargetName,
                                            FunctionEvent::CallContext Context)
 {
   return TranslationFn::Create(*this, TargetName, InstrType, Dir, Context);
+}
+
+
+Constant* InstrContext::TeslaContext(AutomatonDescription::Context C) {
+  static Constant *Global = ConstantInt::get(Int32Ty, TESLA_CONTEXT_GLOBAL);
+  static Constant *PerThread = ConstantInt::get(Int32Ty, TESLA_CONTEXT_THREAD);
+
+  switch (C) {
+  case AutomatonDescription::Global: return Global;
+  case AutomatonDescription::ThreadLocal: return PerThread;
+  }
+}
+
+
+Constant* InstrContext::ExternalDescription(const Automaton& A) {
+  GlobalVariable *Existing = M.getGlobalVariable(A.Name());
+  if (Existing)
+    return Existing;
+
+  return new GlobalVariable(M, AutomatonTy, true, GlobalValue::ExternalLinkage,
+                            NULL, A.Name());
+}
+
+
+Constant* InstrContext::UpdateStateFn() {
+  return M.getOrInsertFunction(
+      "tesla_update_state",
+      VoidTy,           // return type
+      Int32Ty,          // context (global vs per-thread)
+      AutomatonPtrTy,   // automaton description
+      Int32Ty,          // symbol/event ID
+      KeyPtrTy,         // pattern
+      NULL
+  );
 }

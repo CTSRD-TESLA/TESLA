@@ -50,6 +50,7 @@ namespace llvm {
 
 namespace tesla {
 
+class Automaton;
 class EventTranslator;
 class TranslationFn;
 
@@ -63,6 +64,11 @@ public:
 
   TranslationFn* CreateInstrFn(const FunctionEvent&, llvm::Function *Target);
 
+  llvm::Constant* TeslaContext(AutomatonDescription::Context);
+  llvm::Constant* ExternalDescription(const Automaton&);
+
+  llvm::Constant* UpdateStateFn();
+
 private:
   TranslationFn* CreateInstrFn(llvm::StringRef TargetName,
                                llvm::FunctionType *TargetTy,
@@ -73,7 +79,8 @@ private:
                llvm::IntegerType* CharTy, llvm::PointerType* CharPtrTy,
                llvm::PointerType* CharPtrPtrTy,
                llvm::IntegerType* Int32Ty, llvm::IntegerType* IntPtrTy,
-               llvm::StructType* AutomatonTy,
+               llvm::StructType* AutomatonTy, llvm::PointerType* AutomatonPtrTy,
+               llvm::StructType* KeyTy, llvm::PointerType* KeyPtrTy,
                llvm::StructType* TransitionTy, llvm::PointerType* TransPtrTy,
                llvm::StructType* TransitionSetTy,
                llvm::Constant* Debugging, llvm::Constant* Printf,
@@ -92,6 +99,10 @@ private:
   llvm::IntegerType* IntPtrTy;
 
   llvm::StructType* AutomatonTy;
+  llvm::PointerType* AutomatonPtrTy;
+
+  llvm::StructType* KeyTy;
+  llvm::PointerType* KeyPtrTy;
 
   llvm::StructType* TransitionTy;
   llvm::PointerType* TransPtrTy;
