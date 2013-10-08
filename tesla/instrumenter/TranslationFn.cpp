@@ -124,12 +124,13 @@ EventTranslator TranslationFn::AddInstrumentation(const Automaton& A,
     Patterns.push_back(Ev.receiver());
   }
 
-  return AddInstrumentation(A.Name(), Patterns);
+  return AddInstrumentation(A.Name(), Patterns, true);
 }
 
 
 EventTranslator TranslationFn::AddInstrumentation(StringRef Label,
-                                                  ArrayRef<Argument> Patterns) {
+                                                  ArrayRef<Argument> Patterns,
+                                                  bool IndirectionRequired) {
   LLVMContext& Ctx = InstrCtx.Ctx;
 
   //
@@ -161,7 +162,12 @@ EventTranslator TranslationFn::AddInstrumentation(StringRef Label,
 
       assert(Index < TESLA_KEY_SIZE);
       assert(KeyArgs[Index] == NULL);
-      KeyArgs[Index] = GetArgumentValue(&Val, Pattern, Builder);
+
+      if (IndirectionRequired)
+        KeyArgs[Index] = GetArgumentValue(&Val, Pattern, Builder);
+
+      else
+        KeyArgs[Index] = &Val;
     }
 
     i++;

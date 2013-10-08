@@ -116,9 +116,11 @@ private:
    * @param  Label      A prefix used for @ref BasicBlock labels.
    * @param  Patterns   Patterns describing expected values, in the same order
    *                    as the instrumentation function's parameters.
+   * @param  Indirect   Chase indirections (structure fields and dereferences).
    */
   EventTranslator AddInstrumentation(llvm::StringRef Label,
-                                     llvm::ArrayRef<Argument> Patterns);
+                                     llvm::ArrayRef<Argument> Patterns,
+                                     bool Indirect);
   /**
    * Check @a Val against @a Pattern, branching to @a Instr if it doesn't match.
    */
