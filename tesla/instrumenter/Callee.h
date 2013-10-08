@@ -37,6 +37,7 @@
 
 #include "tesla.pb.h"
 
+#include <llvm/ADT/OwningPtr.h>
 #include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Pass.h>
@@ -69,7 +70,7 @@ public:
   virtual bool runOnModule(llvm::Module &M);
 
 private:
-  ObjCInstrumentation *ObjC;
+  llvm::OwningPtr<ObjCInstrumentation> ObjC;
   TranslationFn* GetOrCreateInstr(llvm::Function*, const FunctionEvent&);
 
   llvm::OwningPtr<InstrContext> InstrCtx;

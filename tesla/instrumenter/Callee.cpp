@@ -437,7 +437,6 @@ char FnCalleeInstrumenter::ID = 0;
 
 FnCalleeInstrumenter::~FnCalleeInstrumenter() {
   google::protobuf::ShutdownProtobufLibrary();
-  if (ObjC) delete ObjC;
 }
 
 bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
@@ -459,7 +458,7 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
       // For now, skip Objective-C message sends.
       if (FnEvent.kind() != FunctionEvent::CCall) {
         if (!ObjC)
-          ObjC = new ObjCInstrumentation(Mod, SuppressDebugInstr);
+          ObjC.reset(new ObjCInstrumentation(Mod, SuppressDebugInstr));
         ModifiedIR |= ObjC->instrument(A, FnEvent, EquivClass);
         continue;
       }
