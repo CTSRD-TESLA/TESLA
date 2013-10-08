@@ -53,5 +53,6 @@ echo $LINE
 # DTESLA: TESLA failure:
 # DTESLA: In automaton 'vfs_vnops.c
 # DTESLA: Instance {{[0-9]+}} is in state {{[0-9]+}}
-# DTESLA: but required to take a transition in [ {{.*}} <clean>) {{.*}}]
+# DTESLA: but received event '{{.*}}syscall{{.*}}cleanup
+# DTESLA: causes transition in: [ {{.*}} <clean>) {{.*}}]
 #

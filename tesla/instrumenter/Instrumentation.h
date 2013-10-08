@@ -61,25 +61,6 @@ class FieldAssignTransition;
 class FnTransition;
 class Transition;
 
-//! Instrumentation for a function event.
-class FnInstrumentation {
-public:
-  void AppendInstrumentation(const Automaton&, const FunctionEvent&,
-                             TEquivalenceClass&);
-
-  llvm::Function *getInstrumentationFunction() { return InstrFn; }
-protected:
-  FnInstrumentation(llvm::Module& M, const llvm::Function *TargetFn,
-                    llvm::Function *InstrFn, FunctionEvent::Direction Dir)
-    : M(M), TargetFn(TargetFn), InstrFn(InstrFn), Dir(Dir)
-  {
-  }
-
-  llvm::Module& M;                  //!< The current module.
-  const llvm::Function *TargetFn;   //!< The function being instrumented.
-  llvm::Function *InstrFn;          //!< The instrumentation function.
-  FunctionEvent::Direction Dir;     //!< Which way we instrument (in or out).
-};
 
 /**
  * Creates a new instrumentation function for a callable object (a function, an
@@ -131,8 +112,6 @@ llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
 //! Declare a reference to an external @ref tesla_automaton.
 llvm::Constant* ExternAutomatonDescrip(const Automaton*, llvm::Module&);
 
-//! Construct a @ref tesla_automaton for a @ref tesla::Automaton.
-llvm::Constant* ConstructAutomatonDescription(const Automaton*, llvm::Module&);
 
 //! Poke through indirection, struct fields, etc.
 llvm::Value* GetArgumentValue(llvm::Value* Param, const Argument& ArgDescrip,

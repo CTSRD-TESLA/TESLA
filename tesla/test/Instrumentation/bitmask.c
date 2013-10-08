@@ -36,16 +36,16 @@ void context() {
  *       since the order of the two blocks isn't important.
  *
  * We need to check the first argument against PI:
- * CHECK:   "[[NAME:.*bitmask.c:[0-9]+#[0-9]+]]:match:arg0
+ * CHECK:   "[[NAME:.*bitmask.c:[0-9]+#[0-9]+]]:match:0
  * CHECK:     [[AND:%[a-z0-9]+]] = and i32 %0, 3
  * CHECK:     [[COND:%[a-z0-9]+]] = icmp eq i32 [[AND]], 3
- * CHECK:     br i1 [[COND]], label %"[[NAME]]:match:retval
+ * CHECK:     br i1 [[COND]], label %"[[NAME]]:match:1
  * CHECK:   "[[NAME]]:instr":
  *
- * CHECK:   "[[NAME:.*bitmask.c:[0-9]+#[0-9]+]]:match:arg0
+ * CHECK:   "[[NAME:.*bitmask.c:[0-9]+#[0-9]+]]:match:0
  * CHECK:     [[AND:%[a-z0-9]+]] = and i32 %0, 5
  * CHECK:     [[COND:%[a-z0-9]+]] = icmp eq i32 [[AND]], %0
- * CHECK:     br i1 [[COND]], label %"[[NAME]]:match:retval
+ * CHECK:     br i1 [[COND]], label %"[[NAME]]:match:1
  * CHECK:   "[[NAME]]:instr":
  *
  * CHECK: }

@@ -31,11 +31,14 @@
 
 #include "Automaton.h"
 #include "Callee.h"
+#include "EventTranslator.h"
+#include "InstrContext.h"
 #include "Instrumentation.h"
 #include "Manifest.h"
 #include "Names.h"
 #include "State.h"
 #include "Transition.h"
+#include "TranslationFn.h"
 
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/Bitcode/ReaderWriter.h>
@@ -61,6 +64,7 @@ namespace {
   class SelectorTypesFinder : public InstVisitor<SelectorTypesFinder> {
     Module *Mod;
     FunctionType *FTy;
+    AttributeSet AS;
     unsigned MDKind;
     const std::string &SelName;
     public:
@@ -86,18 +90,20 @@ namespace {
       if (Sel->getString() != SelName) return;
       FTy = cast<FunctionType>(
         cast<PointerType>(CS.getCalledValue()->getType())->getElementType());
+      AS = CS.getAttributes();
     }
     void visitModule(Module &M) { Mod = &M; }
-    FunctionType *getFunctionType(Module &M) {
+    FunctionType *getFunctionType(Module &M, AttributeSet &Attrs) {
       if (!FTy) {
         visit(M);
       }
+      Attrs = AS;
       return FTy;
     }
   };
 }
 
-class ObjCInstrumentation 
+class ObjCInstrumentation
 {
   Module &Mod;
   LLVMContext &Ctx;
@@ -113,17 +119,17 @@ class ObjCInstrumentation
   Constant *SelRegisterName;
   /// The int objc_registerTracingHook(SEL, objc_tracing_hook) function
   Constant *ObjCRegisterHook;
-  llvm::StringMap<CalleeInstr*> Entry;
-  llvm::StringMap<CalleeInstr*> Exit;
+  llvm::StringMap<TranslationFn*> Entry;
+  llvm::StringMap<TranslationFn*> Exit;
   bool SuppressDebugInstr;
 
 
-  FunctionType *typesForSelector(const std::string &Sel) {
+  FunctionType *typesForSelector(const std::string &Sel, AttributeSet &AS) {
     auto &Type = SelTypes[Sel];
     if (Type)
       return Type;
     SelectorTypesFinder Finder(Ctx, Sel);
-    Type = Finder.getFunctionType(Mod);
+    Type = Finder.getFunctionType(Mod, AS);
     return Type;
   }
 
@@ -137,8 +143,8 @@ class ObjCInstrumentation
     return ".tesla_objc_hook_" + ClassName + '_' + SelName + '_' + AutomatonName;
   }
 
-  void createCallLoop(ArrayRef<Value*> Args, BasicBlock *Entry, BasicBlock
-      *Loop, BasicBlock *Exit, Value *List) {
+  void createCallLoop(ArrayRef<Value*> Args, AttributeSet &AS,
+      BasicBlock *Entry, BasicBlock *Loop, BasicBlock *Exit, Value *List) {
 
     IRBuilder<> B(Entry);
     Value *Head = B.CreateLoad(List);
@@ -147,7 +153,8 @@ class ObjCInstrumentation
     B.SetInsertPoint(Loop);
     PHINode *PHI = B.CreatePHI(Head->getType(), 2);
     PHI->addIncoming(Head, Entry);
-    B.CreateCall(B.CreateLoad(B.CreateStructGEP(PHI, 1)), Args);
+    CallInst *CI = B.CreateCall(B.CreateLoad(B.CreateStructGEP(PHI, 1)), Args);
+    CI->setAttributes(AS);
     Head = B.CreateLoad(B.CreateStructGEP(Head, 0));
     B.CreateCondBr(B.CreateIsNull(Head), Exit, Loop);
     PHI->addIncoming(Head, Loop);
@@ -156,7 +163,7 @@ class ObjCInstrumentation
   /// Creates the instrumentation function, which will be invoked by the
   /// runtime whenever the selector is matched.
   void createIntrumentationFunction(const std::string &SelName,
-      FunctionType *MethodType) {
+      FunctionType *MethodType, AttributeSet &AS) {
     std::string HookName = interpositionName(SelName);
     Function *Fn = Mod.getFunction(HookName);
     if (Fn) return;
@@ -174,7 +181,7 @@ class ObjCInstrumentation
     IRBuilder<> B(BasicBlock::Create(Ctx, "entry", RegisterFn));
     // Create a global for the selector name
     Constant *C =
-        ConstantDataArray::getString(Ctx, SelName, false);
+        ConstantDataArray::getString(Ctx, SelName, true);
     GlobalVariable *GV =
       new GlobalVariable(Mod, C->getType(), true,
                                GlobalValue::PrivateLinkage,
@@ -182,7 +189,7 @@ class ObjCInstrumentation
     BasicBlock *End = BasicBlock::Create(Ctx, "ret", RegisterFn);
     BasicBlock *Fail = BasicBlock::Create(Ctx, "error", RegisterFn);
     // Get the selector
-    Value *Sel = B.CreateCall(SelRegisterName, 
+    Value *Sel = B.CreateCall(SelRegisterName,
         B.CreateBitCast(GV, PtrTy));
     // Register it
     B.CreateCondBr(B.CreateIsNull(B.CreateCall2(ObjCRegisterHook, Sel, Fn)), End, Fail);
@@ -216,6 +223,7 @@ class ObjCInstrumentation
     Function *Interpose = cast<Function>(Mod.getOrInsertFunction(
           interpositionName(SelName, "_interposed"), MethodType));
     Interpose->setLinkage(GlobalValue::LinkOnceODRLinkage);
+    Interpose->setAttributes(AS);
 
 
     // Make the hook return the interposition function, after caching the method in TLS.
@@ -266,7 +274,7 @@ class ObjCInstrumentation
                                GlobalValue::LinkOnceODRLinkage,
                                Constant::getNullValue(PointerType::getUnqual(ExitListTy)),
                                interpositionName(SelName, "_exit_list"));
-    
+
     // In the interposition function, call the entry functions, call the real
     // function, then call the exit functions
     BasicBlock *Entry = BasicBlock::Create(Ctx, "entry", Interpose);
@@ -278,34 +286,42 @@ class ObjCInstrumentation
     for (auto I=Interpose->arg_begin(), E=Interpose->arg_end() ; I!=E ; ++I) {
       Args.push_back(I);
     }
+    AttributeSet RetAttrs = AS.getRetAttributes();
+    AS = AS.removeAttributes(Ctx, AttributeSet::ReturnIndex, RetAttrs);
 
-    createCallLoop(Args, Entry, EnterLoop, Call, EnterList);
+    createCallLoop(Args, AS, Entry, EnterLoop, Call, EnterList);
 
     B.SetInsertPoint(Call);
-    llvm::Value *Ret = 
+
+    llvm::CallInst *Ret =
       B.CreateCall(B.CreateBitCast(B.CreateLoad(MethodCache),
             PointerType::getUnqual(MethodType)), Args);
-    if (!isVoidRet) 
+    Ret->setAttributes(AS);
+    if (!isVoidRet)
       Args.push_back(Ret);
 
-    createCallLoop(Args, Call, ExitLoop, Return, ExitList);
+    createCallLoop(Args, AS, Call, ExitLoop, Return, ExitList);
     B.SetInsertPoint(Return);
-    if (isVoidRet) 
+    if (isVoidRet)
       B.CreateRetVoid();
     else
       B.CreateRet(Ret);
   }
 
-  CalleeInstr* GetOrCreateInstr(const std::string &SelName, 
+  TranslationFn* GetOrCreateInstr(const std::string &SelName,
                                 llvm::FunctionType *FTy,
                                 FunctionEvent::Direction Dir,
                                 bool &didCreate) {
     auto& Map = (Dir == FunctionEvent::Entry) ? Entry : Exit;
-    CalleeInstr *Instr = Map[SelName];
+    TranslationFn *Instr = Map[SelName];
     didCreate = !Instr;
-    if (!Instr)
+    if (!Instr) {
+      assert(false && "use new API");
+      /*
       Instr = Map[SelName] = CalleeInstr::Build(Mod, SelName, FTy, Dir,
               SuppressDebugInstr);
+      */
+    }
     return Instr;
   }
 
@@ -343,17 +359,22 @@ public:
       case FunctionEvent::ObjCInstanceMessage:
         SelName = FnEvent.function().name();
     }
-    FunctionType *FTy = typesForSelector(SelName);
+    AttributeSet AS;
+    FunctionType *FTy = typesForSelector(SelName, AS);
     if (!FTy) return false;
 
-    createIntrumentationFunction(SelName, FTy);
+    createIntrumentationFunction(SelName, FTy, AS);
 
     bool didCreate;
     auto Instr = GetOrCreateInstr(SelName, FTy, FnEvent.direction(), didCreate);
-    Instr->AppendInstrumentation(A, FnEvent, EquivClass);
+    Instr->AddInstrumentation(A, FnEvent);
 
     if (didCreate) {
-      Function *Fn = Instr->getInstrumentationFunction();
+      //
+      // TODO: can this code be moved to EventTranslator?
+      //
+      Function *Fn = Instr->getImplementation();
+      Fn->setAttributes(AS);
 
       // We must make this link-once ODR, because we'll potentially also be
       // emitting copies of it in other compilation units and we only want one
@@ -416,10 +437,12 @@ char FnCalleeInstrumenter::ID = 0;
 
 FnCalleeInstrumenter::~FnCalleeInstrumenter() {
   google::protobuf::ShutdownProtobufLibrary();
-  if (ObjC) delete ObjC;
+  delete ObjC;
 }
 
 bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
+  InstrCtx.reset(InstrContext::Create(Mod, SuppressDebugInstr));
+
   bool ModifiedIR = false;
 
   for (auto i : M.RootAutomata()) {
@@ -435,7 +458,7 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 
       // For now, skip Objective-C message sends.
       if (FnEvent.kind() != FunctionEvent::CCall) {
-        if (!ObjC) 
+        if (!ObjC)
           ObjC = new ObjCInstrumentation(Mod, SuppressDebugInstr);
         ModifiedIR |= ObjC->instrument(A, FnEvent, EquivClass);
         continue;
@@ -450,8 +473,9 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
       if (!Target || Target->empty())
         continue;
 
-      GetOrCreateInstr(Mod, Target, FnEvent.direction())
-        ->AppendInstrumentation(A, FnEvent, EquivClass);
+      TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
+      EventTranslator T(InstrFn->AddInstrumentation(A, FnEvent));
+      T.CallUpdateState(A, EquivClass.Symbol);
 
       ModifiedIR = true;
     }
@@ -461,97 +485,61 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 }
 
 
-CalleeInstr* FnCalleeInstrumenter::GetOrCreateInstr(
-    Module& M, Function *F, FunctionEvent::Direction Dir) {
+TranslationFn* FnCalleeInstrumenter::GetOrCreateInstr(Function *F,
+                                                      const FunctionEvent& Ev) {
 
-  assert(F != NULL);
-  StringRef Name = F->getName();
+  // We keep separate maps for entry and exit instrumentation functions.
+  auto& Map = (Ev.direction() == FunctionEvent::Entry) ? Entry : Exit;
 
-  auto& Map = (Dir == FunctionEvent::Entry) ? Entry : Exit;
-  CalleeInstr *Instr = Map[Name];
-  if (!Instr)
-    Instr = Map[Name] = CalleeInstr::Build(M, F, Dir, SuppressDebugInstr);
+  const string Name = Ev.function().name();
+  TranslationFn *InstrFn = Map[Name];
+  if (InstrFn)
+    return InstrFn;
 
-  return Instr;
-}
+  // No instrumentation function yet; create it.
+  InstrFn = Map[Name] = InstrCtx->CreateInstrFn(Ev, F->getFunctionType());
 
-
-// ==== FnCalleeInstr implementation ===========================================
-CalleeInstr* CalleeInstr::Build(Module& M,
-                                const std::string &SelName, 
-                                llvm::FunctionType *FTy,
-                                FunctionEvent::Direction Dir,
-                                bool SuppressDebugInstr) {
-  Function *InstrFn = ObjCMethodInstrumentation(M, SelName, FTy, Dir,
-                                                FunctionEvent::Callee,
-                                                SuppressDebugInstr);
-  return new CalleeInstr(M, InstrFn, Dir);
-}
-
-CalleeInstr* CalleeInstr::Build(Module& M, Function *Target,
-                                FunctionEvent::Direction Dir,
-                                bool SuppressDebugInstr) {
-
-  // Find (or create) the instrumentation function.
-  // Note: it doesn't yet contain the code to translate events and
-  //       dispatch them to tesla_update_state().
-  Function *InstrFn = FunctionInstrumentation(M, *Target, Dir,
-                                              FunctionEvent::Callee,
-                                              SuppressDebugInstr);
-
-  // Record the arguments passed to the instrumented function.
   //
-  // LLVM's SSA magic will keep these around for us until we need them, even if
-  // C code overwrites its parameters.
-  ArgVector Args;
-  for (auto &Arg : Target->getArgumentList())
+  // Add instrumentation hooks: call out to the translation function
+  // when we enter or exit this (callee-instrumented) function.
+  //
+  ArgVector Args;   // can't use (begin,end) constructor; need arg *addresses*
+  for (auto &Arg : F->getArgumentList())
     Args.push_back(&Arg);
 
-  // Instrument either the entry or return points of the target function.
-  switch (Dir) {
+  // TODO: add Objective-C receiver
+  // TODO: we should probably write down the order of arguments
+
+  switch (Ev.direction()) {
   case FunctionEvent::Entry: {
     // Instrumenting function entry is easy: just add a new call to
     // instrumentation at the beginning of the function's entry block.
-    BasicBlock& Entry = Target->getEntryBlock();
-    CallInst::Create(InstrFn, Args)->insertBefore(Entry.getFirstNonPHI());
+    BasicBlock& Entry = F->getEntryBlock();
+    InstrFn->InsertCallBefore(Entry.getFirstNonPHI(), Args);
     break;
   }
 
   case FunctionEvent::Exit: {
+    // Find all return instructions without peturbing iterators.
     SmallPtrSet<ReturnInst*, 16> Returns;
-    for (auto i = inst_begin(Target), End = inst_end(Target); i != End; i++)
+    for (auto i = inst_begin(F), End = inst_end(F); i != End; i++)
       if (auto *Return = dyn_cast<ReturnInst>(&*i))
         Returns.insert(Return);
 
+    // Now instrument all the returns.
     for (ReturnInst *Return : Returns) {
-      ArgVector InstrArgs(Args);
+      ArgVector RetArgs(Args);
 
-      if (Dir == FunctionEvent::Exit && !Target->getReturnType()->isVoidTy())
-        InstrArgs.push_back(Return->getReturnValue());
+      if (not F->getReturnType()->isVoidTy())
+        RetArgs.push_back(Return->getReturnValue());
 
-      CallInst::Create(InstrFn, InstrArgs)->insertBefore(Return);
+      InstrFn->InsertCallBefore(Return, RetArgs);
     }
     break;
   }
   }
 
-  return new CalleeInstr(M, Target, InstrFn, Dir);
-}
-
-CalleeInstr::CalleeInstr(Module& M, Function *Target, Function *InstrFn,
-                         FunctionEvent::Direction Dir)
-  : FnInstrumentation(M, Target, InstrFn, Dir)
-{
-  assert(TargetFn != NULL);
-  assert(InstrFn != NULL);
-
-  // Record the arguments passed to the instrumented function.
-  //
-  // LLVM's SSA magic will keep these around for us until we need them, even if
-  // C code overwrites its parameters.
-  for (auto &Arg : Target->getArgumentList())
-    Args.push_back(&Arg);
+  return InstrFn;
 }
 
 } /* namespace tesla */
-

@@ -32,11 +32,14 @@
 #include "Assertion.h"
 #include "Automaton.h"
 #include "Debug.h"
+#include "EventTranslator.h"
+#include "InstrContext.h"
 #include "Instrumentation.h"
 #include "Manifest.h"
 #include "Names.h"
 #include "State.h"
 #include "Transition.h"
+#include "TranslationFn.h"
 
 #include "tesla.pb.h"
 
@@ -65,6 +68,8 @@ AssertionSiteInstrumenter::~AssertionSiteInstrumenter() {
 }
 
 bool AssertionSiteInstrumenter::runOnModule(Module &M) {
+  InstrCtx.reset(InstrContext::Create(M, SuppressDebugInstr));
+
   // If this module doesn't declare any assertions, just carry on.
   AssertFn = M.getFunction(INLINE_ASSERTION);
   if (!AssertFn)
@@ -87,18 +92,17 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
     auto AssertTransitions(this->AssertTrans(Automaton));
 
     // Generate the static automaton description.
-    ConstructAutomatonDescription(Automaton, Mod);
+    InstrCtx->BuildAutomatonDescription(Automaton);
 
     // Convert the assertion into appropriate instrumentation.
     IRBuilder<> Builder(AssertCall);
-    auto Args(CollectArgs(AssertCall, *Automaton, Mod, Builder));
-    Function *InstrFn = CreateInstrumentation(*Automaton, AssertTransitions,
-                                              Args, Mod);
+    vector<Value*> Args(CollectArgs(AssertCall, *Automaton, Mod, Builder));
 
-    if (!InstrFn)
-      panic("error instrumenting ASSERT_SITE event");
+    TranslationFn *TransFn = InstrCtx->CreateInstrFn(*Automaton, Args);
+    TransFn->InsertCallBefore(AssertCall, Args);
 
-    Builder.CreateCall(InstrFn, Args);
+    EventTranslator E = TransFn->AddInstrumentation(*Automaton);
+    E.CallUpdateState(*Automaton, AssertTransitions.Symbol);
 
     // Delete the call to the assertion pseudo-function.
     AssertCall->removeFromParent();
@@ -180,47 +184,6 @@ vector<Value*> AssertionSiteInstrumenter::CollectArgs(
   }
 
   return Args;
-}
-
-
-Function* AssertionSiteInstrumenter::CreateInstrumentation(
-    const Automaton& A, TEquivalenceClass& TEq,
-    ArrayRef<Value*> AssertArgs, Module& M) {
-
-  auto& Assertion(A.getAssertion());
-  auto& Ctx(M.getContext());
-  auto *Void(Type::getVoidTy(Ctx));
-
-  vector<Type*> ArgTypes;
-  for (auto *Arg : AssertArgs)
-    ArgTypes.push_back(Arg->getType());
-
-  FunctionType *FnType = FunctionType::get(Void, ArgTypes, false);
-
-  string Name = (ASSERTION_REACHED + "_" + Twine(A.ID())).str();
-  Function *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, FnType));
-  assert(InstrFn != NULL && "instrumentation function not a Function!");
-
-  string Message = ("[ASRT] automaton " + Twine(A.ID())).str();
-  BasicBlock *Instr = CreateInstrPreamble(M, InstrFn, Message,
-                                          SuppressDebugInstr);
-
-  IRBuilder<> Builder(Instr);
-
-  std::vector<Value*> InstrArgs((*TEq.begin())->Arguments().size(), NULL);
-  size_t i = 0;
-  for (auto& Arg : InstrFn->getArgumentList()) {
-    const Argument& A(Assertion.argument(i++));
-    InstrArgs[A.index()] = &Arg;
-  }
-
-  auto Exit = BasicBlock::Create(Ctx, "exit", InstrFn);
-  IRBuilder<>(Exit).CreateRetVoid();
-
-  UpdateState(A, TEq.Symbol, ConstructKey(Builder, M, InstrArgs),
-              M, Exit, Builder);
-
-  return InstrFn;
 }
 
 

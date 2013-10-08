@@ -1,5 +1,6 @@
+//! @file EventTranslator.h  Declaration of @ref EventTranslator.
 /*
- * Copyright (c) 2012 Jonathan Anderson
+ * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -28,68 +29,47 @@
  * SUCH DAMAGE.
  */
 
-#include "Instrumenter.h"
-#include "Transition.h"
+#ifndef	TESLA_EVENT_TRANSLATOR_H
+#define	TESLA_EVENT_TRANSLATOR_H
 
+#include <llvm/ADT/StringRef.h>
+#include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
-#include <llvm/Pass.h>
-
-#include <set>
-
 
 namespace llvm {
-  class CallInst;
-  class Instruction;
+  class BasicBlock;
   class Value;
 }
 
 namespace tesla {
 
-class AssertTransition;
 class Automaton;
 class InstrContext;
-class Manifest;
-class Location;
 
-/// Converts calls to TESLA pseudo-assertions into instrumentation sites.
-class AssertionSiteInstrumenter : public Instrumenter, public llvm::ModulePass {
+
+/**
+ * Translator for a single event.
+ *
+ * On initialisation, creates pattern-matching instructions,
+ * a @ref tesla_key and a branch to the next @ref EventBlock
+ * (or the end of the @ref EventTranslator).
+ */
+class EventTranslator {
 public:
-  static char ID;
-  AssertionSiteInstrumenter(const Manifest& M, bool SuppressDI)
-    : Instrumenter(M, SuppressDI), ModulePass(ID) {}
-  virtual ~AssertionSiteInstrumenter();
-
-  const char* getPassName() const {
-    return "TESLA assertion site instrumenter";
+  EventTranslator(llvm::IRBuilder<> B, llvm::Value* Key, InstrContext& Ctx)
+    : InstrCtx(Ctx), Builder(B), Key(Key)
+  {
   }
 
-  virtual bool runOnModule(llvm::Module &M);
+  void CallUpdateState(const Automaton&, uint32_t Symbol);
 
 private:
-  //! Convert assertion declarations into instrumentation calls.
-  bool ConvertAssertions(std::set<llvm::CallInst*>&, llvm::Module&);
+  InstrContext& InstrCtx;
+  llvm::IRBuilder<> Builder;
 
-  //! Find the automaton defined by an assertion site.
-  const Automaton* FindAutomaton(llvm::CallInst *Call);
-
-  //! Find the @ref Automaton that is defined at an assertion site.
-  TEquivalenceClass AssertTrans(const Automaton*);
-
-  //! Gather up the arguments passed to an assertion.
-  std::vector<llvm::Value*> CollectArgs(llvm::Instruction *Before,
-                                        const Automaton&, llvm::Module&,
-                                        llvm::IRBuilder<>&);
-
-  /**
-   * Parse a @ref Location out of a @ref CallInst to the TESLA assertion
-   * pseudo-call.
-   */
-  static void ParseAssertionLocation(Location *Loc, llvm::CallInst*);
-
-  llvm::OwningPtr<InstrContext> InstrCtx;
-
-  //! The TESLA pseudo-function used to declare assertions.
-  llvm::Function *AssertFn = NULL;
+  llvm::Value *Key;             //!< Current variables to pass to libtesla.
 };
 
-}
+} // namespace tesla
+
+#endif	/* !TESLA_EVENT_TRANSLATOR_H */

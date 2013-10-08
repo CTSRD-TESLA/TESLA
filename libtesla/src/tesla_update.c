@@ -368,3 +368,5 @@ tesla_action(const tesla_instance *inst, const tesla_key *event_data,
 	else
 		return FAIL;
 }
+
+printf_type __tesla_printf = (printf_type)printf;

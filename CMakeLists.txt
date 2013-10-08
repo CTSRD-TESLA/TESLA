@@ -52,6 +52,11 @@ link_directories(${LLVM_LIBDIR})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wstrict-prototypes")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+# Disable RTTI usage in protocol buffers.
+#
+# This seems to "just work" on FreeBSD and Mac OS X, but not always on Linux...
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D GOOGLE_PROTOBUF_NO_RTTI")
+
 #
 # TESLA uses some C++11 extensions like 'auto', but doesn't require a
 # C++11-compliant standard library.

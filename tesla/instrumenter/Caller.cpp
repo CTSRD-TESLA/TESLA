@@ -30,10 +30,14 @@
  */
 
 #include "Caller.h"
+#include "Debug.h"
+#include "EventTranslator.h"
+#include "InstrContext.h"
 #include "Manifest.h"
 #include "Names.h"
 #include "State.h"
 #include "Transition.h"
+#include "TranslationFn.h"
 
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/IRBuilder.h>
@@ -79,7 +83,7 @@ namespace {
             cast<PointerType>(CS.getCalledValue()->getType())->getElementType());
         Inst = CallerInstrumentation::Build(*Mod, SelName, FTy, Dir, SuppressDebugInstr);
       }
-      Inst->Instrument(*CS.getInstruction());
+      Inst->Instrument(CS);
     }
     void visitModule(Module &M) { Mod = &M; }
   };
@@ -93,9 +97,11 @@ FnCallerInstrumenter::~FnCallerInstrumenter() {
 }
 
 bool FnCallerInstrumenter::doInitialization(Module &Mod) {
+  InstrCtx.reset(InstrContext::Create(Mod, SuppressDebugInstr));
+
   bool ModifiedIR = true;
   llvm::LLVMContext &Ctx = Mod.getContext();
-  
+
   unsigned ObjCMsgSendMDKind = Ctx.getMDKindID("GNUObjCMessageSend");
 
 
@@ -142,9 +148,10 @@ bool FnCallerInstrumenter::doInitialization(Module &Mod) {
           if (!Target)
             continue;
 
-          GetOrCreateInstr(Mod, Target, FnEvent.direction())
-            ->AppendInstrumentation(A, FnEvent, EquivClass);
+          CallerInstrumentation *I = GetOrCreateInstr(Mod, Target, FnEvent);
 
+          EventTranslator Trans = I->AddInstrumentation(A, FnEvent);
+          Trans.CallUpdateState(A, EquivClass.Symbol);
         }
         ModifiedIR = true;
       }
@@ -156,16 +163,17 @@ bool FnCallerInstrumenter::doInitialization(Module &Mod) {
 
 
 CallerInstrumentation* FnCallerInstrumenter::GetOrCreateInstr(
-    Module& M, Function *F, FunctionEvent::Direction Dir) {
+    Module& M, Function *F, FunctionEvent Ev) {
 
   assert(F != NULL);
   StringRef Name = F->getName();
 
-  auto& Map = (Dir == FunctionEvent::Entry) ? Calls : Returns;
+  auto& Map = (Ev.direction() == FunctionEvent::Entry) ? Calls : Returns;
   CallerInstrumentation *Instr = Map[Name];
-  if (!Instr)
-    Instr = Map[Name] = CallerInstrumentation::Build(M, F, Dir,
-                                                     SuppressDebugInstr);
+  if (!Instr) {
+    TranslationFn *T = InstrCtx->CreateInstrFn(Ev, F->getFunctionType());
+    Instr = Map[Name] = new CallerInstrumentation(T, Ev);
+  }
 
   return Instr;
 }
@@ -195,10 +203,10 @@ bool FnCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
 
     StringRef Name = Callee->getName();
     if (auto Instr = Calls.lookup(Name))
-      ModifiedIR |= Instr->Instrument(Call);
+      ModifiedIR |= Instr->Instrument(CallSite(&Call));
 
     if (auto Instr = Returns.lookup(Name))
-      ModifiedIR |= Instr->Instrument(Call);
+      ModifiedIR |= Instr->Instrument(CallSite(&Call));
   }
 
   return ModifiedIR;
@@ -207,58 +215,42 @@ bool FnCallerInstrumenter::runOnBasicBlock(BasicBlock &Block) {
 
 // ==== CallerInstrumentation implementation ===================================
 CallerInstrumentation*
-    CallerInstrumentation::Build(Module& M, Function *Target,
-                                 FunctionEvent::Direction Dir,
-                                 bool SuppressDebugInstr) {
-
-  assert(Target != NULL);
-
-  Function *InstrFn = FunctionInstrumentation(M, *Target, Dir,
-                                              FunctionEvent::Caller,
-                                              SuppressDebugInstr);
-
-  return new CallerInstrumentation(M, Target, InstrFn, Dir);
-}
-
-CallerInstrumentation*
     CallerInstrumentation::Build(Module& M,
                                  llvm::StringRef Selector,
                                  llvm::FunctionType* Ty,
                                  FunctionEvent::Direction Dir,
                                  bool SuppressDebugInstr) {
 
-  Function *InstrFn = ObjCMethodInstrumentation(M, Selector, Ty, Dir,
-                                              FunctionEvent::Caller,
-                                              SuppressDebugInstr);
-
-  return new CallerInstrumentation(M, 0, InstrFn, Dir);
+  assert(false && "update ObjC implementation");
 }
 
 
-bool CallerInstrumentation::Instrument(Instruction &Inst) {
-  assert(isa<CallInst>(Inst));
-  CallInst &Call = cast<CallInst>(Inst);
+EventTranslator CallerInstrumentation::AddInstrumentation(
+    const Automaton& A, const FunctionEvent& Ev) {
+  return TransFn->AddInstrumentation(A, Ev);
+}
 
-  ArgVector Args;
-  for (size_t i = 0; i < Call.getNumArgOperands(); i++)
-    Args.push_back(Call.getArgOperand(i));
+bool CallerInstrumentation::Instrument(CallSite CS) {
+  Instruction *Call = CS.getInstruction();
 
-  switch (Dir) {
+  ArgVector Args(CS.arg_begin(), CS.arg_end());
+
+  // TODO(DC): if (ObjC) Args.push_back(Selector)?
+
+  switch (Ev.direction()) {
   case FunctionEvent::Entry:
-     CallInst::Create(InstrFn, Args)->insertBefore(&Inst);
-     break;
+    TransFn->InsertCallBefore(Call, Args);
+    break;
 
   case FunctionEvent::Exit:
-    if (!Call.getType()->isVoidTy())
-      Args.push_back(&Call);
+    if (not CS.getType()->isVoidTy())
+      Args.push_back(Call);
 
-    CallInst::Create(InstrFn, Args)->insertAfter(&Inst);
+    TransFn->InsertCallAfter(Call, Args);
     break;
   }
 
   return true;
 }
 
-
 }
-

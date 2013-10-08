@@ -16,7 +16,7 @@ int
 main(int argc, char *argv[])
 {
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
-	// CHECK: call void @__tesla_instrumentation_assertion_reached_0()
+	// CHECK: call void @{{.*}}_tesla_instrumentation_assertion_{{.*}}()
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
 	TESLA_WITHIN(main,
 		TSEQUENCE(
@@ -27,7 +27,7 @@ main(int argc, char *argv[])
 	);
 
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
-	// CHECK: call void @__tesla_instrumentation_assertion_reached_1()
+	// CHECK: call void @{{.*}}_tesla_instrumentation_assertion_{{.*}}()
 	// CHECK-NOT: call void {{.*}}@__tesla_inline_assertion
 	TESLA_WITHIN(main,
 		TSEQUENCE(

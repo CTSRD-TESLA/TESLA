@@ -66,17 +66,6 @@ static Constant* TeslaContext(AutomatonDescription::Context, LLVMContext&);
 static Value* Cast(Value *From, StringRef Name, Type *NewType, IRBuilder<>&);
 
 
-//! Construct a single @ref tesla_transition.
-static Constant* ConstructTransition(IRBuilder<>&, Module&, const Transition&);
-
-//! Construct a @ref tesla_transitions for a @ref TEquivalenceClass.
-static Constant* ConstructTransitions(IRBuilder<>&, Module&,
-                                      const TEquivalenceClass&, StructType*);
-
-//! Construct a @ref tesla_lifetime_event.
-static Constant* ConstructLifetimeEvent(const Transition&, Module&);
-
-
 /// Extract the @a register_t type from an @a llvm::Module.
 static Type* IntPtrType(Module& M)
 {
@@ -96,128 +85,12 @@ static StructType* StructAutomatonType(Module&);
 static StructType* LifetimeEventType(llvm::Module&);
 
 
-/// Find a constnat pointer to a constant value.
-static Constant* PointerTo(Constant *C, Type *T, Module& M, StringRef Name);
-
-/// Get a constant string pointer.
-static Constant* StrPtr(StringRef S, Module& M, StringRef Name = "");
-
-
-/// Create a BasicBlock that matches a value against an @ref Argument pattern.
-static BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
-                                BasicBlock *MatchTarget, BasicBlock *NoMatch,
-                                Value *Val, const tesla::Argument& Pattern);
-
-/// Call @ref tesla_enter_context().
-static BasicBlock* EnterContext(AutomatonDescription::Context,
-                                const Transition&, ArrayRef<Value*> Key,
-                                Module&, Function*, BasicBlock *Next);
-
-/// Call @ref tesla_exit_context().
-static BasicBlock* ExitContext(AutomatonDescription::Context,
-                                const Transition&, ArrayRef<Value*> Key,
-                                Module&, Function*, BasicBlock *Next);
-
-
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
     if (B.getName() == Name)
       return &B;
 
   return NULL;
-}
-
-void FnInstrumentation::AppendInstrumentation(
-    const Automaton& A, const FunctionEvent& Ev, TEquivalenceClass& Trans) {
-
-  LLVMContext& Ctx = M.getContext();
-
-  const Transition *Head = *Trans.begin();
-  assert(!(Head->RequiresInit() and Head->RequiresCleanup()));
-
-  auto Fn = Ev.function();
-  assert((Ev.kind() != FunctionEvent::CCall) || (Fn.name() == TargetFn->getName()));
-  assert(Ev.direction() == Dir);
-
-  // An instrumentation function should be a linear chain of event pattern
-  // matchers and instrumentation blocks. Find the current end of this chain
-  // and insert the new instrumentation before it.
-  auto *Exit = FindBlock("exit", *InstrFn);
-
-  bool HasReturnValue =
-    (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue());
-
-  vector<Value*> KeyArgs(TESLA_KEY_SIZE, NULL);
-
-  BasicBlock *BB;
-  if (Head->RequiresInit()) {
-    if (FindBlock("tesla_context_entry", *InstrFn))
-      return;
-
-    BB = FindBlock("entry", *InstrFn);
-
-  } else if (Head->RequiresCleanup()) {
-    if (FindBlock("tesla_context_exit", *InstrFn))
-      return;
-
-    BB = FindBlock("entry", *InstrFn);
-
-  } else {
-    BB = BasicBlock::Create(Ctx, A.Name() + ":instr", InstrFn, Exit);
-    Exit->replaceAllUsesWith(BB);
-  }
-
-  IRBuilder<> Builder(BB);
-
-  size_t i = 0;
-  if (Ev.argument().size() > 0)
-    for (auto& InstrArg : InstrFn->getArgumentList()) {
-      const Argument& Arg = Ev.argument(i);
-
-      // We may need to match against constants.
-      MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
-                   BB, Exit, &InstrArg, Arg);
-
-      if (Arg.has_index()) {
-        assert(KeyArgs[Arg.index()] == NULL);
-        KeyArgs[Arg.index()] = GetArgumentValue(&InstrArg, Arg, Builder);
-      }
-
-      // Ignore the return value, which passed as an argument to InstrFn.
-      i++;
-      if (HasReturnValue && (i == Ev.argument_size()))
-        break;
-    }
-
-  if (Ev.kind() != FunctionEvent::CCall) {
-    assert(Ev.has_receiver());
-    int Index = ArgIndex(Ev.receiver());
-    if (Index >= 0)
-      KeyArgs[Index] = GetArgumentValue(InstrFn->getArgumentList().begin(),
-          Ev.receiver(), Builder);
-  }
-
-  if (HasReturnValue) {
-    const Argument &Arg = Ev.expectedreturnvalue();
-    Value *ReturnValue = --(InstrFn->arg_end());
-    ReturnValue = GetArgumentValue(ReturnValue, Arg, Builder);
-
-    MatchPattern(Ctx, A.Name() + ":match:retval", InstrFn,
-                 BB, Exit, ReturnValue, Arg);
-
-    // The return value may be a variable that we need to watch.
-    assert(ReturnValue != NULL);
-  }
-
-  if (Head->RequiresInit())
-    EnterContext(A.getAssertion().context(), *Head, KeyArgs, M, InstrFn, Exit);
-
-  else if (Head->RequiresCleanup())
-    ExitContext(A.getAssertion().context(), *Head, KeyArgs, M, InstrFn, Exit);
-
-  else
-    UpdateState(A, Trans.Symbol, ConstructKey(Builder, M, KeyArgs),
-                M, Exit, Builder);
 }
 
 
@@ -237,7 +110,7 @@ StructType* KeyType(Module& M) {
 
 
 /// Find (or create) printf() declaration.
-Function* Printf(Module& Mod) {
+Value* Printf(Module& Mod, IRBuilder<> &B) {
   auto& Ctx = Mod.getContext();
 
   FunctionType *PrintfType = FunctionType::get(
@@ -245,10 +118,11 @@ Function* Printf(Module& Mod) {
     PointerType::getUnqual(IntegerType::get(Ctx, 8)),  // format string: char*
     true);                                             // use varargs
 
-  Function* Printf = cast<Function>(
-    Mod.getOrInsertFunction("printf", PrintfType));
+  Value *Printf =
+    Mod.getOrInsertGlobal("__tesla_printf", PointerType::getUnqual(PrintfType));
 
-  return Printf;
+
+  return B.CreateLoad(Printf);
 }
 
 /// Find (or create) tesla_debugging() declaration.
@@ -263,7 +137,7 @@ Function* TeslaDebugging(Module& Mod) {
 }
 
 const char* Format(Type *T) {
-    if (T->isPointerTy()) return " 0x%llx";
+    if (T->isPointerTy()) return " %p";
     if (T->isIntegerTy()) return " %d";
     if (T->isFloatTy()) return " %f";
     if (T->isDoubleTy()) return " %f";
@@ -447,97 +321,6 @@ void tesla::UpdateState(const Automaton& A, uint32_t Symbol, Value *Key,
 }
 
 
-BasicBlock* tesla::EnterContext(AutomatonDescription::Context Context,
-                                const Transition& T, ArrayRef<Value*> KeyArgs,
-                                Module& M, Function *Fn, BasicBlock *Next) {
-
-  static const string BlockName = "tesla_context_entry";
-  BasicBlock *BB = FindBlock(BlockName, *Fn);
-  if (BB)
-    return BB;
-
-  auto& Ctx(M.getContext());
-
-  BB = BasicBlock::Create(Ctx, BlockName, Fn, Next);
-  auto *Entry = FindBlock("entry", *Fn);
-  BB->moveAfter(Entry);
-
-  Next->replaceAllUsesWith(BB);
-
-  IRBuilder<> Builder(BB);
-
-  Type *Void = Type::getVoidTy(Ctx);
-  Type *Int32 = Type::getInt32Ty(Ctx);
-  Type *Event = PointerType::getUnqual(LifetimeEventType(M));
-  Type *KeyStar = PointerType::getUnqual(KeyType(M));
-
-  auto *Target = dyn_cast<Function>(M.getOrInsertFunction(
-      "tesla_enter_context",
-      Void,       // return type
-      Int32,      // context (global vs per-thread)
-      Event,      // static event description
-      KeyStar,    // dynamic event information
-      NULL
-  ));
-
-  auto *Key = ConstructKey(Builder, M, KeyArgs);
-
-  std::vector<Value*> Args;
-  Args.push_back(TeslaContext(Context, Ctx));
-  Args.push_back(ConstructLifetimeEvent(T, M));
-  Args.push_back(Key);
-
-  assert(Args.size() == Target->arg_size());
-  Builder.CreateCall(Target, Args);
-  Builder.CreateBr(Next);
-
-  return BB;
-}
-
-
-BasicBlock* tesla::ExitContext(AutomatonDescription::Context Context,
-                                const Transition& T, ArrayRef<Value*> KeyArgs,
-                                Module& M, Function *Fn, BasicBlock *Next) {
-
-  static const string BlockName = "tesla_context_exit";
-  BasicBlock *BB = FindBlock(BlockName, *Fn);
-  if (BB)
-    return BB;
-
-  auto& Ctx(M.getContext());
-
-  BB = BasicBlock::Create(Ctx, BlockName, Fn, Next);
-  IRBuilder<> Builder(BB);
-
-  Type *Void = Type::getVoidTy(Ctx);
-  Type *Int32 = Type::getInt32Ty(Ctx);
-  Type *Event = PointerType::getUnqual(LifetimeEventType(M));
-  Type *KeyStar = PointerType::getUnqual(KeyType(M));
-
-  auto *Target = dyn_cast<Function>(M.getOrInsertFunction(
-      "tesla_exit_context",
-      Void,       // return type
-      Int32,      // context (global vs per-thread)
-      Event,      // static event description
-      KeyStar,    // dynamic event information
-      NULL
-  ));
-
-  auto *Key = ConstructKey(Builder, M, KeyArgs);
-
-  std::vector<Value*> Args;
-  Args.push_back(TeslaContext(Context, Ctx));
-  Args.push_back(ConstructLifetimeEvent(T, M));
-  Args.push_back(Key);
-
-  assert(Args.size() == Target->arg_size());
-  Builder.CreateCall(Target, Args);
-  Builder.CreateBr(Next);
-
-  return BB;
-}
-
-
 StructType* tesla::TransitionType(Module& M) {
   const char Name[] = "tesla_transition";
   StructType *T = M.getTypeByName(Name);
@@ -660,7 +443,7 @@ BasicBlock* tesla::CreateInstrPreamble(Module& Mod, Function *F,
   for (auto& Arg : F->getArgumentList()) PrintfArgs.push_back(&Arg);
 
   IRBuilder<> PrintBuilder(PrintBB);
-  PrintBuilder.CreateCall(Printf(Mod), PrintfArgs);
+  PrintBuilder.CreateCall(Printf(Mod, PrintBuilder), PrintfArgs);
   PrintBuilder.CreateBr(Entry);
 
   return Entry;
@@ -700,43 +483,6 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
     return Builder.CreateIntCast(From, NewType, false);
 
   llvm_unreachable("failed to cast something castable");
-}
-
-
-BasicBlock* tesla::MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
-                                BasicBlock *MatchTarget,
-                                BasicBlock *NonMatchTarget,
-                                Value *Val, const tesla::Argument& Pattern) {
-
-  if (Pattern.type() != Argument::Constant)
-    return MatchTarget;
-
-  auto *MatchBlock = BasicBlock::Create(Ctx, Name, Fn, MatchTarget);
-  MatchTarget->replaceAllUsesWith(MatchBlock);
-
-  IRBuilder<> M(MatchBlock);
-  Value *PatternValue = ConstantInt::getSigned(Val->getType(), Pattern.value());
-  Value *Cmp;
-
-  switch (Pattern.constantmatch()) {
-  case Argument::Exact:
-    Cmp = M.CreateICmpEQ(Val, PatternValue);
-    break;
-
-  case Argument::Flags:
-    // test that x contains mask: (val & pattern) == pattern
-    Cmp = M.CreateICmpEQ(M.CreateAnd(Val, PatternValue), PatternValue);
-    break;
-
-  case Argument::Mask:
-    // test that x contains no more than mask: (val & pattern) == val
-    Cmp = M.CreateICmpEQ(M.CreateAnd(Val, PatternValue), Val);
-    break;
-  }
-
-  M.CreateCondBr(Cmp, MatchTarget, NonMatchTarget);
-
-  return MatchBlock;
 }
 
 
@@ -828,60 +574,6 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
   return Key;
 }
 
-Constant* tesla::ConstructTransition(IRBuilder<>& Builder, Module& M,
-                                     const Transition& T) {
-
-  uint32_t Flags =
-      (T.RequiresInit()           ? TESLA_TRANS_INIT      : 0)
-    | (T.RequiresCleanup()        ? TESLA_TRANS_CLEANUP   : 0);
-
-  uint32_t Values[] = {
-    (uint32_t) T.Source().ID(),
-    T.Source().Mask(),
-    (uint32_t) T.Destination().ID(),
-    T.Destination().Mask(),
-    Flags
-  };
-
-  Type *IntType = Type::getInt32Ty(M.getContext());
-
-  vector<Constant*> Elements;
-  for (auto Val : Values)
-    Elements.push_back(ConstantInt::get(IntType, Val));
-
-  return ConstantStruct::get(TransitionType(M), Elements);
-}
-
-Constant* tesla::ConstructTransitions(IRBuilder<>& Builder, Module& M,
-                                      const TEquivalenceClass& Tr,
-                                      StructType *T) {
-
-  assert(!Tr.empty());
-
-  string Name(("sym" + Twine(Tr.Symbol)).str());
-  string Desc((*Tr.begin())->String());
-
-  // First convert each individual transition into an llvm::Constant*.
-  vector<Constant*> Transitions;
-  for (auto T : Tr)
-    Transitions.push_back(ConstructTransition(Builder, M, *T));
-
-  // Put them all into a global struct tesla_transitions.
-  Type *IntType = Type::getInt32Ty(M.getContext());
-  Constant *Count = ConstantInt::get(IntType, Transitions.size());
-
-  ArrayType *ArrayT = ArrayType::get(TransitionType(M), Transitions.size());
-  auto *Array = new GlobalVariable(M, ArrayT, true, GlobalValue::PrivateLinkage,
-                                   ConstantArray::get(ArrayT, Transitions),
-                                   "transition_array_" + Name);
-
-  Constant *Zero = ConstantInt::get(IntType, 0);
-  Constant *Zeroes[] = { Zero, Zero };
-  auto *ArrayPtr = ConstantExpr::getInBoundsGetElementPtr(Array, Zeroes);
-
-  return ConstantStruct::get(T, Count, ArrayPtr, NULL);
-}
-
 
 Constant* tesla::ExternAutomatonDescrip(const Automaton *A, Module& M) {
   auto *Existing = M.getGlobalVariable(A->Name());
@@ -893,114 +585,4 @@ Constant* tesla::ExternAutomatonDescrip(const Automaton *A, Module& M) {
 
   return new GlobalVariable(M, T, true, GlobalValue::ExternalLinkage, NULL,
                             DescripName);
-}
-
-Constant* tesla::ConstructAutomatonDescription(const Automaton *A, Module& M) {
-  auto *Existing = M.getGlobalVariable(A->Name());
-  if (Existing)
-    assert(!Existing->hasInitializer());
-
-  auto& Ctx(M.getContext());
-  string Name(A->Name());
-
-  IntegerType *Int32 = IntegerType::get(Ctx, 32);
-  Type *CharPtr = PointerType::getUnqual(IntegerType::get(Ctx, 8));
-  Type *CharPtrPtr = PointerType::getUnqual(CharPtr);
-  StructType *TransSetTy = TransitionSetType(M);
-  StructType *T = StructAutomatonType(M);
-
-  vector<Constant*> Trans;
-  vector<Constant*> Events;
-
-  auto *Zero = ConstantInt::get(Int32, 0);
-  Constant* Zeros[] = { Zero, Zero };
-  ArrayRef<Constant*> GEPZeros(Zeros, 2);
-
-  IRBuilder<> Builder(Ctx);
-  for (const TEquivalenceClass& Tr : *A) {
-    string Descrip((*Tr.begin())->String());
-
-    Trans.push_back(ConstructTransitions(Builder, M, Tr, TransSetTy));
-    Events.push_back(StrPtr(Descrip, M));
-  }
-
-  ArrayType *TransArrayT = ArrayType::get(TransSetTy, Trans.size());
-  ArrayType *SymbolArrayT = ArrayType::get(CharPtr, Events.size());
-
-
-  // Construct the tesla_automaton struct (starting with its members).
-  auto *AlphabetSize = ConstantInt::get(Int32, Trans.size());
-  auto *Description = StrPtr(A->SourceCode(), M, Name + "_description");
-  auto *SymbolNames = PointerTo(ConstantArray::get(SymbolArrayT, Events),
-                                CharPtrPtr, M, Name + "_symbol_names");
-
-  auto *TransArray = ConstantArray::get(TransArrayT, Trans);
-  auto *TransArrayPtr = PointerTo(TransArray,
-                                  PointerType::getUnqual(TransArrayT),
-                                  M,
-                                  Name + "_transitions");
-  auto *Transitions =
-    ConstantExpr::getInBoundsGetElementPtr(TransArrayPtr, GEPZeros);
-
-  auto *Enter = ConstructLifetimeEvent(A->Init(), M);
-  auto *Exit = ConstructLifetimeEvent(A->Cleanup(), M);
-
-  auto *Init = ConstantStruct::get(T, StrPtr(Name, M, Name + "_name"),
-                                   AlphabetSize, Transitions, Description,
-                                   SymbolNames, Enter, Exit, NULL);
-
-  auto *Var = new GlobalVariable(M, T, true, GlobalValue::ExternalLinkage,
-                                 Init, Name);
-
-
-  // If there is already a variable with the same name, it is an extern
-  // declaration; replace it with this definition.
-  if (Existing) {
-    Existing->replaceAllUsesWith(Var);
-    Existing->removeFromParent();
-    delete Existing;
-
-    Var->setName(A->Name());
-  }
-
-  return Var;
-}
-
-
-Constant* tesla::ConstructLifetimeEvent(const Transition& T, Module& M) {
-
-  LLVMContext& Ctx = M.getContext();
-  Type *Int32 = IntegerType::get(Ctx, 32);
-
-  string Protobuf;
-
-  __debugonly bool Success = T.Protobuf()->SerializeToString(&Protobuf);
-  assert(Success);
-
-  auto *Repr = StrPtr(Protobuf, M, T.ShortLabel() + ":protobuf");
-  auto *Length = ConstantInt::get(Int32, Protobuf.length());
-  auto *Hash =
-    ConstantInt::get(Int32, SuperFastHash(Protobuf.c_str(), Protobuf.length()));
-
-  StructType *Ty = LifetimeEventType(M);
-
-  auto *Lifetime = ConstantStruct::get(Ty, Repr, Length, Hash, NULL);
-
-  return new GlobalVariable(M, Ty, true, GlobalVariable::InternalLinkage,
-                            Lifetime, T.ShortLabel());
-}
-
-
-Constant* tesla::PointerTo(Constant *C, Type *T, Module& M, StringRef Name) {
-  return ConstantExpr::getPointerCast(
-      new GlobalVariable(M, C->getType(), true,
-                         GlobalVariable::InternalLinkage, C, Name),
-      T
-  );
-}
-
-Constant* tesla::StrPtr(StringRef S, Module& M, StringRef Name) {
-  LLVMContext& Ctx = M.getContext();
-  Type *CharPtr = PointerType::getUnqual(IntegerType::get(Ctx, 8));
-  return PointerTo(ConstantDataArray::getString(Ctx, S), CharPtr, M, Name);
 }

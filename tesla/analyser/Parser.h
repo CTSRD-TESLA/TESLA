@@ -44,6 +44,7 @@ namespace clang {
   class ASTContext;
   class BinaryOperator;
   class CallExpr;
+  class ChooseExpr;
   class CompoundStmt;
   class Decl;
   class DeclRefExpr;
@@ -124,6 +125,7 @@ private:
   bool Parse(Expression*, const clang::CallExpr*, Flags);
   bool Parse(Expression*, const clang::DeclRefExpr*, Flags);
   bool Parse(Expression*, const clang::UnaryOperator*, Flags);
+  bool Parse(Expression*, const clang::ChooseExpr*, Flags);
 
   bool Parse(FunctionRef*, const clang::FunctionDecl*, Flags);
   bool Parse(Argument*, const clang::Expr*, Flags, bool DoNotRegister = false);

@@ -33,6 +33,7 @@
 
 #include "Instrumenter.h"
 #include "Instrumentation.h"
+#include "TranslationFn.h"
 
 #include "tesla.pb.h"
 
@@ -41,6 +42,7 @@
 #include <llvm/Pass.h>
 
 namespace llvm {
+  class CallSite;
   class Function;
   class Instruction;
   class LLVMContext;
@@ -50,7 +52,11 @@ namespace llvm {
 namespace tesla {
 
 class CallerInstrumentation;
+class EventTranslator;
+class InstrContext;
 class Manifest;
+class TranslationFn;
+
 
 /// Instruments function calls in the caller context.
 class FnCallerInstrumenter : public Instrumenter, public llvm::FunctionPass {
@@ -70,7 +76,9 @@ public:
 
 private:
   CallerInstrumentation* GetOrCreateInstr(llvm::Module&, llvm::Function*,
-                                          FunctionEvent::Direction);
+                                          FunctionEvent);
+
+  llvm::OwningPtr<InstrContext> InstrCtx;
 
   llvm::StringMap<CallerInstrumentation*> Calls;
   llvm::StringMap<CallerInstrumentation*> Returns;
@@ -80,32 +88,28 @@ private:
 
 /// Function instrumentation (caller context).
 class CallerInstrumentation
-  : public FnInstrumentation, public InstInstrumentation
 {
 public:
-  /// Construct an object that can instrument calls to a given function.
-  static CallerInstrumentation* Build(llvm::Module&, llvm::Function *Target,
-                                      FunctionEvent::Direction,
-                                      bool SuppressDebugInstr);
+  CallerInstrumentation(TranslationFn *TransFn, FunctionEvent Ev)
+    : TransFn(TransFn), Ev(Ev)
+  {
+  }
+
   static CallerInstrumentation* Build(llvm::Module& M,
                                       llvm::StringRef Selector,
                                       llvm::FunctionType* Ty,
                                       FunctionEvent::Direction Dir,
                                       bool SuppressDebugInstr);
 
-  // InstInstrumentation implementation:
-  bool Instrument(llvm::Instruction&);
+  EventTranslator AddInstrumentation(const Automaton&, const FunctionEvent&);
+
+  bool Instrument(llvm::CallSite);
 
 private:
-  /// Private constructor: clients should use CalleeInstrumention::Build().
-  CallerInstrumentation(llvm::Module& M, llvm::Function *Target,
-                        llvm::Function *Instr, FunctionEvent::Direction Dir)
-    : FnInstrumentation(M, Target, Instr, Dir)
-  {
-  }
+  llvm::OwningPtr<TranslationFn> TransFn;
+  FunctionEvent Ev;
 };
 
 }
 
 #endif	/* !TESLA_CALLER_INSTRUMENTATION_H */
-
