@@ -29,6 +29,7 @@
  * SUCH DAMAGE.
  */
 
+#include "Automaton.h"
 #include "EventTranslator.h"
 #include "Instrumentation.h"
 #include "TranslationFn.h"
@@ -114,8 +115,37 @@ TranslationFn* TranslationFn::Create(InstrContext& InstrCtx,
 }
 
 
+EventTranslator TranslationFn::AddInstrumentation(const Automaton& A,
+                                                  const FunctionEvent& Ev) {
+
+  //
+  // The instrumentation function's parameters include the target's
+  // parameters, return value and Objective-C receiver (if any).
+  //
+  // We need to compile a list of patterns in the same order to match against.
+  //
+  //! Start with FunctionEvent-specified function arguments.
+  vector<Argument> Patterns(Ev.argument().begin(), Ev.argument().end());
+
+
+  if (Ev.has_expectedreturnvalue()) {
+    assert(Ev.direction() == FunctionEvent::Exit);
+    Patterns.push_back(Ev.expectedreturnvalue());
+  }
+
+  if (Ev.has_receiver()) {
+    assert(Ev.kind() == FunctionEvent::ObjCInstanceMessage
+       or Ev.kind() == FunctionEvent::ObjCClassMessage
+       or Ev.kind() == FunctionEvent::ObjCSuperMessage);
+
+    Patterns.push_back(Ev.receiver());
+  }
+
+  return AddInstrumentation(A.Name(), Patterns);
+}
+
+
 EventTranslator TranslationFn::AddInstrumentation(StringRef Label,
-                                                  ArrayRef<Value*> Values,
                                                   ArrayRef<Argument> Patterns) {
   LLVMContext& Ctx = InstrCtx.Ctx;
 
@@ -128,28 +158,30 @@ EventTranslator TranslationFn::AddInstrumentation(StringRef Label,
   End->replaceAllUsesWith(Instr);
 
   //
-  // Match values (e.g. function arguments) against the given pattern,
-  // save variables in a struct tesla_key.
+  // Match instrumented values against the given pattern, saving variables
+  // to a struct tesla_key.
   //
+  Function::ArgumentListType& InstrumentedValues = InstrFn->getArgumentList();
+  assert(Patterns.size() == InstrumentedValues.size());
+
   vector<Value*> KeyArgs(TESLA_KEY_SIZE, NULL);
   IRBuilder<> Builder(Instr);
 
-  size_t Len = Patterns.size();
-  assert(Values.size() == Len);
-
-  for (size_t i = 0; i < Len; i++) {
+  size_t i = 0;
+  for (Value& Val : InstrumentedValues) {
     const Argument& Pattern = Patterns[i];
-    Value *Val = Values[i];
 
-    Match(Label + ":match" + Twine(i), Instr, Pattern, Val);
+    Match(Label + ":match:" + Twine(i), Instr, Pattern, &Val);
 
     if (Pattern.has_index()) {
       int Index = Pattern.index();
 
       assert(Index < TESLA_KEY_SIZE);
       assert(KeyArgs[Index] == NULL);
-      KeyArgs[Index] = GetArgumentValue(Val, Pattern, Builder);
+      KeyArgs[Index] = GetArgumentValue(&Val, Pattern, Builder);
     }
+
+    i++;
   }
 
   Value *Key = ConstructKey(Builder, InstrCtx.M, KeyArgs);

@@ -56,6 +56,7 @@ namespace llvm {
 
 namespace tesla {
 
+class Automaton;
 class EventTranslator;
 class InstrContext;
 class TranslationFn;
@@ -73,18 +74,20 @@ class TranslationFn;
 class TranslationFn {
 public:
   /**
-   * Add instrumentation for a single event.
+   * Add instrumentation for a function-esque event.
+   *
+   * This currents includes C function calls and Objective-C messages,
+   * but could include C++ methods and other things in the future.
+   *
+   * Languages that use C calling conventions for FFI (a lot of them)
+   * should Just Work today.
    *
    * @param  Label      A prefix used for @ref BasicBlock labels.
-   * @param  Values     Values encountered at runtime (e.g. functions).
-   *                    This function is agnostic to the origins of these
-   *                    values; munging of e.g. return values or Objective-C
-   *                    selectors must be done by the caller.
-   * @param  Patterns   Patterns describing expected values.
+   * @param  Patterns   Patterns describing expected values, in the same order
+   *                    as the instrumentation function's parameters.
    */
-  EventTranslator AddInstrumentation(llvm::StringRef Label,
-                                     llvm::ArrayRef<llvm::Value*> Values,
-                                     llvm::ArrayRef<Argument> Patterns);
+  EventTranslator AddInstrumentation(const Automaton&, const FunctionEvent&);
+
 
 private:
   static TranslationFn* Create(InstrContext&, llvm::StringRef TargetName,
@@ -101,6 +104,15 @@ private:
   static llvm::BasicBlock* CreatePreamble(InstrContext&, llvm::Function*,
                                           llvm::Twine Prefix);
 
+  /**
+   * Low-level implementation of instrumentation block creation.
+   *
+   * @param  Label      A prefix used for @ref BasicBlock labels.
+   * @param  Patterns   Patterns describing expected values, in the same order
+   *                    as the instrumentation function's parameters.
+   */
+  EventTranslator AddInstrumentation(llvm::StringRef Label,
+                                     llvm::ArrayRef<Argument> Patterns);
   /**
    * Check @a Val against @a Pattern, branching to @a Instr if it doesn't match.
    */
