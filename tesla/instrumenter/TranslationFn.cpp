@@ -115,6 +115,11 @@ TranslationFn* TranslationFn::Create(InstrContext& InstrCtx,
 }
 
 
+CallInst* TranslationFn::Call(ArrayRef<Value*> Args) {
+  return CallInst::Create(InstrFn, Args);
+}
+
+
 EventTranslator TranslationFn::AddInstrumentation(const Automaton& A,
                                                   const FunctionEvent& Ev) {
 
