@@ -31,6 +31,7 @@
 
 #include "Automaton.h"
 #include "Callee.h"
+#include "EventTranslator.h"
 #include "InstrContext.h"
 #include "Instrumentation.h"
 #include "Manifest.h"
@@ -465,8 +466,9 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
       if (!Target || Target->empty())
         continue;
 
-      GetOrCreateInstr(Mod, Target, FnEvent.direction())
-        ->AppendInstrumentation(A, FnEvent, EquivClass);
+      TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
+      EventTranslator T(InstrFn->AddInstrumentation(A, FnEvent));
+      T.CallUpdateState(A, EquivClass.Symbol);
 
       ModifiedIR = true;
     }
@@ -476,18 +478,61 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 }
 
 
-CalleeInstr* FnCalleeInstrumenter::GetOrCreateInstr(
-    Module& M, Function *F, FunctionEvent::Direction Dir) {
+TranslationFn* FnCalleeInstrumenter::GetOrCreateInstr(Function *F,
+                                                      const FunctionEvent& Ev) {
 
-  assert(F != NULL);
-  StringRef Name = F->getName();
+  // We keep separate maps for entry and exit instrumentation functions.
+  auto& Map = (Ev.direction() == FunctionEvent::Entry) ? Entry : Exit;
 
-  auto& Map = (Dir == FunctionEvent::Entry) ? Entry : Exit;
-  CalleeInstr *Instr = Map[Name];
-  if (!Instr)
-    Instr = Map[Name] = CalleeInstr::Build(M, F, Dir, SuppressDebugInstr);
+  const string Name = F->getName();
+  TranslationFn *InstrFn = Map[Name];
+  if (InstrFn)
+    return InstrFn;
 
-  return Instr;
+  // No instrumentation function yet; create it.
+  InstrFn = Map[Name] = InstrCtx->CreateInstrFn(Ev, F);
+
+  //
+  // Add instrumentation hooks: call out to the translation function
+  // when we enter or exit this (callee-instrumented) function.
+  //
+  ArgVector Args;   // can't use (begin,end) constructor; need arg *addresses*
+  for (auto &Arg : F->getArgumentList())
+    Args.push_back(&Arg);
+
+  // TODO: add Objective-C receiver
+  // TODO: we should probably write down the order of arguments
+
+  switch (Ev.direction()) {
+  case FunctionEvent::Entry: {
+    // Instrumenting function entry is easy: just add a new call to
+    // instrumentation at the beginning of the function's entry block.
+    BasicBlock& Entry = F->getEntryBlock();
+    InstrFn->Call(Args)->insertBefore(Entry.getFirstNonPHI());
+    break;
+  }
+
+  case FunctionEvent::Exit: {
+    // Find all return instructions without peturbing iterators.
+    SmallPtrSet<ReturnInst*, 16> Returns;
+    for (auto i = inst_begin(F), End = inst_end(F); i != End; i++)
+      if (auto *Return = dyn_cast<ReturnInst>(&*i))
+        Returns.insert(Return);
+
+    // Now instrument all the returns.
+    for (ReturnInst *Return : Returns) {
+      ArgVector RetArgs(Args);
+
+      if (not F->getReturnType()->isVoidTy())
+        RetArgs.push_back(Return->getReturnValue());
+
+      InstrFn->Call(RetArgs)->insertBefore(Return);
+    }
+    break;
+  }
+  }
+
+  return InstrFn;
 }
 
 

@@ -27,12 +27,12 @@ void context() {
  *       since the order of the two blocks isn't important.
  *
  * We need to check the first argument against PI:
- * CHECK:   "[[NAME:.*constant-arg.c:[0-9]+#[0-9]+]]:match:arg0":
+ * CHECK:   "[[NAME:.*constant-arg.c:[0-9]+#[0-9]+]]:match:0":
  * CHECK:     [[COND:%[0-9]+]] = icmp eq i32 %{{[0-9]+}}, 3
- * CHECK:     br i1 [[COND]], label %"[[NAME]]:match:retval"
+ * CHECK:     br i1 [[COND]], label %"[[NAME]]:match:1"
  *
  * We also need to check that the return value is ANSWER:
- * CHECK:   "[[NAME]]:match:retval":
+ * CHECK:   "[[NAME]]:match:1":
  * CHECK:     [[COND:%[0-9]+]] = icmp eq i32 %{{[0-9]+}}, 42
  * CHECK:     br i1 [[COND]], label %"[[NAME]]:instr"
  *

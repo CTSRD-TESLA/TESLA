@@ -71,12 +71,12 @@ public:
 
 private:
   ObjCInstrumentation *ObjC;
-  CalleeInstr* GetOrCreateInstr(llvm::Module&, llvm::Function*,
-                                FunctionEvent::Direction);
+  TranslationFn* GetOrCreateInstr(llvm::Function*, const FunctionEvent&);
 
-  llvm::StringMap<CalleeInstr*> Entry;
-  llvm::StringMap<CalleeInstr*> Exit;
   llvm::OwningPtr<InstrContext> InstrCtx;
+
+  llvm::StringMap<TranslationFn*> Entry;
+  llvm::StringMap<TranslationFn*> Exit;
 };
 
 
