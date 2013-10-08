@@ -141,6 +141,9 @@ TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
     assert(false && "implement Objective-C");
   }
 
+  FunctionType *T = Target->getFunctionType();
+  vector<Type*> InstrParamTypes(T->param_begin(), T->param_end());
+
   //
   // If instrumenting return from a non-void function, we need to pass the
   // return value to the instrumentation as a parameter.
@@ -148,16 +151,20 @@ TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
   // Otherwise, the instrumentation function will have exactly the same
   // signature as the instrumented function.
   //
-  FunctionType *T = Target->getFunctionType();
-  Type *RetTy = T->getReturnType();
+  if (Ev.direction() == FunctionEvent::Exit) {
+    Type *RetTy = T->getReturnType();
 
-  if (Ev.direction() == FunctionEvent::Exit and not RetTy->isVoidTy()) {
-    vector<Type*> ParamTypes(T->param_begin(), T->param_end());
-    ParamTypes.push_back(RetTy);
-
-    T = FunctionType::get(VoidTy, ParamTypes, false);
+    if (not RetTy->isVoidTy())
+      InstrParamTypes.push_back(RetTy);
   }
 
+  //
+  // TODO: tack on Objective-C receiver to the end of the arguments
+  //
+  //InstrParamTypes.push_back(ObjCReceiver);
+
+
+  T = FunctionType::get(VoidTy, InstrParamTypes, Target->isVarArg());
   return CreateInstrFn(TargetName, T, Ev.direction(), Ev.context());
 }
 
