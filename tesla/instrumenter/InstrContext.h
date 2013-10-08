@@ -76,7 +76,7 @@ public:
   llvm::Constant* ConstStr(llvm::StringRef, llvm::StringRef Name = "");
 
   TranslationFn* CreateInstrFn(const Automaton&, llvm::ArrayRef<llvm::Value*>);
-  TranslationFn* CreateInstrFn(const FunctionEvent&, llvm::Function *Target);
+  TranslationFn* CreateInstrFn(const FunctionEvent&, llvm::FunctionType*);
 
   llvm::Constant* TeslaContext(AutomatonDescription::Context);
   llvm::Constant* ExternalDescription(const Automaton&);

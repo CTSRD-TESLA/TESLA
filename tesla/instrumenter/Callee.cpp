@@ -491,13 +491,13 @@ TranslationFn* FnCalleeInstrumenter::GetOrCreateInstr(Function *F,
   // We keep separate maps for entry and exit instrumentation functions.
   auto& Map = (Ev.direction() == FunctionEvent::Entry) ? Entry : Exit;
 
-  const string Name = F->getName();
+  const string Name = Ev.function().name();
   TranslationFn *InstrFn = Map[Name];
   if (InstrFn)
     return InstrFn;
 
   // No instrumentation function yet; create it.
-  InstrFn = Map[Name] = InstrCtx->CreateInstrFn(Ev, F);
+  InstrFn = Map[Name] = InstrCtx->CreateInstrFn(Ev, F->getFunctionType());
 
   //
   // Add instrumentation hooks: call out to the translation function

@@ -303,13 +303,13 @@ TranslationFn* InstrContext::CreateInstrFn(const Automaton& A,
 
 
 TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
-                                           Function *Target) {
+                                           FunctionType *TargetType) {
 
   string TargetName;
 
   switch (Ev.kind()) {
   case FunctionEvent::CCall:
-    TargetName = Target->getName();
+    TargetName = Ev.function().name();
     break;
 
   case FunctionEvent::ObjCInstanceMessage:
@@ -350,7 +350,7 @@ TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
                                       ? GlobalValue::ExternalLinkage
                                       : GlobalValue::PrivateLinkage;
 
-  FunctionType *T = Target->getFunctionType();
+  FunctionType *T = TargetType;
   vector<Type*> InstrParamTypes(T->param_begin(), T->param_end());
 
   //
@@ -373,7 +373,7 @@ TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
   //InstrParamTypes.push_back(ObjCReceiver);
 
 
-  T = FunctionType::get(VoidTy, InstrParamTypes, Target->isVarArg());
+  T = FunctionType::get(VoidTy, InstrParamTypes, TargetType->isVarArg());
   return TranslationFn::Create(*this, InstrName, T, PrintfPrefix, Linkage);
 }
 

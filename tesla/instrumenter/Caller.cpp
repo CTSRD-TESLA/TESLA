@@ -171,7 +171,7 @@ CallerInstrumentation* FnCallerInstrumenter::GetOrCreateInstr(
   auto& Map = (Ev.direction() == FunctionEvent::Entry) ? Calls : Returns;
   CallerInstrumentation *Instr = Map[Name];
   if (!Instr) {
-    TranslationFn *T = InstrCtx->CreateInstrFn(Ev, F);
+    TranslationFn *T = InstrCtx->CreateInstrFn(Ev, F->getFunctionType());
     Instr = Map[Name] = new CallerInstrumentation(T, Ev);
   }
 
