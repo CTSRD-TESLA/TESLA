@@ -131,7 +131,9 @@ TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
     TargetName = Target->getName();
     break;
 
-  default:
+  case FunctionEvent::ObjCInstanceMessage:
+  case FunctionEvent::ObjCClassMessage:
+  case FunctionEvent::ObjCSuperMessage:
     //
     // TODO: translate Objective-C support to this new API
     //
