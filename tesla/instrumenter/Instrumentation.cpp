@@ -81,7 +81,10 @@ static StructType* TransitionSetType(Module&);
 /// Find or create the @ref tesla_automaton type.
 static StructType* StructAutomatonType(Module&);
 
-/// Find or create the @ref tesla_lifetype type.
+/// Find or create the @ref tesla_lifetime type.
+static StructType* LifetimeType(llvm::Module&);
+
+/// Find or create the @ref tesla_lifetime_event type.
 static StructType* LifetimeEventType(llvm::Module&);
 
 
@@ -374,8 +377,7 @@ StructType* tesla::StructAutomatonType(Module& M) {
 
   Type *TransPtr = PointerType::getUnqual(TransitionSetType(M));
 
-  Type *LifetimeEventPtr =
-    PointerType::getUnqual(LifetimeEventType(M));
+  Type *LifetimePtr = PointerType::getUnqual(LifetimeType(M));
 
   return StructType::create(StructTypeName,
                             CharPtr,    // name
@@ -383,14 +385,27 @@ StructType* tesla::StructAutomatonType(Module& M) {
                             TransPtr,   // transitions
                             CharPtr,    // description
                             CharPtrPtr, // symbol_names
-                            LifetimeEventPtr,   // entry
-                            LifetimeEventPtr,   // exit
+                            LifetimePtr,// lifetime
+                            NULL);
+}
+
+StructType* tesla::LifetimeType(Module& M)
+{
+  static const char Name[] = "tesla_lifetime";
+  StructType *T = M.getTypeByName(Name);
+  if (T)
+    return T;
+
+  StructType *EventTy = LifetimeEventType(M);
+  return StructType::create(Name,
+                            EventTy,    // beginning
+                            EventTy,    // end
                             NULL);
 }
 
 StructType* tesla::LifetimeEventType(Module& M)
 {
-  static const char Name[] = "tesla_lifetime";
+  static const char Name[] = "tesla_lifetime_event";
   StructType *T = M.getTypeByName(Name);
   if (T)
     return T;

@@ -67,6 +67,7 @@ public:
   static InstrContext* Create(llvm::Module&, bool SuppressDebugPrintf = false);
 
   llvm::Constant* BuildAutomatonDescription(const Automaton*);
+  llvm::Constant* BuildLifetime(const Automaton&);
   llvm::Constant* BuildLifetimeEvent(const Transition&);
   llvm::Constant* BuildTransition(const Transition&);
   llvm::Constant* BuildTransitions(const TEquivalenceClass&);
@@ -93,8 +94,8 @@ private:
                llvm::IntegerType* Int32Ty, llvm::IntegerType* IntPtrTy,
                llvm::StructType* AutomatonTy, llvm::PointerType* AutomatonPtrTy,
                llvm::StructType* KeyTy, llvm::PointerType* KeyPtrTy,
+               llvm::StructType* LifetimeTy, llvm::PointerType *LifetimePtrTy,
                llvm::StructType* LifetimeEventTy,
-               llvm::PointerType* LifetimeEventPtrTy,
                llvm::StructType* TransitionTy, llvm::PointerType* TransPtrTy,
                llvm::StructType* TransitionSetTy,
                llvm::PointerType* TransitionSetPtrTy,
@@ -119,8 +120,9 @@ private:
   llvm::StructType* KeyTy;
   llvm::PointerType* KeyPtrTy;
 
+  llvm::StructType* LifetimeTy;
+  llvm::PointerType* LifetimePtrTy;
   llvm::StructType* LifetimeEventTy;
-  llvm::PointerType* LifetimeEventPtrTy;
 
   llvm::StructType* TransitionTy;
   llvm::PointerType* TransPtrTy;

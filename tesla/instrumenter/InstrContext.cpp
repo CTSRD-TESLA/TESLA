@@ -75,9 +75,13 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   PointerType *KeyPtrTy = PointerType::getUnqual(KeyTy);
 
   // A lifetime event contains an opaque representation, a length and a hash.
-  Type* LifeFields[] = { CharPtrTy, Int32Ty, Int32Ty };
-  StructType *LifeEventTy = StructTy("tesla_lifetime_event", LifeFields, M);
-  PointerType *LifetimeEventPtrTy = PointerType::getUnqual(LifeEventTy);
+  Type* LifeEvFields[] = { CharPtrTy, Int32Ty, Int32Ty };
+  StructType *LifeEventTy = StructTy("tesla_lifetime_event", LifeEvFields, M);
+
+  // A lifetime contains two events (entry and exit).
+  Type* LifeFields[] = { LifeEventTy, LifeEventTy };
+  StructType *LifetimeTy = StructTy("tesla_lifetime", LifeFields, M);
+  PointerType *LifetimePtrTy = PointerType::getUnqual(LifetimeTy);
 
   // "from" state and mask, "to" state and mask, flags
   Type *TransFields[] = { Int32Ty, Int32Ty, Int32Ty, Int32Ty, Int32Ty };
@@ -92,7 +96,7 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   // name, alphabet size, transitions, description, symbol names
   Type *AutomFields[] = {
     CharPtrTy, Int32Ty, TransitionSetPtrTy, CharPtrTy, CharPtrPtrTy,
-    LifetimeEventPtrTy, LifetimeEventPtrTy,
+    LifetimePtrTy,
   };
   StructType *AutomatonTy = StructTy("tesla_automaton", AutomFields, M);
   PointerType *AutomatonPtrTy = PointerType::getUnqual(AutomatonTy);
@@ -113,7 +117,8 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
 
   return new InstrContext(M, Ctx, VoidTy, CharTy, CharPtrTy, CharPtrPtrTy,
                           Int32Ty, IntPtrTy, AutomatonTy, AutomatonPtrTy,
-                          KeyTy, KeyPtrTy, LifeEventTy, LifetimeEventPtrTy,
+                          KeyTy, KeyPtrTy,
+                          LifetimeTy, LifetimePtrTy, LifeEventTy,
                           TransitionTy, TransPtrTy,
                           TransitionSetTy, TransitionSetPtrTy,
                           Debugging, Printf, SuppressDebugPrintf);
@@ -125,8 +130,8 @@ InstrContext::InstrContext(Module& M, LLVMContext& Ctx, Type* VoidTy,
                            IntegerType* Int32Ty, IntegerType* IntPtrTy,
                            StructType* AutomatonTy, PointerType* AutomatonPtrTy,
                            StructType* KeyTy, PointerType* KeyPtrTy,
+                           StructType* LifetimeTy, PointerType* LifetimePtrTy,
                            StructType* LifetimeEventTy,
-                           PointerType* LifetimeEventPtrTy,
                            StructType* TransitionTy, PointerType* TransPtrTy,
                            StructType* TransitionSetTy,
                            PointerType* TransitionSetPtrTy,
@@ -138,7 +143,8 @@ InstrContext::InstrContext(Module& M, LLVMContext& Ctx, Type* VoidTy,
     Int32Ty(Int32Ty), IntPtrTy(IntPtrTy),
     AutomatonTy(AutomatonTy), AutomatonPtrTy(AutomatonPtrTy),
     KeyTy(KeyTy), KeyPtrTy(KeyPtrTy),
-    LifetimeEventTy(LifetimeEventTy), LifetimeEventPtrTy(LifetimeEventPtrTy),
+    LifetimeTy(LifetimeTy), LifetimePtrTy(LifetimePtrTy),
+    LifetimeEventTy(LifetimeEventTy),
     TransitionTy(TransitionTy), TransPtrTy(TransPtrTy),
     TransitionSetTy(TransitionSetTy), TransitionSetPtrTy(TransitionSetPtrTy),
     SuppressDebugPrintf(SuppressDebugPrintf),
@@ -196,8 +202,7 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
 
   Constant *TransitionsArray = ConstArrayPointer(TransArrayPtr);
 
-  Constant *Sunrise = BuildLifetimeEvent(A->Init());
-  Constant *Sunset = BuildLifetimeEvent(A->Cleanup());
+  Constant *Lifetime = BuildLifetime(*A);
 
   //
   // Create the global variable and its (constant) initialiser.
@@ -206,7 +211,7 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
                                        ConstStr(Name, Name + "_name"),
                                        AlphabetSize, TransitionsArray,
                                        Description, SymbolNames,
-                                       Sunrise, Sunset,
+                                       Lifetime,
                                        NULL);
 
   GlobalVariable *Automaton
@@ -245,10 +250,7 @@ Constant* InstrContext::BuildLifetimeEvent(const Transition& T) {
 
   StructType *Ty = LifetimeEventTy;
 
-  Constant *Lifetime = ConstantStruct::get(Ty, Repr, Length, Hash, NULL);
-
-  return new GlobalVariable(M, Ty, true, GlobalVariable::InternalLinkage,
-                            Lifetime, T.ShortLabel());
+  return ConstantStruct::get(Ty, Repr, Length, Hash, NULL);
 }
 
 
@@ -270,6 +272,23 @@ Constant* InstrContext::BuildTransition(const Transition& T) {
     Elements.push_back(ConstantInt::get(Int32Ty, Val));
 
   return ConstantStruct::get(TransitionTy, Elements);
+}
+
+
+Constant* InstrContext::BuildLifetime(const Automaton& A) {
+  const Transition& Init = A.Init();
+  const Transition& Cleanup = A.Cleanup();
+
+  Constant *Lifetime = ConstantStruct::get(LifetimeTy,
+                                           BuildLifetimeEvent(A.Init()),
+                                           BuildLifetimeEvent(A.Cleanup()),
+                                           NULL);
+
+  string Name = "(" + Init.ShortLabel() + " -> " + Cleanup.ShortLabel() + ")";
+
+  return new GlobalVariable(M, LifetimeTy, true,
+                            GlobalVariable::InternalLinkage,
+                            Lifetime, Name);
 }
 
 
