@@ -95,10 +95,10 @@ public:
 
 
 private:
-  static TranslationFn* Create(InstrContext&, llvm::StringRef TargetName,
+  static TranslationFn* Create(InstrContext&, llvm::StringRef InstrFnName,
                                llvm::FunctionType *InstrType,
-                               FunctionEvent::Direction,
-                               FunctionEvent::CallContext);
+                               llvm::StringRef PrintfPrefix,
+                               llvm::GlobalValue::LinkageTypes);
 
   /*!
    * Initialise an instrumentation function's preamble.

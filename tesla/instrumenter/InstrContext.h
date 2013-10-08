@@ -82,11 +82,6 @@ public:
   llvm::Constant* UpdateStateFn();
 
 private:
-  TranslationFn* CreateInstrFn(llvm::StringRef TargetName,
-                               llvm::FunctionType *TargetTy,
-                               FunctionEvent::Direction,
-                               FunctionEvent::CallContext);
-
   InstrContext(llvm::Module& M, llvm::LLVMContext& Ctx, llvm::Type* VoidTy,
                llvm::IntegerType* CharTy, llvm::PointerType* CharPtrTy,
                llvm::PointerType* CharPtrPtrTy,

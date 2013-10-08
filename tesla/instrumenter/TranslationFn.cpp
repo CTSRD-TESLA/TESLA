@@ -57,31 +57,16 @@ static const char* Format(Type *T) {
 
 
 TranslationFn* TranslationFn::Create(InstrContext& InstrCtx,
-                                     StringRef TargetName,
+                                     StringRef NameSuffix,
                                      FunctionType *InstrType,
-                                     FunctionEvent::Direction Dir,
-                                     FunctionEvent::CallContext Context) {
-
-  // Find (or build) the instrumentation function.
-  string Name = (Twine()
-    + INSTR_BASE
-    + ((Context == FunctionEvent::Callee) ? CALLEE : CALLER)
-    + ((Dir == FunctionEvent::Entry) ? ENTER : EXIT)
-    + TargetName
-  ).str();
+                                     StringRef PrintfPrefix,
+                                     GlobalValue::LinkageTypes Linkage) {
 
   Module& M = InstrCtx.M;
 
+  string Name = (INSTR_BASE + NameSuffix).str();
   auto *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, InstrType));
-  assert(InstrFn != NULL);
-
-  //
-  // Caller-context instrumentation may be declared in any translation unit,
-  // with different definitions in each. Use private linkage to ensure these
-  // definitions do not conflict.
-  //
-  if (Context == FunctionEvent::Caller)
-    InstrFn->setLinkage(GlobalValue::PrivateLinkage);
+  InstrFn->setLinkage(Linkage);
 
   //
   // Invariant: instrumentation functions should have two exit blocks, one for
@@ -93,14 +78,6 @@ TranslationFn* TranslationFn::Create(InstrContext& InstrCtx,
   BasicBlock *EndBlock;
 
   if (InstrFn->empty()) {
-    string PrintfPrefix = (Twine()
-      + "["
-      + ((Dir == FunctionEvent::Entry) ? "CAL" : "RET")
-      + ((Context == FunctionEvent::Callee) ? "E" : "R")
-      + "] "
-      + TargetName
-    ).str();
-
     BasicBlock *Preamble = CreatePreamble(InstrCtx, InstrFn, PrintfPrefix);
 
     EndBlock = BasicBlock::Create(InstrCtx.Ctx, "exit", InstrFn);

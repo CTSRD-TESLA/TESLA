@@ -307,6 +307,32 @@ TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
     assert(false && "implement Objective-C");
   }
 
+  const bool IsCalleeContext = (Ev.context() == FunctionEvent::Callee);
+  const bool IsEntry = (Ev.direction() == FunctionEvent::Entry);
+
+  const string InstrName = (Twine()
+    + (IsCalleeContext ? CALLEE : CALLER)
+    + (IsEntry ? ENTER : EXIT)
+    + TargetName
+  ).str();
+
+  const string PrintfPrefix = (Twine()
+    + "["
+    + (IsEntry ? "CAL" : "RET")
+    + (IsCalleeContext ? "E" : "R")
+    + "] "
+    + TargetName
+  ).str();
+
+  //
+  // Caller-context instrumentation may be declared in any translation unit,
+  // with different definitions in each. Use private linkage to ensure these
+  // definitions do not conflict.
+  //
+  GlobalValue::LinkageTypes Linkage = IsCalleeContext
+                                      ? GlobalValue::ExternalLinkage
+                                      : GlobalValue::PrivateLinkage;
+
   FunctionType *T = Target->getFunctionType();
   vector<Type*> InstrParamTypes(T->param_begin(), T->param_end());
 
@@ -331,16 +357,7 @@ TranslationFn* InstrContext::CreateInstrFn(const FunctionEvent& Ev,
 
 
   T = FunctionType::get(VoidTy, InstrParamTypes, Target->isVarArg());
-  return CreateInstrFn(TargetName, T, Ev.direction(), Ev.context());
-}
-
-
-TranslationFn* InstrContext::CreateInstrFn(StringRef TargetName,
-                                           FunctionType *InstrType,
-                                           FunctionEvent::Direction Dir,
-                                           FunctionEvent::CallContext Context)
-{
-  return TranslationFn::Create(*this, TargetName, InstrType, Dir, Context);
+  return TranslationFn::Create(*this, InstrName, T, PrintfPrefix, Linkage);
 }
 
 
