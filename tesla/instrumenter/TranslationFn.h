@@ -73,8 +73,8 @@ class TranslationFn;
  */
 class TranslationFn {
 public:
-  void InsertCall(llvm::ArrayRef<llvm::Value*> Args,
-                  llvm::Instruction* Before);
+  void InsertCallBefore(llvm::Instruction*, llvm::ArrayRef<llvm::Value*>);
+  void InsertCallAfter(llvm::Instruction*, llvm::ArrayRef<llvm::Value*>);
 
   /**
    * Add instrumentation for an assertion.

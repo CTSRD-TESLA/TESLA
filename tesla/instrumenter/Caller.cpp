@@ -234,12 +234,22 @@ bool CallerInstrumentation::Instrument(CallSite CS) {
   Instruction *Call = CS.getInstruction();
 
   ArgVector Args(CS.arg_begin(), CS.arg_end());
-  if (Ev.direction() == FunctionEvent::Exit and not CS.getType()->isVoidTy())
-    Args.push_back(Call);
 
-  // TODO: if (ObjC) Args.push_back(Selector)?
+  // TODO(DC): if (ObjC) Args.push_back(Selector)?
 
-  TransFn->InsertCall(Args, Call);
+  switch (Ev.direction()) {
+  case FunctionEvent::Entry:
+    TransFn->InsertCallBefore(Call, Args);
+    break;
+
+  case FunctionEvent::Exit:
+    if (not CS.getType()->isVoidTy())
+      Args.push_back(Call);
+
+    TransFn->InsertCallAfter(Call, Args);
+    break;
+  }
+
   return true;
 }
 

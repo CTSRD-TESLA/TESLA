@@ -99,7 +99,7 @@ bool AssertionSiteInstrumenter::ConvertAssertions(
     vector<Value*> Args(CollectArgs(AssertCall, *Automaton, Mod, Builder));
 
     TranslationFn *TransFn = InstrCtx->CreateInstrFn(*Automaton, Args);
-    TransFn->InsertCall(Args, AssertCall);
+    TransFn->InsertCallBefore(AssertCall, Args);
 
     EventTranslator E = TransFn->AddInstrumentation(*Automaton);
     E.CallUpdateState(*Automaton, AssertTransitions.Symbol);

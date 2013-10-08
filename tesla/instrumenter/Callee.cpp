@@ -515,7 +515,7 @@ TranslationFn* FnCalleeInstrumenter::GetOrCreateInstr(Function *F,
     // Instrumenting function entry is easy: just add a new call to
     // instrumentation at the beginning of the function's entry block.
     BasicBlock& Entry = F->getEntryBlock();
-    InstrFn->InsertCall(Args, Entry.getFirstNonPHI());
+    InstrFn->InsertCallBefore(Entry.getFirstNonPHI(), Args);
     break;
   }
 
@@ -533,7 +533,7 @@ TranslationFn* FnCalleeInstrumenter::GetOrCreateInstr(Function *F,
       if (not F->getReturnType()->isVoidTy())
         RetArgs.push_back(Return->getReturnValue());
 
-      InstrFn->InsertCall(RetArgs, Return);
+      InstrFn->InsertCallBefore(Return, RetArgs);
     }
     break;
   }
