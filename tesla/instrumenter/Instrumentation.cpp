@@ -81,12 +81,6 @@ static StructType* TransitionSetType(Module&);
 static StructType* StructAutomatonType(Module&);
 
 
-/// Create a BasicBlock that matches a value against an @ref Argument pattern.
-static BasicBlock* MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
-                                BasicBlock *MatchTarget, BasicBlock *NoMatch,
-                                Value *Val, const tesla::Argument& Pattern);
-
-
 BasicBlock *FindBlock(StringRef Name, Function& Fn) {
   for (auto& B : Fn)
     if (B.getName() == Name)
@@ -94,91 +88,6 @@ BasicBlock *FindBlock(StringRef Name, Function& Fn) {
 
   panic("instrumentation function '" + Fn.getName()
          + "' has no '" + Name + "' block");
-}
-
-static const Argument& getArgAtIndex(const FunctionEvent& Ev, int i) {
-  // If this is an Objective-C message send, then the first parameter is
-  // the receiver, the second is the selector.  Neither is an explicit
-  // argument.
-  if (Ev.kind() == FunctionEvent::CCall)
-    return Ev.argument(i);
-  else {
-    if (i == 0)
-      return Ev.receiver();
-    }
-    assert(i != 1 && "Matching on selector not allowed");
-    return Ev.argument(i - 2);
-}
-
-void FnInstrumentation::AppendInstrumentation(
-    const Automaton& A, const FunctionEvent& Ev, TEquivalenceClass& Trans) {
-
-  LLVMContext& Ctx = M.getContext();
-
-  auto Fn = Ev.function();
-  assert((Ev.kind() != FunctionEvent::CCall) || (Fn.name() == TargetFn->getName()));
-  assert(Ev.direction() == Dir);
-
-  // An instrumentation function should be a linear chain of event pattern
-  // matchers and instrumentation blocks. Find the current end of this chain
-  // and insert the new instrumentation before it.
-  auto *Exit = FindBlock("exit", *InstrFn);
-  auto *Instr = BasicBlock::Create(Ctx, A.Name() + ":instr", InstrFn, Exit);
-  Exit->replaceAllUsesWith(Instr);
-
-  bool HasReturnValue =
-    (Dir == FunctionEvent::Exit && Ev.has_expectedreturnvalue());
-
-  vector<Value*> KeyArgs(TESLA_KEY_SIZE, NULL);
-
-  IRBuilder<> Builder(Instr);
-
-  size_t i = 0;
-  if (Ev.argument().size() > 0)
-    for (auto& InstrArg : InstrFn->getArgumentList()) {
-      if (Ev.kind() != FunctionEvent::CCall && i == 1) {
-        i++;
-        continue;
-      }
-      const Argument& Arg = getArgAtIndex(Ev, i);
-
-      // We may need to match against constants.
-      MatchPattern(Ctx, (A.Name() + ":match:arg" + Twine(i)).str(), InstrFn,
-                   Instr, Exit, &InstrArg, Arg);
-
-      if (Arg.has_index()) {
-        assert(KeyArgs[Arg.index()] == NULL);
-        KeyArgs[Arg.index()] = GetArgumentValue(&InstrArg, Arg, Builder);
-      }
-
-      // Ignore the return value, which passed as an argument to InstrFn.
-      i++;
-      if (HasReturnValue && (i == Ev.argument_size()))
-        break;
-    }
-
-  if (Ev.kind() != FunctionEvent::CCall) {
-    assert(Ev.has_receiver());
-    int Index = ArgIndex(Ev.receiver());
-    if (Index >= 0)
-      KeyArgs[Index] = GetArgumentValue(InstrFn->getArgumentList().begin(),
-          Ev.receiver(), Builder);
-  }
-
-  if (HasReturnValue) {
-    const Argument &Arg = Ev.expectedreturnvalue();
-    Value *ReturnValue = --(InstrFn->arg_end());
-    ReturnValue = GetArgumentValue(ReturnValue, Arg, Builder);
-
-    MatchPattern(Ctx, A.Name() + ":match:retval", InstrFn,
-                 Instr, Exit, ReturnValue, Arg);
-
-    // The return value may be a variable that we need to watch.
-    assert(ReturnValue != NULL);
-  }
-
-  UpdateState(A, Trans.Symbol, ConstructKey(Builder, M, KeyArgs),
-              M, Exit, Builder);
 }
 
 
@@ -545,43 +454,6 @@ Value* tesla::Cast(Value *From, StringRef Name, Type *NewType,
     return Builder.CreateIntCast(From, NewType, false);
 
   llvm_unreachable("failed to cast something castable");
-}
-
-
-BasicBlock* tesla::MatchPattern(LLVMContext& Ctx, StringRef Name, Function *Fn,
-                                BasicBlock *MatchTarget,
-                                BasicBlock *NonMatchTarget,
-                                Value *Val, const tesla::Argument& Pattern) {
-
-  if (Pattern.type() != Argument::Constant)
-    return MatchTarget;
-
-  auto *MatchBlock = BasicBlock::Create(Ctx, Name, Fn, MatchTarget);
-  MatchTarget->replaceAllUsesWith(MatchBlock);
-
-  IRBuilder<> M(MatchBlock);
-  Value *PatternValue = ConstantInt::getSigned(Val->getType(), Pattern.value());
-  Value *Cmp;
-
-  switch (Pattern.constantmatch()) {
-  case Argument::Exact:
-    Cmp = M.CreateICmpEQ(Val, PatternValue);
-    break;
-
-  case Argument::Flags:
-    // test that x contains mask: (val & pattern) == pattern
-    Cmp = M.CreateICmpEQ(M.CreateAnd(Val, PatternValue), PatternValue);
-    break;
-
-  case Argument::Mask:
-    // test that x contains no more than mask: (val & pattern) == val
-    Cmp = M.CreateICmpEQ(M.CreateAnd(Val, PatternValue), Val);
-    break;
-  }
-
-  M.CreateCondBr(Cmp, MatchTarget, NonMatchTarget);
-
-  return MatchBlock;
 }
 
 
