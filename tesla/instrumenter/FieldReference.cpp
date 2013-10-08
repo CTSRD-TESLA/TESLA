@@ -40,6 +40,7 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <map>
 #include <set>
@@ -262,8 +263,8 @@ bool FieldReferenceInstrumenter::InstrumentStore(
   do {
     User *U = dyn_cast<User>(V);
     if (!U) {
-      V->print(debug);
-      debug << " is not a User!\n";
+      V->dump();
+      llvm::errs() << " is not a User!\n";
       panic("expected a User");
     }
 
