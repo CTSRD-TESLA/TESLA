@@ -90,6 +90,9 @@ public:
    */
   EventTranslator AddInstrumentation(const Automaton&, const FunctionEvent&);
 
+  // TODO: drop this if ObjC doesn't absolutely need it
+  llvm::Function* getImplementation() { return InstrFn; }
+
 
 private:
   static TranslationFn* Create(InstrContext&, llvm::StringRef TargetName,

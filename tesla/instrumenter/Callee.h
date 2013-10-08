@@ -51,7 +51,6 @@ namespace llvm {
 
 namespace tesla {
 
-class CalleeInstr;
 class Manifest;
 class ObjCInstrumentation;
 
@@ -77,33 +76,6 @@ private:
 
   llvm::StringMap<TranslationFn*> Entry;
   llvm::StringMap<TranslationFn*> Exit;
-};
-
-
-/// Function instrumentation (callee context).
-class CalleeInstr : public FnInstrumentation {
-public:
-  /// Construct an object that can instrument a given function.
-  static CalleeInstr* Build(llvm::Module&, llvm::Function *Target,
-                            FunctionEvent::Direction,
-                            bool SuppressDebugInstr);
-
-  static CalleeInstr* Build(llvm::Module&, 
-                            const std::string&,
-                            llvm::FunctionType *,
-                            FunctionEvent::Direction,
-                            bool SuppressDebugInstr);
-
-private:
-  CalleeInstr(llvm::Module&, llvm::Function *Fn, llvm::Function *Inst,
-              FunctionEvent::Direction);
-
-  CalleeInstr(llvm::Module& M, llvm::Function *InstrFn,
-              FunctionEvent::Direction Dir)
-      : FnInstrumentation(M, 0, InstrFn, Dir) {}
-
-
-  ArgVector Args;                   ///< Translated function arguments.
 };
 
 }

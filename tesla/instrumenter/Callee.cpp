@@ -119,8 +119,8 @@ class ObjCInstrumentation
   Constant *SelRegisterName;
   /// The int objc_registerTracingHook(SEL, objc_tracing_hook) function
   Constant *ObjCRegisterHook;
-  llvm::StringMap<CalleeInstr*> Entry;
-  llvm::StringMap<CalleeInstr*> Exit;
+  llvm::StringMap<TranslationFn*> Entry;
+  llvm::StringMap<TranslationFn*> Exit;
   bool SuppressDebugInstr;
 
 
@@ -308,16 +308,20 @@ class ObjCInstrumentation
       B.CreateRet(Ret);
   }
 
-  CalleeInstr* GetOrCreateInstr(const std::string &SelName,
+  TranslationFn* GetOrCreateInstr(const std::string &SelName,
                                 llvm::FunctionType *FTy,
                                 FunctionEvent::Direction Dir,
                                 bool &didCreate) {
     auto& Map = (Dir == FunctionEvent::Entry) ? Entry : Exit;
-    CalleeInstr *Instr = Map[SelName];
+    TranslationFn *Instr = Map[SelName];
     didCreate = !Instr;
-    if (!Instr)
+    if (!Instr) {
+      assert(false && "use new API");
+      /*
       Instr = Map[SelName] = CalleeInstr::Build(Mod, SelName, FTy, Dir,
               SuppressDebugInstr);
+      */
+    }
     return Instr;
   }
 
@@ -363,10 +367,13 @@ public:
 
     bool didCreate;
     auto Instr = GetOrCreateInstr(SelName, FTy, FnEvent.direction(), didCreate);
-    Instr->AppendInstrumentation(A, FnEvent, EquivClass);
+    Instr->AddInstrumentation(A, FnEvent);
 
     if (didCreate) {
-      Function *Fn = Instr->getInstrumentationFunction();
+      //
+      // TODO: can this code be moved to EventTranslator?
+      //
+      Function *Fn = Instr->getImplementation();
       Fn->setAttributes(AS);
 
       // We must make this link-once ODR, because we'll potentially also be
@@ -533,84 +540,6 @@ TranslationFn* FnCalleeInstrumenter::GetOrCreateInstr(Function *F,
   }
 
   return InstrFn;
-}
-
-
-// ==== FnCalleeInstr implementation ===========================================
-CalleeInstr* CalleeInstr::Build(Module& M,
-                                const std::string &SelName,
-                                llvm::FunctionType *FTy,
-                                FunctionEvent::Direction Dir,
-                                bool SuppressDebugInstr) {
-  Function *InstrFn = ObjCMethodInstrumentation(M, SelName, FTy, Dir,
-                                                FunctionEvent::Callee,
-                                                SuppressDebugInstr);
-  return new CalleeInstr(M, InstrFn, Dir);
-}
-
-CalleeInstr* CalleeInstr::Build(Module& M, Function *Target,
-                                FunctionEvent::Direction Dir,
-                                bool SuppressDebugInstr) {
-
-  // Find (or create) the instrumentation function.
-  // Note: it doesn't yet contain the code to translate events and
-  //       dispatch them to tesla_update_state().
-  Function *InstrFn = FunctionInstrumentation(M, *Target, Dir,
-                                              FunctionEvent::Callee,
-                                              SuppressDebugInstr);
-
-  // Record the arguments passed to the instrumented function.
-  //
-  // LLVM's SSA magic will keep these around for us until we need them, even if
-  // C code overwrites its parameters.
-  ArgVector Args;
-  for (auto &Arg : Target->getArgumentList())
-    Args.push_back(&Arg);
-
-  // Instrument either the entry or return points of the target function.
-  switch (Dir) {
-  case FunctionEvent::Entry: {
-    // Instrumenting function entry is easy: just add a new call to
-    // instrumentation at the beginning of the function's entry block.
-    BasicBlock& Entry = Target->getEntryBlock();
-    CallInst::Create(InstrFn, Args)->insertBefore(Entry.getFirstNonPHI());
-    break;
-  }
-
-  case FunctionEvent::Exit: {
-    SmallPtrSet<ReturnInst*, 16> Returns;
-    for (auto i = inst_begin(Target), End = inst_end(Target); i != End; i++)
-      if (auto *Return = dyn_cast<ReturnInst>(&*i))
-        Returns.insert(Return);
-
-    for (ReturnInst *Return : Returns) {
-      ArgVector InstrArgs(Args);
-
-      if (Dir == FunctionEvent::Exit && !Target->getReturnType()->isVoidTy())
-        InstrArgs.push_back(Return->getReturnValue());
-
-      CallInst::Create(InstrFn, InstrArgs)->insertBefore(Return);
-    }
-    break;
-  }
-  }
-
-  return new CalleeInstr(M, Target, InstrFn, Dir);
-}
-
-CalleeInstr::CalleeInstr(Module& M, Function *Target, Function *InstrFn,
-                         FunctionEvent::Direction Dir)
-  : FnInstrumentation(M, Target, InstrFn, Dir)
-{
-  assert(TargetFn != NULL);
-  assert(InstrFn != NULL);
-
-  // Record the arguments passed to the instrumented function.
-  //
-  // LLVM's SSA magic will keep these around for us until we need them, even if
-  // C code overwrites its parameters.
-  for (auto &Arg : Target->getArgumentList())
-    Args.push_back(&Arg);
 }
 
 } /* namespace tesla */
