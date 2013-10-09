@@ -62,10 +62,10 @@ public:
   }
 
   //! Tell libtesla that we are entering a shared automaton lifetime.
-  void CallSunrise(AutomatonDescription::Context, const Automaton::Lifetime&);
+  void CallSunrise(const Automaton::Lifetime&);
 
   //! Tell libtesla that we are leaving a shared automaton lifetime.
-  void CallSunset(AutomatonDescription::Context, const Automaton::Lifetime&);
+  void CallSunset(const Automaton::Lifetime&);
 
   void CallUpdateState(const Automaton&, uint32_t Symbol);
 

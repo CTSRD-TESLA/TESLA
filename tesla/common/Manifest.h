@@ -72,6 +72,10 @@ public:
   //! Find the @ref tesla::Automaton defined at a @ref tesla::Location.
   const Automaton* FindAutomaton(const Location&) const;
 
+  const llvm::ArrayRef<Automaton::Lifetime> getLifetimes() const {
+    return Lifetimes;
+  }
+
   //! Load a @ref tesla::Manifest from a named file.
   static Manifest* load(llvm::raw_ostream& Err,
                         Automaton::Type = Automaton::Deterministic,

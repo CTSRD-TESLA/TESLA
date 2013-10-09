@@ -121,7 +121,7 @@ class ObjCInstrumentation
   Constant *ObjCRegisterHook;
   llvm::StringMap<TranslationFn*> Entry;
   llvm::StringMap<TranslationFn*> Exit;
-  bool SuppressDebugInstr;
+  //bool SuppressDebugInstr;
 
 
   FunctionType *typesForSelector(const std::string &Sel, AttributeSet &AS) {
@@ -449,10 +449,8 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
   // Initialisation and cleanup events are special: they are shared across
   // automata and trigger different libtesla functions.
   //
-  for (auto i : M.RootAutomata()) {
-    auto& A = *M.FindAutomaton(i->identifier());
-
-    if (auto *Init = dyn_cast<FnTransition>(A.Init())) {
+  for (Automaton::Lifetime L : M.getLifetimes()) {
+    if (auto *Init = dyn_cast_or_null<FnTransition>(L.Init)) {
       const FunctionEvent FnEvent = Init->FnEvent();
 
       if (FnEvent.context() != FunctionEvent::Callee)
@@ -466,10 +464,10 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 
       TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
       EventTranslator T(InstrFn->AddInstrumentation(FnEvent, "enter_lifetime"));
-      T.CallSunrise(A.getAssertion().context(), A.getLifetime());
+      T.CallSunrise(L);
     }
 
-    if (auto *Cleanup = dyn_cast<FnTransition>(A.Cleanup())) {
+    if (auto *Cleanup = dyn_cast_or_null<FnTransition>(L.Cleanup)) {
       const FunctionEvent FnEvent = Cleanup->FnEvent();
 
       if (FnEvent.context() != FunctionEvent::Callee)
@@ -483,7 +481,7 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 
       TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
       EventTranslator T(InstrFn->AddInstrumentation(FnEvent, "exit_lifetime"));
-      T.CallSunset(A.getAssertion().context(), A.getLifetime());
+      T.CallSunset(L);
     }
   }
 
