@@ -151,28 +151,26 @@ bool Automaton::IsRealisable() const {
   return true;
 }
 
-const Transition& Automaton::Init() const
+const Transition* Automaton::Init() const
 {
   for (auto& TEq : *this) {
     const Transition *Head = *TEq.begin();
     if (Head->RequiresInit())
-      return *Head;
+      return Head;
   }
 
-  assert(false && "called Init() on an automaton with no Init event");
-  return *((Transition*) NULL);
+  return NULL;
 }
 
-const Transition& Automaton::Cleanup() const
+const Transition* Automaton::Cleanup() const
 {
   for (auto& TEq : *this) {
     const Transition *Head = *TEq.begin();
     if (Head->RequiresCleanup())
-      return *Head;
+      return Head;
   }
 
-  assert(false && "called Cleanup() on an automaton with no Cleanup event");
-  return *((Transition*) NULL);
+  return NULL;
 }
 
 string Automaton::String() const {

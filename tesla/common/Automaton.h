@@ -112,8 +112,8 @@ public:
   TransitionSets::const_iterator begin() const { return Transitions.begin(); }
   TransitionSets::const_iterator end() const  { return Transitions.end(); }
 
-  const Transition& Init() const;
-  const Transition& Cleanup() const;
+  const Transition* Init() const;
+  const Transition* Cleanup() const;
 
 protected:
   Automaton(size_t id, const AutomatonDescription&,
