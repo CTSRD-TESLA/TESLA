@@ -78,8 +78,8 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   Type* LifeEvFields[] = { CharPtrTy, Int32Ty, Int32Ty };
   StructType *LifeEventTy = StructTy("tesla_lifetime_event", LifeEvFields, M);
 
-  // A lifetime contains two events (entry and exit).
-  Type* LifeFields[] = { LifeEventTy, LifeEventTy };
+  // A lifetime contains two events (entry and exit) and a description (char*).
+  Type* LifeFields[] = { LifeEventTy, LifeEventTy, CharPtrTy };
   StructType *LifetimeTy = StructTy("tesla_lifetime", LifeFields, M);
   PointerType *LifetimePtrTy = PointerType::getUnqual(LifetimeTy);
 
@@ -291,6 +291,7 @@ Constant* InstrContext::BuildLifetime(const Transition& Sunrise,
   Constant *Lifetime = ConstantStruct::get(LifetimeTy,
                                            BuildLifetimeEvent(Sunrise),
                                            BuildLifetimeEvent(Sunset),
+                                           ConstStr(Name),
                                            NULL);
 
   return new GlobalVariable(M, LifetimeTy, true,

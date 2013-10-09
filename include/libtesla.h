@@ -152,6 +152,9 @@ struct tesla_lifetime_event {
 struct tesla_lifetime {
 	struct tesla_lifetime_event	tl_begin;
 	struct tesla_lifetime_event	tl_end;
+
+	/** A human-readable string for debugging. */
+	const char			*tl_repr;
 };
 
 
