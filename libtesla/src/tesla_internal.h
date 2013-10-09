@@ -80,6 +80,27 @@ __BEGIN_DECLS
 #define assert(cond) KASSERT((cond), ("Assertion failed: '%s'", #cond))
 #endif
 
+
+/**
+ * The current runtime state of a TESLA lifetime.
+ */
+struct tesla_lifetime_state {
+	struct tesla_lifetime_event	 tls_begin;
+	struct tesla_lifetime_event	 tls_end;
+
+	/** A place to register a few classes that share this lifetime. */
+	struct tesla_class*		 tls_classes[4];
+
+	/** A place to register more classes that share this lifetime. */
+	struct tesla_class*		*tls_dyn_classes;
+
+	/** The number of values @ref tls_dyn_classes can hold. */
+	uint32_t			 tls_dyn_capacity;
+
+	/** The number of values currently in @ref tls_dyn_classes. */
+	uint32_t			 tls_dyn_count;
+};
+
 /**
  * Call this if things go catastrophically, unrecoverably wrong.
  */
@@ -144,6 +165,28 @@ same_lifetime(const struct tesla_lifetime *x, const struct tesla_lifetime *y)
 		&& (strncmp(x->tl_begin.tle_repr, y->tl_begin.tle_repr,
 		            x->tl_begin.tle_length) == 0)
 		&& (strncmp(x->tl_end.tle_repr, y->tl_end.tle_repr,
+		            x->tl_end.tle_length) == 0)
+		;
+}
+
+/**
+ * Compare the static parts of a @ref tesla_lifetime_state with a
+ * @ref tesla_lifetime.
+ */
+static inline bool
+same_static_lifetime(const struct tesla_lifetime *x,
+	const struct tesla_lifetime_state *y)
+{
+	assert(x != NULL);
+	assert(y != NULL);
+
+	return (x->tl_begin.tle_length == y->tls_begin.tle_length)
+		&& (x->tl_end.tle_length == y->tls_end.tle_length)
+		&& (x->tl_begin.tle_hash == y->tls_begin.tle_hash)
+		&& (x->tl_end.tle_hash == y->tls_end.tle_hash)
+		&& (strncmp(x->tl_begin.tle_repr, y->tls_begin.tle_repr,
+		            x->tl_begin.tle_length) == 0)
+		&& (strncmp(x->tl_end.tle_repr, y->tls_end.tle_repr,
 		            x->tl_end.tle_length) == 0)
 		;
 }
@@ -285,6 +328,7 @@ typedef struct tesla_class		tesla_class;
 typedef struct tesla_instance		tesla_instance;
 typedef struct tesla_key		tesla_key;
 typedef struct tesla_lifetime_event	tesla_lifetime_event;
+typedef struct tesla_lifetime_state	tesla_lifetime_state;
 typedef struct tesla_store		tesla_store;
 typedef struct tesla_transition		tesla_transition;
 typedef struct tesla_transitions	tesla_transitions;
@@ -311,7 +355,7 @@ struct tesla_store {
 	 * by many automata we've written for the FreeBSD kernel. Each
 	 * @ref tesla_store should only record these events once.
 	 */
-	struct tesla_lifetime	*ts_lifetimes;
+	struct tesla_lifetime_state *ts_lifetimes;
 
 	/** The number of lifetimes that we currently know about. */
 	uint32_t		ts_lifetime_count;

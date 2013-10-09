@@ -39,6 +39,10 @@
 #endif
 
 
+static void tesla_update_class_state(struct tesla_class *, struct tesla_store *,
+	uint32_t symbol, const struct tesla_key *);
+
+
 void
 tesla_sunrise(enum tesla_context context, const struct tesla_lifetime *l)
 {
@@ -50,19 +54,79 @@ tesla_sunrise(enum tesla_context context, const struct tesla_lifetime *l)
 	assert(ret == TESLA_SUCCESS);
 	assert(store->ts_lifetime_count < store->ts_length);
 
-	store->ts_lifetimes[store->ts_lifetime_count++] = *l;
+	tesla_lifetime_state *ls = NULL;
+
+	// TODO: lock global store
+
+	const uint32_t lifetimes = store->ts_lifetime_count;
+	for (uint32_t i = 0; i < lifetimes; i++) {
+	    if (same_static_lifetime(l, store->ts_lifetimes + i)) {
+		    ls = store->ts_lifetimes + i;
+		    break;
+	    }
+	}
+
+	if (ls == NULL) {
+		ls = store->ts_lifetimes + lifetimes;
+		store->ts_lifetime_count++;
+
+		ls->tls_begin = l->tl_begin;
+		ls->tls_end = l->tl_end;
+	}
 
 	ev_sunrise(context, l);
 }
 
 
 void
-tesla_sunset(enum tesla_context context __unused,
-	const struct tesla_lifetime *l)
+tesla_sunset(enum tesla_context context, const struct tesla_lifetime *l)
 {
 	assert(l != NULL);
 
 	ev_sunset(context, l);
+
+	struct tesla_store *store;
+	int ret = tesla_store_get(context, TESLA_MAX_CLASSES,
+			TESLA_MAX_INSTANCES, &store);
+	assert(ret == TESLA_SUCCESS);
+	assert(store->ts_lifetime_count < store->ts_length);
+
+	tesla_lifetime_state *ls = NULL;
+
+	const uint32_t lifetimes = store->ts_lifetime_count;
+	for (uint32_t i = 0; i < lifetimes; i++) {
+		if (same_static_lifetime(l, store->ts_lifetimes + i)) {
+			ls = store->ts_lifetimes + i;
+			break;
+		}
+	}
+
+	assert(ls != NULL && "tesla_sunset() without corresponding sunrise");
+
+	tesla_key empty_key;
+	empty_key.tk_mask = 0;
+
+	const size_t static_classes =
+		sizeof(ls->tls_classes) / sizeof(ls->tls_classes[0]);
+
+	for (size_t i = 0; i < static_classes; i++) {
+		tesla_class *class = ls->tls_classes[i];
+		if (class == NULL)
+			break;
+
+		tesla_update_class_state(class, store,
+			class->tc_automaton->ta_cleanup_symbol, &empty_key);
+	}
+
+	const size_t dynamic_classes = ls->tls_dyn_count;
+	for (size_t i = 0; i < dynamic_classes; i++) {
+		tesla_class *class = ls->tls_dyn_classes[i];
+		if (class == NULL)
+			break;
+
+		tesla_update_class_state(class, store,
+			class->tc_automaton->ta_cleanup_symbol, &empty_key);
+	}
 }
 
 
@@ -163,21 +227,51 @@ tesla_update_class_state(struct tesla_class *class, struct tesla_store *store,
 		ev_new_instance(class, inst);
 
 		// Register this class for eventual cleanup.
+		tesla_lifetime_state *ls = lifetime;
 		const size_t static_classes =
-			sizeof(lifetime->tls_classes)
-			 / sizeof(lifetime->tls_classes[0]);
+			sizeof(ls->tls_classes) / sizeof(ls->tls_classes[0]);
 
 		size_t i;
 		for (i = 0; i < static_classes; i++) {
-			if (lifetime->tls_classes[i] != NULL)
+			if (ls->tls_classes[i] != NULL)
 				continue;
 
-			lifetime->tls_classes[i] = class;
+			ls->tls_classes[i] = class;
 			break;
 		}
 
 		if (i == static_classes) {
-			// TODO: do the dynamic thing too
+#ifdef _KERNEL
+			/*
+			 * TODO(JA): we should also do the dynamic thing,
+			 *           but we might have to do it by noting
+			 *           that we don't have enough space and
+			 *           leaving the allocation for a later time
+			 *           when we know it's safe.
+			 */
+			ev_err(autom, symbol, TESLA_ERROR_ENOMEM,
+			       "out of dynamic registration space in lifetime");
+#else
+			static size_t unit_size =
+				sizeof(ls->tls_dyn_classes[0]);
+
+			tesla_class ***dyn_classes = &ls->tls_dyn_classes;
+
+			if (ls->tls_dyn_capacity == 0) {
+				// Need to create a fresh allocation.
+				size_t count = 8;
+				*dyn_classes = calloc(count, unit_size);
+				ls->tls_dyn_capacity = count;
+			} else {
+				size_t count = 2 * ls->tls_dyn_capacity;
+				*dyn_classes = realloc(*dyn_classes,
+						       count * unit_size);
+				ls->tls_dyn_capacity = count;
+			}
+
+			assert(ls->tls_dyn_count < ls->tls_dyn_capacity);
+			ls->tls_dyn_classes[ls->tls_dyn_count++] = class;
+#endif
 		}
 	}
 
