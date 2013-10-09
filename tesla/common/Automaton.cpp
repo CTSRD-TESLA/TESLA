@@ -290,13 +290,13 @@ bool Automaton::Lifetime::operator == (const Automaton::Lifetime& other) const {
   if (other.Init == NULL xor Init == NULL)
     return false;
 
-  if (Init != NULL and other.Init->Protobuf() != Init->Protobuf())
+  if (Init != NULL and *other.Init->Protobuf() != *Init->Protobuf())
     return false;
 
   if (other.Cleanup == NULL xor Cleanup == NULL)
     return false;
 
-  if (Cleanup != NULL and other.Cleanup->Protobuf() != Cleanup->Protobuf())
+  if (Cleanup != NULL and *other.Cleanup->Protobuf() != *Cleanup->Protobuf())
     return false;
 
   return true;
