@@ -132,7 +132,7 @@ public:
     {
     }
 
-    bool operator == (const Lifetime& other);
+    bool operator == (const Lifetime& other) const;
   };
 
   Lifetime getLifetime() const;
