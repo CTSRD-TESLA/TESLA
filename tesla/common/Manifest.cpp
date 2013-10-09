@@ -32,6 +32,7 @@
 #include "Debug.h"
 #include "Manifest.h"
 #include "Names.h"
+#include "Protocol.h"
 
 #include "tesla.pb.h"
 
@@ -148,8 +149,11 @@ Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
 
     Automaton::Lifetime L = Result->getLifetime();
     if (L.Init != NULL
-        and find(Lifetimes.begin(), Lifetimes.end(), L) == Lifetimes.end())
+        and find(Lifetimes.begin(), Lifetimes.end(), L) == Lifetimes.end()) {
+
         Lifetimes.push_back(L);
+        assert(Lifetimes.back() == L);
+    }
 
     Automata[ID] = Result.take();
   }
