@@ -40,8 +40,7 @@
 
 
 void
-tesla_enter_context(enum tesla_context context,
-	const struct tesla_lifetime *l)
+tesla_sunrise(enum tesla_context context, const struct tesla_lifetime *l)
 {
 	assert(l != NULL);
 
@@ -58,7 +57,7 @@ tesla_enter_context(enum tesla_context context,
 
 
 void
-tesla_exit_context(enum tesla_context context __unused,
+tesla_sunset(enum tesla_context context __unused,
 	const struct tesla_lifetime *l)
 {
 	assert(l != NULL);

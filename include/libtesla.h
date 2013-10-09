@@ -300,11 +300,11 @@ void	tesla_update_state(enum tesla_context context,
  * @param  context      Where the automaton is stored.
  * @param  l            Static description of the lifetime (begin, end events).
  */
-void	tesla_enter_context(enum tesla_context context,
+void	tesla_sunrise(enum tesla_context context,
 	const struct tesla_lifetime *l);
 
 /** We have encountered an exit bound for some automata. */
-void	tesla_exit_context(enum tesla_context context,
+void	tesla_sunset(enum tesla_context context,
 	const struct tesla_lifetime*);
 
 

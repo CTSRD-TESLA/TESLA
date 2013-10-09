@@ -137,7 +137,7 @@ void UpdateTest::run()
 	t[0].flags = TESLA_TRANS_INIT;
 
 	expectedEvents.push(Sunrise);
-	tesla_enter_context(context, automaton.ta_lifetime);
+	tesla_sunrise(context, automaton.ta_lifetime);
 
 	assert(count(store, &any) == 0);
 	assert(count(store, &one) == 0);
