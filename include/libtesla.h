@@ -296,16 +296,13 @@ void	tesla_update_state(enum tesla_context context,
  *
  * @param  context      Where the automaton is stored.
  * @param  l            Static description of the lifetime (begin, end events).
- * @param  k            Dynamic event information. Usually empty, since we
- *                      often use purely static bounds like
- *                      call(syscallenter), but doesn't have to be.
  */
 void	tesla_enter_context(enum tesla_context context,
-	const struct tesla_lifetime *l, const struct tesla_key *k);
+	const struct tesla_lifetime *l);
 
 /** We have encountered an exit bound for some automata. */
 void	tesla_exit_context(enum tesla_context context,
-	const struct tesla_lifetime*, const struct tesla_key*);
+	const struct tesla_lifetime*);
 
 
 /** A single instance of an automaton: a name (@ref ti_key) and a state. */

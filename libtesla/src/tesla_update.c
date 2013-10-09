@@ -41,10 +41,9 @@
 
 void
 tesla_enter_context(enum tesla_context context,
-	const struct tesla_lifetime *l, const struct tesla_key *k)
+	const struct tesla_lifetime *l)
 {
 	assert(l != NULL);
-	assert(k != NULL);
 
 	struct tesla_store *store;
 	int ret = tesla_store_get(context, TESLA_MAX_CLASSES,
@@ -60,10 +59,9 @@ tesla_enter_context(enum tesla_context context,
 
 void
 tesla_exit_context(enum tesla_context context __unused,
-	const struct tesla_lifetime *l, const struct tesla_key *k)
+	const struct tesla_lifetime *l)
 {
 	assert(l != NULL);
-	assert(k != NULL);
 
 	ev_sunset(l);
 }
