@@ -150,7 +150,7 @@ bool FnCallerInstrumenter::doInitialization(Module &Mod) {
 
           CallerInstrumentation *I = GetOrCreateInstr(Mod, Target, FnEvent);
 
-          EventTranslator Trans = I->AddInstrumentation(A, FnEvent);
+          EventTranslator Trans = I->AddInstrumentation(FnEvent, A.Name());
           Trans.CallUpdateState(A, EquivClass.Symbol);
         }
         ModifiedIR = true;
@@ -226,8 +226,8 @@ CallerInstrumentation*
 
 
 EventTranslator CallerInstrumentation::AddInstrumentation(
-    const Automaton& A, const FunctionEvent& Ev) {
-  return TransFn->AddInstrumentation(A, Ev);
+    const FunctionEvent& Ev, StringRef Label) {
+  return TransFn->AddInstrumentation(Ev, Label);
 }
 
 bool CallerInstrumentation::Instrument(CallSite CS) {

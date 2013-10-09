@@ -109,8 +109,8 @@ EventTranslator TranslationFn::AddInstrumentation(const Automaton& A) {
 }
 
 
-EventTranslator TranslationFn::AddInstrumentation(const Automaton& A,
-                                                  const FunctionEvent& Ev) {
+EventTranslator TranslationFn::AddInstrumentation(const FunctionEvent& Ev,
+                                                  StringRef Label) {
 
   //
   // The instrumentation function's parameters include the target's
@@ -135,7 +135,7 @@ EventTranslator TranslationFn::AddInstrumentation(const Automaton& A,
     Patterns.push_back(Ev.receiver());
   }
 
-  return AddInstrumentation(A.Name(), Patterns, true);
+  return AddInstrumentation(Label, Patterns, true);
 }
 
 

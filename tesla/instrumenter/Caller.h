@@ -101,7 +101,7 @@ public:
                                       FunctionEvent::Direction Dir,
                                       bool SuppressDebugInstr);
 
-  EventTranslator AddInstrumentation(const Automaton&, const FunctionEvent&);
+  EventTranslator AddInstrumentation(const FunctionEvent&, llvm::StringRef);
 
   bool Instrument(llvm::CallSite);
 

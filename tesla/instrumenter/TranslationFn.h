@@ -90,11 +90,12 @@ public:
    * Languages that use C calling conventions for FFI (a lot of them)
    * should Just Work today.
    *
-   * @param  Label      A prefix used for @ref BasicBlock labels.
    * @param  Patterns   Patterns describing expected values, in the same order
    *                    as the instrumentation function's parameters.
+   * @param  Label      A prefix used for @ref BasicBlock labels.
    */
-  EventTranslator AddInstrumentation(const Automaton&, const FunctionEvent&);
+  EventTranslator AddInstrumentation(const FunctionEvent&,
+                                     llvm::StringRef Label = "");
 
   // TODO: drop this if ObjC doesn't absolutely need it
   llvm::Function* getImplementation() { return InstrFn; }

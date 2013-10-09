@@ -367,7 +367,7 @@ public:
 
     bool didCreate;
     auto Instr = GetOrCreateInstr(SelName, FTy, FnEvent.direction(), didCreate);
-    Instr->AddInstrumentation(A, FnEvent);
+    Instr->AddInstrumentation(FnEvent, A.Name());
 
     if (didCreate) {
       //
@@ -474,7 +474,7 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
         continue;
 
       TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
-      EventTranslator T(InstrFn->AddInstrumentation(A, FnEvent));
+      EventTranslator T(InstrFn->AddInstrumentation(FnEvent, A.Name()));
       T.CallUpdateState(A, EquivClass.Symbol);
 
       ModifiedIR = true;
