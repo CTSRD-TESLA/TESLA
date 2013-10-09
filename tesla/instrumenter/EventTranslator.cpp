@@ -40,6 +40,29 @@ using std::string;
 using std::vector;
 
 
+void EventTranslator::CallSunrise(AutomatonDescription::Context Context,
+                                  const Transition& Sunrise,
+                                  const Transition& Sunset) {
+
+  std::vector<Value*> Args;
+  Args.push_back(InstrCtx.TeslaContext(Context));
+  Args.push_back(InstrCtx.BuildLifetime(Sunrise, Sunset));
+
+  Builder.CreateCall(InstrCtx.SunriseFn(), Args);
+}
+
+
+void EventTranslator::CallSunset(AutomatonDescription::Context Context,
+                                  const Transition& Sunrise,
+                                  const Transition& Sunset) {
+  std::vector<Value*> Args;
+  Args.push_back(InstrCtx.TeslaContext(Context));
+  Args.push_back(InstrCtx.BuildLifetime(Sunrise, Sunset));
+
+  Builder.CreateCall(InstrCtx.SunsetFn(), Args);
+}
+
+
 void EventTranslator::CallUpdateState(const Automaton& A, uint32_t Symbol) {
   std::vector<Value*> Args;
   Args.push_back(InstrCtx.TeslaContext(A.getAssertion().context()));
@@ -49,96 +72,3 @@ void EventTranslator::CallUpdateState(const Automaton& A, uint32_t Symbol) {
 
   Builder.CreateCall(InstrCtx.UpdateStateFn(), Args);
 }
-
-
-#if 0
-BasicBlock* tesla::EnterContext(AutomatonDescription::Context Context,
-                                const Transition& T, ArrayRef<Value*> KeyArgs,
-                                Module& M, Function *Fn, BasicBlock *Next) {
-
-  static const string BlockName = "tesla_context_entry";
-  BasicBlock *BB = FindBlock(BlockName, *Fn);
-  if (BB)
-    return BB;
-
-  auto& Ctx(M.getContext());
-
-  BB = BasicBlock::Create(Ctx, BlockName, Fn, Next);
-  auto *Entry = FindBlock("entry", *Fn);
-  BB->moveAfter(Entry);
-
-  Next->replaceAllUsesWith(BB);
-
-  IRBuilder<> Builder(BB);
-
-  Type *Void = Type::getVoidTy(Ctx);
-  Type *Int32 = Type::getInt32Ty(Ctx);
-  Type *Event = PointerType::getUnqual(LifetimeEventType(M));
-  Type *KeyStar = PointerType::getUnqual(KeyType(M));
-
-  auto *Target = dyn_cast<Function>(M.getOrInsertFunction(
-      "tesla_enter_context",
-      Void,       // return type
-      Int32,      // context (global vs per-thread)
-      Event,      // static event description
-      KeyStar,    // dynamic event information
-      NULL
-  ));
-
-  auto *Key = ConstructKey(Builder, M, KeyArgs);
-
-  std::vector<Value*> Args;
-  Args.push_back(TeslaContext(Context, Ctx));
-  Args.push_back(ConstructLifetimeEvent(T, M));
-  Args.push_back(Key);
-
-  assert(Args.size() == Target->arg_size());
-  Builder.CreateCall(Target, Args);
-  Builder.CreateBr(Next);
-
-  return BB;
-}
-
-
-BasicBlock* tesla::ExitContext(AutomatonDescription::Context Context,
-                                const Transition& T, ArrayRef<Value*> KeyArgs,
-                                Module& M, Function *Fn, BasicBlock *Next) {
-
-  static const string BlockName = "tesla_context_exit";
-  BasicBlock *BB = FindBlock(BlockName, *Fn);
-  if (BB)
-    return BB;
-
-  auto& Ctx(M.getContext());
-
-  BB = BasicBlock::Create(Ctx, BlockName, Fn, Next);
-  IRBuilder<> Builder(BB);
-
-  Type *Void = Type::getVoidTy(Ctx);
-  Type *Int32 = Type::getInt32Ty(Ctx);
-  Type *Event = PointerType::getUnqual(LifetimeEventType(M));
-  Type *KeyStar = PointerType::getUnqual(KeyType(M));
-
-  auto *Target = dyn_cast<Function>(M.getOrInsertFunction(
-      "tesla_exit_context",
-      Void,       // return type
-      Int32,      // context (global vs per-thread)
-      Event,      // static event description
-      KeyStar,    // dynamic event information
-      NULL
-  ));
-
-  auto *Key = ConstructKey(Builder, M, KeyArgs);
-
-  std::vector<Value*> Args;
-  Args.push_back(TeslaContext(Context, Ctx));
-  Args.push_back(ConstructLifetimeEvent(T, M));
-  Args.push_back(Key);
-
-  assert(Args.size() == Target->arg_size());
-  Builder.CreateCall(Target, Args);
-  Builder.CreateBr(Next);
-
-  return BB;
-}
-#endif

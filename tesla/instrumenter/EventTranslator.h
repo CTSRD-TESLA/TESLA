@@ -61,6 +61,30 @@ public:
   {
   }
 
+  /**
+   * Tell libtesla that we are entering a shared automaton lifetime.
+   *
+   * If a sunrise event is shared by multiple lifetimes, a call should be
+   * inserted for each one.
+   *
+   * @param  Sunrise    The event that triggers this call.
+   * @param  Subset     The matching end-of-lifetime.
+   */
+  void CallSunrise(AutomatonDescription::Context,
+                   const Transition& Sunrise, const Transition& Sunset);
+
+  /**
+   * Tell libtesla that we are leaving a shared automaton lifetime.
+   *
+   * If a sunset event is shared by multiple lifetimes, a call should be
+   * inserted for each one.
+   *
+   * @param  Sunrise    Matching beginning-of-lifetime.
+   * @param  Subset     The event that triggers this call.
+   */
+  void CallSunset(AutomatonDescription::Context,
+                  const Transition& Sunrise, const Transition& Sunset);
+
   void CallUpdateState(const Automaton&, uint32_t Symbol);
 
 private:
