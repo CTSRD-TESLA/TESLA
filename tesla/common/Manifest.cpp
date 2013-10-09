@@ -117,6 +117,8 @@ Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
   for (auto& A : Protobuf->automaton())
     Descriptions[A.identifier()] = &A;
 
+  vector<Automaton::Lifetime> Lifetimes;
+
   int id = 0;
   for (auto i : Descriptions) {
     const Identifier& ID = i.first;
@@ -144,10 +146,14 @@ Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
         Result.reset(DFA::Convert(N.get()));
     }
 
+    Automaton::Lifetime Lifetime = Result->getLifetime();
+    if (find(Lifetimes.begin(), Lifetimes.end(), Lifetime) == Lifetimes.end())
+      Lifetimes.push_back(Lifetime);
+
     Automata[ID] = Result.take();
   }
 
-  return new Manifest(Protobuf, Descriptions, Automata, Roots);
+  return new Manifest(Protobuf, Descriptions, Automata, Roots, Lifetimes);
 }
 
 StringRef Manifest::defaultLocation() { return ManifestName; }

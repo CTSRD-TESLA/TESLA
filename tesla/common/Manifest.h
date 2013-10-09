@@ -88,9 +88,10 @@ private:
   Manifest(llvm::OwningPtr<ManifestFile>& Protobuf,
            const AutomataMap& Descriptions,
            const std::map<Identifier,const Automaton*>& Automata,
-           llvm::ArrayRef<const Usage*> Roots)
+           llvm::ArrayRef<const Usage*> Roots,
+           llvm::ArrayRef<Automaton::Lifetime> Lifetimes)
     : Protobuf(Protobuf.take()), Descriptions(Descriptions), Automata(Automata),
-      Roots(Roots)
+      Roots(Roots), Lifetimes(Lifetimes)
   {
   }
 
@@ -109,6 +110,8 @@ private:
 
   //! Root automata (those named explicitly by the programmer).
   llvm::ArrayRef<const Usage*> Roots;
+
+  std::vector<Automaton::Lifetime> Lifetimes;
 };
 
 }
