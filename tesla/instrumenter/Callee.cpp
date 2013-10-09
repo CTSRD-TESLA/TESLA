@@ -488,6 +488,8 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 TranslationFn* FnCalleeInstrumenter::GetOrCreateInstr(Function *F,
                                                       const FunctionEvent& Ev) {
 
+  assert(F != NULL);
+
   // We keep separate maps for entry and exit instrumentation functions.
   auto& Map = (Ev.direction() == FunctionEvent::Entry) ? Entry : Exit;
 
