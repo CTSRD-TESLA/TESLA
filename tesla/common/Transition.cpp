@@ -333,6 +333,8 @@ string FnTransition::ShortLabel() const {
   } else
     ss << ": " << FunctionEvent::Direction_Name(Ev.direction());
 
+  ss << " (" << FunctionEvent::CallContext_Name(Ev.context()) << ")";
+
   return ss.str();
 }
 
