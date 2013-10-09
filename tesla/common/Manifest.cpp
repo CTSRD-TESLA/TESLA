@@ -146,9 +146,10 @@ Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
         Result.reset(DFA::Convert(N.get()));
     }
 
-    Automaton::Lifetime Lifetime = Result->getLifetime();
-    if (find(Lifetimes.begin(), Lifetimes.end(), Lifetime) == Lifetimes.end())
-      Lifetimes.push_back(Lifetime);
+    Automaton::Lifetime L = Result->getLifetime();
+    if (L.Init != NULL
+        and find(Lifetimes.begin(), Lifetimes.end(), L) == Lifetimes.end())
+        Lifetimes.push_back(L);
 
     Automata[ID] = Result.take();
   }
