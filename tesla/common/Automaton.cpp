@@ -283,8 +283,8 @@ Automaton::Lifetime Automaton::getLifetime() const {
   return Lifetime(getAssertion().context(), Init(), Cleanup());
 }
 
-  if (other.Context == Context)
 bool Automaton::Lifetime::operator == (const Automaton::Lifetime& other) const {
+  if (other.Context != Context)
     return false;
 
   if (other.Init == NULL xor Init == NULL)
