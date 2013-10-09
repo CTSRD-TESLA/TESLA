@@ -32,6 +32,7 @@
 #include "Automaton.h"
 #include "Debug.h"
 #include "Names.h"
+#include "Protocol.h"
 #include "State.h"
 #include "Transition.h"
 
@@ -277,6 +278,29 @@ string Automaton::Dot() const {
   return ss.str();
 }
 
+
+Automaton::Lifetime Automaton::getLifetime() const {
+  return Lifetime(getAssertion().context(), Init(), Cleanup());
+}
+
+bool Automaton::Lifetime::operator == (const Automaton::Lifetime& other) {
+  if (other.Context == Context)
+    return false;
+
+  if (other.Init == NULL xor Init == NULL)
+    return false;
+
+  if (Init != NULL and other.Init->Protobuf() != Init->Protobuf())
+    return false;
+
+  if (other.Cleanup == NULL xor Cleanup == NULL)
+    return false;
+
+  if (Cleanup != NULL and other.Cleanup->Protobuf() != Cleanup->Protobuf())
+    return false;
+
+  return true;
+}
 
 
 // ---- NFA implementation ----------------------------------------------------

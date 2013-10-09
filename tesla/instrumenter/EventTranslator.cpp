@@ -41,23 +41,21 @@ using std::vector;
 
 
 void EventTranslator::CallSunrise(AutomatonDescription::Context Context,
-                                  const Transition& Sunrise,
-                                  const Transition& Sunset) {
+                                  const Automaton::Lifetime& Lifetime) {
 
   std::vector<Value*> Args;
   Args.push_back(InstrCtx.TeslaContext(Context));
-  Args.push_back(InstrCtx.BuildLifetime(Sunrise, Sunset));
+  Args.push_back(InstrCtx.BuildLifetime(Lifetime));
 
   Builder.CreateCall(InstrCtx.SunriseFn(), Args);
 }
 
 
 void EventTranslator::CallSunset(AutomatonDescription::Context Context,
-                                  const Transition& Sunrise,
-                                  const Transition& Sunset) {
+                                  const Automaton::Lifetime& Lifetime) {
   std::vector<Value*> Args;
   Args.push_back(InstrCtx.TeslaContext(Context));
-  Args.push_back(InstrCtx.BuildLifetime(Sunrise, Sunset));
+  Args.push_back(InstrCtx.BuildLifetime(Lifetime));
 
   Builder.CreateCall(InstrCtx.SunsetFn(), Args);
 }

@@ -466,7 +466,7 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 
       TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
       EventTranslator T(InstrFn->AddInstrumentation(FnEvent, "enter_lifetime"));
-      T.CallSunrise(A.getAssertion().context(), *A.Init(), *A.Cleanup());
+      T.CallSunrise(A.getAssertion().context(), A.getLifetime());
     }
 
     if (auto *Cleanup = dyn_cast<FnTransition>(A.Cleanup())) {
@@ -483,7 +483,7 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 
       TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
       EventTranslator T(InstrFn->AddInstrumentation(FnEvent, "exit_lifetime"));
-      T.CallSunset(A.getAssertion().context(), *A.Init(), *A.Cleanup());
+      T.CallSunset(A.getAssertion().context(), A.getLifetime());
     }
   }
 

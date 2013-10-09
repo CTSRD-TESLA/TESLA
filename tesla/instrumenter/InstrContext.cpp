@@ -202,7 +202,7 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
 
   Constant *TransitionsArray = ConstArrayPointer(TransArrayPtr);
 
-  Constant *Lifetime = BuildLifetime(A->Init(), A->Cleanup());
+  Constant *Lifetime = BuildLifetime(A->getLifetime());
 
   //
   // Create the global variable and its (constant) initialiser.
@@ -275,8 +275,12 @@ Constant* InstrContext::BuildTransition(const Transition& T) {
 }
 
 
-Constant* InstrContext::BuildLifetime(const Transition& Sunrise,
-                                      const Transition& Sunset) {
+Constant* InstrContext::BuildLifetime(const Automaton::Lifetime& Lifetime) {
+  assert(Lifetime.Init != NULL and Lifetime.Cleanup != NULL);
+
+  const Transition& Sunrise = *Lifetime.Init;
+  const Transition& Sunset = *Lifetime.Cleanup;
+
   string Name =
     "("
     + Sunrise.ShortLabel()
@@ -288,15 +292,15 @@ Constant* InstrContext::BuildLifetime(const Transition& Sunrise,
   if (Existing)
     return Existing;
 
-  Constant *Lifetime = ConstantStruct::get(LifetimeTy,
-                                           BuildLifetimeEvent(Sunrise),
-                                           BuildLifetimeEvent(Sunset),
-                                           ConstStr(Name),
-                                           NULL);
+  Constant *Initialiser = ConstantStruct::get(LifetimeTy,
+                                              BuildLifetimeEvent(Sunrise),
+                                              BuildLifetimeEvent(Sunset),
+                                              ConstStr(Name),
+                                              NULL);
 
   return new GlobalVariable(M, LifetimeTy, true,
                             GlobalVariable::InternalLinkage,
-                            Lifetime, Name);
+                            Initialiser, Name);
 }
 
 

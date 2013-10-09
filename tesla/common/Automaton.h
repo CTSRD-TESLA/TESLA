@@ -115,6 +115,28 @@ public:
   const Transition* Init() const;
   const Transition* Cleanup() const;
 
+  /**
+   * A representation of this automaton's lifetime, suitable for storing
+   * in e.g., an unordered_set for deduplicating.
+   */
+  class Lifetime {
+  public:
+    AutomatonDescription::Context Context;
+    const Transition* Init;
+    const Transition* Cleanup;
+
+    Lifetime(AutomatonDescription::Context Context,
+             const Transition* Init,
+             const Transition* Cleanup)
+      : Context(Context), Init(Init), Cleanup(Cleanup)
+    {
+    }
+
+    bool operator == (const Lifetime& other);
+  };
+
+  Lifetime getLifetime() const;
+
 protected:
   Automaton(size_t id, const AutomatonDescription&,
             const Usage*, llvm::StringRef Name,

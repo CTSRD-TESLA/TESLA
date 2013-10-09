@@ -32,6 +32,7 @@
 #ifndef	TESLA_INSTR_CONTEXT_H
 #define	TESLA_INSTR_CONTEXT_H
 
+#include "Automaton.h"
 #include "Transition.h"
 
 #include "tesla.pb.h"
@@ -54,7 +55,6 @@ namespace llvm {
 
 namespace tesla {
 
-class Automaton;
 class EventTranslator;
 class TranslationFn;
 
@@ -67,7 +67,7 @@ public:
   static InstrContext* Create(llvm::Module&, bool SuppressDebugPrintf = false);
 
   llvm::Constant* BuildAutomatonDescription(const Automaton*);
-  llvm::Constant* BuildLifetime(const Transition&, const Transition&);
+  llvm::Constant* BuildLifetime(const Automaton::Lifetime&);
   llvm::Constant* BuildLifetimeEvent(const Transition&);
   llvm::Constant* BuildTransition(const Transition&);
   llvm::Constant* BuildTransitions(const TEquivalenceClass&);
