@@ -1,4 +1,4 @@
-//! @file EventTranslator.cpp  Definition of @ref EventTranslator.
+//! @file EventTranslator.cpp  Definition of @ref tesla::EventTranslator.
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

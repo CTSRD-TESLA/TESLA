@@ -1,4 +1,4 @@
-//! @file InstrContext.h  Declaration of @ref InstrContext.
+//! @file tesla::InstrContext.h  Declaration of @ref InstrContext.
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.

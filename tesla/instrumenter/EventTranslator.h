@@ -1,4 +1,4 @@
-//! @file EventTranslator.h  Declaration of @ref EventTranslator.
+//! @file EventTranslator.h  Declaration of @ref tesla::EventTranslator.
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
@@ -51,7 +51,7 @@ class InstrContext;
  * Translator for a single event.
  *
  * On initialisation, creates pattern-matching instructions,
- * a @ref tesla_key and a branch to the next @ref EventBlock
+ * a @ref tesla_key and a branch to the next @ref EventTranslator
  * (or the end of the @ref EventTranslator).
  */
 class EventTranslator {

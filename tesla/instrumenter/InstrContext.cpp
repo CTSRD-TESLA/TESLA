@@ -1,4 +1,4 @@
-//! @file InstrContext.cpp  Definition of @ref InstrContext.
+//! @file InstrContext.cpp  Definition of @ref tesla::InstrContext.
 /*
  * Copyright (c) 2012-2013 Jonathan Anderson
  * All rights reserved.

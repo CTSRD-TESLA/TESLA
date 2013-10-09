@@ -1,4 +1,4 @@
-//! @file TranslationFn.cpp  Definition of @ref TranslationFn.
+//! @file TranslationFn.cpp  Definition of @ref tesla::TranslationFn.
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
