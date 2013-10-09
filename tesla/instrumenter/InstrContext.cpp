@@ -478,7 +478,7 @@ Constant* InstrContext::SunriseFn() {
 
 Constant* InstrContext::SunsetFn() {
   return M.getOrInsertFunction(
-      "tesla_enter_context",
+      "tesla_exit_context",
       VoidTy,           // return type
       Int32Ty,          // context (global vs per-thread)
       LifetimePtrTy,    // static lifetime description

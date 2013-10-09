@@ -228,7 +228,7 @@ static void
 print_sunset(enum tesla_context c, const struct tesla_lifetime *tl)
 {
 
-    DEBUG(libtesla.sunrise, "sunset   %s %s\n",
+    DEBUG(libtesla.sunset, "sunset   %s %s\n",
 	    (c == TESLA_CONTEXT_GLOBAL) ? "global" : "per-thread", tl->tl_repr);
 }
 
