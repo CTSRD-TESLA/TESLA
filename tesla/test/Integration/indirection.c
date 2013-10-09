@@ -26,12 +26,13 @@ main(int argc, char *argv[])
 {
 	/*
 	 * CHECK: [CALE] main
-	 * CHECK: new    [[INST0:[0-9]+]]: [[INIT:1:0x0]]
+         * CHECK: sunrise
 	 */
 	struct object *o;
 
 	/*
 	 * CHECK: [RETE] get_object 0 [[OBJ_PTR:0x[0-9a-f]+]] 0
+	 * CHECK: new    [[INST0:[0-9]+]]: [[INIT:1:0x0]]
 	 * CHECK: clone  [[INST0]]:[[INIT]] -> [[INST1:[0-9]+]]:[[OBJ:[0-9]+:0x1]]
 	 */
 	get_object(0, &o);
@@ -44,6 +45,7 @@ main(int argc, char *argv[])
 
 	/*
 	 * CHECK: [RETE] main
+         * CHECK: sunset
 	 * CHECK: [[INST0]]: [[INIT]]->[[DONE:[0-9]+:0x0]]
 	 * CHECK: pass '[[NAME:.*]]': [[INST0]]
 	 * CHECK: [[INST1]]: [[NOW]]->[[DONE:[0-9]+:0x0]]

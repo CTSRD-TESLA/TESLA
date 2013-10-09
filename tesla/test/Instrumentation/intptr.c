@@ -33,8 +33,7 @@ main(int argc, char *argv[])
 	 * First we enter main():
 	 *
 	 * CHECK: [CALE] main
-	 * CHECK: new    [[INST0:[0-9]+]]: [[INIT:1:0x0]]
-	 * CHECK:   ('[[NAME:.*]]')
+         * CHECK: sunrise
 	 */
 
 	int i = 4;
@@ -50,6 +49,8 @@ main(int argc, char *argv[])
 	 * Then we call foo():
 	 *
 	 * CHECK: [RETE] foo
+	 * CHECK: new    [[INST0:[0-9]+]]: [[INIT:1:0x0]]
+	 * CHECK:   ('[[NAME:.*]]')
 	 * CHECK: clone  [[INST0]]:[[INIT]] -> [[INST1:[0-9]+]]:[[FOO:[0-9]+:0x7]]
 	 */
 
@@ -67,6 +68,7 @@ main(int argc, char *argv[])
 	 * And finally we leave main():
 	 *
 	 * CHECK: [RETE] main
+         * CHECK: sunset
 	 *
 	 * CHECK: update [[INST0]]: [[INIT]]->[[DONE:[0-9]+:0x0]]
 	 * CHECK: pass '[[NAME]]': [[INST0]]

@@ -46,7 +46,7 @@ void context() {
  * CHECK:     [[AND:%[a-z0-9]+]] = and i32 %0, 5
  * CHECK:     [[COND:%[a-z0-9]+]] = icmp eq i32 [[AND]], %0
  * CHECK:     br i1 [[COND]], label %"[[NAME]]:match:1
- * CHECK:   "[[NAME]]:instr":
+ * CHECK:   "[[NAME]]:instr{{[0-9]+}}":
  *
  * CHECK: }
  */

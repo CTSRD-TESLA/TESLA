@@ -52,8 +52,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * Entering the system call should update all automata:
 	 *
 	 * CHECK: [CALE] example_syscall
-	 * CHECK: new    0: 1:0x0 ('{{.*}}')
-	 * CHECK: new    0: 1:0x0 ('{{.*}}')
+         * CHECK: sunrise
 	 */
 
 	struct object *o;
@@ -70,6 +69,9 @@ example_syscall(struct credential *cred, int index, int op)
 		return (error);
 
 	/*
+         * CHECK: [ASRT]
+	 * CHECK: new    0: 1:0x0 ('{{.*}}')
+         *
 	 * ERR: TESLA failure
 	 * ERR: No instance matched key '0x1 [ {{[0-9a-f]+}} X X X ]' for transition(s) [ ({{[0-9]+}}:0x1 -> {{[0-9]+}}:0x1) ]
 	 */
