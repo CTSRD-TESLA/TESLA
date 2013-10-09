@@ -445,6 +445,48 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 
   bool ModifiedIR = false;
 
+  //
+  // Initialisation and cleanup events are special: they are shared across
+  // automata and trigger different libtesla functions.
+  //
+  for (auto i : M.RootAutomata()) {
+    auto& A = *M.FindAutomaton(i->identifier());
+
+    if (auto *Init = dyn_cast<FnTransition>(&A.Init())) {
+      const FunctionEvent FnEvent = Init->FnEvent();
+
+      if (FnEvent.context() != FunctionEvent::Callee)
+        continue;
+
+      Function *Target = Mod.getFunction(FnEvent.function().name());
+
+      // Only handle functions that are defined in this module.
+      if (!Target || Target->empty())
+        continue;
+
+      TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
+      EventTranslator T(InstrFn->AddInstrumentation(FnEvent, "enter_lifetime"));
+      T.CallSunrise(A.getAssertion().context(), A.Init(), A.Cleanup());
+    }
+
+    if (auto *Cleanup = dyn_cast<FnTransition>(&A.Cleanup())) {
+      const FunctionEvent FnEvent = Cleanup->FnEvent();
+
+      if (FnEvent.context() != FunctionEvent::Callee)
+        continue;
+
+      Function *Target = Mod.getFunction(FnEvent.function().name());
+
+      // Only handle functions that are defined in this module.
+      if (!Target || Target->empty())
+        continue;
+
+      TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
+      EventTranslator T(InstrFn->AddInstrumentation(FnEvent, "exit_lifetime"));
+      T.CallSunset(A.getAssertion().context(), A.Init(), A.Cleanup());
+    }
+  }
+
   for (auto i : M.RootAutomata()) {
     auto& A = *M.FindAutomaton(i->identifier());
     for (auto EquivClass : A) {
@@ -452,6 +494,10 @@ bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
 
       auto *Head = dyn_cast<FnTransition>(*EquivClass.begin());
       if (!Head)
+        continue;
+
+      // Lifetime events are dealt with above.
+      if (Head->RequiresInit() or Head->RequiresCleanup())
         continue;
 
       auto& FnEvent = Head->FnEvent();
