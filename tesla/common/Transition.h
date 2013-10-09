@@ -65,7 +65,7 @@ typedef llvm::SmallVector<Transition*,10> TransitionVector;
 class TEquivalenceClass
 {
 public:
-  TEquivalenceClass(uint32_t Symbol) : Symbol(Symbol) {}
+  TEquivalenceClass(uint32_t Symbol = -1) : Symbol(Symbol) {}
 
   bool empty() const { return Transitions.empty(); }
   void insert(const Transition *t) { Transitions.insert(t); }

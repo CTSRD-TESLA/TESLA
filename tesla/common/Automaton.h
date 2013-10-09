@@ -113,7 +113,7 @@ public:
   TransitionSets::const_iterator end() const  { return Transitions.end(); }
 
   const Transition* Init() const;
-  const Transition* Cleanup() const;
+  const TEquivalenceClass Cleanup() const;
 
   /**
    * A representation of this automaton's lifetime, suitable for storing

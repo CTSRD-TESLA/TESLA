@@ -163,15 +163,15 @@ const Transition* Automaton::Init() const
   return NULL;
 }
 
-const Transition* Automaton::Cleanup() const
+const TEquivalenceClass Automaton::Cleanup() const
 {
   for (auto& TEq : *this) {
     const Transition *Head = *TEq.begin();
     if (Head->RequiresCleanup())
-      return Head;
+      return TEq;
   }
 
-  return NULL;
+  return TEquivalenceClass();
 }
 
 string Automaton::String() const {
@@ -280,7 +280,10 @@ string Automaton::Dot() const {
 
 
 Automaton::Lifetime Automaton::getLifetime() const {
-  return Lifetime(getAssertion().context(), Init(), Cleanup());
+  TEquivalenceClass Cleanup = this->Cleanup();
+  const Transition *CleanupTrans = Cleanup.empty() ? NULL : *Cleanup.begin();
+
+  return Lifetime(getAssertion().context(), Init(), CleanupTrans);
 }
 
 

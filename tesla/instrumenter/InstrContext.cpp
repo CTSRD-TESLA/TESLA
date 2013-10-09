@@ -93,9 +93,9 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   StructType *TransitionSetTy = StructTy("tesla_transitions", TransSetF, M);
   PointerType *TransitionSetPtrTy = PointerType::getUnqual(TransitionSetTy);
 
-  // name, alphabet size, transitions, description, symbol names
+  // name, alphabet size, cleanup symbol, transitions, description, symbol names
   Type *AutomFields[] = {
-    CharPtrTy, Int32Ty, TransitionSetPtrTy, CharPtrTy, CharPtrPtrTy,
+    CharPtrTy, Int32Ty, Int32Ty, TransitionSetPtrTy, CharPtrTy, CharPtrPtrTy,
     LifetimePtrTy,
   };
   StructType *AutomatonTy = StructTy("tesla_automaton", AutomFields, M);
@@ -194,6 +194,8 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
     ConstPointer(ConstantArray::get(SymbolArrayT, EventDescriptions),
                  CharPtrPtrTy, Name + "_symbol_names");
 
+  Constant *CleanupSymbol = ConstantInt::get(Int32Ty, A->Cleanup().Symbol);
+
   ArrayType *TransArrayT = ArrayType::get(TransitionSetTy, Transitions.size());
   Constant *TransArray = ConstantArray::get(TransArrayT, Transitions);
   Constant *TransArrayPtr = ConstPointer(TransArray,
@@ -209,8 +211,11 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
   //
   Constant *Init = ConstantStruct::get(AutomatonTy,
                                        ConstStr(Name, Name + "_name"),
-                                       AlphabetSize, TransitionsArray,
-                                       Description, SymbolNames,
+                                       AlphabetSize,
+                                       CleanupSymbol,
+                                       TransitionsArray,
+                                       Description,
+                                       SymbolNames,
                                        Lifetime,
                                        NULL);
 

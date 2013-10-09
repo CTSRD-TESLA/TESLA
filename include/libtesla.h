@@ -94,6 +94,11 @@ struct tesla_automaton {
 	 */
 	const int32_t			 ta_alphabet_size;
 
+        /**
+         * The symbol number used to signal cleanup.
+         */
+        const int32_t                    ta_cleanup_symbol;
+
 	/**
 	 * Transitions that will be taken in response to events.
 	 *
