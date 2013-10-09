@@ -365,8 +365,8 @@ void	tesla_class_perthread_destroy(struct tesla_class*);
 extern const struct tesla_event_handlers dtrace_handlers;
 #endif
 
-void	ev_sunrise(const struct tesla_lifetime *);
-void	ev_sunset(const struct tesla_lifetime *);
+void	ev_sunrise(enum tesla_context, const struct tesla_lifetime *);
+void	ev_sunset(enum tesla_context, const struct tesla_lifetime *);
 void	ev_new_instance(struct tesla_class *, struct tesla_instance *);
 void	ev_transition(struct tesla_class *, struct tesla_instance *,
 	    const struct tesla_transition *);

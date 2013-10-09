@@ -38,10 +38,10 @@
 
 SDT_PROVIDER_DEFINE(tesla);
 
-SDT_PROBE_DEFINE1(tesla, automata, lifetime, sunrise, sunrise,
-    "struct tesla_lifetime *");
-SDT_PROBE_DEFINE1(tesla, automata, lifetime, sunset, sunset,
-    "struct tesla_lifetime *");
+SDT_PROBE_DEFINE2(tesla, automata, lifetime, sunrise, sunrise,
+    "enum tesla_context context", "struct tesla_lifetime *");
+SDT_PROBE_DEFINE2(tesla, automata, lifetime, sunset, sunset,
+    "enum tesla_context context", "struct tesla_lifetime *");
 SDT_PROBE_DEFINE2(tesla, automata, instance, create, create,
     "struct tesla_class *", "struct tesla_instance *");
 SDT_PROBE_DEFINE3(tesla, automata, event, transition, state-transition,
@@ -65,17 +65,17 @@ SDT_PROBE_DEFINE3(tesla, automata, event, ignored, ignored-event,
     "struct tesla_transitions *");
 
 static void
-sunrise(struct tesla_lifetime *tl)
+sunrise(enum tesla_context c, struct tesla_lifetime *tl)
 {
 
-	SDT_PROBE(tesla, automata, lifetime, sunrise, tl, 0, 0, 0, 0);
+	SDT_PROBE(tesla, automata, lifetime, sunrise, c, tl, 0, 0, 0);
 }
 
 static void
-sunset(struct tesla_lifetime *tl)
+sunset(enum tesla_context context, struct tesla_lifetime *tl)
 {
 
-	SDT_PROBE(tesla, automata, lifetime, sunset, tl, 0, 0, 0, 0);
+	SDT_PROBE(tesla, automata, lifetime, sunset, c, tl, 0, 0, 0);
 }
 
 static void

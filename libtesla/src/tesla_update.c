@@ -53,7 +53,7 @@ tesla_enter_context(enum tesla_context context,
 
 	store->ts_lifetimes[store->ts_lifetime_count++] = *l;
 
-	ev_sunrise(l);
+	ev_sunrise(context, l);
 }
 
 
@@ -63,7 +63,7 @@ tesla_exit_context(enum tesla_context context __unused,
 {
 	assert(l != NULL);
 
-	ev_sunset(l);
+	ev_sunset(context, l);
 }
 
 

@@ -120,18 +120,18 @@ tesla_set_event_handlers(struct tesla_event_metahandler *temp)
 				event_handlers->tem_handlers[i]->x(__VA_ARGS__)
 
 void
-ev_sunrise(const struct tesla_lifetime *tl)
+ev_sunrise(enum tesla_context c, const struct tesla_lifetime *tl)
 {
 
-	FOREACH_ERROR_HANDLER(teh_sunrise, tl);
+	FOREACH_ERROR_HANDLER(teh_sunrise, c, tl);
 }
 
 
 void
-ev_sunset(const struct tesla_lifetime *tl)
+ev_sunset(enum tesla_context c, const struct tesla_lifetime *tl)
 {
 
-	FOREACH_ERROR_HANDLER(teh_sunset, tl);
+	FOREACH_ERROR_HANDLER(teh_sunset, c, tl);
 }
 
 
@@ -217,13 +217,19 @@ print_failure_header(const struct tesla_class *tcp)
 }
 
 static void
-print_sunrise(const struct tesla_lifetime *tl)
+print_sunrise(enum tesla_context c, const struct tesla_lifetime *tl)
 {
+
+    DEBUG(libtesla.sunrise, "sunrise  %s %s\n",
+	    (c == TESLA_CONTEXT_GLOBAL) ? "global" : "per-thread", tl->tl_repr);
 }
 
 static void
-print_sunset(const struct tesla_lifetime *tl)
+print_sunset(enum tesla_context c, const struct tesla_lifetime *tl)
 {
+
+    DEBUG(libtesla.sunrise, "sunset   %s %s\n",
+	    (c == TESLA_CONTEXT_GLOBAL) ? "global" : "per-thread", tl->tl_repr);
 }
 
 static void

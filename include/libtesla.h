@@ -316,10 +316,12 @@ struct tesla_instance {
  * Event notification:
  */
 /** An initialisation event has occurred; entering an automaton lifetime. */
-typedef void	(*tesla_ev_sunrise)(const struct tesla_lifetime *);
+typedef void	(*tesla_ev_sunrise)(enum tesla_context,
+	    const struct tesla_lifetime *);
 
 /** A cleanup event has occurred; exiting an automaton lifetime. */
-typedef void	(*tesla_ev_sunset)(const struct tesla_lifetime *);
+typedef void	(*tesla_ev_sunset)(enum tesla_context,
+	    const struct tesla_lifetime *);
 
 /** A new @ref tesla_instance has been created. */
 typedef void	(*tesla_ev_new_instance)(struct tesla_class *,

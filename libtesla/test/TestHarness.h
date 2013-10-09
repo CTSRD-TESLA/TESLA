@@ -84,16 +84,16 @@ LibTeslaTest *Test = NULL;
 
 class Event {
 public:
-	static void SunriseEvent(const Lifetime *l)
+	static void SunriseEvent(enum tesla_context c, const Lifetime *l)
 	{
 		Test->Ev(new Event(Sunrise, NULL, NULL, NULL, NULL,
-		                   NULL, l));
+		                   NULL, l, c));
 	}
 
-	static void SunsetEvent(const Lifetime *l)
+	static void SunsetEvent(enum tesla_context c, const Lifetime *l)
 	{
 		Test->Ev(new Event(Sunset, NULL, NULL, NULL, NULL,
-		                   NULL, l));
+		                   NULL, l, c));
 	}
 
 	static void NewInstanceEvent(Class *c, Instance *i)
