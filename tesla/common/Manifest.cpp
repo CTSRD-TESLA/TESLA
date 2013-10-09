@@ -156,17 +156,8 @@ Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
 
   raw_ostream& debug = debugs("tesla.manifest.lifetimes");
   debug << "--------\nUnique automata lifetimes:\n";
-  for (auto& Lifetime : Lifetimes) {
-    assert(Lifetime.Init != NULL);
-    assert(Lifetime.Cleanup != NULL);
-
-    debug
-      << " * " << AutomatonDescription::Context_Name(Lifetime.Context)
-      << ": " << Lifetime.Init->ShortLabel()
-      << " -> " << Lifetime.Cleanup->ShortLabel()
-      << "\n"
-      ;
-  }
+  for (auto& Lifetime : Lifetimes)
+    debug << " * " << Lifetime.String() << "\n";
   debug << "--------\n";
 
   return new Manifest(Protobuf, Descriptions, Automata, Roots, Lifetimes);

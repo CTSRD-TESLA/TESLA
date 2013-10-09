@@ -132,6 +132,7 @@ public:
     {
     }
 
+    std::string String() const;
     bool operator == (const Lifetime& other) const;
   };
 

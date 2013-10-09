@@ -283,6 +283,19 @@ Automaton::Lifetime Automaton::getLifetime() const {
   return Lifetime(getAssertion().context(), Init(), Cleanup());
 }
 
+
+string Automaton::Lifetime::String() const {
+  return (Twine()
+    + AutomatonDescription::Context_Name(Context)
+    + ": ("
+    + (Init ? Init->ShortLabel() : "<null>")
+    + " -> "
+    + (Cleanup ? Cleanup->ShortLabel() : "<null>")
+    + ")"
+  ).str();
+}
+
+
 bool Automaton::Lifetime::operator == (const Automaton::Lifetime& other) const {
   if (other.Context != Context)
     return false;
