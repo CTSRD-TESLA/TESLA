@@ -202,7 +202,7 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
 
   Constant *TransitionsArray = ConstArrayPointer(TransArrayPtr);
 
-  Constant *Lifetime = BuildLifetime(*A);
+  Constant *Lifetime = BuildLifetime(A->Init(), A->Cleanup());
 
   //
   // Create the global variable and its (constant) initialiser.
@@ -275,16 +275,23 @@ Constant* InstrContext::BuildTransition(const Transition& T) {
 }
 
 
-Constant* InstrContext::BuildLifetime(const Automaton& A) {
-  const Transition& Init = A.Init();
-  const Transition& Cleanup = A.Cleanup();
+Constant* InstrContext::BuildLifetime(const Transition& Sunrise,
+                                      const Transition& Sunset) {
+  string Name =
+    "("
+    + Sunrise.ShortLabel()
+    + " -> "
+    + Sunset.ShortLabel()
+    + ")";
+
+  auto *Existing = M.getGlobalVariable(Name);
+  if (Existing)
+    return Existing;
 
   Constant *Lifetime = ConstantStruct::get(LifetimeTy,
-                                           BuildLifetimeEvent(A.Init()),
-                                           BuildLifetimeEvent(A.Cleanup()),
+                                           BuildLifetimeEvent(Sunrise),
+                                           BuildLifetimeEvent(Sunset),
                                            NULL);
-
-  string Name = "(" + Init.ShortLabel() + " -> " + Cleanup.ShortLabel() + ")";
 
   return new GlobalVariable(M, LifetimeTy, true,
                             GlobalVariable::InternalLinkage,
@@ -458,7 +465,7 @@ Constant* InstrContext::SunriseFn() {
       "tesla_enter_context",
       VoidTy,           // return type
       Int32Ty,          // context (global vs per-thread)
-      LifetimeEventTy,  // static event description
+      LifetimePtrTy,    // static lifetime description
       NULL
   );
 }
@@ -469,7 +476,7 @@ Constant* InstrContext::SunsetFn() {
       "tesla_enter_context",
       VoidTy,           // return type
       Int32Ty,          // context (global vs per-thread)
-      LifetimeEventTy,  // static event description
+      LifetimePtrTy,    // static lifetime description
       NULL
   );
 }

@@ -67,7 +67,7 @@ public:
   static InstrContext* Create(llvm::Module&, bool SuppressDebugPrintf = false);
 
   llvm::Constant* BuildAutomatonDescription(const Automaton*);
-  llvm::Constant* BuildLifetime(const Automaton&);
+  llvm::Constant* BuildLifetime(const Transition&, const Transition&);
   llvm::Constant* BuildLifetimeEvent(const Transition&);
   llvm::Constant* BuildTransition(const Transition&);
   llvm::Constant* BuildTransitions(const TEquivalenceClass&);
