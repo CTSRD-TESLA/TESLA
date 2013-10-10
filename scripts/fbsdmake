@@ -34,9 +34,23 @@ if [ "$TESLA" == "" ]; then
 	exit 1
 fi
 
+if [ "$KERNCONF" == "" ]; then
+	echo "KERNCONF not set, defaulting to TESLA_ALL"
+	KERNCONF="TESLA_ALL"
+fi
+
+
+echo "Building with:"
+echo "   KERNCONF   $KERNCONF"
+echo "   TESLA      $TESLA"
+echo "   XCC        $XCC"
+echo "   XCXX       $XCXX"
+echo "   XCPP       $XCPP"
+echo "   XLLC       $XLLC"
+
 
 # Run make, setting some variable and passing command-line arguments through.
 make \
-	KERNCONF=TESLA -DWITH_TESLA -DWITHOUT_FORMAT_EXTENSIONS \
+	KERNCONF=$KERNCONF -DWITH_TESLA -DWITHOUT_FORMAT_EXTENSIONS \
 	XCC=$XCC XCXX=$XCXX XCPP=$XCPP XLLC=$XLLC TESLA=$TESLA \
 	$*
