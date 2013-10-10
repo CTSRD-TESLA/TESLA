@@ -71,7 +71,7 @@ sunrise(enum tesla_context c, const struct tesla_lifetime *tl)
 }
 
 static void
-sunset(enum tesla_context context, const struct tesla_lifetime *tl)
+sunset(enum tesla_context c, const struct tesla_lifetime *tl)
 {
 
 	SDT_PROBE(tesla, automata, lifetime, sunset, c, tl, 0, 0, 0);
