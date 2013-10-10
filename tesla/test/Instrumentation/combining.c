@@ -40,7 +40,7 @@ main(int argc, char *argv[])
 {
 	/*
 	 * TESLA: [CALE] main
-         * TESLA: sunrise per-thread (main(X,X): Entry -> main(X,X) == X)
+         * TESLA: sunrise per-thread (main(X,X){{.*}} -> main(X,X) == X{{.*}})
 	 */
 
 	/*
@@ -72,7 +72,7 @@ main(int argc, char *argv[])
 
 	/*
 	 * TESLA: [RETE] main
-         * TESLA: sunset per-thread (main(X,X): Entry -> main(X,X) == X)
+         * TESLA: sunset per-thread (main(X,X){{.*}} -> main(X,X) == X{{.*}})
 	 * TESLA: update 0: [[FOO2]]->[[DONE:[0-9]+:0x0]]
 	 * TESLA: pass '[[NAME]]': 0
 	 * TESLA: tesla_class_reset [[NAME]]

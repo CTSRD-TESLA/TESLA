@@ -21,7 +21,7 @@ main(int argc, char *argv[])
 	 * We should note that we've entered main():
 	 *
 	 * CHECK: [CALE] main
-         * CHECK: sunrise per-thread (main(X,X): Entry -> main(X,X) == X)
+         * CHECK: sunrise per-thread (main(X,X){{.*}} -> main(X,X) == X{{.*}})
 	 */
 
 
@@ -64,7 +64,7 @@ main(int argc, char *argv[])
 	 * Finally, we leave the context:
 	 *
 	 * CHECK: [RETE] main
-         * CHECK: sunset per-thread (main(X,X): Entry -> main(X,X) == X)
+         * CHECK: sunset per-thread (main(X,X){{.*}} -> main(X,X) == X{{.*}})
 	 * CHECK: update 0: [[NOW]]->[[DONE:[0-9]+:0x0]]
 	 * CHECK: pass '[[NAME]]': 0
 	 * CHECK: tesla_class_reset [[NAME]]
