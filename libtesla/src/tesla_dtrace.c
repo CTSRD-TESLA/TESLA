@@ -64,14 +64,14 @@ SDT_PROBE_DEFINE3(tesla, automata, event, ignored, ignored-event,
     "struct tesla_class *", "int32_t", "struct tesla_key *");
 
 static void
-sunrise(enum tesla_context c, struct tesla_lifetime *tl)
+sunrise(enum tesla_context c, const struct tesla_lifetime *tl)
 {
 
 	SDT_PROBE(tesla, automata, lifetime, sunrise, c, tl, 0, 0, 0);
 }
 
 static void
-sunset(enum tesla_context context, struct tesla_lifetime *tl)
+sunset(enum tesla_context context, const struct tesla_lifetime *tl)
 {
 
 	SDT_PROBE(tesla, automata, lifetime, sunset, c, tl, 0, 0, 0);
