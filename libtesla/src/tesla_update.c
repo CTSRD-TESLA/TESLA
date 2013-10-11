@@ -255,7 +255,7 @@ tesla_update_class_state(struct tesla_class *class, struct tesla_store *store,
 			 *           when we know it's safe.
 			 */
 			ev_err(autom, symbol, TESLA_ERROR_ENOMEM,
-			       "out of dynamic registration space in lifetime");
+			       "out of static registration space in lifetime");
 #else
 			static size_t unit_size =
 				sizeof(ls->tls_dyn_classes[0]);
