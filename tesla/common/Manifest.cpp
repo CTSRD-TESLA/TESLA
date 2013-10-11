@@ -32,6 +32,7 @@
 #include "Debug.h"
 #include "Manifest.h"
 #include "Names.h"
+#include "Protocol.h"
 
 #include "tesla.pb.h"
 
@@ -117,6 +118,8 @@ Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
   for (auto& A : Protobuf->automaton())
     Descriptions[A.identifier()] = &A;
 
+  vector<Automaton::Lifetime> Lifetimes;
+
   int id = 0;
   for (auto i : Descriptions) {
     const Identifier& ID = i.first;
@@ -144,10 +147,24 @@ Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
         Result.reset(DFA::Convert(N.get()));
     }
 
+    Automaton::Lifetime L = Result->getLifetime();
+    if (L.Init != NULL
+        and find(Lifetimes.begin(), Lifetimes.end(), L) == Lifetimes.end()) {
+
+        Lifetimes.push_back(L);
+        assert(Lifetimes.back() == L);
+    }
+
     Automata[ID] = Result.take();
   }
 
-  return new Manifest(Protobuf, Descriptions, Automata, Roots);
+  raw_ostream& debug = debugs("tesla.manifest.lifetimes");
+  debug << "--------\nUnique automata lifetimes:\n";
+  for (auto& Lifetime : Lifetimes)
+    debug << " * " << Lifetime.String() << "\n";
+  debug << "--------\n";
+
+  return new Manifest(Protobuf, Descriptions, Automata, Roots, Lifetimes);
 }
 
 StringRef Manifest::defaultLocation() { return ManifestName; }

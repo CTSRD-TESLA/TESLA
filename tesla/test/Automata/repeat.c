@@ -18,7 +18,7 @@ int foo() {
 	 * CHECK: automaton '[[NAME:.*repeat.c:[0-9]+#[0-9]+]]' {
 	 *
 	 * CHECK: state {{.*}} :
-	 * CHECK: context(): Entry <<init>>
+	 * CHECK: context(): Entry {{.*}}<<init>>
 	 * CHECK: -->([[INIT:.*]])
 	 */
 	TESLA_WITHIN(context,
@@ -30,13 +30,13 @@ int foo() {
 			 * loop back.
 			 *
 			 * CHECK: state [[INIT]]
-			 * CHECK: foo(): Entry)-->([[FOO1:[':,a-zA-Z0-9]+]])
+			 * CHECK: foo(): {{.*}})-->([[FOO1:[':,a-zA-Z0-9]+]])
 			 *
 			 * CHECK: state [[FOO1]]
-			 * CHECK: --(foo(): Entry)-->([[FOO2:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(foo(): {{.*}})-->([[FOO2:[':,a-zA-Z0-9]+]])
 			 *
 			 * CHECK: state [[FOO2]]
-			 * CHECK: --(foo(): Entry)-->([[FOO2]])
+			 * CHECK: --(foo(): {{.*}})-->([[FOO2]])
 			 */
 			ATLEAST(2, call(foo)),
 
@@ -45,15 +45,15 @@ int foo() {
 			 * one, a baz() event could advance the state to
 			 * the [[BAZ1]] state.
 			 *
-			 * CHECK: --(bar(): Entry)-->([[BAR1:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(bar(): {{.*}})-->([[BAR1:[':,a-zA-Z0-9]+]])
 			 *
 			 * CHECK: state [[BAR1]]
-			 * CHECK: --(bar(): Entry)-->([[BAR2:[':,a-zA-Z0-9]+]])
-			 * CHECK: --(baz(): Entry)-->([[BAZ1:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(bar(): {{.*}})-->([[BAR2:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(baz(): {{.*}})-->([[BAZ1:[':,a-zA-Z0-9]+]])
 			 *
 			 * CHECK: state [[BAR2]]
-			 * CHECK: --(bar(): Entry)-->([[BAR3:[':,a-zA-Z0-9]+]])
-			 * CHECK: --(baz(): Entry)-->([[BAZ1]])
+			 * CHECK: --(bar(): {{.*}})-->([[BAR3:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(baz(): {{.*}})-->([[BAZ1]])
 			 */
 			UPTO(3, call(bar)),
 
@@ -65,22 +65,22 @@ int foo() {
 			 * one more we can take an exit transition:
 			 *
 			 * CHECK: state [[BAZ1]]
-			 * CHECK: --(baz(): Entry)-->([[BAZ2:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(baz(): {{.*}})-->([[BAZ2:[':,a-zA-Z0-9]+]])
 			 *
 			 * CHECK: state [[BAZ2]]
-			 * CHECK: --(baz(): Entry)-->([[BAZ3:[':,a-zA-Z0-9]+]])
-			 * CHECK: --(context() == X <<cleanup>>)-->([[DONE:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(baz(): {{.*}})-->([[BAZ3:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(context() == X {{.*}})-->([[DONE:[':,a-zA-Z0-9]+]])
 			 *
 			 * We are allowed one more baz() transition:
 			 *
 			 * CHECK: state [[BAZ3]]
-			 * CHECK: --(baz(): Entry)-->([[BAZ4:[':,a-zA-Z0-9]+]])
-			 * CHECK: --(context() == X <<cleanup>>)-->([[DONE]])
+			 * CHECK: --(baz(): {{.*}})-->([[BAZ4:[':,a-zA-Z0-9]+]])
+			 * CHECK: --(context() == X {{.*}})-->([[DONE]])
 			 *
 			 * But that was absolutely the last baz() transition:
 			 *
 			 * CHECK: state [[BAZ4]]
-			 * CHECK: --(context() == X <<cleanup>>)-->([[DONE]])
+			 * CHECK: --(context() == X {{.*}})-->([[DONE]])
 			 */
 			REPEAT(2, 4, call(baz))
 
@@ -88,7 +88,7 @@ int foo() {
 			 * TODO: use CHECK-DAG when we switch to LLVM 3.4:
 			 *
 			 * CHECK: state [[BAR3]]
-			 * CHECK: --(baz(): Entry)-->([[BAZ1]])
+			 * CHECK: --(baz(): {{.*}})-->([[BAZ1]])
 			 */
 		)
 	);

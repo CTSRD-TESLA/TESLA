@@ -18,17 +18,18 @@ int
 main(int argc, char *argv[])
 {
 	/*
-	 * We should update state on entering main():
+	 * We should note that we've entered main():
 	 *
 	 * CHECK: [CALE] main
-	 * CHECK: new    0: [[INIT:[0-9]+:0x0]] ('[[NAME:.*]]')
+         * CHECK: sunrise per-thread (main(X,X){{.*}} -> main(X,X) == X{{.*}})
 	 */
 
 
 	/*
-	 * Update state again on calling foo():
+	 * Update state on calling foo():
 	 *
 	 * CHECK: [CALR] foo
+	 * CHECK: new    0: [[INIT:[0-9]+:0x0]] ('[[NAME:.*]]')
 	 * CHECK: update 0: [[INIT]]->[[FOO:[0-9]+:0x0]]
 	 */
 	foo();
@@ -63,6 +64,7 @@ main(int argc, char *argv[])
 	 * Finally, we leave the context:
 	 *
 	 * CHECK: [RETE] main
+         * CHECK: sunset per-thread (main(X,X){{.*}} -> main(X,X) == X{{.*}})
 	 * CHECK: update 0: [[NOW]]->[[DONE:[0-9]+:0x0]]
 	 * CHECK: pass '[[NAME]]': 0
 	 * CHECK: tesla_class_reset [[NAME]]

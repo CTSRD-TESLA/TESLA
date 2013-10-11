@@ -40,13 +40,14 @@ main(int argc, char *argv[])
 {
 	/*
 	 * TESLA: [CALE] main
-	 * TESLA: new    0: [[INIT:1:0x0]] ('[[NAME:.*]]')
+         * TESLA: sunrise per-thread (main(X,X){{.*}} -> main(X,X) == X{{.*}})
 	 */
 
 	/*
 	 * INSTR: call void @tesla_update_state({{.*}}[[AUTO]]
 	 *
 	 * TESLA: [CALE] foo
+	 * TESLA: new    0: [[INIT:1:0x0]] ('[[NAME:.*]]')
 	 * TESLA: update 0: [[INIT]]->[[FOO:[0-9]+:0x0]]
 	 */
 	foo();
@@ -71,6 +72,7 @@ main(int argc, char *argv[])
 
 	/*
 	 * TESLA: [RETE] main
+         * TESLA: sunset per-thread (main(X,X){{.*}} -> main(X,X) == X{{.*}})
 	 * TESLA: update 0: [[FOO2]]->[[DONE:[0-9]+:0x0]]
 	 * TESLA: pass '[[NAME]]': 0
 	 * TESLA: tesla_class_reset [[NAME]]

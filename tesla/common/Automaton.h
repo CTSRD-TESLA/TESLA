@@ -112,8 +112,31 @@ public:
   TransitionSets::const_iterator begin() const { return Transitions.begin(); }
   TransitionSets::const_iterator end() const  { return Transitions.end(); }
 
-  const Transition& Init() const;
-  const Transition& Cleanup() const;
+  const Transition* Init() const;
+  const TEquivalenceClass Cleanup() const;
+
+  /**
+   * A representation of this automaton's lifetime, suitable for storing
+   * in e.g., an unordered_set for deduplicating.
+   */
+  class Lifetime {
+  public:
+    AutomatonDescription::Context Context;
+    const Transition* Init;
+    const Transition* Cleanup;
+
+    Lifetime(AutomatonDescription::Context Context,
+             const Transition* Init,
+             const Transition* Cleanup)
+      : Context(Context), Init(Init), Cleanup(Cleanup)
+    {
+    }
+
+    std::string String() const;
+    bool operator == (const Lifetime& other) const;
+  };
+
+  Lifetime getLifetime() const;
 
 protected:
   Automaton(size_t id, const AutomatonDescription&,

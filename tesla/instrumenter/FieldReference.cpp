@@ -40,6 +40,7 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <map>
 #include <set>
@@ -53,7 +54,6 @@ using std::string;
 namespace tesla {
 
 char FieldReferenceInstrumenter::ID = 0;
-raw_ostream& debug = debugs("tesla.instrumentation.field_assign");
 
 
 /** Instrumentation for a struct field assignment. */
@@ -94,12 +94,6 @@ FieldReferenceInstrumenter::~FieldReferenceInstrumenter() {
 
 
 bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
-  debug
-    << "===================================================================\n"
-    << __PRETTY_FUNCTION__ << "\n"
-    << "-------------------------------------------------------------------\n"
-    << "module:                    " << Mod.getModuleIdentifier() << "\n";
-
   this->Mod = &Mod;
 
   //
@@ -107,18 +101,6 @@ bool FieldReferenceInstrumenter::runOnModule(Module &Mod) {
   //
   for (auto *Root : M.RootAutomata())
     BuildInstrumentation(*M.FindAutomaton(Root->identifier()));
-
-  debug << "instrumentation:\n";
-  for (auto& i : Instrumentation) {
-    debug << "  " << i.getKey() << " -> ";
-    i.getValue()->getTarget()->getType()->print(debug);
-    debug << "\n";
-  }
-
-  debug
-    << "-------------------------------------------------------------------\n"
-    << "looking for field references...\n"
-    ;
 
   //
   // Then, iterate through all uses of the LLVM pointer annotation and look
@@ -196,7 +178,6 @@ FieldInstrumentation* FieldReferenceInstrumenter::GetInstr(
   if (!Head)      // ignore other kinds of transitions
     return NULL;
 
-  debug << Head->String() << "\n";
   auto& Protobuf = Head->Assignment();
   auto StructName = Protobuf.field().type();
   auto FieldName = Protobuf.field().name();
@@ -247,10 +228,6 @@ bool FieldReferenceInstrumenter::InstrumentStore(
   assert(Store != NULL);
   assert(Instr != NULL);
 
-  debug << "instrumenting: ";
-  Store->print(debug);
-  debug << "\n";
-
   assert(Store->getNumOperands() > 1);
   Value *Val = Store->getOperand(0);
   Value *Ptr = Store->getOperand(1);
@@ -262,8 +239,8 @@ bool FieldReferenceInstrumenter::InstrumentStore(
   do {
     User *U = dyn_cast<User>(V);
     if (!U) {
-      V->print(debug);
-      debug << " is not a User!\n";
+      V->dump();
+      llvm::errs() << " is not a User!\n";
       panic("expected a User");
     }
 
@@ -290,8 +267,6 @@ bool FieldReferenceInstrumenter::InstrumentStore(
 
 void FieldInstrumentation::AppendInstrumentation(
     const Automaton& A, const TEquivalenceClass& Trans) {
-
-  debug << "AppendInstrumentation\n";
 
   LLVMContext& Ctx = InstrFn->getContext();
   auto *Head = dyn_cast<FieldAssignTransition>(*Trans.begin());

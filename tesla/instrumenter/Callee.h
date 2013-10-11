@@ -31,11 +31,13 @@
 #ifndef	TESLA_CALLEE_INSTRUMENTATION_H
 #define	TESLA_CALLEE_INSTRUMENTATION_H
 
+#include "InstrContext.h"
 #include "Instrumenter.h"
 #include "Instrumentation.h"
 
 #include "tesla.pb.h"
 
+#include <llvm/ADT/OwningPtr.h>
 #include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Pass.h>
@@ -50,7 +52,6 @@ namespace llvm {
 
 namespace tesla {
 
-class CalleeInstr;
 class Manifest;
 class ObjCInstrumentation;
 
@@ -69,42 +70,15 @@ public:
   virtual bool runOnModule(llvm::Module &M);
 
 private:
-  ObjCInstrumentation *ObjC;
-  CalleeInstr* GetOrCreateInstr(llvm::Module&, llvm::Function*,
-                                FunctionEvent::Direction);
+  ObjCInstrumentation* ObjC;
+  TranslationFn* GetOrCreateInstr(llvm::Function*, const FunctionEvent&);
 
-  llvm::StringMap<CalleeInstr*> Entry;
-  llvm::StringMap<CalleeInstr*> Exit;
-};
+  llvm::OwningPtr<InstrContext> InstrCtx;
 
-
-/// Function instrumentation (callee context).
-class CalleeInstr : public FnInstrumentation {
-public:
-  /// Construct an object that can instrument a given function.
-  static CalleeInstr* Build(llvm::Module&, llvm::Function *Target,
-                            FunctionEvent::Direction,
-                            bool SuppressDebugInstr);
-
-  static CalleeInstr* Build(llvm::Module&, 
-                            const std::string&,
-                            llvm::FunctionType *,
-                            FunctionEvent::Direction,
-                            bool SuppressDebugInstr);
-
-private:
-  CalleeInstr(llvm::Module&, llvm::Function *Fn, llvm::Function *Inst,
-              FunctionEvent::Direction);
-
-  CalleeInstr(llvm::Module& M, llvm::Function *InstrFn,
-              FunctionEvent::Direction Dir)
-      : FnInstrumentation(M, 0, InstrFn, Dir) {}
-
-
-  ArgVector Args;                   ///< Translated function arguments.
+  llvm::StringMap<TranslationFn*> Entry;
+  llvm::StringMap<TranslationFn*> Exit;
 };
 
 }
 
 #endif	/* !TESLA_CALLEE_INSTRUMENTATION_H */
-

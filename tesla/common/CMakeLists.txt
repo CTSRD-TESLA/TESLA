@@ -10,6 +10,7 @@ add_library(TeslaCommon
   Names.cpp
   Protocol.cpp
   State.cpp
+  SuperFastHash.c
   Transition.cpp
 )
 

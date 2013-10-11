@@ -1,4 +1,4 @@
-/*! @file Debug.h  Debugging helpers. */
+//! @file EventTranslator.cpp  Definition of @ref tesla::EventTranslator.
 /*
  * Copyright (c) 2013 Jonathan Anderson
  * All rights reserved.
@@ -29,30 +29,42 @@
  * SUCH DAMAGE.
  */
 
-#ifndef TESLA_DEBUG_H
-#define TESLA_DEBUG_H
+#include "Automaton.h"
+#include "EventTranslator.h"
+#include "InstrContext.h"
 
-#include <llvm/ADT/StringRef.h>
-#include <llvm/ADT/Twine.h>
+using namespace llvm;
+using namespace tesla;
 
-namespace llvm {
-  class raw_ostream;
+using std::string;
+using std::vector;
+
+
+void EventTranslator::CallSunrise(const Automaton::Lifetime& Lifetime) {
+
+  std::vector<Value*> Args;
+  Args.push_back(InstrCtx.TeslaContext(Lifetime.Context));
+  Args.push_back(InstrCtx.BuildLifetime(Lifetime));
+
+  Builder.CreateCall(InstrCtx.SunriseFn(), Args);
 }
 
-namespace tesla {
 
-llvm::raw_ostream& debugs(llvm::StringRef DebugModuleName = "tesla");
+void EventTranslator::CallSunset(const Automaton::Lifetime& Lifetime) {
+  std::vector<Value*> Args;
+  Args.push_back(InstrCtx.TeslaContext(Lifetime.Context));
+  Args.push_back(InstrCtx.BuildLifetime(Lifetime));
 
-LLVM_ATTRIBUTE_NORETURN
-void panic(llvm::Twine Message, bool PrintStackTrace = true);
-
-#ifdef NDEBUG
-#define __debugonly __unused
-#else
-#define __debugonly
-#endif
-
-} // namespace tesla
+  Builder.CreateCall(InstrCtx.SunsetFn(), Args);
+}
 
 
-#endif  // TESLA_DEBUG_H
+void EventTranslator::CallUpdateState(const Automaton& A, uint32_t Symbol) {
+  std::vector<Value*> Args;
+  Args.push_back(InstrCtx.TeslaContext(A.getAssertion().context()));
+  Args.push_back(InstrCtx.ExternalDescription(A));
+  Args.push_back(ConstantInt::get(InstrCtx.Int32Ty, Symbol));
+  Args.push_back(Key);
+
+  Builder.CreateCall(InstrCtx.UpdateStateFn(), Args);
+}

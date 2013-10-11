@@ -44,7 +44,7 @@ void foo(struct obj1 *op) {
  * CHECK: [[PTR:%[_a-zA-Z0-9\.]+]] = getelementptr inbounds %struct.obj2* [[C]]
  * CHECK: [[VALUE:%[_a-zA-Z0-9\.]+]] = load i32* [[PTR]]
  *
- * CHECK: call void [[INSTR:@__tesla_instr.*assert.*]](%struct.obj1* [[CHILD]], [[INT:i[3264]+]] [[VALUE]])
+ * CHECK: call void [[INSTR:@.*_tesla_instr.*assert.*]](%struct.obj1* [[CHILD]], [[INT:i[3264]+]] [[VALUE]])
  */
 		eventually(
 			do_something(
@@ -55,7 +55,7 @@ void foo(struct obj1 *op) {
 }
 
 /*
- * CHECK: define void [[INSTR]](%struct.obj1*, i32) {
+ * CHECK: define internal void [[INSTR]](%struct.obj1*, i32) {
  *
  * CHECK: [[KEY:%[_a-zA-Z0-9\.]+]] = alloca %tesla_key
  *

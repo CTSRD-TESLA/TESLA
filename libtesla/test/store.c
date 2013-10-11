@@ -44,12 +44,26 @@ check_store(struct tesla_store *store)
 {
 	assert(store != NULL);
 
+	struct tesla_lifetime lifetime = {
+		.tl_begin = {
+			.tle_repr = "init",
+			.tle_length = sizeof("init"),
+			.tle_hash = 0,
+		},
+		.tl_end = {
+			.tle_repr = "cleanup",
+			.tle_length = sizeof("cleanup"),
+			.tle_hash = 1,
+		},
+	};
+
 	struct tesla_automaton descriptions[CLASSES];
 	struct tesla_class *classes[CLASSES];
 
 	for (unsigned int i = 0; i < CLASSES; i++) {
 		struct tesla_automaton *descrip = descriptions + i;
 		descrip->ta_name = name(i);
+                descrip->ta_lifetime = &lifetime;
 
 		check(tesla_class_get(store, descrip, classes + i));
 

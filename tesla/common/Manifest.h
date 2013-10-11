@@ -29,6 +29,9 @@
  * SUCH DAMAGE.
  */
 
+#ifndef TESLA_MANIFEST_H
+#define TESLA_MANIFEST_H
+
 #include "Automaton.h"
 #include "Names.h"
 
@@ -69,6 +72,10 @@ public:
   //! Find the @ref tesla::Automaton defined at a @ref tesla::Location.
   const Automaton* FindAutomaton(const Location&) const;
 
+  const llvm::ArrayRef<Automaton::Lifetime> getLifetimes() const {
+    return Lifetimes;
+  }
+
   //! Load a @ref tesla::Manifest from a named file.
   static Manifest* load(llvm::raw_ostream& Err,
                         Automaton::Type = Automaton::Deterministic,
@@ -85,9 +92,10 @@ private:
   Manifest(llvm::OwningPtr<ManifestFile>& Protobuf,
            const AutomataMap& Descriptions,
            const std::map<Identifier,const Automaton*>& Automata,
-           llvm::ArrayRef<const Usage*> Roots)
+           llvm::ArrayRef<const Usage*> Roots,
+           llvm::ArrayRef<Automaton::Lifetime> Lifetimes)
     : Protobuf(Protobuf.take()), Descriptions(Descriptions), Automata(Automata),
-      Roots(Roots)
+      Roots(Roots), Lifetimes(Lifetimes)
   {
   }
 
@@ -106,7 +114,10 @@ private:
 
   //! Root automata (those named explicitly by the programmer).
   llvm::ArrayRef<const Usage*> Roots;
+
+  std::vector<Automaton::Lifetime> Lifetimes;
 };
 
 }
 
+#endif  /* !TESLA_MANIFEST_H */

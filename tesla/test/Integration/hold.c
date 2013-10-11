@@ -51,8 +51,7 @@ example_syscall(struct credential *cred, int index, int op)
 	 * Entering the system call should instantiate automata:
 	 *
 	 * CHECK: [CALE] example_syscall
-	 * CHECK: new  [[A0I0:[0-9]+]]: [[INIT:[0-9]+:0x0]] ('[[A0:.*]]')
-	 * CHECK: new  [[A1I0:[0-9]+]]: [[INIT:[0-9]+:0x0]] ('[[A1:.*]]')
+         * CHECK: sunrise
 	 */
 
 	struct object *o;
@@ -62,8 +61,10 @@ example_syscall(struct credential *cred, int index, int op)
 	 * (one which cares about entry and the other, exit):
 	 *
 	 * CHECK: [CALE] hold
+	 * CHECK: new  [[A0I0:[0-9]+]]: [[INIT:[0-9]+:0x0]] ('[[A0:.*]]')
 	 * CHECK: clone [[A0I0]]:[[INIT]] -> [[A0I1:[0-9]+]]:[[HOLD:[0-9]+:0x1]]
 	 * CHECK: [RETE] hold
+	 * CHECK: new  [[A1I0:[0-9]+]]: [[INIT:[0-9]+:0x0]] ('[[A1:.*]]')
 	 * CHECK: clone [[A1I0]]:[[INIT]] -> [[A1I1:[0-9]+]]:[[HOLD:[0-9]+:0x1]]
 	 */
 	int error = get_object(index, &o);
@@ -94,6 +95,10 @@ example_syscall(struct credential *cred, int index, int op)
 	 * On leaving the assertion scope, we should be cleaning up:
 	 *
 	 * CHECK: [RETE] example_syscall
+         *
+         * There should only be one (shared) sunset event:
+         * CHECK: sunset
+         * CHECK-NOT: sunset
 	 *
 	 * CHECK: update [[A0I0]]: [[INIT]]->[[DONE:[0-9]+:0x0]]
 	 * CHECK: pass '[[A0]]': [[A0I0]]

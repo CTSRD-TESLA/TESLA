@@ -45,18 +45,45 @@ public:
 private:
 	int count(struct tesla_store *store, const struct tesla_key *key);
 
+	struct tesla_transition begin = {
+		.from = 0,
+		.to = 1,
+		.flags = TESLA_TRANS_INIT,
+	};
+
+	struct tesla_transition end = {
+		.from = 1,
+		.to = 999,
+		.flags = TESLA_TRANS_CLEANUP,
+	};
+
 	struct tesla_transition t[3];
-	struct tesla_transitions trans = {
-		.length = 1,
-		.transitions = t
+	struct tesla_transitions trans[3] = {
+		{ .length = 1, .transitions = &begin },
+		{ .length = 1, .transitions = t },
+		{ .length = 1, .transitions = &end },
+	};
+
+	struct tesla_lifetime lifetime = {
+		.tl_begin = {
+			.tle_repr = "init",
+			.tle_length = sizeof("init"),
+			.tle_hash = 0,
+		},
+		.tl_end = {
+			.tle_repr = "cleanup",
+			.tle_length = sizeof("cleanup"),
+			.tle_hash = 1,
+		},
 	};
 
 	struct tesla_automaton automaton = {
 		.ta_name = "unique_name",
 		.ta_description = "update.cpp: generate(automaton)",
-		.ta_alphabet_size = 1,
+		.ta_alphabet_size = 3,
 		.ta_symbol_names = event_descriptions,
-		.ta_transitions = &trans,
+		.ta_transitions = trans,
+		.ta_lifetime = &lifetime,
 	};
 };
 
@@ -109,15 +136,10 @@ void UpdateTest::run()
 	t[0].to_mask = 0x0;
 	t[0].flags = TESLA_TRANS_INIT;
 
-	expectedEvents.push(NewInstance);
-	tesla_update_state(context, &automaton, 0, &key);
-	// TODO: pass transition through event handler
-	//assert(lastEvent->transition == t);
-	assert(lastEvent.get());
-	assert(lastEvent->inst->ti_state == 1);
-	assert(lastEvent->inst->ti_key.tk_mask == 0);
+	expectedEvents.push(Sunrise);
+	tesla_sunrise(context, automaton.ta_lifetime);
 
-	assert(count(store, &any) == 1);
+	assert(count(store, &any) == 0);
 	assert(count(store, &one) == 0);
 	assert(count(store, &two) == 0);
 
@@ -131,8 +153,9 @@ void UpdateTest::run()
 	t[0].to_mask = 0x1;
 	t[0].flags = 0;
 
+	expectedEvents.push(NewInstance);
 	expectedEvents.push(Clone);
-	tesla_update_state(context, &automaton, 0, &key);
+	tesla_update_state(context, &automaton, 1, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 1);
 	assert(lastEvent->inst->ti_key.tk_mask == 0);
@@ -155,7 +178,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(context, &automaton, 0, &key);
+	tesla_update_state(context, &automaton, 1, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 2);
 	assert(lastEvent->inst->ti_key.tk_mask == 0x1);
@@ -178,7 +201,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Transition);
-	tesla_update_state(context, &automaton, 0, &key);
+	tesla_update_state(context, &automaton, 1, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 4);
 	assert(lastEvent->inst->ti_key.tk_mask == 0x3);
@@ -198,7 +221,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(context, &automaton, 0, &key);
+	tesla_update_state(context, &automaton, 1, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 1);
 	assert(lastEvent->inst->ti_key.tk_mask == 0);
@@ -221,7 +244,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(context, &automaton, 0, &key);
+	tesla_update_state(context, &automaton, 1, &key);
 	assert(lastEvent->transition == t);
 	assert(lastEvent->inst->ti_state == 5);
 	assert(lastEvent->inst->ti_key.tk_mask == 0x1);
@@ -244,7 +267,7 @@ void UpdateTest::run()
 	t[0].flags = 0;
 
 	expectedEvents.push(Clone);
-	tesla_update_state(context, &automaton, 0, &key);
+	tesla_update_state(context, &automaton, 1, &key);
 	assert(lastEvent->inst->ti_state == 1);
 	assert(lastEvent->inst->ti_key.tk_mask == 0);
 	assert(lastEvent->copy->ti_state == 7);

@@ -47,11 +47,14 @@ typedef struct tesla_automaton Automaton;
 typedef struct tesla_class Class;
 typedef struct tesla_instance Instance;
 typedef struct tesla_key Key;
+typedef struct tesla_lifetime Lifetime;
 typedef struct tesla_transition Trans;
 typedef struct tesla_transitions TransSet;
 
 
 enum EventType {
+	Sunrise,
+	Sunset,
 	NewInstance,
 	Transition,
 	Clone,
@@ -81,6 +84,18 @@ LibTeslaTest *Test = NULL;
 
 class Event {
 public:
+	static void SunriseEvent(enum tesla_context c, const Lifetime *l)
+	{
+		Test->Ev(new Event(Sunrise, NULL, NULL, NULL, NULL,
+		                   NULL, l, c));
+	}
+
+	static void SunsetEvent(enum tesla_context c, const Lifetime *l)
+	{
+		Test->Ev(new Event(Sunset, NULL, NULL, NULL, NULL,
+		                   NULL, l, c));
+	}
+
 	static void NewInstanceEvent(Class *c, Instance *i)
 	{
 		Test->Ev(new Event(NewInstance, c, i));
@@ -99,20 +114,21 @@ public:
 
 	static void NoInstanceEvent(Class *c, int32_t symbol, const Key *k)
 	{
-		Test->Ev(new Event(NoInstance, c, NULL, NULL, k, NULL, symbol));
+		Test->Ev(new Event(NoInstance, c, NULL, NULL, k, NULL, NULL,
+		                   symbol));
 	}
 
 	static void BadTransitionEvent(Class *c, Instance *i, int32_t symbol)
 	{
 		Test->Ev(new Event(BadTransition, c, i, NULL, NULL, NULL,
-		                   symbol));
+		                   NULL, symbol));
 	}
 
 	static void ErrEvent(const Automaton *a, int32_t symbol, int32_t code,
 		const char *message)
 	{
-		Test->Ev(new Event(Err, NULL, NULL, NULL,
-				NULL, NULL, symbol, code, message));
+		Test->Ev(new Event(Err, NULL, NULL, NULL, NULL,
+		                   NULL, NULL, symbol, code, message));
 	}
 
 	static void AcceptEvent(Class *c, Instance *i)
@@ -122,7 +138,8 @@ public:
 
 	static void IgnoredEvent(const Class *c, int32_t symbol, const Key *k)
 	{
-		Test->Ev(new Event(Ignored, c, NULL, NULL, k, NULL, symbol));
+		Test->Ev(new Event(Ignored, c, NULL, NULL, k, NULL, NULL,
+		                   symbol));
 	}
 
 	static struct tesla_event_handlers handlers;
@@ -133,6 +150,7 @@ public:
 	const Instance *copy;
 	const Key *key;
 	const Trans *transition;
+	const Lifetime *lifetime;
 	const int32_t symbol;
 	const int32_t err;
 	const char *errMessage;
@@ -140,17 +158,19 @@ public:
 	Event(const EventType type, const Class *cls,
 	      const Instance *inst = NULL, const Instance *copy = NULL,
 	      const Key *key = NULL, const Trans *transition = NULL,
-	      const int32_t symbol = -1,
+	      const Lifetime *lifetime = NULL, const int32_t symbol = -1,
 	      const int32_t err = -1, const char *errMessage = NULL,
 	      const char *errContext = NULL)
 		: type(type), cls(cls), inst(inst), copy(copy), key(key),
-		  transition(transition), symbol(symbol),
+		  transition(transition), lifetime(lifetime), symbol(symbol),
 		  err(err), errMessage(errMessage)
 	{
 	}
 
 	static const char* TypeStr(enum EventType e) {
 		switch (e) {
+			case Sunrise:		return "Sunrise";
+			case Sunset:		return "Sunset";
 			case NewInstance:	return "NewInstance";
 			case Transition:	return "Transition";
 			case Clone:		return "Clone";
@@ -198,6 +218,8 @@ public:
 
 
 struct tesla_event_handlers Event::handlers = {
+	.teh_sunrise		= SunriseEvent,
+	.teh_sunset		= SunsetEvent,
 	.teh_init		= NewInstanceEvent,
 	.teh_transition		= TransitionEvent,
 	.teh_clone		= CloneEvent,

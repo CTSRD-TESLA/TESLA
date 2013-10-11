@@ -154,9 +154,12 @@ message AssertionSite {
 message FunctionEvent {
   enum Direction { Entry = 1; Exit = 2; }
   enum CallContext { Caller = 1; Callee = 2; }
+
   /** Is this a C function call or an Objective-C message send? */
-  enum CallKind { CCall = 1; ObjCInstanceMessage = 2; ObjCClassMessage = 3;
-    ObjCSuperMessage = 4; }
+  enum CallKind {
+    CCall = 1;
+    ObjCInstanceMessage = 2; ObjCClassMessage = 3; ObjCSuperMessage = 4;
+  }
 
   /** The function to be instrumented. This contains the selector name for
    * Objective-C*/

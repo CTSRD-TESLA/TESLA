@@ -32,6 +32,7 @@
 #include "Automaton.h"
 #include "Debug.h"
 #include "Names.h"
+#include "Protocol.h"
 #include "State.h"
 #include "Transition.h"
 
@@ -151,28 +152,26 @@ bool Automaton::IsRealisable() const {
   return true;
 }
 
-const Transition& Automaton::Init() const
+const Transition* Automaton::Init() const
 {
   for (auto& TEq : *this) {
     const Transition *Head = *TEq.begin();
     if (Head->RequiresInit())
-      return *Head;
+      return Head;
   }
 
-  assert(false && "called Init() on an automaton with no Init event");
-  return *((Transition*) NULL);
+  return NULL;
 }
 
-const Transition& Automaton::Cleanup() const
+const TEquivalenceClass Automaton::Cleanup() const
 {
   for (auto& TEq : *this) {
     const Transition *Head = *TEq.begin();
     if (Head->RequiresCleanup())
-      return *Head;
+      return TEq;
   }
 
-  assert(false && "called Cleanup() on an automaton with no Cleanup event");
-  return *((Transition*) NULL);
+  return TEquivalenceClass();
 }
 
 string Automaton::String() const {
@@ -279,6 +278,45 @@ string Automaton::Dot() const {
   return ss.str();
 }
 
+
+Automaton::Lifetime Automaton::getLifetime() const {
+  TEquivalenceClass Cleanup = this->Cleanup();
+  const Transition *CleanupTrans = Cleanup.empty() ? NULL : *Cleanup.begin();
+
+  return Lifetime(getAssertion().context(), Init(), CleanupTrans);
+}
+
+
+string Automaton::Lifetime::String() const {
+  return (Twine()
+    + AutomatonDescription::Context_Name(Context)
+    + ": ("
+    + (Init ? Init->ShortLabel() : "<null>")
+    + " -> "
+    + (Cleanup ? Cleanup->ShortLabel() : "<null>")
+    + ")"
+  ).str();
+}
+
+
+bool Automaton::Lifetime::operator == (const Automaton::Lifetime& other) const {
+  if (other.Context != Context)
+    return false;
+
+  if (other.Init == NULL xor Init == NULL)
+    return false;
+
+  if (Init != NULL and *other.Init->Protobuf() != *Init->Protobuf())
+    return false;
+
+  if (other.Cleanup == NULL xor Cleanup == NULL)
+    return false;
+
+  if (Cleanup != NULL and *other.Cleanup->Protobuf() != *Cleanup->Protobuf())
+    return false;
+
+  return true;
+}
 
 
 // ---- NFA implementation ----------------------------------------------------
