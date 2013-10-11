@@ -118,6 +118,8 @@ tesla_sunset(enum tesla_context context, const struct tesla_lifetime *l)
 			class->tc_automaton->ta_cleanup_symbol, &empty_key);
 	}
 
+	bzero(ls->tls_classes, sizeof(ls->tls_classes));
+
 	const size_t dynamic_classes = ls->tls_dyn_count;
 	for (size_t i = 0; i < dynamic_classes; i++) {
 		tesla_class *class = ls->tls_dyn_classes[i];
@@ -127,6 +129,9 @@ tesla_sunset(enum tesla_context context, const struct tesla_lifetime *l)
 		tesla_update_class_state(class, store,
 			class->tc_automaton->ta_cleanup_symbol, &empty_key);
 	}
+
+	bzero(ls->tls_dyn_classes,
+	      ls->tls_dyn_count * sizeof(ls->tls_classes[0]));
 }
 
 
