@@ -47,7 +47,7 @@ LLVM_ATTRIBUTE_NORETURN
 void panic(llvm::Twine Message, bool PrintStackTrace = true);
 
 #ifdef NDEBUG
-#define __debugonly __unused
+#define __debugonly __attribute__((unused))
 #else
 #define __debugonly
 #endif

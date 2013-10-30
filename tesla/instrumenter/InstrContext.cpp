@@ -244,7 +244,7 @@ Constant* InstrContext::BuildAutomatonDescription(const Automaton *A) {
 Constant* InstrContext::BuildLifetimeEvent(const Transition& T) {
   string Protobuf;
 
-  __unused bool Success = T.Protobuf()->SerializeToString(&Protobuf);
+  __debugonly bool Success = T.Protobuf()->SerializeToString(&Protobuf);
   assert(Success);
 
   int32_t HashValue = SuperFastHash(Protobuf.c_str(), Protobuf.length());
