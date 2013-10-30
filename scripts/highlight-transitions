@@ -14,6 +14,9 @@ args.add_argument('dot', nargs='+',
 args.add_argument('-t', '--transitions', required = True,
 	help = 'file containing TESLA transition counts')
 
+args.add_argument('--format', default='dot',
+	help = 'output format')
+
 args.add_argument('-o', '--output',
 	help = 'file to put weighted graphs in')
 
@@ -72,6 +75,8 @@ for l in open(args.transitions, 'r'):
 	transitions_taken[name][transition] = count
 
 
+assertion_counts = collections.defaultdict(int)
+
 for filename in args.dot:
 	#
 	# Transitions for the automaton we're currently processing
@@ -103,7 +108,7 @@ for filename in args.dot:
 		# (including the name comments we matched above).
 		#
 		if not transition_pattern.match(line):
-			out.write(line)
+			if args.format == 'dot': out.write(line)
 			continue
 
 		#
@@ -118,6 +123,8 @@ for filename in args.dot:
 		# If never taken, grey it out.
 		#
 		if (source,dest) not in trans:
+			assertion_counts[name] += 0
+
 			attrs = { 'color': '"#00000011"' }
 
 		#
@@ -132,9 +139,23 @@ for filename in args.dot:
 				'penwidth': 10 * width
 			}
 
+			assertion_counts[name] += count
 
-		attrs = ', '.join([ '%s = %s' % a for a in attrs.items() ])
-		out.write('\t%d -> %d [ %s ];\n' % (source, dest, attrs))
+
+		if args.format == 'dot':
+			attrs = ', '.join([ '%s = %s' % a for a in attrs.items() ])
+			out.write('\t%d -> %d [ %s ];\n' % (source, dest, attrs))
+
+		elif args.format == 'assertions':
+			pass
+
+		else:
+			raise ValueError("invalid format: '%s'" % args.format)
+
+
+if args.format == 'assertions':
+	for (name,count) in assertion_counts:
+		out.write('%s: %d\n' % (name, count))
 
 if args.output:
 	os.rename(args.output + tmp_suffix, args.output)
