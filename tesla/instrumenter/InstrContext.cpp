@@ -30,6 +30,7 @@
  */
 
 #include "Automaton.h"
+#include "Debug.h"
 #include "InstrContext.h"
 #include "State.h"
 #include "SuperFastHash.h"
