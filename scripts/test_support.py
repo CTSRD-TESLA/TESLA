@@ -35,7 +35,7 @@ def cpp_out():
 	cpp_version = run_command('cpp', [ '--version' ]).split('\n')[0]
 
 	# Clang usage: 'cpp in -o out'; GCC usage: 'cpp in out'
-	if 'clang' in cpp_version: return '-o'
+	if 'clang version 3.3' in cpp_version: return '-o'
 	else: return ''
 
 
