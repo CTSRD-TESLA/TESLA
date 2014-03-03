@@ -89,7 +89,7 @@ struct tesla_lifetime_state {
 	struct tesla_lifetime_event	 tls_end;
 
 	/** A place to register a few classes that share this lifetime. */
-	struct tesla_class*		 tls_classes[4];
+	struct tesla_class*		 tls_classes[32];
 
 	/** A place to register more classes that share this lifetime. */
 	struct tesla_class*		*tls_dyn_classes;
@@ -416,14 +416,14 @@ void	ev_transition(struct tesla_class *, struct tesla_instance *,
 	    const struct tesla_transition *);
 void	ev_clone(struct tesla_class *, struct tesla_instance *orig,
 	    struct tesla_instance *copy, const struct tesla_transition *);
-void	ev_no_instance(struct tesla_class *, int32_t symbol,
+void	ev_no_instance(struct tesla_class *, uint32_t symbol,
 	    const struct tesla_key *);
 void	ev_bad_transition(struct tesla_class *, struct tesla_instance *,
-	    int32_t symbol);
+	    uint32_t symbol);
 void	ev_err(const struct tesla_automaton *, int symbol, int errnum,
 	    const char *);
 void	ev_accept(struct tesla_class *, struct tesla_instance *);
-void	ev_ignored(const struct tesla_class *, int32_t symbol,
+void	ev_ignored(const struct tesla_class *, uint32_t symbol,
 	    const struct tesla_key *);
 
 /*

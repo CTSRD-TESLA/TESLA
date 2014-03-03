@@ -51,17 +51,17 @@ SDT_PROBE_DEFINE4(tesla, automata, instance, clone, clone,
     "struct tesla_class *", "struct tesla_instance *",
     "struct tesla_instance *", "struct tesla_transition *");
 SDT_PROBE_DEFINE4(tesla, automata, fail, no_instance, no-instance-match,
-    "struct tesla_class *", "const char *", "int32_t",
+    "struct tesla_class *", "const char *", "uint32_t",
     "struct tesla_transitions *");
 SDT_PROBE_DEFINE3(tesla, automata, fail, bad_transition, bad-transition,
     "struct tesla_class *", "struct tesla_instance *",
-    "int32_t");
+    "uint32_t");
 SDT_PROBE_DEFINE4(tesla, automata, fail, other_err, other-error,
-    "struct tesla_automaton *", "int32_t", "int", "const char *");
+    "struct tesla_class *", "uint32_t", "int32_t", "const char *");
 SDT_PROBE_DEFINE2(tesla, automata, success, accept, accept,
     "struct tesla_class *", "struct tesla_instance *");
 SDT_PROBE_DEFINE3(tesla, automata, event, ignored, ignored-event,
-    "struct tesla_class *", "int32_t", "struct tesla_key *");
+    "struct tesla_class *", "uint32_t", "struct tesla_key *");
 
 static void
 sunrise(enum tesla_context c, const struct tesla_lifetime *tl)
@@ -101,7 +101,7 @@ clone(struct tesla_class *tcp, struct tesla_instance *origp,
 }
 
 static void
-no_instance(struct tesla_class *tcp, int32_t symbol,
+no_instance(struct tesla_class *tcp, uint32_t symbol,
     const struct tesla_key *tkp)
 {
 	char instbuf[200];
@@ -130,7 +130,7 @@ no_instance(struct tesla_class *tcp, int32_t symbol,
 
 static void
 bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
-    int32_t symbol)
+    uint32_t symbol)
 {
 
 	SDT_PROBE(tesla, automata, fail, bad_transition, tcp, tip, symbol,
@@ -138,7 +138,7 @@ bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 }
 
 static void
-err(const struct tesla_automaton *tap, int32_t symbol, int32_t errnum,
+err(const struct tesla_automaton *tap, uint32_t symbol, int32_t errnum,
     const char *message)
 {
 
@@ -154,7 +154,7 @@ accept(struct tesla_class *tcp, struct tesla_instance *tip)
 }
 
 static void
-ignored(const struct tesla_class *tcp, int32_t symbol,
+ignored(const struct tesla_class *tcp, uint32_t symbol,
     const struct tesla_key *tkp)
 {
 

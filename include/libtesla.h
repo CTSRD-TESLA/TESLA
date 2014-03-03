@@ -92,12 +92,12 @@ struct tesla_automaton {
 	 *
 	 * Input alphabet symbols are integers in the range [0,alphabet_size].
 	 */
-	const int32_t			 ta_alphabet_size;
+	const uint32_t			 ta_alphabet_size;
 
         /**
          * The symbol number used to signal cleanup.
          */
-        const int32_t                    ta_cleanup_symbol;
+        const uint32_t                    ta_cleanup_symbol;
 
 	/**
 	 * Transitions that will be taken in response to events.
@@ -136,7 +136,7 @@ struct tesla_lifetime_event {
 	const char			*tle_repr;
 
 	/** The length of @ref #tle_repr. */
-	const int32_t			 tle_length;
+	const uint32_t			 tle_length;
 
 	/**
 	 * A precomputed hash of @ref #tle_repr.
@@ -147,7 +147,7 @@ struct tesla_lifetime_event {
 	 * All clients should be consistent, however; the TESLA instrumenter
 	 * uses SuperFastHash.
 	 */
-	const int32_t			 tle_hash;
+	const uint32_t			 tle_hash;
 };
 
 
@@ -346,15 +346,15 @@ typedef void	(*tesla_ev_clone)(struct tesla_class *,
 
 /** No @ref tesla_class instance was found to match a @ref tesla_key. */
 typedef void	(*tesla_ev_no_instance)(struct tesla_class *,
-	    int32_t symbol, const struct tesla_key *);
+	    uint32_t symbol, const struct tesla_key *);
 
 /** A @ref tesla_instance is not in the right state to take a transition. */
 typedef void	(*tesla_ev_bad_transition)(struct tesla_class *,
-	    struct tesla_instance *, int32_t symbol);
+	    struct tesla_instance *, uint32_t symbol);
 
 /** Generic error handler. */
 typedef void	(*tesla_ev_error)(const struct tesla_automaton *,
-	    int32_t symbol, int32_t errnum, const char *message);
+	    uint32_t symbol, int32_t errnum, const char *message);
 
 /** A @ref tesla_instance has accepted a sequence of events. */
 typedef void	(*tesla_ev_accept)(struct tesla_class *,
@@ -362,7 +362,7 @@ typedef void	(*tesla_ev_accept)(struct tesla_class *,
 
 /** An event is being ignored. */
 typedef void	(*tesla_ev_ignored)(const struct tesla_class *,
-	    int32_t symbol, const struct tesla_key *);
+	    uint32_t symbol, const struct tesla_key *);
 
 /** A vector of event handlers. */
 struct tesla_event_handlers {

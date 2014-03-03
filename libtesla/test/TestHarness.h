@@ -112,19 +112,19 @@ public:
 		Test->Ev(new Event(Clone, c, orig, copy, NULL, t));
 	}
 
-	static void NoInstanceEvent(Class *c, int32_t symbol, const Key *k)
+	static void NoInstanceEvent(Class *c, uint32_t symbol, const Key *k)
 	{
 		Test->Ev(new Event(NoInstance, c, NULL, NULL, k, NULL, NULL,
 		                   symbol));
 	}
 
-	static void BadTransitionEvent(Class *c, Instance *i, int32_t symbol)
+	static void BadTransitionEvent(Class *c, Instance *i, uint32_t symbol)
 	{
 		Test->Ev(new Event(BadTransition, c, i, NULL, NULL, NULL,
 		                   NULL, symbol));
 	}
 
-	static void ErrEvent(const Automaton *a, int32_t symbol, int32_t code,
+	static void ErrEvent(const Automaton *a, uint32_t symbol, int32_t code,
 		const char *message)
 	{
 		Test->Ev(new Event(Err, NULL, NULL, NULL, NULL,
@@ -136,7 +136,7 @@ public:
 		Test->Ev(new Event(Accept, c, i));
 	}
 
-	static void IgnoredEvent(const Class *c, int32_t symbol, const Key *k)
+	static void IgnoredEvent(const Class *c, uint32_t symbol, const Key *k)
 	{
 		Test->Ev(new Event(Ignored, c, NULL, NULL, k, NULL, NULL,
 		                   symbol));
@@ -151,14 +151,14 @@ public:
 	const Key *key;
 	const Trans *transition;
 	const Lifetime *lifetime;
-	const int32_t symbol;
+	const uint32_t symbol;
 	const int32_t err;
 	const char *errMessage;
 
 	Event(const EventType type, const Class *cls,
 	      const Instance *inst = NULL, const Instance *copy = NULL,
 	      const Key *key = NULL, const Trans *transition = NULL,
-	      const Lifetime *lifetime = NULL, const int32_t symbol = -1,
+	      const Lifetime *lifetime = NULL, const uint32_t symbol = -1,
 	      const int32_t err = -1, const char *errMessage = NULL,
 	      const char *errContext = NULL)
 		: type(type), cls(cls), inst(inst), copy(copy), key(key),

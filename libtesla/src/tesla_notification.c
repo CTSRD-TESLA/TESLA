@@ -159,7 +159,7 @@ ev_clone(struct tesla_class *tcp, struct tesla_instance *orig,
 }
 
 void
-ev_no_instance(struct tesla_class *tcp, int32_t symbol,
+ev_no_instance(struct tesla_class *tcp, uint32_t symbol,
 	const struct tesla_key *tkp)
 {
 
@@ -168,7 +168,7 @@ ev_no_instance(struct tesla_class *tcp, int32_t symbol,
 
 void
 ev_bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
-	int32_t symbol)
+	uint32_t symbol)
 {
 
 	FOREACH_ERROR_HANDLER(teh_bad_transition, tcp, tip, symbol);
@@ -190,7 +190,7 @@ ev_accept(struct tesla_class *tcp, struct tesla_instance *tip)
 }
 
 void
-ev_ignored(const struct tesla_class *tcp, int32_t symbol,
+ev_ignored(const struct tesla_class *tcp, uint32_t symbol,
 	const struct tesla_key *tkp)
 {
 
@@ -266,7 +266,7 @@ print_clone(struct tesla_class *tcp,
 }
 
 static void
-print_no_instance(struct tesla_class *tcp, int32_t symbol,
+print_no_instance(struct tesla_class *tcp, uint32_t symbol,
     const struct tesla_key *tkp)
 {
 
@@ -293,7 +293,7 @@ print_no_instance(struct tesla_class *tcp, int32_t symbol,
 
 static void
 print_bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
-    int32_t symbol)
+    uint32_t symbol)
 {
 
 	assert(tcp != NULL);
@@ -326,7 +326,7 @@ print_bad_transition(struct tesla_class *tcp, struct tesla_instance *tip,
 }
 
 static void
-print_error(const struct tesla_automaton *a, int symbol, int errnum,
+print_error(const struct tesla_automaton *a, uint32_t symbol, int32_t errnum,
 	const char *message)
 {
 
@@ -345,7 +345,7 @@ print_accept(struct tesla_class *tcp, struct tesla_instance *tip)
 }
 
 static void
-print_ignored(const struct tesla_class *tcp, int32_t symbol,
+print_ignored(const struct tesla_class *tcp, uint32_t symbol,
     __unused const struct tesla_key *tkp)
 {
 	const struct tesla_automaton *a = tcp->tc_automaton;
@@ -385,7 +385,7 @@ static const struct tesla_event_handlers printf_on_failure = {
  * Wrappers that panic on failure:
  */
 static void
-panic_no_instance(struct tesla_class *tcp, int32_t symbol,
+panic_no_instance(struct tesla_class *tcp, uint32_t symbol,
 	__unused const struct tesla_key *tkp)
 {
 	const char *event_name = tcp->tc_automaton->ta_symbol_names[symbol];
@@ -396,7 +396,7 @@ panic_no_instance(struct tesla_class *tcp, int32_t symbol,
 
 static void
 panic_bad_transition(struct tesla_class *tcp,
-	__unused struct tesla_instance *tip, int32_t symbol)
+	__unused struct tesla_instance *tip, uint32_t symbol)
 {
 	const char *event_name = tcp->tc_automaton->ta_symbol_names[symbol];
 
@@ -405,7 +405,7 @@ panic_bad_transition(struct tesla_class *tcp,
 }
 
 static void
-panic_error(const struct tesla_automaton *a, int symbol, int errnum,
+panic_error(const struct tesla_automaton *a, uint32_t symbol, int32_t errnum,
 	const char *message)
 {
 
