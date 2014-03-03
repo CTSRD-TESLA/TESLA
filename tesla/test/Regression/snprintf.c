@@ -4,8 +4,8 @@
  * RUN: %t | tee %t.out
  * RUN: FileCheck -input-file %t.out %s
  *
- * I have *no* idea why this fails on my laptop but not other machines:
- * XFAIL: darwin
+ * This test exposes a bug in snprintf() on Mac OS X 10.8.
+ * XFAIL: darwin12
  */
 
 #include <stdint.h>
