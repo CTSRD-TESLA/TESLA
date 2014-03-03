@@ -39,8 +39,6 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/PrettyStackTrace.h>
 
-#include <google/protobuf/text_format.h>
-
 using namespace clang::tooling;
 using namespace llvm;
 using namespace tesla;
