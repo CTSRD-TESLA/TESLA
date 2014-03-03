@@ -7,7 +7,7 @@ BASE=openssl-api
 
 CC=clang
 
-CFLAGS	+= -Wall -g -ggdb -I ${TESLA_SOURCE_DIR}/include
+CFLAGS	+= -Wall -I ${TESLA_SOURCE_DIR}/include
 LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
 
 CLANG_VERSION=`clang --version | grep version | awk '{ print $$3 }'`
