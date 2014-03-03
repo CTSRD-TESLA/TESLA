@@ -46,10 +46,11 @@ static void tesla_update_class_state(struct tesla_class *, struct tesla_store *,
 void
 tesla_sunrise(enum tesla_context context, const struct tesla_lifetime *l)
 {
+	__unused int ret;
 	assert(l != NULL);
 
 	struct tesla_store *store;
-	int ret = tesla_store_get(context, TESLA_MAX_CLASSES,
+	ret = tesla_store_get(context, TESLA_MAX_CLASSES,
 			TESLA_MAX_INSTANCES, &store);
 	assert(ret == TESLA_SUCCESS);
 	assert(store->ts_lifetime_count < store->ts_length);
@@ -81,12 +82,13 @@ tesla_sunrise(enum tesla_context context, const struct tesla_lifetime *l)
 void
 tesla_sunset(enum tesla_context context, const struct tesla_lifetime *l)
 {
+	__unused int ret;
 	assert(l != NULL);
 
 	ev_sunset(context, l);
 
 	struct tesla_store *store;
-	int ret = tesla_store_get(context, TESLA_MAX_CLASSES,
+	ret = tesla_store_get(context, TESLA_MAX_CLASSES,
 			TESLA_MAX_INSTANCES, &store);
 	assert(ret == TESLA_SUCCESS);
 	assert(store->ts_lifetime_count < store->ts_length);
