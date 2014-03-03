@@ -93,7 +93,7 @@ main(int argc, char *argv[]) {
 
   if (!Manifest) {
     err << "Unable to read manifest '" << ManifestName << "'\n";
-    return false;
+    return 1;
   }
 
   for (auto i : Manifest->AllAutomata()) {
