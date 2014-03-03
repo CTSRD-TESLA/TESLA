@@ -39,7 +39,7 @@ ${BASE}: ${BASE}.instr.o
 
 # TESLA analysis (C -> TESLA IR)
 .c.tesla:
-	tesla analyse $< -o $@ -- ${CFLAGS} ${RESOURCE_DIR}
+	tesla analyse -S $< -o $@ -- ${CFLAGS} ${RESOURCE_DIR}
 	sed -i.backup "s@`pwd`/@@" $@ && rm $@.backup
 
 # Pretty visualisation (TELSA IR -> GraphViz)

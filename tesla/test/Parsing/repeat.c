@@ -2,7 +2,7 @@
  * @file repeat.c
  * Check parsing of repeated expressions.
  *
- * RUN: tesla analyse %s -o %t -- %cflags
+ * RUN: tesla analyse -S %s -o %t -- %cflags
  * RUN: FileCheck -input-file=%t %s
  */
 

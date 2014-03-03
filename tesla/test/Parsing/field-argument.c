@@ -2,7 +2,7 @@
  * @file field-argument.c
  * Check parsing of a automaton instance name derived from a struct field.
  *
- * RUN: tesla analyse %s -o %t -- %cflags
+ * RUN: tesla analyse -S %s -o %t -- %cflags
  * RUN: FileCheck -input-file=%t %s
  */
 

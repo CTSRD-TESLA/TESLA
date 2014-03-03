@@ -2,7 +2,7 @@
  * @file bitmask.c
  * Check parsing of flags combined in a bitmask.
  *
- * RUN: tesla analyse %s -o %t -- %cflags
+ * RUN: tesla analyse -S %s -o %t -- %cflags
  * RUN: FileCheck -input-file=%t %s
  */
 

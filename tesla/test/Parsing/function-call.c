@@ -2,7 +2,7 @@
  * @file function-call.c
  * Check parsing of TESLA sequences.
  *
- * RUN: tesla analyse %s -o %t -- %cflags
+ * RUN: tesla analyse -S %s -o %t -- %cflags
  * RUN: FileCheck -input-file=%t %s
  */
 

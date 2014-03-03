@@ -47,6 +47,9 @@ using namespace clang;
 using namespace tesla;
 using std::string;
 
+llvm::cl::opt<bool> UseTextFormat(
+  "S", llvm::cl::desc("Use textual (rather than binary) TESLA representation"));
+
 
 namespace tesla {
 
@@ -74,7 +77,12 @@ void TeslaConsumer::HandleTranslationUnit(ASTContext &Context) {
     *Result.add_root() = *U;
 
   string ProtobufText;
-  google::protobuf::TextFormat::PrintToString(Result, &ProtobufText);
+
+  if (UseTextFormat)
+    google::protobuf::TextFormat::PrintToString(Result, &ProtobufText);
+  else
+    Result.SerializeToString(&ProtobufText);
+
   Out << ProtobufText;
 }
 

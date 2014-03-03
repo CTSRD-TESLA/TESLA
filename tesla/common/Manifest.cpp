@@ -100,9 +100,26 @@ Manifest::load(raw_ostream& ErrorStream, Automaton::Type T, StringRef Path) {
   }
 
   OwningPtr<ManifestFile> Protobuf(new ManifestFile);
-  if (!::google::protobuf::TextFormat::ParseFromString(Buffer->getBuffer(),
-                                                       Protobuf.get())) {
-    ErrorStream << "Error parsing TESLA manifest '" << Path << "'\n";
+
+  StringRef buf = Buffer->getBuffer();
+  const bool TextFormat =
+    buf.ltrim().startswith("automaton")
+    or buf.ltrim().startswith("#line 1")       // for preprocessed manifests
+    or buf.ltrim().startswith("# 1")           // GNU cpp version of the above
+    ;
+
+  const bool success =
+    TextFormat
+      ? google::protobuf::TextFormat::ParseFromString(buf, Protobuf.get())
+      : Protobuf->ParseFromArray(buf.data(), buf.size())
+    ;
+
+  if (!success) {
+    ErrorStream
+      << "Error parsing TESLA manifest '" << Path << "' (in "
+      << (TextFormat ? "text" : "binary")
+      << " format)\n"
+      ;
     return NULL;
   }
 
