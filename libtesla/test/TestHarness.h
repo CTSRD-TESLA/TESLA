@@ -207,8 +207,8 @@ public:
 		if (copy)       oss << "  clone:        " << copy << "\n";
 		if (key)        oss << "  key:          " << key << "\n";
 		if (transition) oss << "  transition:   " << transition << "\n";
-		if (symbol >= 0)
-			oss << "  symbol:       " << symbol << "\n";
+
+		oss << "  symbol:       " << symbol << "\n";
 
 		oss << "}";
 
