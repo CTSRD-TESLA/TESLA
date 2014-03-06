@@ -11,7 +11,7 @@ LLC?=llc
 CFLAGS	+= -Wall -I ${TESLA_SOURCE_DIR}/include
 LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
 
-CLANG_VERSION=`${CLANG} --version | grep version | awk '{ print $$3 }'`
+CLANG_VERSION=`${CC} --version | grep version | awk '{ print $$3 }'`
 RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/${CLANG_VERSION}
 
 
