@@ -4,8 +4,8 @@
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
  * RUN: tesla print -format=dot -r %t.tesla -o %t.nondeterministic.dot
  * RUN: tesla print -format=dot -n %t.tesla -o %t.deterministic.dot
- * RUN: FileCheck -check-prefix=NFA -input-file=%t.nondeterministic.dot %s
- * RUN: FileCheck -check-prefix=DFA -input-file=%t.deterministic.dot %s
+ * RUN: %filecheck -check-prefix=NFA -input-file=%t.nondeterministic.dot %s
+ * RUN: %filecheck -check-prefix=DFA -input-file=%t.deterministic.dot %s
  */
 
 #include <tesla-macros.h>

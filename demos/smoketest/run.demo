@@ -1,10 +1,10 @@
 #!/bin/sh
 #
 # RUN: %s %cflags > %t.out 2>&1
-# RUN: FileCheck --check-prefix NORMAL -input-file %t.out %s
+# RUN: %filecheck --check-prefix NORMAL -input-file %t.out %s
 #
 # RUN: %s %cflags -D TESLA > %t.tesla.out 2>&1
-# RUN: FileCheck --check-prefix DTESLA -input-file %t.tesla.out %s
+# RUN: %filecheck --check-prefix DTESLA -input-file %t.tesla.out %s
 #
 
 cd `dirname $0`
@@ -18,7 +18,7 @@ TESLA_DEBUG=tesla.events LD_LIBRARY_PATH=$TESLA_BUILD_DIR/libtesla/src ./smokete
 # NORMAL: tesla analyse
 # NORMAL: tesla cat
 # NORMAL: tesla instrument
-# NORMAL: clang -o smoketest {{.*}}.instr.o
+# NORMAL: clang{{[0-9]*}} -o smoketest {{.*}}.instr.o
 # NORMAL: Calling the 'example_syscall' function...
 # NORMAL-NOT: [CALE]
 # NORMAL-NOT: [CALR]
@@ -32,7 +32,7 @@ TESLA_DEBUG=tesla.events LD_LIBRARY_PATH=$TESLA_BUILD_DIR/libtesla/src ./smokete
 # DTESLA: tesla analyse
 # DTESLA: tesla cat
 # DTESLA: tesla instrument
-# DTESLA: clang -o smoketest {{.*}}.instr.o
+# DTESLA: clang{{[0-9]*}} -o smoketest {{.*}}.instr.o
 # DTESLA: Calling the 'example_syscall' function...
 # DTESLA: [CALE] example_syscall [[O:0x[0-9a-f]+]] 0 0
 # DTESLA: [RETE] example_syscall [[O]] 0 0 0

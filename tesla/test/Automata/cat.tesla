@@ -6,7 +6,7 @@
  * RUN: cpp -P -DFILE_A %s %cpp_out %t.a.tesla
  * RUN: cpp -P -DFILE_B %s %cpp_out %t.b.tesla
  * RUN: tesla cat %t.a.tesla %t.b.tesla -o %t.tesla
- * RUN: FileCheck %s -input-file %t.tesla
+ * RUN: %filecheck %s -input-file %t.tesla
  */
 
 

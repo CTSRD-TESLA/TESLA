@@ -1,6 +1,6 @@
 ; ModuleID = '/Users/jon/Documents/TESLA/tesla/test/Integration/call.c'
 ; RUN: tesla instrument -S -tesla-manifest %p/Inputs/missing-now.tesla %s -o %t.instr.ll 2> %t.err || true
-; RUN: FileCheck -input-file %t.err %s
+; RUN: %filecheck -input-file %t.err %s
 
 ; Ensure that we output a sensible error message:
 ; CHECK: TESLA: automaton '{{.*}}' has no assertion site event

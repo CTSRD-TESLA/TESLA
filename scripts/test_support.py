@@ -72,6 +72,20 @@ def run_command(command, args = []):
 	cmd.wait()
 	return cmd.stdout.read()
 
+def which(commands, paths = os.environ.get('PATH')):
+	"""
+	Do something similar to which(2): find the full path of a command
+	(one of 'commands') contained in the $PATH environment variable.
+	"""
+
+	for command in commands:
+		for path in paths.split(os.pathsep):
+			full = os.path.join(path, command)
+			if os.path.exists(full):
+				return full
+
+	raise ValueError('No command from %s in path %s' % (commands, paths))
+
 
 
 class Config:
@@ -81,5 +95,4 @@ class Config:
 	def __getitem__(self, name):
 		return run_command(self.command, [ '--' + name ]).strip()
 
-llvm_config = Config('llvm-config')
-
+llvm_config = Config(which([ 'llvm-config33', 'llvm-config' ]))

@@ -20,6 +20,10 @@ if(NOT CMAKE_LLVM_CONFIG)
 	set(CMAKE_LLVM_CONFIG llvm-config)
 endif()
 
+if(NOT CMAKE_LLVM_LIT)
+	set(CMAKE_LLVM_LIT llvm-lit)
+endif()
+
 # Make sure we can find llvm-config!
 exec_program(${CMAKE_LLVM_CONFIG} ARGS --version  OUTPUT_VARIABLE LLVM_VERSION)
 if("${LLVM_VERSION}" MATCHES "not found")

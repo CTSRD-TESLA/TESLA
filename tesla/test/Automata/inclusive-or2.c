@@ -3,7 +3,7 @@
  *
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
  * RUN: tesla print -format=dot -n %t.tesla -o %t.dot
- * RUN: FileCheck -input-file=%t.dot %s
+ * RUN: %filecheck -input-file=%t.dot %s
  */
 
 #include <tesla-macros.h>

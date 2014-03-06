@@ -7,8 +7,8 @@
  *
  * Commands for llvm-lit:
  * RUN: clang++ %cxxflags %ldflags %s -o %t
- * RUN: %t | tee %t.out
- * RUN: FileCheck -input-file %t.out %s
+ * RUN: %t > %t.out
+ * RUN: %filecheck -input-file %t.out %s
  */
 
 #include "tesla_internal.h"

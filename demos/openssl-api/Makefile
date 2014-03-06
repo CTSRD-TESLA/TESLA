@@ -5,12 +5,13 @@
 BASE=openssl-api
 .PRECIOUS: ${BASE}.dot
 
-CC=clang
+CC?=clang
+LLC?=llc
 
 CFLAGS	+= -Wall -I ${TESLA_SOURCE_DIR}/include
 LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
 
-CLANG_VERSION=`clang --version | grep version | awk '{ print $$3 }'`
+CLANG_VERSION=`${CLANG} --version | grep version | awk '{ print $$3 }'`
 RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/${CLANG_VERSION}
 
 
@@ -30,7 +31,7 @@ ${BASE}: ${BASE}.instr.o
 	${CC} -S -emit-llvm ${CFLAGS} $< -o $@
 
 .ll.o:
-	llc -filetype=obj $< -o $@
+	${LLC} -filetype=obj $< -o $@
 
 
 #

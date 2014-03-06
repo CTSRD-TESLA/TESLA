@@ -10,12 +10,12 @@
  *
  * It is an error to 'tesla cat' different definitions with the same name:
  * RUN: tesla cat %t.good1.tesla %t.bad.tesla -o %t.err.tesla 2> %t.err || true
- * RUN: FileCheck %s -check-prefix=ERR -input-file %t.err
+ * RUN: %filecheck %s -check-prefix=ERR -input-file %t.err
  *
  * Concatenate files with identical definitions is supported:
  * RUN: tesla cat %t.good1.tesla %t.good2.tesla -o %t.cat.tesla
- * RUN: FileCheck %s -check-prefix=AUTO -input-file %t.cat.tesla
- * RUN: FileCheck %s -check-prefix=ROOT -input-file %t.cat.tesla
+ * RUN: %filecheck %s -check-prefix=AUTO -input-file %t.cat.tesla
+ * RUN: %filecheck %s -check-prefix=ROOT -input-file %t.cat.tesla
  */
 
 #include <tesla-macros.h>

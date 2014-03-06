@@ -5,7 +5,7 @@
  * RUN: clang %cflags% -c -emit-llvm -S %s -o %t.ll
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
  * RUN: tesla instrument -S %t.ll -tesla-manifest %t.tesla -o %t.instr.ll
- * RUN: FileCheck -input-file=%t.instr.ll %s
+ * RUN: %filecheck -input-file=%t.instr.ll %s
  */
 
 #include <tesla-macros.h>

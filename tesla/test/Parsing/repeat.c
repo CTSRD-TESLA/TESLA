@@ -3,7 +3,7 @@
  * Check parsing of repeated expressions.
  *
  * RUN: tesla analyse -S %s -o %t -- %cflags
- * RUN: FileCheck -input-file=%t %s
+ * RUN: %filecheck -input-file=%t %s
  */
 
 #include <tesla-macros.h>

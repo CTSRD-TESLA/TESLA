@@ -10,9 +10,9 @@
  * RUN: tesla analyse %s -o %t/tesla -- %cflags
  * RUN: tesla instrument -S -tesla-manifest %t/tesla %t/main.ll -o %t/instr.ll
  * RUN: clang %ldflags %t/instr.ll -o %t/binary
- * RUN: FileCheck -check-prefix=INSTR -input-file %t/instr.ll %s
+ * RUN: %filecheck -check-prefix=INSTR -input-file %t/instr.ll %s
  * RUN: %t/binary | tee %t/out.txt
- * RUN: FileCheck -check-prefix=TESLA -input-file %t/out.txt %s
+ * RUN: %filecheck -check-prefix=TESLA -input-file %t/out.txt %s
  */
 
 #include <tesla-macros.h>

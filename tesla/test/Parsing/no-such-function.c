@@ -3,7 +3,7 @@
  * Writing assertions about non-existent functions should cause errors.
  *
  * RUN: tesla analyse %s -o %t -- %cflags 2> %t.err || true
- * RUN: FileCheck -input-file=%t.err %s
+ * RUN: %filecheck -input-file=%t.err %s
  */
 
 #include <tesla-macros.h>

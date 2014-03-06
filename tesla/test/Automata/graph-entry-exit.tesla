@@ -6,7 +6,7 @@
  *
  * RUN: cpp -DTESLA_FILE %s %cpp_out %t.tesla
  * RUN: tesla print -format=dot %t.tesla -o %t.dot
- * RUN: FileCheck -input-file %t.dot %s
+ * RUN: %filecheck -input-file %t.dot %s
  */
 
 #ifdef TESLA_FILE

@@ -32,7 +32,7 @@
  * RUN: clang %cflags -c -S -emit-llvm %s -o %t.ll
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
  * RUN: tesla instrument -S -tesla-manifest %t.tesla %t.ll -o %t.instr.ll
- * RUN: FileCheck -input-file=%t.instr.ll %s
+ * RUN: %filecheck -input-file=%t.instr.ll %s
  * RUN: clang -g %ldflags %t.instr.ll -o %t
  * RUN: %t
  */

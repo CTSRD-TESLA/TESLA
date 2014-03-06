@@ -2,7 +2,7 @@
  * Commands for llvm-lit:
  * RUN: clang %cflags %s -o %t
  * RUN: %t | tee %t.out
- * RUN: FileCheck -input-file %t.out %s
+ * RUN: %filecheck -input-file %t.out %s
  *
  * This test exposes a bug in snprintf() on Mac OS X 10.8.
  * XFAIL: darwin12

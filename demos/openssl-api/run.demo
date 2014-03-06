@@ -1,10 +1,10 @@
 #!/bin/sh
 #
 # RUN: %s > %t.out 2>&1
-# RUN: FileCheck --check-prefix NORMAL -input-file %t.out %s
+# RUN: %filecheck --check-prefix NORMAL -input-file %t.out %s
 #
 # RUN: %s -D TESLA 2>&1 | tee %t.tesla.out
-# RUN: FileCheck --check-prefix DTESLA -input-file %t.tesla.out %s
+# RUN: %filecheck --check-prefix DTESLA -input-file %t.tesla.out %s
 #
 
 LINE="======================================================================"
@@ -45,14 +45,14 @@ echo $LINE
 #
 # NORMAL: tesla analyse
 # NORMAL: tesla instrument
-# NORMAL: clang {{.*}}.instr.o -o openssl-api
+# NORMAL: clang{{[0-9]*}} {{.*}}.instr.o -o openssl-api
 #
 #
 # The run with -D TESLA should detect the missing audit event:
 #
 # DTESLA: tesla analyse
 # DTESLA: tesla instrument
-# DTESLA: clang {{.*}}.instr.o -o openssl-api
+# DTESLA: clang{{[0-9]*}} {{.*}}.instr.o -o openssl-api
 #
 # DTESLA: TESLA failure:
 # DTESLA: In automaton 'openssl-api.c

@@ -3,9 +3,9 @@
  * Check parsing of a value returned from a function via a pointer.
  *
  * RUN: tesla analyse -S %s -o %t -- %cflags
- * RUN: FileCheck -input-file=%t %s
+ * RUN: %filecheck -input-file=%t %s
  * RUN: tesla print -format=dot -d %t -o %t.dot
- * RUN: FileCheck -check-prefix=DOT -input-file=%t.dot %s
+ * RUN: %filecheck -check-prefix=DOT -input-file=%t.dot %s
  */
 
 #include <tesla-macros.h>

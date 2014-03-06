@@ -31,7 +31,7 @@
  * Commands for llvm-lit:
  * RUN: clang %cflags -c -S -emit-llvm %s -o %t.ll
  * RUN: tesla instrument -S -tesla-manifest %p/tesla.manifest %t.ll -o %t.instr.ll
- * RUN: FileCheck -input-file=%t.instr.ll %s
+ * RUN: %filecheck -input-file=%t.instr.ll %s
  */
 
 /*

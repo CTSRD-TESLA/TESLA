@@ -1,10 +1,10 @@
 #!/bin/sh
 #
 # RUN: %s > %t.out 2>&1
-# RUN: FileCheck --check-prefix NORMAL -input-file %t.out %s
+# RUN: %filecheck --check-prefix NORMAL -input-file %t.out %s
 #
 # RUN: %s -D TESLA > %t.tesla.out 2>&1
-# RUN: FileCheck --check-prefix DTESLA -input-file %t.tesla.out %s
+# RUN: %filecheck --check-prefix DTESLA -input-file %t.tesla.out %s
 #
 # XFAIL: linux
 #
@@ -40,7 +40,7 @@ echo $LINE
 # NORMAL: tesla analyse
 # NORMAL: tesla cat
 # NORMAL: tesla instrument
-# NORMAL: clang {{.*}}.instro -o audit-demo
+# NORMAL: clang{{[0-9]*}} {{.*}}.instro -o audit-demo
 #
 #
 # The run with -D TESLA should detect the missing audit event:
@@ -48,7 +48,7 @@ echo $LINE
 # DTESLA: tesla analyse
 # DTESLA: tesla cat
 # DTESLA: tesla instrument
-# DTESLA: clang {{.*}}.instro -o audit-demo
+# DTESLA: clang{{[0-9]*}} {{.*}}.instro -o audit-demo
 #
 # DTESLA: TESLA failure:
 # DTESLA: In automaton 'vfs_vnops.c

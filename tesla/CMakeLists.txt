@@ -33,8 +33,8 @@ include_directories("${LLVM_SRC}/include" "${LLVM_OBJ}/include")
 link_directories("${LLVM_OBJ}/lib/")
 
 # Use LLVM's CFLAGS and CXXFLAGS, but filter out optimisations and -DNDEBUG.
-exec_program(llvm-config ARGS --cflags   OUTPUT_VARIABLE LLVM_C)
-exec_program(llvm-config ARGS --cxxflags OUTPUT_VARIABLE LLVM_CXX)
+exec_program(${CMAKE_LLVM_CONFIG} ARGS --cflags   OUTPUT_VARIABLE LLVM_C)
+exec_program(${CMAKE_LLVM_CONFIG} ARGS --cxxflags OUTPUT_VARIABLE LLVM_CXX)
 string(REGEX REPLACE "(.*)-O[0-9] -DNDEBUG(.*)" "\\1\\2" LLVM_C ${LLVM_C})
 string(REGEX REPLACE "(.*)-O[0-9] -DNDEBUG(.*)" "\\1\\2" LLVM_CXX ${LLVM_CXX})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LLVM_C}")

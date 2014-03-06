@@ -5,7 +5,7 @@
 BASE=audit-demo
 .PRECIOUS: ${BASE}.dot
 
-CC=clang
+CC?=clang
 
 CFLAGS	+= -D _KERNEL -D AUDIT -D MAC -D __BSD_VISIBLE \
 	-Wall -Werror \
@@ -13,6 +13,9 @@ CFLAGS	+= -D _KERNEL -D AUDIT -D MAC -D __BSD_VISIBLE \
 	-I include -I ${TESLA_SOURCE_DIR}/include
 
 LDFLAGS	+= -L ${TESLA_BUILD_DIR}/libtesla/src -l crypto -l ssl -l tesla
+
+LLC?=llc
+LLVM_CONFIG?=llvm-config
 
 # TODO: do some string substitution to derive .tesla file names
 OBJ=	\
@@ -29,8 +32,8 @@ TESLA_FILES=	\
 	vfs_syscalls.tesla \
 	vfs_vnops.tesla
 
-CLANG_VERSION=`clang --version | grep version | awk '{ print $$3 }'`
-RESOURCE_DIR=-resource-dir `llvm-config --libdir`/clang/${CLANG_VERSION}
+CLANG_VERSION=`${CLANG} --version | grep version | awk '{ print $$3 }'`
+RESOURCE_DIR=-resource-dir `${LLVM_CONFIG} --libdir`/clang/${CLANG_VERSION}
 
 
 all: ${BASE}.tesla ${BASE}
@@ -49,7 +52,7 @@ ${BASE}: ${OBJ}
 	${CC} -S -emit-llvm ${CFLAGS} $< -o $@
 
 .instrll.instro:
-	llc -filetype=obj $< -o $@
+	${LLC} -filetype=obj $< -o $@
 
 
 #

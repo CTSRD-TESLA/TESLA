@@ -3,7 +3,7 @@
  * Commands for llvm-lit:
  * RUN: tesla analyse %s -o %t.tesla -- %cflags -D TESLA
  * RUN: tesla print -format=dot -d -o %t.dot %t.tesla
- * RUN: FileCheck -input-file %t.dot %s
+ * RUN: %filecheck -input-file %t.dot %s
  */
 
 #include <errno.h>

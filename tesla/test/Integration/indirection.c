@@ -7,7 +7,7 @@
  * RUN: tesla instrument -S -tesla-manifest %t.tesla -o %t.instr.ll %t.ll
  * RUN: clang %ldflags %t.instr.ll -o %t
  * RUN: %t | tee %t.out
- * RUN: FileCheck -input-file=%t.out %s
+ * RUN: %filecheck -input-file=%t.out %s
  */
 
 #include <tesla-macros.h>

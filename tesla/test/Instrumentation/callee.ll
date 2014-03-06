@@ -30,7 +30,7 @@
 ;
 ; Commands for llvm-lit:
 ; RUN: tesla instrument -S -tesla-manifest %p/tesla.manifest %s -o %t
-; RUN: FileCheck -input-file=%t %s
+; RUN: %filecheck -input-file=%t %s
 
 
 ; The 'example_syscall' function is supposed to be instrumented in the

@@ -6,7 +6,7 @@
  * RUN: tesla instrument -S -tesla-manifest %t.tesla %t.ll -o %t.instr.ll
  * RUN: clang %ldflags %t.instr.ll -o %t
  * RUN: %t | tee %t.out
- * RUN: FileCheck -input-file %t.out %s
+ * RUN: %filecheck -input-file %t.out %s
  */
 
 #include <assert.h>
@@ -28,7 +28,7 @@ static struct object objects[] = {
 	{ .refcount = 0 },
 	/*
 	 * just one thread for now:
-	 * FileCheck can't express arbitrary interleavings.
+	 * %filecheck can't express arbitrary interleavings.
 	 *
 	{ .refcount = 0 },
 	{ .refcount = 0 },
@@ -89,7 +89,7 @@ main(int argc, char *argv[]) {
 
 	/*
 	 * It would be nice to check for both assertions' reset events, but
-	 * FileCheck will only let us test things whose ordering is known;
+	 * %filecheck will only let us test things whose ordering is known;
 	 * arbitrary interleavings are possible here.
 	 *
 	 * CHECK: tesla_class_reset [[ASSERT:.*threading.c:[0-9]+#[0-9]+]]

@@ -9,10 +9,9 @@ TESLA_BUILD_DIR?=${TESLA_SOURCE_DIR}/build
 # For our demo handcoded LLVM IR, we need to assign an arch-vendor-OS triple.
 # Normal consumers don't need to do this.
 TRIPLE=		$(shell tesla get-triple)
-LLC=llc -mtriple=${TRIPLE} -filetype=obj
 
-CC=		clang
-LINK=		clang
+CC?=		clang
+LLC?=		llc
 
 REVISION:=	$(shell ./revision.sh)
 CFLAGS+=	-Wall -D REVISION="${REVISION}" \
@@ -61,9 +60,9 @@ example.tesla: example.c tcp.h
 
 # Compile IR to object code.
 .ll.o:
-	${LLC} $< -o $@
+	${LLC} -mtriple=${TRIPLE} -filetype=obj $< -o $@
 
 # Build the demo application.
 ${BIN}: ${OBJS}
-	${LINK} -o $@ ${OBJS} ${LIBS}
+	${CC} -o $@ ${OBJS} ${LIBS}
 

@@ -3,7 +3,7 @@
  * Check automata generated from repeated expressions.
  *
  * RUN: tesla analyse %s -o %t.tesla -- %cflags
- * RUN: tesla print -format=text -d %t.tesla | FileCheck %s
+ * RUN: tesla print -format=text -d %t.tesla | %filecheck %s
  *
  * This failure is caused by a non-deterministic reordering of states,
  * not but an actual failure. LLVM 3.4's version of llvm-lit adds a
