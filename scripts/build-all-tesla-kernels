@@ -1,0 +1,32 @@
+#!/bin/sh
+
+assert_in_path() {
+	name=$1
+	if [ "`which $name`" == "" ]; then
+		echo "'$name' not found; maybe adjust \$PATH?"
+		echo "$PATH"
+		exit 1
+	fi
+}
+
+assert_in_path 'clang'
+assert_in_path 'opt'
+assert_in_path 'tesla'
+assert_in_path 'fbsdmake'
+
+: ${arch:="`uname -p`"}
+: ${jflag:="-j32"}
+
+echo "Building toolchain with ${jflag}..."
+fbsdmake ${jflag} kernel-toolchain 2>&1 > toolchain.out
+
+echo "Building kernels for ${arch} with ${jflag}..."
+configurations="GENERIC GENERIC_NODEBUG `ls sys/${arch}/conf | grep TESLA`"
+for conf in ${configurations}; do
+	echo ${conf}
+	fbsdmake ${jflag} KERNCONF=${conf} -D NO_MODULES buildkernel \
+		2>&1 > ${conf}.buildkernel.out \
+		|| (tail -n20 ${conf}.buildkernel.out && exit 1)
+done
+
+echo "done."
