@@ -57,9 +57,9 @@ enum OutputFormat { dot, source, summary, text };
 cl::opt<OutputFormat> Format("format", cl::desc("output format"),
   cl::values(
     clEnumVal(dot,        "GraphViz dot"),
-    clEnumVal(source,     "automata definition from the original source code"),
-    clEnumVal(summary,    "succinct summaru"),
-    clEnumVal(text,       "textual representation"),
+    clEnumVal(source,     "automata definitions from the original source code"),
+    clEnumVal(summary,    "succinct summaries"),
+    clEnumVal(text,       "textual automata representations"),
     NULL
   ),
   cl::init(summary)
