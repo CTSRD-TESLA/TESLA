@@ -1,5 +1,17 @@
 #!/bin/sh
 
+: ${arch:="`uname -p`"}
+: ${buildlogs:="_TESLA.build"}
+: ${jflag:="-j32"}
+: ${tarball:=""}
+
+echo "Building TESLA kernels for ${arch} with ${jflag}"
+
+
+#
+# Do some sanity checks on our $PATH. For instance, if we don't have
+# an LLVM 'opt' binary, the build the build will fail in mysterious ways.
+#
 assert_in_path() {
 	name=$1
 	if [ "`which $name`" == "" ]; then
@@ -14,19 +26,52 @@ assert_in_path 'opt'
 assert_in_path 'tesla'
 assert_in_path 'fbsdmake'
 
-: ${arch:="`uname -p`"}
-: ${jflag:="-j32"}
 
-echo "Building toolchain with ${jflag}..."
-fbsdmake ${jflag} kernel-toolchain 2>&1 > toolchain.out
+#
+# Create the log output directory and symlink to the actual output.
+#
+echo "Putting build logs in ${buildlogs}"
+mkdir -p ${buildlogs} || exit 1
+rm -f ${buildlogs}/obj || exit 1
+ln -s `make -V .OBJDIR`/sys ${buildlogs}/obj || exit 1
 
-echo "Building kernels for ${arch} with ${jflag}..."
+echo
+
+#
+# We only need to build the toolchain once, as this script isn't intended
+# to support cross-building (yet).
+#
+echo "Building toolchain..."
+fbsdmake ${jflag} kernel-toolchain 2>&1 > ${buildlogs}/toolchain.out || exit 1
+
+#
+# Build the TESLA_* kernels plus GENERIC (with and without debug features).
+#
 configurations="GENERIC GENERIC_NODEBUG `ls sys/${arch}/conf | grep TESLA`"
 for conf in ${configurations}; do
-	echo ${conf}
+	echo "Building ${conf}..."
+	outfile=${buildlogs}/${conf}.buildkernel.out
+
 	fbsdmake ${jflag} KERNCONF=${conf} -D NO_MODULES buildkernel \
-		2>&1 > ${conf}.buildkernel.out \
-		|| (tail -n20 ${conf}.buildkernel.out && exit 1)
+		2>&1 > ${outfile} \
+		|| (tail -n20 ${outfile} && exit 1)
 done
+
+#
+# If $tarball is set, create a tarball of all the kernels.
+# Use bzip compression to make life easier on Linux cluster heads.
+#
+if [ "$tarball" == "yes" ]; then
+	cd ${buildlogs} || exit 1
+	outdir=`pwd`
+
+	cd ${buildlogs}/obj || exit 1
+	tarball=${outdir}/tesla-kernels.tar.bz2
+	echo "Building ${tarball}..."
+	tar -cjf ${tarball} \
+		GENERIC*/kernel GENERIC*/tesla.manifest \
+		TESLA_*/kernel TESLA_*/tesla.manifest \
+		|| exit 1
+fi
 
 echo "done."
