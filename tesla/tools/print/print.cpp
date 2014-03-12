@@ -53,10 +53,11 @@ cl::opt<string> ManifestName(cl::desc("<input file>"),
 
 cl::opt<string> OutputFile("o", cl::desc("<output file>"), cl::init("-"));
 
-enum OutputFormat { dot, source, summary, text };
+enum OutputFormat { dot, names, source, summary, text };
 cl::opt<OutputFormat> Format("format", cl::desc("output format"),
   cl::values(
     clEnumVal(dot,        "GraphViz dot"),
+    clEnumVal(names,      "automata names"),
     clEnumVal(source,     "automata definitions from the original source code"),
     clEnumVal(summary,    "succinct summaries"),
     clEnumVal(text,       "textual automata representations"),
@@ -104,6 +105,10 @@ main(int argc, char *argv[]) {
     switch (Format) {
     case dot:
       out << A->Dot();
+      break;
+
+    case names:
+      out << A->Name();
       break;
 
     case source:
