@@ -107,7 +107,7 @@ main(int argc, char *argv[]) {
       break;
 
     case source:
-      out << A->Name() << ":\n" << A->SourceCode();
+      out << A->Name() << ":\n" << A->SourceCode() << "\n";
       break;
 
     case summary:
@@ -129,7 +129,7 @@ main(int argc, char *argv[]) {
       break;
     }
 
-    out << "\n\n";
+    out << "\n";
 
     out.flush();
   }
