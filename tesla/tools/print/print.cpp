@@ -74,6 +74,16 @@ cl::opt<Automaton::Type> Determinism(cl::desc("automata determinism:"),
         clEnumValEnd),
       cl::init(Automaton::Deterministic));
 
+
+typedef std::vector<const Automaton*> AutomataVec;
+
+static void PrintGraphvizDot(const AutomataVec&, llvm::raw_ostream&);
+static void PrintAutomataNames(const AutomataVec&, llvm::raw_ostream&);
+static void PrintSources(const AutomataVec&, llvm::raw_ostream&);
+static void PrintSummaries(const AutomataVec&, llvm::raw_ostream&);
+static void PrintTextFormat(const AutomataVec&, llvm::raw_ostream&);
+
+
 int
 main(int argc, char *argv[]) {
   cl::ParseCommandLineOptions(argc, argv);
@@ -97,49 +107,81 @@ main(int argc, char *argv[]) {
     return 1;
   }
 
+  AutomataVec Automata;
   for (auto i : Manifest->AllAutomata()) {
     Identifier ID = i.first;
     auto *A = Manifest->FindAutomaton(ID);
     assert(A);
 
-    switch (Format) {
-    case dot:
-      out << A->Dot();
-      break;
+    Automata.push_back(A);
+  }
 
-    case names:
-      out << A->Name();
-      break;
+  switch (Format) {
+  case dot:
+    PrintGraphvizDot(Automata, out);
+    break;
 
-    case source:
-      out << A->Name() << ":\n" << A->SourceCode() << "\n";
-      break;
+  case names:
+    PrintAutomataNames(Automata, out);
+    break;
 
-    case summary:
-      out
-        << A->Name() << ":\n"
-        << A->StateCount() << " states, "
-        << "responds to " << A->TransitionCount() << " events:\n"
-        ;
+  case source:
+    PrintSources(Automata, out);
+    break;
 
-      for (auto& TransClass : *A) {
-        auto& Head(**TransClass.begin());
-        out << "  " << Head.ShortLabel() << "\n";
-      }
+  case summary:
+    PrintSummaries(Automata, out);
+    break;
 
-      break;
-
-    case text:
-      out << A->String();
-      break;
-    }
-
-    out << "\n";
-
-    out.flush();
+  case text:
+    PrintTextFormat(Automata, out);
+    break;
   }
 
   google::protobuf::ShutdownProtobufLibrary();
   return 0;
 }
 
+
+static void PrintGraphvizDot(const AutomataVec& A, llvm::raw_ostream& out) {
+  for (auto i : A) {
+    out << i->Dot() << "\n\n";
+  }
+}
+
+
+static void PrintAutomataNames(const AutomataVec& A, llvm::raw_ostream& out) {
+  for (auto i : A) {
+    out << i->Name() << "\n";
+  }
+}
+
+
+static void PrintSources(const AutomataVec& A, llvm::raw_ostream& out) {
+  for (const Automaton *i : A) {
+    out << i->Name() << ":\n" << i->SourceCode() << "\n";
+  }
+}
+
+
+static void PrintSummaries(const AutomataVec& A, llvm::raw_ostream& out) {
+  for (const Automaton *i : A) {
+    out
+      << i->Name() << ":\n"
+      << i->StateCount() << " states, "
+      << "responds to " << i->TransitionCount() << " events:\n"
+      ;
+
+    for (auto& TransClass : *i) {
+      auto& Head(**TransClass.begin());
+      out << "  " << Head.ShortLabel() << "\n";
+    }
+  }
+}
+
+
+static void PrintTextFormat(const AutomataVec& A, llvm::raw_ostream& out) {
+  for (const Automaton *i : A) {
+    out << i->String() << "\n\n";
+  }
+}
