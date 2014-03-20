@@ -53,10 +53,11 @@ cl::opt<string> ManifestName(cl::desc("<input file>"),
 
 cl::opt<string> OutputFile("o", cl::desc("<output file>"), cl::init("-"));
 
-enum OutputFormat { dot, names, source, summary, text };
+enum OutputFormat { dot, instr, names, source, summary, text };
 cl::opt<OutputFormat> Format("format", cl::desc("output format"),
   cl::values(
     clEnumVal(dot,        "GraphViz dot"),
+    clEnumVal(instr,      "instrumentation points"),
     clEnumVal(names,      "automata names"),
     clEnumVal(source,     "automata definitions from the original source code"),
     clEnumVal(summary,    "succinct summaries"),
@@ -78,6 +79,7 @@ cl::opt<Automaton::Type> Determinism(cl::desc("automata determinism:"),
 typedef std::vector<const Automaton*> AutomataVec;
 
 static void PrintGraphvizDot(const AutomataVec&, llvm::raw_ostream&);
+static void PrintInstrPoints(const AutomataVec&, llvm::raw_ostream&);
 static void PrintAutomataNames(const AutomataVec&, llvm::raw_ostream&);
 static void PrintSources(const AutomataVec&, llvm::raw_ostream&);
 static void PrintSummaries(const AutomataVec&, llvm::raw_ostream&);
@@ -121,6 +123,10 @@ main(int argc, char *argv[]) {
     PrintGraphvizDot(Automata, out);
     break;
 
+  case instr:
+    PrintInstrPoints(Automata, out);
+    break;
+
   case names:
     PrintAutomataNames(Automata, out);
     break;
@@ -147,6 +153,36 @@ static void PrintGraphvizDot(const AutomataVec& A, llvm::raw_ostream& out) {
   for (auto i : A) {
     out << i->Dot() << "\n\n";
   }
+}
+
+
+static void PrintInstrPoints(const AutomataVec& A, llvm::raw_ostream& out) {
+  llvm::SmallVector<Transition const*, 16> Transitions;
+
+  for (const Automaton *i : A) {
+    for (auto& TransClass : *i)
+    {
+      const Transition *T = *TransClass.begin();
+
+      bool AlreadyHave = false;
+      for (auto& Existing : Transitions)
+      {
+        if (T->EquivalentTo(*Existing))
+        {
+          AlreadyHave = true;
+          break;
+        }
+      }
+
+      if (not AlreadyHave)
+      {
+        Transitions.push_back(T);
+      }
+    }
+  }
+
+  for (auto& t : Transitions)
+    out << t->ShortLabel() << "\n";
 }
 
 
