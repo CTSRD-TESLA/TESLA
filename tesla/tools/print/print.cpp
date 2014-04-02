@@ -195,7 +195,7 @@ static void PrintAutomataNames(const AutomataVec& A, llvm::raw_ostream& out) {
 
 static void PrintSources(const AutomataVec& A, llvm::raw_ostream& out) {
   for (const Automaton *i : A) {
-    out << i->Name() << ":\n" << i->SourceCode() << "\n";
+    out << i->Name() << ":\n" << i->SourceCode() << "\n\n";
   }
 }
 
