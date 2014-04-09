@@ -73,7 +73,7 @@ __BEGIN_DECLS
 #include <libtesla.h>
 
 /** Is @a x a subset of @a y? */
-#define	SUBSET(x,y) ((x & y) == x)
+#define	SUBSET(x,y) (((x) & (y)) == (x))
 
 #ifdef _KERNEL
 /** Emulate simple POSIX assertions. */
