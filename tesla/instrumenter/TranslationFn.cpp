@@ -102,10 +102,17 @@ void TranslationFn::InsertCallAfter(Instruction *I, ArrayRef<Value*> Args) {
 
 
 EventTranslator TranslationFn::AddInstrumentation(const Automaton& A) {
-  auto& Args = A.getAssertion().argument();
-  vector<Argument> Patterns(Args.begin(), Args.end());
+  vector<Argument> Values;
+  uint32_t FreeMask = 0;
 
-  return AddInstrumentation("assertion_reached", Patterns, false);
+  for (const Argument& A : A.getAssertion().argument()) {
+    if (A.free())
+      FreeMask |= (1 << A.index());
+    else
+      Values.push_back(A);
+  }
+
+  return AddInstrumentation("assertion_reached", Values, false, FreeMask);
 }
 
 
@@ -141,7 +148,8 @@ EventTranslator TranslationFn::AddInstrumentation(const FunctionEvent& Ev,
 
 EventTranslator TranslationFn::AddInstrumentation(StringRef Label,
                                                   ArrayRef<Argument> Patterns,
-                                                  bool IndirectionRequired) {
+                                                  bool IndirectionRequired,
+                                                  uint32_t FreeMask) {
   LLVMContext& Ctx = InstrCtx.Ctx;
 
   //
@@ -184,7 +192,7 @@ EventTranslator TranslationFn::AddInstrumentation(StringRef Label,
     i++;
   }
 
-  Value *Key = ConstructKey(Builder, InstrCtx.M, KeyArgs);
+  Value *Key = ConstructKey(Builder, InstrCtx.M, KeyArgs, FreeMask);
 
   TerminatorInst *Branch = Builder.CreateBr(End);
   Builder.SetInsertPoint(Branch);

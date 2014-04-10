@@ -58,7 +58,10 @@ void Transition::Create(State& From, State& To, const AssertionSite& A,
                         TransitionVector& Transitions,
                         bool Init, bool Cleanup) {
 
-  ReferenceVector Refs(Automaton.argument().data(), Automaton.argument_size());
+  std::vector<const Argument*> Refs;
+  for (const Argument& A : Automaton.argument())
+    if (not A.free())
+      Refs.push_back(&A);
 
   OwningPtr<Transition> T(
     new AssertTransition(From, To, A, Refs, Init, Cleanup));

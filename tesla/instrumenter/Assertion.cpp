@@ -157,11 +157,15 @@ vector<Value*> AssertionSiteInstrumenter::CollectArgs(
 
   int ArgSize = 0;
   for (auto& Arg : A.getAssertion().argument())
-    ArgSize = std::max(ArgSize + 1, Arg.index());
+    if (!Arg.free())
+      ArgSize = std::max(ArgSize + 1, Arg.index());
 
   vector<Value*> Args(ArgSize, NULL);
 
   for (auto& Arg : A.getAssertion().argument()) {
+    if (Arg.free())
+      continue;
+
     string Name(BaseName(Arg));
 
     if (ValuesInScope.find(Name) == ValuesInScope.end()) {

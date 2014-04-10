@@ -301,13 +301,13 @@ protected:
 
 private:
   AssertTransition(const State& From, const State& To, const AssertionSite& A,
-                   const ReferenceVector& Refs, bool Init, bool Cleanup)
+                   std::vector<const Argument*> Refs, bool Init, bool Cleanup)
     : Transition(NULL, From, To, Init, Cleanup, false), A(A), Refs(Refs)
   {
   }
 
   const AssertionSite& A;
-  const ReferenceVector Refs;
+  const std::vector<const Argument*> Refs;
 
   friend class Transition;
 };

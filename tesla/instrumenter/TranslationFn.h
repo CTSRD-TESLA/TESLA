@@ -119,10 +119,11 @@ private:
    * @param  Patterns   Patterns describing expected values, in the same order
    *                    as the instrumentation function's parameters.
    * @param  Indirect   Chase indirections (structure fields and dereferences).
+   * @param  FreeMask   Mask of free variables to only-sort-of ignore
    */
   EventTranslator AddInstrumentation(llvm::StringRef Label,
                                      llvm::ArrayRef<Argument> Patterns,
-                                     bool Indirect);
+                                     bool Indirect, uint32_t FreeMask = 0);
   /**
    * Check @a Val against @a Pattern, branching to @a Instr if it doesn't match.
    */
