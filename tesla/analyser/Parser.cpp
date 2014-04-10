@@ -229,10 +229,9 @@ bool Parser::Parse(Expression *E, const CompoundStmt *C, Flags F) {
         return false;
       }
 
-    } else if (isa<DeclStmt>(S)) {
-      // Ignore decls within sequences: this is TESLA's way of expressing
-      // intermediate variables.
-      return true;
+    } else if (auto *DS = dyn_cast<DeclStmt>(S)) {
+      for (auto i = DS->decl_begin(); i != DS->decl_end(); i++)
+        FreeVariables.push_back(*i);
 
     } else if (auto *E = dyn_cast<Expr>(S)) {
       // Otherwise, it's just a regular TESLA expression.
@@ -1108,6 +1107,10 @@ bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F,
   assert(D != NULL);
 
   *Arg->mutable_name() = D->getName();
+
+  if (find(FreeVariables.begin(), FreeVariables.end(), D)
+      != FreeVariables.end())
+    Arg->set_free(true);
 
   if (auto *Enum = dyn_cast<EnumConstantDecl>(D)) {
     Arg->set_type(Argument::Constant);

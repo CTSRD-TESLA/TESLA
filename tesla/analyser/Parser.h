@@ -204,6 +204,7 @@ private:
   const llvm::StringRef SourceCode; //!< Source code of automaton definition.
 
   std::map<const clang::ValueDecl*, const clang::Expr*> FieldAssignments;
+  std::vector<const clang::Decl*> FreeVariables;
   std::vector<const Argument*> References;
 };
 

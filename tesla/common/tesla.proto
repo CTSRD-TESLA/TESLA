@@ -258,6 +258,12 @@ message Argument {
   /** The name of the referenced variable (if applicable, for debugging). */
   optional string name = 3;
 
+  /**
+   * Free variables do not exist in an assertion's scope, they are only used
+   * to bind other events together (e.g., foo(x), bar(x) have the same x).
+   */
+  optional bool free = 9 [ default = false ];
+
   /** The integer value. */
   optional int64 value = 5;
 
