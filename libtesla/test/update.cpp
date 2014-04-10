@@ -29,10 +29,6 @@
 
 int	count(struct tesla_store*, const struct tesla_key*);
 
-const int id = 0;
-const char name[] = "demo class";
-const char descrip[] = "a demonstration class of automata";
-
 #define PRINT(...) DEBUG(libtesla.test.update, __VA_ARGS__)
 
 const char *event_descriptions[] = { "foo" };

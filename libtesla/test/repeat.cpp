@@ -58,9 +58,6 @@ main(int argc, char **argv)
  * D    : [ (2->4) ]
  */
 
-const char name[] = "automaton 0";
-const char descrip[] = "a description of the automaton";
-
 #define	INIT	TESLA_TRANS_INIT
 #define	CLEAN	TESLA_TRANS_CLEANUP
 
