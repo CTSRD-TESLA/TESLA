@@ -114,13 +114,13 @@ void UpdateTest::run()
 	// (2,X,X,3): 5->6       fork   (2,X,X,X):5 -> (2,X,X,3):6
 	// (2,X,X,4): 1->7       fork   (X,X,X,X):1 -> (2,X,X,4):7
 
-	struct tesla_key key;
+	struct tesla_key key = { .tk_freemask = 0 };
 
 
 	const struct tesla_key
-		any = { .tk_mask = 0 },
-		one = { .tk_mask = 1, .tk_keys[0] = 1 },
-		two = { .tk_mask = 1, .tk_keys[0] = 2 }
+		any = { .tk_mask = 0, .tk_freemask = 0 },
+		one = { .tk_mask = 1, .tk_keys[0] = 1, .tk_freemask = 0 },
+		two = { .tk_mask = 1, .tk_keys[0] = 2, .tk_freemask = 0 }
 		;
 
 

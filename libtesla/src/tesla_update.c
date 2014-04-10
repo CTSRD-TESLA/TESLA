@@ -451,7 +451,8 @@ tesla_action(const tesla_instance *inst, const tesla_key *event_data,
 				 *     if its (masked) name matches.
 				 */
 				tesla_key masked_name = inst->ti_key;
-				masked_name.tk_mask &= pattern.tk_mask;
+				masked_name.tk_mask &=
+					(pattern.tk_mask | pattern.tk_freemask);
 
 				if (tesla_key_matches(&pattern, &masked_name)) {
 					*trigger = t;

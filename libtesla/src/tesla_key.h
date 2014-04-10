@@ -53,7 +53,7 @@ tesla_key_matches(const struct tesla_key *pattern, const struct tesla_key *k)
 
 	// The pattern's mask must be a subset of the target's (ANY matches
 	// 42 but not the other way around).
-	if (!SUBSET(pattern->tk_mask, k->tk_mask))
+	if (!SUBSET(pattern->tk_mask | pattern->tk_freemask, k->tk_mask))
 		return (0);
 
 	for (uint32_t i = 0; i < TESLA_KEY_SIZE; i++) {

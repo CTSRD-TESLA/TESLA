@@ -107,7 +107,8 @@ llvm::BasicBlock* CreateInstrPreamble(llvm::Module& Mod, llvm::Function *F,
 
 //! Map a set of values into a @ref tesla_key.
 llvm::Value* ConstructKey(llvm::IRBuilder<>&, llvm::Module&,
-                          llvm::ArrayRef<llvm::Value*> Args);
+                          llvm::ArrayRef<llvm::Value*> Args,
+                          uint32_t FreeMask = 0);
 
 //! Declare a reference to an external @ref tesla_automaton.
 llvm::Constant* ExternAutomatonDescrip(const Automaton*, llvm::Module&);

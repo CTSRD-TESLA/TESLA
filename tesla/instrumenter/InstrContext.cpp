@@ -69,8 +69,9 @@ InstrContext* InstrContext::Create(Module& M, bool SuppressDebugPrintf)
   IntegerType *Int32Ty = IntegerType::getInt32Ty(Ctx);
   IntegerType *IntPtrTy = DataLayout(&M).getIntPtrType(Ctx);
 
-  // A struct tesla_key is a mask and a set of keys.
+  // A struct tesla_key is a set of keys and two masks.
   vector<Type*> KeyElements(TESLA_KEY_SIZE, IntPtrTy);
+  KeyElements.push_back(Int32Ty);
   KeyElements.push_back(Int32Ty);
   StructType *KeyTy = StructTy("tesla_key", KeyElements, M);
   PointerType *KeyPtrTy = PointerType::getUnqual(KeyTy);

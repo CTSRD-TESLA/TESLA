@@ -45,6 +45,7 @@ main(int argc, char **argv)
 	 */
 	event_data.tk_mask = 1;
 	event_data.tk_keys[0] = x;
+	event_data.tk_freemask = 0;
 
 	t.length = 3;
 

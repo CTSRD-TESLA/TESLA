@@ -102,12 +102,17 @@ StructType* KeyType(Module& M) {
   StructType *T = M.getTypeByName(Name);
 
   if (T == NULL) {
-    // A struct tesla_key is just a mask and a set of keys.
+    // A struct tesla_key is a set of keys and two bitmasks.
     vector<Type*> KeyElements(TESLA_KEY_SIZE, IntPtrType(M));
-    KeyElements.push_back(Type::getInt32Ty(M.getContext()));
+
+    IntegerType *Int32Ty = Type::getInt32Ty(M.getContext());
+    KeyElements.push_back(Int32Ty);
+    KeyElements.push_back(Int32Ty);
+
     T = StructType::create(KeyElements, Name);
   }
 
+  assert(T->getNumElements() == TESLA_KEY_SIZE + 2);
   return T;
 }
 
@@ -561,7 +566,7 @@ Value* tesla::GetArgumentValue(Value* Param, const Argument& ArgDescrip,
 
 
 Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
-                           ArrayRef<Value*> Args) {
+                           ArrayRef<Value*> Args, uint32_t FreeMask) {
 
   Value *Key = Builder.CreateAlloca(KeyType(M), 0, "key");
   Type *IntPtrTy = IntPtrType(M);
@@ -585,6 +590,9 @@ Value* tesla::ConstructKey(IRBuilder<>& Builder, Module& M,
 
   Value *Mask = Builder.CreateStructGEP(Key, TESLA_KEY_SIZE);
   Builder.CreateStore(ConstantInt::get(IntTy, KeyMask), Mask);
+
+  Value *FreeMaskPtr = Builder.CreateStructGEP(Key, TESLA_KEY_SIZE + 1);
+  Builder.CreateStore(ConstantInt::get(IntTy, FreeMask), FreeMaskPtr);
 
   return Key;
 }

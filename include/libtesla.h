@@ -284,6 +284,9 @@ struct tesla_key {
 
 	/** A bitmask of the keys that are actually set. */
 	uint32_t	tk_mask;
+
+	/** A bitmask of free variables (something is set, don't know what). */
+	uint32_t	tk_freemask;
 };
 
 
