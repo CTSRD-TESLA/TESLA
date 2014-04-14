@@ -62,10 +62,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D GOOGLE_PROTOBUF_NO_RTTI")
 
 #
-# TESLA uses some C++11 extensions like 'auto', but doesn't require a
-# C++11-compliant standard library.
+# TESLA uses C++11.
 #
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-extensions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 #
 # Global include directories for all of TESLA:

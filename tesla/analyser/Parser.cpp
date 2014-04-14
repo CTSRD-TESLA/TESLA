@@ -610,7 +610,8 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
 
   Expr *RetVal = (LHSisICE ? LHS : RHS)->IgnoreParenCasts();
   Expr *FnCall = (LHSisICE ? RHS : LHS)->IgnoreParenCasts();
-  if (!Parse(FnEvent->mutable_expectedreturnvalue(), RetVal, F))
+  if (!ParseArg([=]() { return FnEvent->mutable_expectedreturnvalue(); },
+                RetVal, F))
     return false;
 
   if (const ObjCMessageExpr *OME = dyn_cast<ObjCMessageExpr>(FnCall))
@@ -632,8 +633,9 @@ bool Parser::ParseFunctionCall(Expression *E, const BinaryOperator *Bop,
   if (!Parse(FnEvent->mutable_function(), Fn, F))
     return false;
 
+  const auto CreateNewArg = std::bind(&FunctionEvent::add_argument, FnEvent);
   for (auto I = FnCallExpr->arg_begin(); I != FnCallExpr->arg_end(); ++I) {
-    if (!Parse(FnEvent->add_argument(), I->IgnoreImplicit(), F))
+    if (!ParseArg(CreateNewArg, I->IgnoreImplicit(), F))
       return false;
   }
 
@@ -652,8 +654,9 @@ bool Parser::ParseObjCMessageSend(FunctionEvent *FnEvent,
 
   FnEvent->mutable_function()->set_name(Meth->getNameAsString());
 
+  auto CreateNewArg = std::bind(&FunctionEvent::add_argument, FnEvent);
   for (auto I = OME->arg_begin(); I != OME->arg_end(); ++I) {
-    if (!Parse(FnEvent->add_argument(), I->IgnoreImplicit(), F))
+    if (!ParseArg(CreateNewArg, I->IgnoreImplicit(), F))
       return false;
   }
 
@@ -666,7 +669,8 @@ bool Parser::ParseObjCMessageSend(FunctionEvent *FnEvent,
 
     case ObjCMessageExpr::Instance:
       FnEvent->set_kind(FunctionEvent::ObjCInstanceMessage);
-      return Parse(FnEvent->mutable_receiver(), OME->getInstanceReceiver(), F);
+      return ParseArg([=]() { return FnEvent->mutable_receiver(); },
+                      OME->getInstanceReceiver(), F);
 
     case ObjCMessageExpr::SuperClass:
     case ObjCMessageExpr::SuperInstance:
@@ -884,13 +888,14 @@ bool Parser::ParseFunctionDetails(FunctionEvent *Event, const CallExpr *CE,
   // specified by the programmer in the assertion or else
   // debug information about them, implied by the definition of the function.
   //
+  auto CreateNewArg = [=]() { return Event->add_argument(); };
   if (Args.empty()) {
     //
     // The assertion doesn't specify any arguments; include information about
     // arguments from the function definition for debugging purposes.
     //
     for (auto i = ParamBegin; i != ParamEnd; i++)
-      if (!Parse(Event->add_argument(), *i, true, F))
+      if (!ParseArg(CreateNewArg, *i, true, F))
         return false;
 
   } else {
@@ -902,13 +907,14 @@ bool Parser::ParseFunctionDetails(FunctionEvent *Event, const CallExpr *CE,
     }
 
     for (auto Arg : Args)
-      if (!Parse(Event->add_argument(), Arg, F))
+      if (!ParseArg(CreateNewArg, Arg, F))
         return false;
   }
 
   if (HaveRetVal) {
     if (RetVal) {
-      if (!Parse(Event->mutable_expectedreturnvalue(), RetVal, F))
+      auto NextArg = [=]() { return Event->mutable_expectedreturnvalue(); };
+      if (!ParseArg(NextArg, RetVal, F))
         return false;
     } else {
       Event->mutable_expectedreturnvalue()->set_type(Argument::Any);
@@ -944,7 +950,7 @@ bool Parser::ParseFieldAssign(Expression *E, const clang::BinaryOperator *O,
 
   return CheckAssignmentKind(LHS->getMemberDecl(), O)
       && ParseStructField(A->mutable_field(), LHS, F)
-      && Parse(A->mutable_value(), O->getRHS(), F);
+      && ParseArg([=]() { return A->mutable_value(); }, O->getRHS(), F);
 }
 
 
@@ -973,17 +979,18 @@ bool Parser::ParseStructField(StructField *Field, const MemberExpr *ME,
   Field->set_index(Member->getFieldIndex());
   Field->set_name(Member->getName());
 
-  return Parse(Field->mutable_base(), Base, F, DoNotRegisterBase);
+  return ParseArg([=]() { return Field->mutable_base(); },
+                  Base, F, DoNotRegisterBase);
 }
 
 
-bool Parser::Parse(Argument *Arg, const Expr *E, Flags F, bool DoNotRegister) {
-  assert(Arg != NULL);
+bool Parser::ParseArg(ArgFactory NextArg, const Expr *E, Flags F,
+                      bool DoNotRegister) {
   assert(E != NULL);
 
   auto P = E->IgnoreParenCasts();
   if (const ChooseExpr *CE = dyn_cast<ChooseExpr>(P))
-    return Parse(Arg, CE->getChosenSubExpr(Ctx), F, DoNotRegister);
+    return ParseArg(NextArg, CE->getChosenSubExpr(Ctx), F, DoNotRegister);
 
   llvm::APSInt ConstValue;
 
@@ -1009,12 +1016,17 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F, bool DoNotRegister) {
         return false;
       }
 
-      Arg->set_constantmatch(
-        (Name == FLAGS) ? Argument::Flags : Argument::Mask);
+      NextArg = [=]() {
+        Argument *Arg = NextArg();
+        Arg->set_constantmatch(
+          (Name == FLAGS) ? Argument::Flags : Argument::Mask);
+        return Arg;
+      };
+
       P = Call->getArg(0);
 
     } else if (Name.slice(0, ANY.length()) == ANY) {
-      Arg->set_type(Argument::Any);
+      NextArg()->set_type(Argument::Any);
       return true;
 
     } else {
@@ -1025,9 +1037,10 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F, bool DoNotRegister) {
   }
 
   if (auto DRE = dyn_cast<DeclRefExpr>(P))
-    return Parse(Arg, DRE->getDecl(), false, F, DoNotRegister);
+    return ParseArg(NextArg, DRE->getDecl(), false, F, DoNotRegister);
 
   if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
+    Argument *Arg = NextArg();
     Arg->set_type(Argument::Constant);
     Arg->set_value(ConstValue.getSExtValue());
 
@@ -1070,15 +1083,21 @@ bool Parser::Parse(Argument *Arg, const Expr *E, Flags F, bool DoNotRegister) {
   //  * multiple-return-via-pointer: foo(&x) => foo() returned x via pointer
   if (auto *UO = dyn_cast<UnaryOperator>(P)) {
     if (UO->getOpcode() == UO_AddrOf) {
-      Arg->set_type(Argument::Indirect);
+      Argument *Indirect = NextArg();
+      auto NextIndirectArg = [=]() {
+        Indirect->set_type(Argument::Indirect);
+        return Indirect->mutable_indirection();
+      };
+
       return
-        Parse(Arg->mutable_indirection(), UO->getSubExpr(), F, true)
-        && (DoNotRegister || RegisterArg(Arg));
+        ParseArg(NextIndirectArg, UO->getSubExpr(), F, true)
+        && (DoNotRegister || RegisterArg(Indirect));
     }
   }
 
   //  * structure field access: bar(s->x) => called bar() with s->x (TODO)
   if (auto *ME = dyn_cast<MemberExpr>(P)) {
+    Argument *Arg = NextArg();
     Arg->set_type(Argument::Field);
     return
       ParseStructField(Arg->mutable_field(), ME, F, true)
@@ -1101,11 +1120,11 @@ bool Parser::Parse(FunctionRef *FnRef, const FunctionDecl *Fn, Flags F) {
 }
 
 
-bool Parser::Parse(Argument *Arg, const ValueDecl *D, bool AllowAny, Flags F,
-                   bool DoNotRegister) {
-  assert(Arg != NULL);
+bool Parser::ParseArg(ArgFactory NextArg, const ValueDecl *D,
+                      bool AllowAny, Flags F, bool DoNotRegister) {
   assert(D != NULL);
 
+  Argument *Arg = NextArg();
   *Arg->mutable_name() = D->getName();
 
   if (find(FreeVariables.begin(), FreeVariables.end(), D)

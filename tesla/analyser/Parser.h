@@ -37,6 +37,7 @@
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/OwningPtr.h>
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -128,9 +129,22 @@ private:
   bool Parse(Expression*, const clang::ChooseExpr*, Flags);
 
   bool Parse(FunctionRef*, const clang::FunctionDecl*, Flags);
-  bool Parse(Argument*, const clang::Expr*, Flags, bool DoNotRegister = false);
-  bool Parse(Argument*, const clang::ValueDecl*, bool AllowAny, Flags,
-             bool DoNotRegister = false);
+
+  typedef std::function<Argument* ()> ArgFactory;
+
+  /**
+   * Parse a value (e.g., a function argument) into one or more
+   * tesla::Argument objects.
+   *
+   * A single function argument can yield multiple tesla::Argument objects
+   * when the platform calling convention requires, e.g., splitting structures
+   * passed by value into their constituent fields.
+   */
+  bool ParseArg(ArgFactory, const clang::Expr*,
+                Parser::Flags, bool DoNotRegister = false);
+  bool ParseArg(ArgFactory, const clang::ValueDecl*, bool AllowAny,
+                Parser::Flags, bool DoNotRegister = false);
+
   bool ParseStructField(StructField*, const clang::MemberExpr*, Flags,
                         bool DoNotRegisterBase = false);
 
