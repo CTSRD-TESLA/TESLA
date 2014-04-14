@@ -992,8 +992,6 @@ bool Parser::ParseArg(ArgFactory NextArg, const Expr *E, Flags F,
   if (const ChooseExpr *CE = dyn_cast<ChooseExpr>(P))
     return ParseArg(NextArg, CE->getChosenSubExpr(Ctx), F, DoNotRegister);
 
-  llvm::APSInt ConstValue;
-
   // Each variable references must be one of:
   //  - a call to a TESLA pseudo-function:
   //    - __tesla_flags(),
@@ -1039,6 +1037,7 @@ bool Parser::ParseArg(ArgFactory NextArg, const Expr *E, Flags F,
   if (auto DRE = dyn_cast<DeclRefExpr>(P))
     return ParseArg(NextArg, DRE->getDecl(), false, F, DoNotRegister);
 
+  llvm::APSInt ConstValue;
   if (P->isIntegerConstantExpr(ConstValue, Ctx)) {
     Argument *Arg = NextArg();
     Arg->set_type(Argument::Constant);
