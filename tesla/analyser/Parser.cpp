@@ -1123,6 +1123,32 @@ bool Parser::ParseArg(ArgFactory NextArg, const ValueDecl *D,
                       bool AllowAny, Flags F, bool DoNotRegister) {
   assert(D != NULL);
 
+  QualType T = D->getType();
+  if (auto *Typedef = dyn_cast<TypedefType>(T))
+    T = Typedef->desugar();
+
+  if (auto *ET = dyn_cast<ElaboratedType>(T)) {
+    auto *StructTy = dyn_cast<RecordType>(ET->getNamedType());
+    assert(StructTy);
+
+    /*
+     * TODO(JA): this treatment of pass-by-value structures is highly
+     *           platform-dependent and should be driven by ArgABIInfo.
+     */
+
+    // TODO(JA): use range-based iterator when we update Clang
+    RecordDecl *Struct = StructTy->getDecl();
+    for (auto i = Struct->decls_begin(); i != Struct->decls_end(); i++) {
+      auto *Field = dyn_cast<FieldDecl>(*i);
+      assert(Field);
+
+      if (!ParseArg(NextArg, Field, AllowAny, F, DoNotRegister))
+        return false;
+    }
+
+    return true;
+  }
+
   Argument *Arg = NextArg();
   *Arg->mutable_name() = D->getName();
 
