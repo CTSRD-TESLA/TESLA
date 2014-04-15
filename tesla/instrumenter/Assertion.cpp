@@ -172,9 +172,9 @@ vector<Value*> AssertionSiteInstrumenter::CollectArgs(
       string s;
       raw_string_ostream Out(s);
 
-      for (auto Name : ValuesInScope) {
-        Out << "  '" << Name.first << "': ";
-        Name.second->print(Out);
+      for (auto v : ValuesInScope) {
+        Out << "  \"" << v.first << "\": ";
+        v.second->getType()->print(Out);
         Out << "\n";
       }
 
