@@ -1123,6 +1123,14 @@ bool Parser::ParseArg(ArgFactory NextArg, const ValueDecl *D,
                       bool AllowAny, Flags F, bool DoNotRegister) {
   assert(D != NULL);
 
+  if (find(FreeVariables.begin(), FreeVariables.end(), D)
+      != FreeVariables.end())
+    NextArg = [=]() {
+      Argument *Arg = NextArg();
+      Arg->set_free(true);
+      return Arg;
+    };
+
   QualType T = D->getType();
   if (auto *Typedef = dyn_cast<TypedefType>(T))
     T = Typedef->desugar();
@@ -1151,10 +1159,6 @@ bool Parser::ParseArg(ArgFactory NextArg, const ValueDecl *D,
 
   Argument *Arg = NextArg();
   *Arg->mutable_name() = D->getName();
-
-  if (find(FreeVariables.begin(), FreeVariables.end(), D)
-      != FreeVariables.end())
-    Arg->set_free(true);
 
   if (auto *Enum = dyn_cast<EnumConstantDecl>(D)) {
     Arg->set_type(Argument::Constant);
