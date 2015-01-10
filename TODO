@@ -1,0 +1,4 @@
+* for assertion site instr: iterate over calls to __tesla_inline_assertion
+* swap T/F in pattern-matching
+* rename protobuf fields to underscore_separated_names (protobuf convention)
+* use PassManagerBuilder
