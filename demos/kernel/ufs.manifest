@@ -1,0 +1,1712 @@
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 449
+      counter: 0
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: BOOLEAN_EXPR
+    booleanExpr {
+      operation: BE_Or
+      expression {
+        type: BOOLEAN_EXPR
+        booleanExpr {
+          operation: BE_Or
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: NULL_EXPR
+              }
+              expression {
+                type: FUNCTION
+                function {
+                  function {
+                    name: "ufs_readdir"
+                  }
+                  direction: Entry
+                  context: Callee
+                  argument {
+                    type: Any
+                    name: ""
+                  }
+                  strict: false
+                }
+              }
+              expression {
+                type: ASSERTION_SITE
+                assertSite {
+                  location {
+                    filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                    line: 449
+                    counter: 0
+                  }
+                }
+              }
+              expression {
+                type: FUNCTION
+                function {
+                  function {
+                    name: "ufs_readdir"
+                  }
+                  direction: Exit
+                  context: Callee
+                  argument {
+                    type: Any
+                    name: ""
+                  }
+                  expectedReturnValue {
+                    type: Any
+                  }
+                  strict: false
+                }
+              }
+            }
+          }
+          expression {
+            type: SEQUENCE
+            sequence {
+              expression {
+                type: NULL_EXPR
+              }
+              expression {
+                type: FUNCTION
+                function {
+                  function {
+                    name: "vn_rdwr"
+                  }
+                  direction: Entry
+                  context: Callee
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Variable
+                    index: 0
+                    name: "vp"
+                  }
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Constant
+                    value: 4096
+                    constantMatch: Flags
+                  }
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Any
+                  }
+                  argument {
+                    type: Any
+                  }
+                  strict: false
+                }
+              }
+              expression {
+                type: ASSERTION_SITE
+                assertSite {
+                  location {
+                    filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                    line: 449
+                    counter: 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "mac_vnode_check_read"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Variable
+                index: 0
+                name: "vp"
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 449
+                counter: 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "vp"
+  }
+  source: "TESLA_SYSCALL(\n\t    incallstack(ufs_readdir) ||\n\t    previously(called(vn_rdwr(ANY(int), vp, ANY(ptr), ANY(int),\n\t    ANY(int), ANY(int), flags(IO_NOMACCHECK), ANY(ptr), ANY(ptr),\n\t    ANY(ptr), ANY(ptr)))) ||\n\t    previously(mac_vnode_check_read(ANY(ptr), ANY(ptr), vp) == 0));"
+}
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 682
+      counter: 1
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: BOOLEAN_EXPR
+    booleanExpr {
+      operation: BE_Or
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "vn_rdwr"
+              }
+              direction: Entry
+              context: Callee
+              argument {
+                type: Any
+              }
+              argument {
+                type: Variable
+                index: 0
+                name: "vp"
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Constant
+                value: 4096
+                constantMatch: Flags
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Any
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 682
+                counter: 1
+              }
+            }
+          }
+        }
+      }
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "mac_vnode_check_write"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+              }
+              argument {
+                type: Any
+              }
+              argument {
+                type: Variable
+                index: 0
+                name: "vp"
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 682
+                counter: 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Variable
+    index: 0
+    name: "vp"
+  }
+  source: "TESLA_SYSCALL(\n\t    previously(called(vn_rdwr(ANY(int), vp, ANY(ptr), ANY(int),\n\t    ANY(int), ANY(int), flags(IO_NOMACCHECK), ANY(ptr), ANY(ptr),\n\t    ANY(ptr), ANY(ptr)))) ||\n\t    previously(mac_vnode_check_write(ANY(ptr), ANY(ptr), vp) == 0));"
+}
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 1501
+      counter: 2
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: BOOLEAN_EXPR
+    booleanExpr {
+      operation: BE_Or
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "ufs_setacl"
+              }
+              direction: Entry
+              context: Callee
+              argument {
+                type: Any
+                name: ""
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 1501
+                counter: 2
+              }
+            }
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "ufs_setacl"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+                name: ""
+              }
+              expectedReturnValue {
+                type: Any
+              }
+              strict: false
+            }
+          }
+        }
+      }
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "mac_vnode_check_deleteextattr"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+              }
+              argument {
+                type: Field
+                index: 0
+                field {
+                  type: "vop_deleteextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_vp"
+                  index: 1
+                }
+              }
+              argument {
+                type: Field
+                index: 1
+                field {
+                  type: "vop_deleteextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_attrnamespace"
+                  index: 2
+                }
+              }
+              argument {
+                type: Field
+                index: 2
+                field {
+                  type: "vop_deleteextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_name"
+                  index: 3
+                }
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 1501
+                counter: 2
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Field
+    index: 0
+    field {
+      type: "vop_deleteextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_vp"
+      index: 1
+    }
+  }
+  argument {
+    type: Field
+    index: 1
+    field {
+      type: "vop_deleteextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_attrnamespace"
+      index: 2
+    }
+  }
+  argument {
+    type: Field
+    index: 2
+    field {
+      type: "vop_deleteextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_name"
+      index: 3
+    }
+  }
+  source: "TESLA_SYSCALL(incallstack(ufs_setacl) ||\n\t    previously(mac_vnode_check_deleteextattr(ANY(ptr), ap->a_vp,\n\t    ap->a_attrnamespace, ap->a_name) == 0));"
+}
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 1596
+      counter: 3
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: BOOLEAN_EXPR
+    booleanExpr {
+      operation: BE_Or
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "ufs_getacl"
+              }
+              direction: Entry
+              context: Callee
+              argument {
+                type: Any
+                name: ""
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 1596
+                counter: 3
+              }
+            }
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "ufs_getacl"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+                name: ""
+              }
+              expectedReturnValue {
+                type: Any
+              }
+              strict: false
+            }
+          }
+        }
+      }
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "mac_vnode_check_getextattr"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+              }
+              argument {
+                type: Field
+                index: 0
+                field {
+                  type: "vop_getextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_vp"
+                  index: 1
+                }
+              }
+              argument {
+                type: Field
+                index: 1
+                field {
+                  type: "vop_getextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_attrnamespace"
+                  index: 2
+                }
+              }
+              argument {
+                type: Field
+                index: 2
+                field {
+                  type: "vop_getextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_name"
+                  index: 3
+                }
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 1596
+                counter: 3
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Field
+    index: 0
+    field {
+      type: "vop_getextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_vp"
+      index: 1
+    }
+  }
+  argument {
+    type: Field
+    index: 1
+    field {
+      type: "vop_getextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_attrnamespace"
+      index: 2
+    }
+  }
+  argument {
+    type: Field
+    index: 2
+    field {
+      type: "vop_getextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_name"
+      index: 3
+    }
+  }
+  source: "TESLA_SYSCALL(incallstack(ufs_getacl) ||\n\t    previously(mac_vnode_check_getextattr(ANY(ptr), ap->a_vp,\n\t    ap->a_attrnamespace, ap->a_name) == 0));"
+}
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 1659
+      counter: 4
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "mac_vnode_check_listextattr"
+          }
+          direction: Exit
+          context: Callee
+          argument {
+            type: Any
+          }
+          argument {
+            type: Field
+            index: 0
+            field {
+              type: "vop_listextattr_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_vp"
+              index: 1
+            }
+          }
+          argument {
+            type: Field
+            index: 1
+            field {
+              type: "vop_listextattr_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_attrnamespace"
+              index: 2
+            }
+          }
+          expectedReturnValue {
+            type: Constant
+            value: 0
+          }
+          strict: false
+        }
+      }
+      expression {
+        type: ASSERTION_SITE
+        assertSite {
+          location {
+            filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+            line: 1659
+            counter: 4
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Field
+    index: 0
+    field {
+      type: "vop_listextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_vp"
+      index: 1
+    }
+  }
+  argument {
+    type: Field
+    index: 1
+    field {
+      type: "vop_listextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_attrnamespace"
+      index: 2
+    }
+  }
+  source: "TESLA_SYSCALL_PREVIOUSLY(mac_vnode_check_listextattr(ANY(ptr),\n\t    ap->a_vp, ap->a_attrnamespace) == 0);"
+}
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 1731
+      counter: 5
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: BOOLEAN_EXPR
+    booleanExpr {
+      operation: BE_Or
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "ufs_setacl"
+              }
+              direction: Entry
+              context: Callee
+              argument {
+                type: Any
+                name: ""
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 1731
+                counter: 5
+              }
+            }
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "ufs_setacl"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+                name: ""
+              }
+              expectedReturnValue {
+                type: Any
+              }
+              strict: false
+            }
+          }
+        }
+      }
+      expression {
+        type: SEQUENCE
+        sequence {
+          expression {
+            type: NULL_EXPR
+          }
+          expression {
+            type: FUNCTION
+            function {
+              function {
+                name: "mac_vnode_check_setextattr"
+              }
+              direction: Exit
+              context: Callee
+              argument {
+                type: Any
+              }
+              argument {
+                type: Field
+                index: 0
+                field {
+                  type: "vop_setextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_vp"
+                  index: 1
+                }
+              }
+              argument {
+                type: Field
+                index: 1
+                field {
+                  type: "vop_setextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_attrnamespace"
+                  index: 2
+                }
+              }
+              argument {
+                type: Field
+                index: 2
+                field {
+                  type: "vop_setextattr_args"
+                  base {
+                    type: Variable
+                    name: "ap"
+                  }
+                  name: "a_name"
+                  index: 3
+                }
+              }
+              expectedReturnValue {
+                type: Constant
+                value: 0
+              }
+              strict: false
+            }
+          }
+          expression {
+            type: ASSERTION_SITE
+            assertSite {
+              location {
+                filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+                line: 1731
+                counter: 5
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Field
+    index: 0
+    field {
+      type: "vop_setextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_vp"
+      index: 1
+    }
+  }
+  argument {
+    type: Field
+    index: 1
+    field {
+      type: "vop_setextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_attrnamespace"
+      index: 2
+    }
+  }
+  argument {
+    type: Field
+    index: 2
+    field {
+      type: "vop_setextattr_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_name"
+      index: 3
+    }
+  }
+  source: "TESLA_SYSCALL(incallstack(ufs_setacl) ||\n\t    previously(mac_vnode_check_setextattr(ANY(ptr), ap->a_vp,\n\t    ap->a_attrnamespace, ap->a_name) == 0));"
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 449
+      counter: 0
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 682
+      counter: 1
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 1501
+      counter: 2
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 1596
+      counter: 3
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 1659
+      counter: 4
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ffs/ffs_vnops.c"
+      line: 1731
+      counter: 5
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+      line: 369
+      counter: 0
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "mac_vnode_check_getacl"
+          }
+          direction: Exit
+          context: Callee
+          argument {
+            type: Any
+          }
+          argument {
+            type: Field
+            index: 0
+            field {
+              type: "vop_getacl_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_vp"
+              index: 1
+            }
+          }
+          argument {
+            type: Field
+            index: 1
+            field {
+              type: "vop_getacl_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_type"
+              index: 2
+            }
+          }
+          expectedReturnValue {
+            type: Constant
+            value: 0
+          }
+          strict: false
+        }
+      }
+      expression {
+        type: ASSERTION_SITE
+        assertSite {
+          location {
+            filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+            line: 369
+            counter: 0
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Field
+    index: 0
+    field {
+      type: "vop_getacl_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_vp"
+      index: 1
+    }
+  }
+  argument {
+    type: Field
+    index: 1
+    field {
+      type: "vop_getacl_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_type"
+      index: 2
+    }
+  }
+  source: "TESLA_SYSCALL_PREVIOUSLY(mac_vnode_check_getacl(ANY(ptr), ap->a_vp,\n\t    ap->a_type) == 0);"
+}
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+      line: 628
+      counter: 1
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "mac_vnode_check_deleteacl"
+          }
+          direction: Exit
+          context: Callee
+          argument {
+            type: Any
+          }
+          argument {
+            type: Field
+            index: 0
+            field {
+              type: "vop_setacl_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_vp"
+              index: 1
+            }
+          }
+          argument {
+            type: Field
+            index: 1
+            field {
+              type: "vop_setacl_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_type"
+              index: 2
+            }
+          }
+          expectedReturnValue {
+            type: Constant
+            value: 0
+          }
+          strict: false
+        }
+      }
+      expression {
+        type: ASSERTION_SITE
+        assertSite {
+          location {
+            filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+            line: 628
+            counter: 1
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Field
+    index: 0
+    field {
+      type: "vop_setacl_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_vp"
+      index: 1
+    }
+  }
+  argument {
+    type: Field
+    index: 1
+    field {
+      type: "vop_setacl_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_type"
+      index: 2
+    }
+  }
+  source: "TESLA_SYSCALL_PREVIOUSLY(mac_vnode_check_deleteacl(ANY(ptr),\n\t\t    ap->a_vp, ap->a_type) == 0);"
+}
+automaton {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+      line: 631
+      counter: 2
+    }
+  }
+  context: ThreadLocal
+  expression {
+    type: SEQUENCE
+    sequence {
+      expression {
+        type: NULL_EXPR
+      }
+      expression {
+        type: FUNCTION
+        function {
+          function {
+            name: "mac_vnode_check_setacl"
+          }
+          direction: Exit
+          context: Callee
+          argument {
+            type: Any
+          }
+          argument {
+            type: Field
+            index: 0
+            field {
+              type: "vop_setacl_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_vp"
+              index: 1
+            }
+          }
+          argument {
+            type: Field
+            index: 1
+            field {
+              type: "vop_setacl_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_type"
+              index: 2
+            }
+          }
+          argument {
+            type: Field
+            index: 2
+            field {
+              type: "vop_setacl_args"
+              base {
+                type: Variable
+                name: "ap"
+              }
+              name: "a_aclp"
+              index: 3
+            }
+          }
+          expectedReturnValue {
+            type: Constant
+            value: 0
+          }
+          strict: false
+        }
+      }
+      expression {
+        type: ASSERTION_SITE
+        assertSite {
+          location {
+            filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+            line: 631
+            counter: 2
+          }
+        }
+      }
+    }
+  }
+  argument {
+    type: Field
+    index: 0
+    field {
+      type: "vop_setacl_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_vp"
+      index: 1
+    }
+  }
+  argument {
+    type: Field
+    index: 1
+    field {
+      type: "vop_setacl_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_type"
+      index: 2
+    }
+  }
+  argument {
+    type: Field
+    index: 2
+    field {
+      type: "vop_setacl_args"
+      base {
+        type: Variable
+        name: "ap"
+      }
+      name: "a_aclp"
+      index: 3
+    }
+  }
+  source: "TESLA_SYSCALL_PREVIOUSLY(mac_vnode_check_setacl(ANY(ptr),\n\t\t    ap->a_vp, ap->a_type, ap->a_aclp) == 0);"
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+      line: 369
+      counter: 0
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+      line: 628
+      counter: 1
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
+root {
+  identifier {
+    location {
+      filename: "/pool/users/jra40/P4/tesla/sys/ufs/ufs/ufs_acl.c"
+      line: 631
+      counter: 2
+    }
+  }
+  beginning {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Entry
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+  end {
+    type: FUNCTION
+    function {
+      function {
+        name: "amd64_syscall"
+      }
+      direction: Exit
+      context: Callee
+      argument {
+        type: Any
+        name: ""
+      }
+      argument {
+        type: Any
+        name: ""
+      }
+      strict: false
+    }
+  }
+}
