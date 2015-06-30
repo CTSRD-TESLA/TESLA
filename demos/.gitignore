@@ -1,8 +1,0 @@
-*.ll
-*.instrll
-*.instr.o
-*.instro
-*.tesla
-
-*.dot
-*.pdf

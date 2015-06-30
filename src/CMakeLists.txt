@@ -1,0 +1,12 @@
+add_llvm_loadable_module(LLVMTESLAInstrumenter
+	instrument.cpp
+	Annotations.cpp
+	Assertion.cpp
+	Callee.cpp
+	Caller.cpp
+	EventTranslator.cpp
+	FieldReference.cpp
+	InstrContext.cpp
+	Instrumentation.cpp
+	TranslationFn.cpp
+)

@@ -1,2 +1,0 @@
-#cmakedefine HAVE_ISSETUGID
-#cmakedefine HAVE_STRNLEN
