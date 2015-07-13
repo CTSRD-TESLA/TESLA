@@ -1,6 +1,6 @@
 /** @file Instrumenter.h   Declaration of @ref tesla::Instrumenter. */
 /*
- * Copyright (c) 2013 Jonathan Anderson
+ * Copyright (c) 2013,2015 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -32,24 +32,30 @@
 #ifndef INSTRUMENTER_H
 #define INSTRUMENTER_H
 
+#include <llvm/ADT/SmallVector.h>
+
+namespace llvm
+{
+  class Value;
+}
+
+
 namespace tesla {
 
-class Manifest;
+class Policy;
+
+/// A container for function arguments, which shouldn't be very numerous.
+typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
+
 
 /// Base class for TESLA instrumenters.
 class Instrumenter {
 public:
-  Instrumenter(const Manifest& M, bool SuppressDI)
-    : M(M), SuppressDebugInstr(SuppressDI) {}
-
+  Instrumenter() {}
   virtual ~Instrumenter() {}
 
 protected:
-  //! TESLA manifest that describes automata.
-  const Manifest& M;
-
-  //! Don't produce debug instrumentation (e.g., printf() statements).
-  const bool SuppressDebugInstr;
+  const Policy& policy() const;
 };
 
 }

@@ -1,11 +1,12 @@
-//! @file TranslationFn.cpp  Definition of @ref tesla::TranslationFn.
+//! @file InstrumentationFn.cpp  Definition of @ref tesla::InstrumentationFn.
 /*
- * Copyright (c) 2013 Jonathan Anderson
+ * Copyright (c) 2013,2015 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
  * Cambridge Computer Laboratory under DARPA/AFRL contract (FA8750-10-C-0237)
- * ("CTSRD"), as part of the DARPA CRASH research programme.
+ * ("CTSRD"), as part of the DARPA CRASH research programme, as well as at
+ * Memorial University under the NSERC Discovery program (RGPIN-2015-06048).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,12 +30,7 @@
  * SUCH DAMAGE.
  */
 
-#if 0
-#include "Automaton.h"
-#include "EventTranslator.h"
-#include "Instrumentation.h"
-#include "TranslationFn.h"
-#include "Names.h"
+#include "InstrumentationFn.hh"
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
@@ -43,30 +39,33 @@ using namespace llvm;
 using namespace tesla;
 
 using std::string;
-using std::vector;
+using std::unique_ptr;
 
 
-static const char* Format(Type *T) {
-    if (T->isPointerTy()) return " %p";
-    if (T->isIntegerTy()) return " %d";
-    if (T->isFloatTy()) return " %f";
-    if (T->isDoubleTy()) return " %f";
+static const char* PrintfFormat(Type *T) {
+    if (T->isPointerTy()) return "%p";
+    if (T->isIntegerTy()) return "%d";
+    if (T->isFloatTy()) return "%f";
+    if (T->isDoubleTy()) return "%f";
 
     assert(false && "Unhandled arg type");
     abort();
 }
 
+static BasicBlock *FindBlock(StringRef Name, Function& Fn) {
+  for (auto& B : Fn)
+    if (B.getName() == Name)
+      return &B;
 
-TranslationFn* TranslationFn::Create(InstrContext& InstrCtx,
-                                     StringRef NameSuffix,
-                                     FunctionType *InstrType,
-                                     StringRef PrintfPrefix,
-                                     GlobalValue::LinkageTypes Linkage) {
+  return NULL;
+}
 
-  Module& M = InstrCtx.M;
 
-  string Name = (INSTR_BASE + NameSuffix).str();
-  auto *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, InstrType));
+unique_ptr<InstrumentationFn>
+InstrumentationFn::Create(StringRef Name, FunctionType *T,
+                          GlobalValue::LinkageTypes Linkage, Module& M) {
+
+  auto *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, T));
   InstrFn->setLinkage(Linkage);
 
   //
@@ -79,75 +78,36 @@ TranslationFn* TranslationFn::Create(InstrContext& InstrCtx,
   BasicBlock *EndBlock;
 
   if (InstrFn->empty()) {
-    BasicBlock *Preamble = CreatePreamble(InstrCtx, InstrFn, PrintfPrefix);
+    LLVMContext& Ctx = M.getContext();
 
-    EndBlock = BasicBlock::Create(InstrCtx.Ctx, "exit", InstrFn);
+    BasicBlock *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
+    BasicBlock *Preamble = BasicBlock::Create(Ctx, "preamble", InstrFn);
+    EndBlock = BasicBlock::Create(T->getContext(), "exit", InstrFn);
 
+    IRBuilder<>(Entry).CreateBr(Preamble);
     IRBuilder<>(Preamble).CreateBr(EndBlock);
     IRBuilder<>(EndBlock).CreateRetVoid();
 
   } else
     EndBlock = FindBlock("exit", *InstrFn);
 
-  return new TranslationFn(InstrCtx, InstrFn, EndBlock);
+  return unique_ptr<InstrumentationFn> {
+    new InstrumentationFn(InstrFn, EndBlock)
+  };
 }
 
 
-void TranslationFn::InsertCallBefore(Instruction *I, ArrayRef<Value*> Args) {
+void InstrumentationFn::CallBefore(Instruction *I, ArrayRef<Value*> Args) {
   CallInst::Create(InstrFn, Args)->insertBefore(I);
 }
 
-void TranslationFn::InsertCallAfter(Instruction *I, ArrayRef<Value*> Args) {
+void InstrumentationFn::CallAfter(Instruction *I, ArrayRef<Value*> Args) {
   CallInst::Create(InstrFn, Args)->insertAfter(I);
 }
 
 
-EventTranslator TranslationFn::AddInstrumentation(const Automaton& A) {
-  vector<Argument> Values;
-  uint32_t FreeMask = 0;
-
-  for (const Argument& A : A.getAssertion().argument()) {
-    if (A.free())
-      FreeMask |= (1 << A.index());
-    else
-      Values.push_back(A);
-  }
-
-  return AddInstrumentation("assertion_reached", Values, false, FreeMask);
-}
-
-
-EventTranslator TranslationFn::AddInstrumentation(const FunctionEvent& Ev,
-                                                  StringRef Label) {
-
-  //
-  // The instrumentation function's parameters include the target's
-  // parameters, return value and Objective-C receiver (if any).
-  //
-  // We need to compile a list of patterns in the same order to match against.
-  //
-  //! Start with FunctionEvent-specified function arguments.
-  vector<Argument> Patterns(Ev.argument().begin(), Ev.argument().end());
-
-
-  if (Ev.has_expectedreturnvalue()) {
-    assert(Ev.direction() == FunctionEvent::Exit);
-    Patterns.push_back(Ev.expectedreturnvalue());
-  }
-
-  if (Ev.has_receiver()) {
-    assert(Ev.kind() == FunctionEvent::ObjCInstanceMessage
-       or Ev.kind() == FunctionEvent::ObjCClassMessage
-       or Ev.kind() == FunctionEvent::ObjCSuperMessage);
-
-    Patterns.push_back(Ev.receiver());
-  }
-
-  return AddInstrumentation(Label, Patterns, true);
-}
-
-
-EventTranslator TranslationFn::AddInstrumentation(StringRef Label,
+#if 0
+EventTranslator InstrumentationFn::AddInstrumentation(StringRef Label,
                                                   ArrayRef<Argument> Patterns,
                                                   bool IndirectionRequired,
                                                   uint32_t FreeMask) {
@@ -202,7 +162,7 @@ EventTranslator TranslationFn::AddInstrumentation(StringRef Label,
 }
 
 
-BasicBlock* TranslationFn::Match(Twine Label, BasicBlock *InstrBlock,
+BasicBlock* InstrumentationFn::Match(Twine Label, BasicBlock *InstrBlock,
                                  const Argument& Pattern, Value *Val) {
 
   if (Pattern.type() != Argument::Constant)
@@ -239,11 +199,10 @@ BasicBlock* TranslationFn::Match(Twine Label, BasicBlock *InstrBlock,
 }
 
 
-BasicBlock* TranslationFn::CreatePreamble(InstrContext& InstrCtx,
-                                          Function *InstrFn, Twine Prefix) {
+BasicBlock* InstrumentationFn::CreatePreamble(Function *InstrFn, Twine Prefix) {
 
-  LLVMContext& Ctx = InstrCtx.Ctx;
-  Module& M = InstrCtx.M;
+  Module& M = InstrFn->getModule();
+  LLVMContext& Ctx = M.getContext();
 
   BasicBlock *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
 
@@ -256,6 +215,7 @@ BasicBlock* TranslationFn::CreatePreamble(InstrContext& InstrCtx,
   BasicBlock *Preamble = BasicBlock::Create(Ctx, "preamble", InstrFn, Entry);
   IRBuilder<> Builder(Preamble);
 
+#if 0
   //
   // Only print if TESLA_DEBUG indicates that we want output.
   //
@@ -282,6 +242,7 @@ BasicBlock* TranslationFn::CreatePreamble(InstrContext& InstrCtx,
   IRBuilder<> PrintBuilder(PrintBB);
   PrintBuilder.CreateCall(InstrCtx.Printf, PrintfArgs);
   PrintBuilder.CreateBr(Entry);
+#endif
 
   return Entry;
 }

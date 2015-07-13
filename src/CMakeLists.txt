@@ -2,11 +2,13 @@ add_llvm_loadable_module(LLVMTESLAInstrumenter
 	instrument.cpp
 	Annotations.cpp
 	Assertion.cpp
-	Callee.cpp
-	Caller.cpp
+	CallInstrumentionPass.cc
 	EventTranslator.cpp
 	FieldReference.cpp
-	InstrContext.cpp
+	FunctionBoundaryPass.cpp
 	Instrumentation.cpp
-	TranslationFn.cpp
+	InstrumentationFn.cc
+	Instrumenter.cc
+	PolicyFile.cc
+	Strings.cc
 )

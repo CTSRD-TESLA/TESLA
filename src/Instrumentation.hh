@@ -1,11 +1,12 @@
-/*! @file Instrumentation.h  Declaration of instrumentation helpers. */
+/*! @file Instrumentation.hh  Declaration of instrumentation helpers. */
 /*
- * Copyright (c) 2012-2013 Jonathan Anderson
+ * Copyright (c) 2012-2013,2015 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
  * Cambridge Computer Laboratory under DARPA/AFRL contract (FA8750-10-C-0237)
- * ("CTSRD"), as part of the DARPA CRASH research programme.
+ * ("CTSRD"), as part of the DARPA CRASH research programme, as well as at
+ * Memorial University under the NSERC Discovery program (RGPIN-2015-06048).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,16 +30,27 @@
  * SUCH DAMAGE.
  */
 
-#if 0
 #ifndef	TESLA_INSTRUMENTATION_H
 #define	TESLA_INSTRUMENTATION_H
 
-#include "Transition.h"
+namespace llvm
+{
+	class Instruction;
+}
 
-#include "tesla.pb.h"
+namespace tesla {
 
-#include <libtesla.h>
+/// Instrumentation on a single instruction that does not change control flow.
+class InstInstrumentation {
+  public:
+  /// Optionally decorate an instruction with calls to instrumentation.
+  ///
+  /// @returns true if instrumentation was added
+  virtual bool Instrument(llvm::Instruction*) const = 0;
+};
 
+
+#if 0
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/IR/Function.h>
@@ -73,17 +85,6 @@ llvm::Function* CallableInstrumentation(llvm::Module& Mod,
                                         FunctionEvent::Direction Dir,
                                         FunctionEvent::CallContext Context,
                                         bool SuppressDebugInstr);
-
-/// Instrumentation on a single instruction that does not change control flow.
-class InstInstrumentation {
-public:
-   /// Optionally decorate an instruction with calls to instrumentation.
-   /// @returns whether or not any instrumentation was actually added.
-   virtual bool Instrument(llvm::Instruction&) = 0;
-};
-
-/// A container for function arguments, which shouldn't be very numerous.
-typedef llvm::SmallVector<llvm::Value*,3> ArgVector;
 
 /// A container for a few types (e.g., of function arguments).
 typedef llvm::SmallVector<llvm::Type*,3> TypeVector;
@@ -139,6 +140,8 @@ llvm::Function* StructInstrumentation(llvm::Module&, llvm::StructType*,
                                       llvm::StringRef FieldName, size_t Index,
                                       bool Store, bool SuppressDebugInstr);
 }
+#endif
+
+} // namespace tesla
 
 #endif	/* !TESLA_INSTRUMENTATION_H */
-#endif

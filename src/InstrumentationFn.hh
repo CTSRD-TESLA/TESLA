@@ -1,11 +1,12 @@
-//! @file TranslationFn.h  Declaration of @ref tesla::TranslationFn.
+//! @file InstrumentationFn.h  Declaration of @ref tesla::InstrumentationFn.
 /*
- * Copyright (c) 2012-2013 Jonathan Anderson
+ * Copyright (c) 2012-2013,2015 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
  * Cambridge Computer Laboratory under DARPA/AFRL contract (FA8750-10-C-0237)
- * ("CTSRD"), as part of the DARPA CRASH research programme.
+ * ("CTSRD"), as part of the DARPA CRASH research programme, as well as at
+ * Memorial University under the NSERC Discovery program (RGPIN-2015-06048).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,40 +30,21 @@
  * SUCH DAMAGE.
  */
 
-#if 0
-#ifndef	TESLA_TRANSLATION_FN_H
-#define	TESLA_TRANSLATION_FN_H
+#ifndef	TESLA_INSTRUMENTATION_FN_H
+#define	TESLA_INSTRUMENTATION_FN_H
 
-#include "InstrContext.h"
-#include "Transition.h"
-
-#include "tesla.pb.h"
-
-#include <libtesla.h>
-
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
 
 namespace llvm {
-  class BasicBlock;
-  class Constant;
   class Instruction;
   class LLVMContext;
   class Module;
-  class Twine;
-  class Type;
-  class Value;
 }
 
 namespace tesla {
-
-class Automaton;
-class EventTranslator;
-class InstrContext;
-class TranslationFn;
-
-
 
 /**
  * An instrumentation function that translates program events such as
@@ -72,47 +54,24 @@ class TranslationFn;
  * Event translators match program events against programmer-supplied
  * patterns and, when they match, forward events to libtesla.
  */
-class TranslationFn {
+class InstrumentationFn {
 public:
-  void InsertCallBefore(llvm::Instruction*, llvm::ArrayRef<llvm::Value*>);
-  void InsertCallAfter(llvm::Instruction*, llvm::ArrayRef<llvm::Value*>);
+  static std::unique_ptr<InstrumentationFn>
+    Create(llvm::StringRef Name, llvm::FunctionType*,
+           llvm::GlobalValue::LinkageTypes, llvm::Module&);
 
-  /**
-   * Add instrumentation for an assertion.
-   */
-  EventTranslator AddInstrumentation(const Automaton&);
+  /// Insert a call to this instrumentation just before the given Instruction.
+  void CallBefore(llvm::Instruction*, llvm::ArrayRef<llvm::Value*> Args);
 
-  /**
-   * Add instrumentation for a function-esque event.
-   *
-   * This currents includes C function calls and Objective-C messages,
-   * but could include C++ methods and other things in the future.
-   *
-   * Languages that use C calling conventions for FFI (a lot of them)
-   * should Just Work today.
-   */
-  EventTranslator AddInstrumentation(const FunctionEvent&,
-                                     llvm::StringRef Label = "");
+  /// Insert a call to this instrumentation just after the given Instruction.
+  void CallAfter(llvm::Instruction*, llvm::ArrayRef<llvm::Value*> Args);
 
   // TODO: drop this if ObjC doesn't absolutely need it
   llvm::Function* getImplementation() { return InstrFn; }
 
 
 private:
-  static TranslationFn* Create(InstrContext&, llvm::StringRef InstrFnName,
-                               llvm::FunctionType *InstrType,
-                               llvm::StringRef PrintfPrefix,
-                               llvm::GlobalValue::LinkageTypes);
-
-  /*!
-   * Initialise an instrumentation function's preamble.
-   *
-   * For instance, we might like to insert a (conditional) printf that describes
-   * the event being interpreted.
-   */
-  static llvm::BasicBlock* CreatePreamble(InstrContext&, llvm::Function*,
-                                          llvm::Twine Prefix);
-
+#if 0
   /**
    * Low-level implementation of instrumentation block creation.
    *
@@ -130,22 +89,17 @@ private:
    */
   llvm::BasicBlock* Match(llvm::Twine Label, llvm::BasicBlock *Instr,
                           const Argument& Pattern, llvm::Value *Val);
+#endif
 
-  TranslationFn(InstrContext& InstrCtx, llvm::Function *InstrFn,
-                llvm::BasicBlock *End)
-    : InstrCtx(InstrCtx), InstrFn(InstrFn), End(End)
+  InstrumentationFn(llvm::Function *InstrFn, llvm::BasicBlock *End)
+    : InstrFn(InstrFn), End(End)
   {
   }
 
-  InstrContext& InstrCtx;
-
   llvm::Function *InstrFn;      //!< The instrumentation function.
   llvm::BasicBlock *End;        //!< End of the instrumentation chain.
-
-  friend class InstrContext;
 };
 
 }
 
-#endif	/* !TESLA_TRANSLATION_FN_H */
-#endif
+#endif	/* !TESLA_INSTRUMENTATION_FN_H */
