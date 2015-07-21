@@ -50,6 +50,12 @@ class NullPolicy : public Policy
     return {};
   }
 
+  virtual std::vector<Direction>
+    FunctionInstrumentation(const llvm::Function&) const override
+  {
+    return {};
+  }
+
   virtual string InstrName(const vector<string>& Components) const override
   {
     return Join(Components, "_");

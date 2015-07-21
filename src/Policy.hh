@@ -56,6 +56,9 @@ class Policy
   virtual std::vector<Direction>
     CallInstrumentation(const llvm::Function&) const = 0;
 
+  virtual std::vector<Direction>
+    FunctionInstrumentation(const llvm::Function&) const = 0;
+
   //! Name an instrumentation function for a particular event type.
   virtual std::string
     InstrName(const std::vector<std::string>& Components) const = 0;

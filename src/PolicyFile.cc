@@ -181,6 +181,23 @@ PolicyFile::CallInstrumentation(const llvm::Function& Fn) const
 }
 
 
+vector<Policy::Direction>
+PolicyFile::FunctionInstrumentation(const llvm::Function& Fn) const
+{
+  StringRef Name = Fn.getName();
+
+  for (FnInstrumentation& F : Policy->Functions)
+  {
+    if (F.Name == Name)
+    {
+      return F.Body;
+    }
+  }
+
+  return vector<Policy::Direction>();
+}
+
+
 string PolicyFile::InstrName(const vector<string>& Components) const
 {
   vector<string> FullName(1, Policy->HookPrefix);

@@ -56,6 +56,9 @@ class PolicyFile : public Policy
   virtual std::vector<Direction>
     CallInstrumentation(const llvm::Function&) const override;
 
+  virtual std::vector<Direction>
+    FunctionInstrumentation(const llvm::Function&) const override;
+
   virtual std::string InstrName(const std::vector<std::string>&) const override;
 
   private:
