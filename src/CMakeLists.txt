@@ -5,7 +5,7 @@ add_llvm_loadable_module(LLVMTESLAInstrumenter
 	CallInstrumentionPass.cc
 	EventTranslator.cpp
 	FieldReference.cpp
-	FunctionBoundaryPass.cpp
+	FunctionBoundaryPass.cc
 	Instrumentation.cpp
 	InstrumentationFn.cc
 	Instrumenter.cc

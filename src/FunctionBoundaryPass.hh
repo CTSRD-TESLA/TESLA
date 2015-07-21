@@ -1,10 +1,15 @@
+/*!
+ * \file  FunctionBoundaryPass.hh
+ * \brief Declaration of FunctionBoundaryPass class.
+ */
 /*
- * Copyright (c) 2012-2013 Jonathan Anderson
+ * Copyright (c) 2012-2013,2015 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
  * Cambridge Computer Laboratory under DARPA/AFRL contract (FA8750-10-C-0237)
- * ("CTSRD"), as part of the DARPA CRASH research programme.
+ * ("CTSRD"), as part of the DARPA CRASH research programme, as well as at
+ * Memorial University under the NSERC Discovery program (RGPIN-2015-06048).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,42 +33,35 @@
  * SUCH DAMAGE.
  */
 
-#ifndef	TESLA_CALLEE_INSTRUMENTATION_H
-#define	TESLA_CALLEE_INSTRUMENTATION_H
+#ifndef  TESLA_FUNCTION_BOUNDARY_PASS_H
+#define  TESLA_FUNCTION_BOUNDARY_PASS_H
 
-#if 0
+#include "Instrumenter.hh"
+#include "Instrumentation.hh"
+#include "Policy.hh"
 
-#include "InstrContext.h"
-#include "Instrumenter.h"
-#include "Instrumentation.h"
-
-#include "tesla.pb.h"
-
-#include <llvm/ADT/OwningPtr.h>
-#include <llvm/ADT/StringMap.h>
-#include <llvm/ADT/StringRef.h>
 #include <llvm/Pass.h>
 
-namespace llvm {
-  class Function;
-  class Instruction;
-  class LLVMContext;
-  class Module;
-  class Value;
+#include <memory>
+
+
+namespace llvm
+{
+  class CallSite;
+  class FunctionType;
 }
+
 
 namespace tesla {
 
-class Manifest;
-class ObjCInstrumentation;
-
-/// Instruments function calls in the callee context.
-class FnCalleeInstrumenter : public Instrumenter, public llvm::ModulePass {
+///
+/// \brief Instruments function boundaries (entry and exit points).
+///
+class FunctionBoundaryPass : public Instrumenter, public llvm::ModulePass {
 public:
   static char ID;
-  FnCalleeInstrumenter(const Manifest& M, bool SuppressDI)
-    : Instrumenter(M, SuppressDI), ModulePass(ID), ObjC(0) {}
-  ~FnCalleeInstrumenter();
+  FunctionBoundaryPass();
+  ~FunctionBoundaryPass();
 
   const char* getPassName() const {
     return "TESLA function instrumenter (callee-side)";
@@ -72,17 +70,13 @@ public:
   virtual bool runOnModule(llvm::Module &M);
 
 private:
-  ObjCInstrumentation* ObjC;
-  TranslationFn* GetOrCreateInstr(llvm::Function*, const FunctionEvent&);
+  const InstInstrumentation&
+    Instrumentation(llvm::Function&, Policy::Direction);
 
-  llvm::OwningPtr<InstrContext> InstrCtx;
-
-  llvm::StringMap<TranslationFn*> Entry;
-  llvm::StringMap<TranslationFn*> Exit;
+  llvm::StringMap<std::unique_ptr<InstInstrumentation>> Entry;
+  llvm::StringMap<std::unique_ptr<InstInstrumentation>> Exit;
 };
 
 }
 
-#endif
-
-#endif	/* !TESLA_CALLEE_INSTRUMENTATION_H */
+#endif  /* !TESLA_FUNCTION_BOUNDARY_PASS_H */

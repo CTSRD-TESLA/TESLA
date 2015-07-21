@@ -1,6 +1,9 @@
-/*! @file Callee.cpp  Code for instrumenting function calls (callee context). */
+/*!
+ * @file FunctionBoundaryPass.cc
+ * Code for instrumenting function calls (callee context).
+ */
 /*
- * Copyright (c) 2012-2013 Jonathan Anderson
+ * Copyright (c) 2012-2013,2015 Jonathan Anderson
  * All rights reserved.
  *
  * This software was developed by SRI International and the University of
@@ -29,38 +32,104 @@
  * SUCH DAMAGE.
  */
 
-#if 0
-#include "Automaton.h"
-#include "Callee.h"
-#include "EventTranslator.h"
-#include "InstrContext.h"
-#include "Instrumentation.h"
-#include "Manifest.h"
-#include "Names.h"
-#include "State.h"
-#include "Transition.h"
-#include "TranslationFn.h"
+#include "FunctionBoundaryPass.hh"
+#include "InstrumentationFn.hh"
 
-#include <llvm/ADT/SmallPtrSet.h>
-#include <llvm/Bitcode/ReaderWriter.h>
-#include <llvm/IR/Function.h>
-#include <llvm/IR/Instructions.h>
-#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Module.h>
-#include <llvm/Support/InstIterator.h>
-#include <llvm/Support/system_error.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Transforms/Utils/ModuleUtils.h>
-#include <llvm/InstVisitor.h>
-
 
 using namespace llvm;
+using namespace std;
 
-using std::string;
-using std::vector;
 
 namespace tesla {
 
+class InstrumentationFn;
+
+
+/// Instrumentation that we put on a call site.
+class BoundaryInstrumentation : public InstInstrumentation
+{
+public:
+  static unique_ptr<BoundaryInstrumentation>
+    Create(llvm::Function&, const Policy&, Policy::Direction);
+
+  virtual bool Instrument(llvm::Instruction*) const override;
+
+private:
+  BoundaryInstrumentation(llvm::Function*, Policy::Direction,
+                          unique_ptr<InstrumentationFn>&&);
+
+  llvm::Function *Fn;
+  const unique_ptr<InstrumentationFn> InstrFn;
+  const Policy::Direction Direction;
+};
+
+
+
+char FunctionBoundaryPass::ID = 0;
+
+FunctionBoundaryPass::FunctionBoundaryPass()
+  : llvm::ModulePass(ID)
+{
+}
+
+FunctionBoundaryPass::~FunctionBoundaryPass()
+{
+}
+
+bool FunctionBoundaryPass::runOnModule(Module &Mod) {
+  bool ModifiedIR = false;
+
+  for (Function& Fn : Mod)
+  {
+    for (Policy::Direction D : policy().FunctionInstrumentation(Fn))
+    {
+      const InstInstrumentation& Instr = Instrumentation(Fn, D);
+
+      switch (D)
+      {
+        case Policy::Direction::In:
+        {
+          Instr.Instrument(Fn.getEntryBlock().getFirstNonPHI());
+          break;
+        }
+
+        case Policy::Direction::Out:
+        {
+          for (BasicBlock& BB : Fn)
+          {
+            if (auto *Ret = dyn_cast<ReturnInst>(BB.getTerminator()))
+            {
+              Instr.Instrument(Ret);
+            }
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  return ModifiedIR;
+}
+
+
+const InstInstrumentation&
+FunctionBoundaryPass::Instrumentation(Function& F, Policy::Direction Dir) {
+
+  auto& Map = (Dir == Policy::Direction::In) ? Entry : Exit;
+
+  StringRef FnName = F.getName();
+
+  if (const unique_ptr<InstInstrumentation>& Instr = Map[FnName])
+    return *Instr;
+
+  Map[FnName] = BoundaryInstrumentation::Create(F, policy(), Dir);
+  return *Map[FnName];
+}
+
+
+#if 0
 namespace {
   class SelectorTypesFinder : public InstVisitor<SelectorTypesFinder> {
     Module *Mod;
@@ -433,161 +502,78 @@ public:
   }
 };
 
-// ==== FnCalleeInstrumenter implementation ======================================
-char FnCalleeInstrumenter::ID = 0;
-
-FnCalleeInstrumenter::~FnCalleeInstrumenter() {
-  google::protobuf::ShutdownProtobufLibrary();
-  delete ObjC;
-}
-
-bool FnCalleeInstrumenter::runOnModule(Module &Mod) {
-  InstrCtx.reset(InstrContext::Create(Mod, SuppressDebugInstr));
-
-  bool ModifiedIR = false;
-
-  //
-  // Initialisation and cleanup events are special: they are shared across
-  // automata and trigger different libtesla functions.
-  //
-  for (Automaton::Lifetime L : M.getLifetimes()) {
-    if (auto *Init = dyn_cast_or_null<FnTransition>(L.Init)) {
-      const FunctionEvent FnEvent = Init->FnEvent();
-
-      if (FnEvent.context() != FunctionEvent::Callee)
-        continue;
-
-      Function *Target = Mod.getFunction(FnEvent.function().name());
-
-      // Only handle functions that are defined in this module.
-      if (!Target || Target->empty())
-        continue;
-
-      TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
-      EventTranslator T(InstrFn->AddInstrumentation(FnEvent, "enter_lifetime"));
-      T.CallSunrise(L);
-    }
-
-    if (auto *Cleanup = dyn_cast_or_null<FnTransition>(L.Cleanup)) {
-      const FunctionEvent FnEvent = Cleanup->FnEvent();
-
-      if (FnEvent.context() != FunctionEvent::Callee)
-        continue;
-
-      Function *Target = Mod.getFunction(FnEvent.function().name());
-
-      // Only handle functions that are defined in this module.
-      if (!Target || Target->empty())
-        continue;
-
-      TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
-      EventTranslator T(InstrFn->AddInstrumentation(FnEvent, "exit_lifetime"));
-      T.CallSunset(L);
-    }
-  }
-
-  for (auto i : M.RootAutomata()) {
-    auto& A = *M.FindAutomaton(i->identifier());
-    for (auto EquivClass : A) {
-      assert(!EquivClass.empty());
-
-      auto *Head = dyn_cast<FnTransition>(*EquivClass.begin());
-      if (!Head)
-        continue;
-
-      // Lifetime events are dealt with above.
-      if (Head->RequiresInit() or Head->RequiresCleanup())
-        continue;
-
-      auto& FnEvent = Head->FnEvent();
-
-      // For now, skip Objective-C message sends.
-      if (FnEvent.kind() != FunctionEvent::CCall) {
-        if (!ObjC)
-          ObjC = new ObjCInstrumentation(Mod, SuppressDebugInstr);
-        ModifiedIR |= ObjC->instrument(A, FnEvent, EquivClass);
-        continue;
-      }
-
-      if (FnEvent.context() != FunctionEvent::Callee)
-        continue;
-
-      Function *Target = Mod.getFunction(FnEvent.function().name());
-
-      // Only handle functions that are defined in this module.
-      if (!Target || Target->empty())
-        continue;
-
-      TranslationFn *InstrFn = GetOrCreateInstr(Target, FnEvent);
-      EventTranslator T(InstrFn->AddInstrumentation(FnEvent, A.Name()));
-      T.CallUpdateState(A, EquivClass.Symbol);
-
-      ModifiedIR = true;
-    }
-  }
-
-  return ModifiedIR;
-}
-
-
-TranslationFn* FnCalleeInstrumenter::GetOrCreateInstr(Function *F,
-                                                      const FunctionEvent& Ev) {
-
-  assert(F != NULL);
-
-  // We keep separate maps for entry and exit instrumentation functions.
-  auto& Map = (Ev.direction() == FunctionEvent::Entry) ? Entry : Exit;
-
-  const string Name = Ev.function().name();
-  TranslationFn *InstrFn = Map[Name];
-  if (InstrFn)
-    return InstrFn;
-
-  // No instrumentation function yet; create it.
-  InstrFn = Map[Name] = InstrCtx->CreateInstrFn(Ev, F->getFunctionType());
-
-  //
-  // Add instrumentation hooks: call out to the translation function
-  // when we enter or exit this (callee-instrumented) function.
-  //
-  ArgVector Args;   // can't use (begin,end) constructor; need arg *addresses*
-  for (auto &Arg : F->getArgumentList())
-    Args.push_back(&Arg);
-
-  // TODO: add Objective-C receiver
-  // TODO: we should probably write down the order of arguments
-
-  switch (Ev.direction()) {
-  case FunctionEvent::Entry: {
-    // Instrumenting function entry is easy: just add a new call to
-    // instrumentation at the beginning of the function's entry block.
-    BasicBlock& Entry = F->getEntryBlock();
-    InstrFn->InsertCallBefore(Entry.getFirstNonPHI(), Args);
-    break;
-  }
-
-  case FunctionEvent::Exit: {
-    // Find all return instructions without peturbing iterators.
-    SmallPtrSet<ReturnInst*, 16> Returns;
-    for (auto i = inst_begin(F), End = inst_end(F); i != End; i++)
-      if (auto *Return = dyn_cast<ReturnInst>(&*i))
-        Returns.insert(Return);
-
-    // Now instrument all the returns.
-    for (ReturnInst *Return : Returns) {
-      ArgVector RetArgs(Args);
-
-      if (not F->getReturnType()->isVoidTy())
-        RetArgs.push_back(Return->getReturnValue());
-
-      InstrFn->InsertCallBefore(Return, RetArgs);
-    }
-    break;
-  }
-  }
-
-  return InstrFn;
-}
-
-} /* namespace tesla */
 #endif
+
+
+// ==== BoundaryInstrumentation implementation ===============================
+unique_ptr<BoundaryInstrumentation> BoundaryInstrumentation::Create(
+    llvm::Function& F, const Policy& P, Policy::Direction Dir)
+{
+  const string Name = P.InstrName({
+    (Dir == Policy::Direction::In) ? "enter" : "leave",
+    F.getName(),
+  });
+
+  //
+  // The instrumentation function should take the same arguments as the
+  // instrumented function, possibly with an additional argument for
+  // "the value we're about to return".
+  //
+  FunctionType *TargetFnType = F.getFunctionType();
+  vector<Type*> ParamTypes = TargetFnType->params();
+
+  if (Dir == Policy::Direction::Out) {
+    Type *RetTy = TargetFnType->getReturnType();
+    if (not RetTy->isVoidTy())
+      ParamTypes.push_back(RetTy);
+  }
+
+  //
+  // TODO: tack on Objective-C receiver to the end of the arguments
+  //
+  //InstrParamTypes.push_back(ObjCReceiver);
+
+  static const auto Linkage = GlobalValue::PrivateLinkage;
+
+  return unique_ptr<BoundaryInstrumentation> {
+    new BoundaryInstrumentation(&F, Dir,
+      InstrumentationFn::Create(Name, ParamTypes, Linkage, *F.getParent()))
+  };
+}
+
+BoundaryInstrumentation::BoundaryInstrumentation(
+    Function *F, Policy::Direction Dir, unique_ptr<InstrumentationFn>&& Instr)
+  : Fn(F), InstrFn(std::move(Instr)), Direction(Dir)
+{
+}
+
+bool BoundaryInstrumentation::Instrument(Instruction *I) const {
+  ArgVector Args;
+  for (llvm::Argument& A : Fn->args())
+    Args.push_back(&A);
+
+  switch (Direction) {
+  case Policy::Direction::In:
+    InstrFn->CallBefore(I, Args);
+    break;
+
+  case Policy::Direction::Out:
+    auto *Ret = dyn_cast<ReturnInst>(I);
+    assert(Ret && "should only intrument function return on a ReturnInst");
+
+    // Pass return value to instrumentation.
+    if (Value *V = Ret->getReturnValue())
+      Args.push_back(V);
+
+    InstrFn->CallBefore(I, Args);
+    break;
+  }
+
+  return true;
+}
+
+
+static llvm::RegisterPass<FunctionBoundaryPass>
+  pass("tesla-fn", "TESLA function boundary instrumentation pass");
+
+} // namespace tesla
