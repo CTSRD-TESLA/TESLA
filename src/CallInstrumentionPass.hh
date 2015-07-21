@@ -1,3 +1,7 @@
+/*!
+ * \file  CallInstrumentationPass.hh
+ * \brief Declaration of CallInstrumentationPass class.
+ */
 /*
  * Copyright (c) 2012-2013,2015 Jonathan Anderson
  * All rights reserved.
