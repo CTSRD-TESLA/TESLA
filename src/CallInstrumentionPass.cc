@@ -126,12 +126,13 @@ const InstInstrumentation&
 CallInstrumentationPass::InstrumentationFn(Function& F, Policy::Direction Dir) {
 
   StringRef FnName = F.getName();
+  auto& Map = (Dir == Policy::Direction::In) ? CallInstr : ReturnInstr;
 
-  if (const unique_ptr<InstInstrumentation>& Instr = Instrumentation[InstrName])
+  if (const unique_ptr<InstInstrumentation>& Instr = Map[FnName])
     return *Instr;
 
-  Instrumentation[FnName] = CallInstrumentation::Create(F, policy(), Dir);
-  return *Instrumentation[FnName];
+  Map[FnName] = CallInstrumentation::Create(F, policy(), Dir);
+  return *Map[FnName];
 }
 
 

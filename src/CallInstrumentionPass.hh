@@ -70,7 +70,8 @@ private:
   const InstInstrumentation&
     InstrumentationFn(llvm::Function&, Policy::Direction);
 
-  llvm::StringMap<std::unique_ptr<InstInstrumentation>> Instrumentation;
+  llvm::StringMap<std::unique_ptr<InstInstrumentation>> CallInstr;
+  llvm::StringMap<std::unique_ptr<InstInstrumentation>> ReturnInstr;
 };
 
 }
