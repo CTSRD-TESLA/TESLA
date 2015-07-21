@@ -52,8 +52,8 @@ namespace tesla {
 class CallInstrumentation : public InstInstrumentation
 {
 public:
-  static unique_ptr<CallInstrumentation>
-    Create(StringRef Name, llvm::FunctionType*, Policy::Direction, Module&);
+  static unique_ptr<CallInstrumentation> Create(Function&, const Policy&,
+                                                Policy::Direction);
 
   virtual bool Instrument(llvm::Instruction*) const override;
 
@@ -125,44 +125,13 @@ namespace {
 const InstInstrumentation&
 CallInstrumentationPass::InstrumentationFn(Function& F, Policy::Direction Dir) {
 
-  const string InstrName = policy().InstrName({
-      (Dir == Policy::Direction::In) ? "call" : "return",
-      F.getName(),
-    });
+  StringRef FnName = F.getName();
 
   if (const unique_ptr<InstInstrumentation>& Instr = Instrumentation[InstrName])
     return *Instr;
 
-  FunctionType *T = F.getFunctionType();
-  vector<Type*> InstrParamTypes(T->param_begin(), T->param_end());
-
-  //
-  // If instrumenting return from a non-void function, we need to pass the
-  // return value to the instrumentation as a parameter.
-  //
-  // Otherwise, the instrumentation function will have exactly the same
-  // signature as the instrumented function.
-  //
-  if (Dir == Policy::Direction::Out) {
-    Type *RetTy = T->getReturnType();
-
-    if (not RetTy->isVoidTy())
-      InstrParamTypes.push_back(RetTy);
-  }
-
-  //
-  // TODO: tack on Objective-C receiver to the end of the arguments
-  //
-  //InstrParamTypes.push_back(ObjCReceiver);
-
-
-  Type *Void = Type::getVoidTy(F.getContext());
-  T = FunctionType::get(Void, InstrParamTypes, T->isVarArg());
-
-  Instrumentation[InstrName] =
-    CallInstrumentation::Create(InstrName, T, Dir, *F.getParent());
-
-  return *Instrumentation[InstrName];
+  Instrumentation[FnName] = CallInstrumentation::Create(F, policy(), Dir);
+  return *Instrumentation[FnName];
 }
 
 
@@ -232,8 +201,37 @@ bool CallInstrumentationPass::runOnModule(Module &M) {
 
 // ==== CallInstrumentation implementation ===================================
 unique_ptr<CallInstrumentation> CallInstrumentation::Create(
-    StringRef Name, llvm::FunctionType *T, Policy::Direction Dir, Module& M)
+    Function& F, const Policy& P, Policy::Direction Dir)
 {
+  const string Name = P.InstrName({
+      (Dir == Policy::Direction::In) ? "call" : "return",
+      F.getName(),
+    });
+
+  FunctionType *T = F.getFunctionType();
+  vector<Type*> InstrParamTypes(T->param_begin(), T->param_end());
+
+  //
+  // If instrumenting return from a non-void function, we need to pass the
+  // return value to the instrumentation as a parameter.
+  //
+  // Otherwise, the instrumentation function will have exactly the same
+  // signature as the instrumented function.
+  //
+  if (Dir == Policy::Direction::Out) {
+    Type *RetTy = T->getReturnType();
+
+    if (not RetTy->isVoidTy())
+      InstrParamTypes.push_back(RetTy);
+  }
+
+  //
+  // TODO: tack on Objective-C receiver to the end of the arguments
+  //
+  //InstrParamTypes.push_back(ObjCReceiver);
+
+
+
   //
   // Call instrumentation may be declared in any translation unit, with
   // different definitions in each one. Use private linkage to ensure these
@@ -242,8 +240,8 @@ unique_ptr<CallInstrumentation> CallInstrumentation::Create(
   static const auto Linkage = GlobalValue::PrivateLinkage;
 
   return unique_ptr<CallInstrumentation> {
-    new CallInstrumentation(
-      Dir, InstrumentationFn::Create(Name, T, Linkage, M))
+    new CallInstrumentation(Dir,
+      InstrumentationFn::Create(Name, InstrParamTypes, Linkage, *F.getParent()))
   };
 }
 

@@ -62,9 +62,12 @@ static BasicBlock *FindBlock(StringRef Name, Function& Fn) {
 
 
 unique_ptr<InstrumentationFn>
-InstrumentationFn::Create(StringRef Name, FunctionType *T,
+InstrumentationFn::Create(StringRef Name, ArrayRef<Type*> ParamTypes,
                           GlobalValue::LinkageTypes Linkage, Module& M) {
 
+  LLVMContext& Ctx = M.getContext();
+
+  FunctionType *T = FunctionType::get(Type::getVoidTy(Ctx), ParamTypes, false);
   auto *InstrFn = dyn_cast<Function>(M.getOrInsertFunction(Name, T));
   InstrFn->setLinkage(Linkage);
 
@@ -78,8 +81,6 @@ InstrumentationFn::Create(StringRef Name, FunctionType *T,
   BasicBlock *EndBlock;
 
   if (InstrFn->empty()) {
-    LLVMContext& Ctx = M.getContext();
-
     BasicBlock *Entry = BasicBlock::Create(Ctx, "entry", InstrFn);
     BasicBlock *Preamble = BasicBlock::Create(Ctx, "preamble", InstrFn);
     EndBlock = BasicBlock::Create(T->getContext(), "exit", InstrFn);

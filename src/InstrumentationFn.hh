@@ -57,7 +57,7 @@ namespace tesla {
 class InstrumentationFn {
 public:
   static std::unique_ptr<InstrumentationFn>
-    Create(llvm::StringRef Name, llvm::FunctionType*,
+    Create(llvm::StringRef Name, llvm::ArrayRef<llvm::Type*> ParameterTypes,
            llvm::GlobalValue::LinkageTypes, llvm::Module&);
 
   /// Insert a call to this instrumentation just before the given Instruction.
