@@ -54,7 +54,7 @@ namespace tesla {
  * Instruments function calls at the call site (the caller context, rather than
  * the callee context).
  */
-class CallInstrumentationPass : public Instrumenter, public llvm::FunctionPass {
+class CallInstrumentationPass : public Instrumenter, public llvm::ModulePass {
 public:
   static char ID;
   CallInstrumentationPass();
@@ -64,9 +64,7 @@ public:
     return "TESLA function instrumenter (caller-side)";
   }
 
-  virtual bool doInitialization(llvm::Module &M);
-  virtual bool runOnFunction(llvm::Function &Fn);
-  virtual bool runOnBasicBlock(llvm::BasicBlock &Block);
+  virtual bool runOnModule(llvm::Module &) override;
 
 private:
   const InstInstrumentation&

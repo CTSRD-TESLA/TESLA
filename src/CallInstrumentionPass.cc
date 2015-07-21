@@ -68,7 +68,7 @@ private:
 char CallInstrumentationPass::ID = 0;
 
 CallInstrumentationPass::CallInstrumentationPass()
-  : FunctionPass(ID)
+  : ModulePass(ID)
 {
 }
 
@@ -122,14 +122,6 @@ namespace {
 #endif
 
 
-bool CallInstrumentationPass::doInitialization(Module &Mod) {
-  bool ModifiedIR = false;
-
-
-  return ModifiedIR;
-}
-
-
 const InstInstrumentation&
 CallInstrumentationPass::InstrumentationFn(Function& F, Policy::Direction Dir) {
 
@@ -174,40 +166,29 @@ CallInstrumentationPass::InstrumentationFn(Function& F, Policy::Direction Dir) {
 }
 
 
-
-
-bool CallInstrumentationPass::runOnFunction(Function &Fn) {
-  bool modifiedIR = false;
-
-  for (auto &Block : Fn) {
-    modifiedIR |= runOnBasicBlock(Block);
-  }
-
-  return modifiedIR;
-}
-
-bool CallInstrumentationPass::runOnBasicBlock(BasicBlock &Block) {
+bool CallInstrumentationPass::runOnModule(Module &M) {
   bool ModifiedIR = false;
   const Policy& Policy = Instrumenter::policy();
 
-  for (auto &Inst : Block) {
-    if (!isa<CallInst>(Inst)) {
-      continue;
-    }
+  for (llvm::Function &Fn : M) {
+    for (llvm::BasicBlock &Block : Fn) {
+      for (auto &Inst : Block) {
+        if (!isa<CallInst>(Inst)) {
+          continue;
+        }
 
-    CallInst &Call = cast<CallInst>(Inst);
-    Function *Callee = Call.getCalledFunction();
+        CallInst &Call = cast<CallInst>(Inst);
+        Function *Callee = Call.getCalledFunction();
 
-    // TODO: handle indirection (e.g. function pointers)?
-    if (!Callee)
-      continue;
+        // TODO: handle indirection (e.g. function pointers)?
+        if (!Callee)
+          continue;
 
-    for (Policy::Direction D : Policy.CallInstrumentation(*Callee))
-    {
-      const InstInstrumentation& Instr = InstrumentationFn(*Callee, D);
-      ModifiedIR |= Instr.Instrument(&Call);
-    }
-
+        for (Policy::Direction D : Policy.CallInstrumentation(*Callee))
+        {
+          const InstInstrumentation& Instr = InstrumentationFn(*Callee, D);
+          ModifiedIR |= Instr.Instrument(&Call);
+        }
 
 #if 0
   unsigned ObjCMsgSendMDKind = Ctx.getMDKindID("GNUObjCMessageSend");
@@ -240,7 +221,10 @@ bool CallInstrumentationPass::runOnBasicBlock(BasicBlock &Block) {
     }
   }
 #endif
-   }
+
+      }
+    }
+  }
 
   return ModifiedIR;
 }
