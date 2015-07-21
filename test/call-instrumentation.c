@@ -1,5 +1,5 @@
 /*
- * \file caller.c
+ * \file  call-instrumentation.c
  * \brief Tests caller-context function instrumentation.
  *
  * Commands for llvm-lit:
